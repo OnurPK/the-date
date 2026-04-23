@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<title>Room · Mobile Preview</title>
+<style>
+  :root {
+    --phone-w: 390px;
+    --phone-h: 844px;
+    --bezel: 10px;
+    --radius-outer: 52px;
+    --radius-inner: 42px;
+  }
+
+  * { box-sizing: border-box; }
+
+  html, body {
+    margin: 0; padding: 0;
+    width: 100%; height: 100%;
+    overflow: hidden;
+    color: #fff;
+    font-family: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", sans-serif;
+    background:
+      radial-gradient(ellipse at 20% 10%, rgba(255,126,185,0.10), transparent 45%),
+      radial-gradient(ellipse at 85% 85%, rgba(155,127,255,0.10), transparent 45%),
+      radial-gradient(ellipse at 50% 50%, #1a1423 0%, #0a0a0f 60%, #050508 100%);
+  }
+
+  body::before {
+    content: "";
+    position: fixed; inset: 0;
+    background-image:
+      linear-gradient(rgba(255,255,255,0.014) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,0.014) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .center {
+    position: fixed; inset: 0;
+    display: flex; align-items: center; justify-content: center;
+    z-index: 1;
+  }
+
+  /* Phone stage (scales down when window is smaller) */
+  .stage {
+    width: calc(var(--phone-w) + var(--bezel) * 2);
+    height: calc(var(--phone-h) + var(--bezel) * 2);
+    transform-origin: center center;
+    will-change: transform;
+  }
+
+  .phone {
+    width: 100%; height: 100%;
+    padding: var(--bezel);
+    background: #0a0a0f;
+    border-radius: var(--radius-outer);
+    box-shadow:
+      inset 0 0 0 1.5px rgba(255,255,255,0.07),
+      0 30px 80px -20px rgba(0,0,0,0.75),
+      0 10px 40px -10px rgba(255,126,185,0.12),
+      0 60px 120px -30px rgba(155,127,255,0.15);
+  }
+
+  .screen {
+    position: relative;
+    width: var(--phone-w);
+    height: var(--phone-h);
+    border-radius: var(--radius-inner);
+    overflow: hidden;
+    background: #000;
+    box-shadow: inset 0 0 0 1px rgba(255,255,255,0.05);
+  }
+
+  .screen iframe {
+    width: var(--phone-w);
+    height: var(--phone-h);
+    border: 0;
+    display: block;
+    background: #0a0a0f;
+  }
+
+  /* ---------- Desktop UI around the phone ---------- */
+  .topbar {
+    position: fixed;
+    top: 20px; left: 22px;
+    z-index: 10;
+  }
+  .title {
+    font-size: 13px;
+    letter-spacing: 0.26em;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.75);
+    font-weight: 600;
+  }
+  .subtitle {
+    font-size: 11px;
+    color: rgba(255,255,255,0.4);
+    letter-spacing: 0.14em;
+    margin-top: 4px;
+  }
+
+  .sizes {
+    position: fixed;
+    top: 20px; right: 20px;
+    display: flex; gap: 6px;
+    z-index: 10;
+  }
+
+  /* External action buttons — these sit OUTSIDE the phone frame */
+  .actions {
+    position: fixed;
+    left: 50%;
+    bottom: 28px;
+    transform: translateX(-50%);
+    display: flex; gap: 10px;
+    z-index: 10;
+  }
+  .act-btn {
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.14);
+    color: rgba(255,255,255,0.85);
+    padding: 11px 18px;
+    border-radius: 999px;
+    font-size: 13px;
+    font-weight: 500;
+    letter-spacing: 0.05em;
+    cursor: pointer;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    font-family: inherit;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    transition: background 0.2s, transform 0.15s, border-color 0.2s, color 0.2s;
+  }
+  .act-btn:hover {
+    background: rgba(255,255,255,0.1);
+    color: #fff;
+    border-color: rgba(255,255,255,0.25);
+  }
+  .act-btn:active { transform: scale(0.97); }
+  .act-btn.primary {
+    background: linear-gradient(135deg, rgba(255,126,185,0.22), rgba(155,127,255,0.22));
+    border-color: rgba(255,178,213,0.4);
+    color: #ffd8ea;
+  }
+  .act-btn.primary:hover {
+    background: linear-gradient(135deg, rgba(255,126,185,0.32), rgba(155,127,255,0.32));
+    border-color: rgba(255,178,213,0.6);
+  }
+
+  .size-pill {
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.1);
+    color: rgba(255,255,255,0.7);
+    padding: 7px 11px;
+    border-radius: 999px;
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    font-family: ui-monospace, "SF Mono", monospace;
+    cursor: pointer;
+    transition: background 0.2s, color 0.2s, border-color 0.2s;
+  }
+  .size-pill:hover { background: rgba(255,255,255,0.1); color: #fff; }
+  .size-pill.active {
+    background: rgba(255,126,185,0.15);
+    border-color: rgba(255,126,185,0.4);
+    color: #ffc7e1;
+  }
+
+  /* --- On actual mobile: drop the frame, full-screen --- */
+  @media (max-width: 500px) {
+    html, body { background: #000; }
+    body::before { display: none; }
+    .topbar, .sizes, .actions { display: none; }
+    .center { display: block; }
+    .stage {
+      width: 100vw; height: 100vh;
+      transform: none !important;
+    }
+    .phone {
+      padding: 0;
+      border-radius: 0;
+      background: transparent;
+      box-shadow: none;
+    }
+    .screen {
+      width: 100vw; height: 100vh;
+      border-radius: 0;
+    }
+    .screen iframe { width: 100%; height: 100%; }
+  }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="title">Room</div>
+  <div class="subtitle" id="sizeLabel">390 × 844 · iPhone 14</div>
+</div>
+
+<div class="sizes">
+  <button class="size-pill" data-w="375" data-h="812">SE</button>
+  <button class="size-pill active" data-w="390" data-h="844">14</button>
+  <button class="size-pill" data-w="430" data-h="932">Max</button>
+</div>
+
+<div class="center">
+  <div class="stage" id="stage">
+    <div class="phone">
+      <div class="screen">
+        <iframe id="gameFrame" src="dialog.html" title="Oda — Visual Novel"></iframe>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="actions">
+  <a class="act-btn primary" id="btnEditor" href="editor.html" target="_blank" rel="noopener">✎ Open Editor</a>
+  <button class="act-btn" id="btnRestart">↺ Restart</button>
+  <button class="act-btn" id="btnResetIntro" title="Replay the onboarding / character creation">⏮ Replay Intro</button>
+</div>
+
+<script>
+  const stage      = document.getElementById('stage');
+  const frame      = document.getElementById('gameFrame');
+  const sizeLabel  = document.getElementById('sizeLabel');
+  const pills      = document.querySelectorAll('.size-pill');
+  const btnRestart = document.getElementById('btnRestart');
+  // "Open Editor" is a real <a> link — no JS handler needed.
+
+  let phoneW = 390;
+  let phoneH = 844;
+  const BEZEL = 20;        // 10px padding each side
+  const OUTER_MARGIN = 80; // breathing room around the phone
+
+  function applySize(w, h, labelText) {
+    phoneW = w; phoneH = h;
+    document.documentElement.style.setProperty('--phone-w', w + 'px');
+    document.documentElement.style.setProperty('--phone-h', h + 'px');
+    frame.style.width  = w + 'px';
+    frame.style.height = h + 'px';
+    sizeLabel.textContent = `${w} × ${h}${labelText ? ' · ' + labelText : ''}`;
+    fit();
+  }
+
+  function fit() {
+    if (window.innerWidth <= 500) {
+      stage.style.transform = '';
+      return;
+    }
+    const availW = window.innerWidth  - OUTER_MARGIN;
+    const availH = window.innerHeight - OUTER_MARGIN;
+    const needW = phoneW + BEZEL;
+    const needH = phoneH + BEZEL;
+    const scale = Math.min(1, availW / needW, availH / needH);
+    stage.style.transform = `scale(${scale})`;
+  }
+
+  pills.forEach(p => {
+    p.addEventListener('click', () => {
+      pills.forEach(q => q.classList.remove('active'));
+      p.classList.add('active');
+      const w = parseInt(p.dataset.w, 10);
+      const h = parseInt(p.dataset.h, 10);
+      const label = {
+        '375x812': 'iPhone SE',
+        '390x844': 'iPhone 14',
+        '430x932': 'iPhone 14 Pro Max'
+      }[`${w}x${h}`] || '';
+      applySize(w, h, label);
+    });
+  });
+
+  // External controls → iframe via postMessage
+  function send(type) {
+    if (!frame.contentWindow) return;
+    frame.contentWindow.postMessage({ type }, '*');
+  }
+  btnRestart.addEventListener('click', () => send('restart'));
+  document.getElementById('btnResetIntro').addEventListener('click', () => {
+    frame.src = 'dialog.html?reset=1&t=' + Date.now();
+  });
+
+  window.addEventListener('resize', fit);
+  applySize(390, 844, 'iPhone 14');
+</script>
+</body>
+</html>

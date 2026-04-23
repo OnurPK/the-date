@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+<title>Oda — Visual Novel</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body {
+    width: 100%; height: 100%;
+    background: #0a0a0f;
+    overflow: hidden;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Inter", sans-serif;
+    color: #fff;
+    user-select: none;
+    -webkit-user-select: none;
+    touch-action: pan-x;
+  }
+
+  /* Horizontal scroll scene */
+  #scene {
+    position: fixed; inset: 0;
+    overflow-x: auto;
+    overflow-y: hidden;
+    scroll-behavior: smooth;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+  #scene::-webkit-scrollbar { display: none; }
+
+  #world {
+    position: relative;
+    height: 100%;
+    /* Image aspect ratio ~ 3:2. Height = 100vh, width = 150vh */
+    width: calc(100vh * 1.5);
+    min-width: 100%;
+    background: url("scene.jpg") center center / cover no-repeat #1a1625;
+  }
+
+  /* When image missing, show friendly placeholder */
+  #world.no-image::after {
+    content: "📁 'scene.jpg' görseli bu klasöre kaydedilmeli";
+    position: absolute; inset: 0;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px; color: #ffb3d1;
+    background: linear-gradient(135deg,#2a1e3f,#1a1625);
+    text-align: center; padding: 20px;
+  }
+
+  /* Hotspot markers */
+  .hotspot {
+    position: absolute;
+    border-radius: 50%;
+    cursor: pointer;
+    z-index: 10;
+    transform: translate(-50%, -50%);
+    display: flex; align-items: center; justify-content: center;
+  }
+  .hotspot .dot {
+    width: 16px; height: 16px;
+    border-radius: 50%;
+    background: #fff;
+    box-shadow: 0 0 0 2px rgba(255,255,255,0.4),
+                0 2px 12px rgba(0,0,0,0.5);
+    position: relative;
+    z-index: 2;
+  }
+  .hotspot .pulse {
+    position: absolute;
+    width: 16px; height: 16px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.6);
+    animation: pulse 2s ease-out infinite;
+  }
+  @keyframes pulse {
+    0%   { transform: scale(1);   opacity: 0.8; }
+    100% { transform: scale(3.5); opacity: 0; }
+  }
+  .hotspot .hitbox {
+    position: absolute;
+    width: 56px; height: 56px;
+    border-radius: 50%;
+  }
+  .hotspot.visited .dot { background: #ffc9d9; }
+  .hotspot.visited .pulse { animation: none; opacity: 0; }
+
+  /* Top HUD */
+  .hud-top {
+    position: fixed; top: 0; left: 0; right: 0;
+    padding: 14px 16px;
+    padding-top: max(14px, env(safe-area-inset-top));
+    display: flex; justify-content: space-between; align-items: center;
+    background: linear-gradient(180deg, rgba(0,0,0,0.55), rgba(0,0,0,0));
+    z-index: 50;
+    pointer-events: none;
+  }
+  .title {
+    font-size: 13px;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    opacity: 0.85;
+    font-weight: 600;
+  }
+  .counter {
+    font-size: 12px;
+    background: rgba(0,0,0,0.45);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    padding: 6px 12px;
+    border-radius: 999px;
+    border: 1px solid rgba(255,255,255,0.15);
+  }
+
+  /* Scroll hint arrows */
+  .scroll-hint {
+    position: fixed;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 40;
+    font-size: 28px;
+    color: rgba(255,255,255,0.7);
+    background: rgba(0,0,0,0.35);
+    backdrop-filter: blur(6px);
+    width: 40px; height: 40px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    pointer-events: none;
+    transition: opacity 0.3s;
+    animation: bob 1.8s ease-in-out infinite;
+  }
+  .scroll-hint.left  { left: 10px; }
+  .scroll-hint.right { right: 10px; }
+  @keyframes bob {
+    0%,100% { transform: translateY(-50%) translateX(0); }
+    50%     { transform: translateY(-50%) translateX(6px); }
+  }
+  .scroll-hint.left { animation-name: bobLeft; }
+  @keyframes bobLeft {
+    0%,100% { transform: translateY(-50%) translateX(0); }
+    50%     { transform: translateY(-50%) translateX(-6px); }
+  }
+  .scroll-hint.hidden { opacity: 0; }
+
+  /* Dialog box (visual novel style) */
+  .dialog {
+    position: fixed;
+    left: 0; right: 0; bottom: 0;
+    padding: 20px 22px 28px;
+    padding-bottom: max(28px, calc(env(safe-area-inset-bottom) + 20px));
+    background: linear-gradient(180deg,
+      rgba(12,10,20,0.85) 0%,
+      rgba(20,15,35,0.97) 100%);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border-top: 1px solid rgba(255,255,255,0.12);
+    z-index: 100;
+    transform: translateY(110%);
+    transition: transform 0.4s cubic-bezier(0.2, 0.9, 0.3, 1.15);
+    box-shadow: 0 -20px 60px rgba(0,0,0,0.5);
+  }
+  .dialog.open { transform: translateY(0); }
+
+  .dialog-tag {
+    display: inline-block;
+    font-size: 11px;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: #ffb3d1;
+    padding: 4px 10px;
+    border: 1px solid rgba(255,179,209,0.4);
+    border-radius: 4px;
+    margin-bottom: 10px;
+    font-weight: 600;
+  }
+  .dialog-title {
+    font-size: 18px;
+    font-weight: 700;
+    margin-bottom: 10px;
+    color: #fff;
+  }
+  .dialog-text {
+    font-size: 15px;
+    line-height: 1.6;
+    color: rgba(255,255,255,0.88);
+    min-height: 72px;
+  }
+  .dialog-text .cursor {
+    display: inline-block;
+    width: 8px; height: 16px;
+    background: #ffb3d1;
+    margin-left: 2px;
+    vertical-align: middle;
+    animation: blink 1s step-end infinite;
+  }
+  @keyframes blink {
+    0%, 50% { opacity: 1; }
+    50.01%, 100% { opacity: 0; }
+  }
+
+  .dialog-actions {
+    margin-top: 14px;
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+  }
+  .btn {
+    background: rgba(255,255,255,0.08);
+    border: 1px solid rgba(255,255,255,0.2);
+    color: #fff;
+    padding: 10px 18px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.15s;
+    font-family: inherit;
+  }
+  .btn:active { transform: scale(0.96); background: rgba(255,255,255,0.15); }
+  .btn.primary {
+    background: linear-gradient(135deg, #ff7eb9, #ff65a3);
+    border-color: transparent;
+  }
+
+  /* Fade in on load */
+  body { animation: fadeIn 0.6s ease; }
+  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+</style>
+</head>
+<body>
+
+<div class="hud-top">
+  <div class="title">Oda · Bölüm 1</div>
+  <div class="counter" id="counter">0 / 6 keşfedildi</div>
+</div>
+
+<div id="scene">
+  <div id="world">
+    <!-- Hotspots positioned by % of the world width/height.
+         Adjust data-x / data-y if your image crops differently. -->
+
+    <!-- 1. Coffee machine (red espresso machine on counter) -->
+    <div class="hotspot" data-id="coffee"
+         style="left:27%; top:42%;">
+      <div class="hitbox"></div>
+      <div class="pulse"></div>
+      <div class="dot"></div>
+    </div>
+
+    <!-- 2. Photos on fridge -->
+    <div class="hotspot" data-id="fridge"
+         style="left:7%; top:35%;">
+      <div class="hitbox"></div>
+      <div class="pulse"></div>
+      <div class="dot"></div>
+    </div>
+
+    <!-- 3. Record player (on shelf behind couch) -->
+    <div class="hotspot" data-id="record"
+         style="left:78%; top:35%;">
+      <div class="hitbox"></div>
+      <div class="pulse"></div>
+      <div class="dot"></div>
+    </div>
+
+    <!-- 4. Wall poster ("Good Things Take Time") -->
+    <div class="hotspot" data-id="poster"
+         style="left:77%; top:16%;">
+      <div class="hitbox"></div>
+      <div class="pulse"></div>
+      <div class="dot"></div>
+    </div>
+
+    <!-- 5. Lava lamp (bottom left) -->
+    <div class="hotspot" data-id="lavalamp"
+         style="left:5%; top:73%;">
+      <div class="hitbox"></div>
+      <div class="pulse"></div>
+      <div class="dot"></div>
+    </div>
+
+    <!-- 6. Plant on coffee table -->
+    <div class="hotspot" data-id="table"
+         style="left:52%; top:72%;">
+      <div class="hitbox"></div>
+      <div class="pulse"></div>
+      <div class="dot"></div>
+    </div>
+  </div>
+</div>
+
+<div class="scroll-hint left" id="hintLeft">‹</div>
+<div class="scroll-hint right" id="hintRight">›</div>
+
+<div class="dialog" id="dialog">
+  <div class="dialog-tag" id="dTag">İNCELEME</div>
+  <div class="dialog-title" id="dTitle">Başlık</div>
+  <div class="dialog-text" id="dText">Metin burada.</div>
+  <div class="dialog-actions">
+    <button class="btn primary" id="dClose">Devam</button>
+  </div>
+</div>
+
+<script>
+  // --- Narrative content ------------------------------------------------
+  const NARRATIVE = {
+    coffee: {
+      tag: "MUTFAK",
+      title: "Kırmızı Espresso Makinesi",
+      text: "Tezgâhın üstünde, kiracının en sadık dostu duruyor. Bu makine her sabah homurdanarak uyanıyor, ama yine de vazgeçilmez. Yanındaki kupada kurumuş bir kahve halkası var — sahibi bugün de aceleciydi."
+    },
+    fridge: {
+      tag: "HATIRA",
+      title: "Buzdolabındaki Fotoğraflar",
+      text: "Mıknatıslarla tutturulmuş dört fotoğraf, bir kartpostal ve eski bir 'süt almayı unutma' notu. Fotoğraflardan birinde gülümseyen iki kişi var. Diğerlerinde kim var, uzaktan seçilmiyor. Yaklaşmak ister misin?"
+    },
+    record: {
+      tag: "MÜZİK",
+      title: "Plak Çalar",
+      text: "Raf boyunca dizilmiş plakların üstünde duruyor. İğne kaldırılmış, son çalan plak hâlâ tabakta. Plağın etiketi solmuş — ama kapak hâlâ burada, bir yerlerde. Açıp bir daha çalmak ister misin?"
+    },
+    poster: {
+      tag: "DUVAR",
+      title: "\"Good Things Take Time\"",
+      text: "Neon pembe bir kalp posterin yanında parlıyor. Yazı biraz klişe, ama ev sahibi bunu kendine hatırlatmak için asmış olmalı. Sabahın üçünde buraya bakıp derin bir nefes almış birini hayal et."
+    },
+    lavalamp: {
+      tag: "IŞIK",
+      title: "Lav Lambası",
+      text: "Mor sıvının içinde balonlar yavaşça yükselip iniyor. Işık odaya ritm katıyor. Kimse açıp kapatmıyor — sanki hep açıkmış gibi duruyor."
+    },
+    table: {
+      tag: "SEHPA",
+      title: "Sehpa ve Saksı",
+      text: "Sehpanın üstünde yarım kalmış bir kahve, iki kitap ve küçük bir saksı. Saksıdaki bitki son günlerde biraz bükülmüş — ya ışığa doğru uzanıyor ya da birinin ona su vermesini bekliyor."
+    }
+  };
+
+  // --- Elements ---------------------------------------------------------
+  const scene    = document.getElementById('scene');
+  const world    = document.getElementById('world');
+  const dialog   = document.getElementById('dialog');
+  const dTag     = document.getElementById('dTag');
+  const dTitle   = document.getElementById('dTitle');
+  const dText    = document.getElementById('dText');
+  const dClose   = document.getElementById('dClose');
+  const counter  = document.getElementById('counter');
+  const hintL    = document.getElementById('hintLeft');
+  const hintR    = document.getElementById('hintRight');
+
+  const visited = new Set();
+  const total   = Object.keys(NARRATIVE).length;
+
+  // --- Check if image loaded --------------------------------------------
+  (function checkImage() {
+    const img = new Image();
+    img.onerror = () => world.classList.add('no-image');
+    img.src = 'scene.jpg';
+  })();
+
+  // --- Hotspot taps -----------------------------------------------------
+  document.querySelectorAll('.hotspot').forEach(el => {
+    el.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const id = el.dataset.id;
+      openDialog(id);
+      if (!visited.has(id)) {
+        visited.add(id);
+        el.classList.add('visited');
+        updateCounter();
+      }
+    });
+  });
+
+  function updateCounter() {
+    counter.textContent = `${visited.size} / ${total} keşfedildi`;
+  }
+  updateCounter();
+
+  // --- Dialog with typewriter effect ------------------------------------
+  let typeTimer = null;
+  function openDialog(id) {
+    const entry = NARRATIVE[id];
+    if (!entry) return;
+    dTag.textContent   = entry.tag;
+    dTitle.textContent = entry.title;
+
+    // typewriter
+    if (typeTimer) clearInterval(typeTimer);
+    dText.innerHTML = '<span class="cursor"></span>';
+    const full = entry.text;
+    let i = 0;
+    dialog.classList.add('open');
+    typeTimer = setInterval(() => {
+      i++;
+      dText.innerHTML = escapeHtml(full.slice(0, i)) +
+                        (i < full.length ? '<span class="cursor"></span>' : '');
+      if (i >= full.length) {
+        clearInterval(typeTimer);
+        typeTimer = null;
+      }
+    }, 18);
+  }
+
+  function closeDialog() {
+    dialog.classList.remove('open');
+    if (typeTimer) { clearInterval(typeTimer); typeTimer = null; }
+  }
+
+  dClose.addEventListener('click', closeDialog);
+
+  // Tapping the dialog text skips the typewriter to the end
+  dText.addEventListener('click', () => {
+    if (typeTimer) {
+      clearInterval(typeTimer); typeTimer = null;
+      const id = Object.keys(NARRATIVE).find(k => NARRATIVE[k].title === dTitle.textContent);
+      if (id) dText.textContent = NARRATIVE[id].text;
+    }
+  });
+
+  function escapeHtml(s) {
+    return s.replace(/[&<>]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+  }
+
+  // --- Drag to scroll (mouse & touch) -----------------------------------
+  let isDown = false, startX = 0, scrollStart = 0;
+  scene.addEventListener('mousedown', (e) => {
+    isDown = true;
+    startX = e.pageX;
+    scrollStart = scene.scrollLeft;
+  });
+  window.addEventListener('mouseup', () => isDown = false);
+  window.addEventListener('mousemove', (e) => {
+    if (!isDown) return;
+    scene.scrollLeft = scrollStart - (e.pageX - startX);
+  });
+
+  // Scroll hints hide once user starts scrolling
+  let interacted = false;
+  scene.addEventListener('scroll', () => {
+    if (!interacted) {
+      interacted = true;
+      hintL.classList.add('hidden');
+      hintR.classList.add('hidden');
+    }
+    // Recalculate when near edges
+    if (scene.scrollLeft < 20) hintL.classList.add('hidden');
+    if (scene.scrollLeft > scene.scrollWidth - scene.clientWidth - 20) hintR.classList.add('hidden');
+  });
+
+  // Auto-hide hints after 4s anyway
+  setTimeout(() => {
+    hintL.classList.add('hidden');
+    hintR.classList.add('hidden');
+  }, 4000);
+
+  // Start scroll centered-ish
+  window.addEventListener('load', () => {
+    // small nudge to show there's more to explore
+    setTimeout(() => {
+      scene.scrollTo({ left: scene.scrollWidth * 0.08, behavior: 'smooth' });
+    }, 400);
+  });
+</script>
+</body>
+</html>
