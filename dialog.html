@@ -10234,17 +10234,12 @@ function swipeCard(dir) {
 }
 
 function showDate() {
-  // Clear every intro/onboarding flow before opening the date stack —
-  // otherwise the logo screen stays mounted on top and Start looks
-  // un-clickable on subsequent visits.
-  setFlow('');
-  el.body.classList.remove('flow-map');
-  el.body.classList.add('flow-date');
+  // Atomic swap via setFlow — no transient "no-flow" frame so the
+  // dialog box can't flash its default "Start" HTML on mobile.
+  setFlow('date');
 }
 function showMap() {
-  setFlow('');
-  el.body.classList.remove('flow-date');
-  el.body.classList.add('flow-map');
+  setFlow('map');
   flowEl.mapScroll.scrollTo({ left: 0, behavior: 'auto' });
 }
 
@@ -10970,14 +10965,24 @@ function saveUserProfile(p) {
   try { localStorage.setItem(PROFILE_KEY, JSON.stringify(p)); } catch (e) {}
 }
 
+// All flow class names — anything in this list is a "screen state" the
+// body can be in. Listed here so setFlow() can atomically swap one for
+// another without ever leaving the body in a bare state (which would
+// flash the dialog box's default "Start / Tap anywhere to begin" HTML
+// for one paint frame on mobile during fast taps).
+const _FLOW_CLASSES = [
+  'flow-intro','flow-form','flow-loading','flow-survey',
+  'flow-gallery','flow-addself','flow-final',
+  'flow-date','flow-map'
+];
+
 function setFlow(name) {
-  // name in: 'intro','form','loading','survey','gallery','addself','final','',
-  // or falls through to date/map/game (handled by their own classes).
-  el.body.classList.remove(
-    'flow-intro','flow-form','flow-loading','flow-survey',
-    'flow-gallery','flow-addself','flow-final'
-  );
-  if (name) el.body.classList.add('flow-' + name);
+  // ATOMIC swap: remove every flow class, then immediately add the new
+  // one, in the same synchronous JS turn. Browsers won't paint between
+  // these two classList calls.
+  const cl = el.body.classList;
+  cl.remove.apply(cl, _FLOW_CLASSES);
+  if (name) cl.add('flow-' + name);
   // Ensure video plays (Safari sometimes pauses when display toggles)
   const v = document.getElementById('introVideo');
   if (v) { v.play().catch(()=>{}); }
@@ -11451,8 +11456,7 @@ function renderFinalHero() {
 
 // Final → jump to the date picker
 document.getElementById('finalContinue').addEventListener('click', () => {
-  setFlow('');
-  showDate();
+  showDate();   // setFlow('date') is atomic — no intermediate empty frame
 });
 
 // Final → "Edit your character" opens the full cast gallery (me + pet + voices)
@@ -11708,7 +11712,7 @@ document.getElementById('galleryContinue').addEventListener('click', () => {
     // Came in from the final screen to tweak the cast — just go back.
     showFinalScreen();
   } else {
-    setFlow('');
+    // showSurveyQuestion() already calls setFlow('survey') atomically.
     surveyIdx = 0;
     showSurveyQuestion();
   }
@@ -12086,6 +12090,12 @@ function preloadPack(packId) {
 el.body.dataset.pack = activePack;
 preloadAssets(PRELOAD_ASSETS.common);
 preloadPack(activePack);
+// Defense in depth: blank the dialog box's default HTML ("START / Tap
+// anywhere to begin") immediately so a brief no-flow frame during fast
+// taps on mobile can never flash the default placeholder.
+if (el.speakerLabel)  el.speakerLabel.textContent  = '';
+if (el.dialogText)    el.dialogText.textContent    = '';
+if (el.continueHint)  el.continueHint.style.display = 'none';
 el.scriptBox.value = SAMPLE;
 loadScript(SAMPLE);
 
