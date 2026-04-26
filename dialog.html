@@ -9483,19 +9483,17 @@ function startVideo(src) {
     }, 350);
   };
 
-  // Freeze on the last frame, show SUCCESS + subtitle, then advance after ~2.5s
+  // Show SUCCESS + subtitle on top of whatever frame is currently
+  // showing, then advance after ~2.5s. We DO NOT seek the video to its
+  // end — on slow connections that would skip the coin animation
+  // mid-flight. Instead we just pause where we are; on natural ended
+  // we're already on the last frame, on a tap-skip we freeze mid-flip
+  // (acceptable — the SUCCESS layer is the focal point at that moment).
   const showSuccessThenAdvance = () => {
     if (advanced) return;
-    // Pause (most browsers keep the current / last frame on screen). If we
-    // were mid-video from a tap, nudge to near-end so the freeze feels right.
-    try {
-      if (video.duration && isFinite(video.duration) &&
-          video.currentTime < video.duration - 0.1) {
-        video.currentTime = Math.max(0, video.duration - 0.05);
-      }
-      video.pause();
-    } catch (e) {}
+    try { video.pause(); } catch (e) {}
     overlay.classList.add('success');
+    if (successTimer) clearTimeout(successTimer);
     successTimer = setTimeout(advance, 2500);
   };
 
@@ -9535,12 +9533,15 @@ function startVideo(src) {
     if (overlay.classList.contains('success')) { advance(); }
     else { showSuccessThenAdvance(); }
   };
-  // Soft safety cap — if the video is still loading / playing after 12s
-  // (slow mobile connection), force the SUCCESS state instead of skip-
-  // advancing past it. Then the regular 2.5s success timer hands off to
-  // advance(). Hard cap at 18s for the absolute pathological case.
-  setTimeout(showSuccessThenAdvance, 12000);
-  setTimeout(advance, 18000);
+  // Single hard safety cap — only fire if onended NEVER reaches us
+  // (broken file, paused tab, etc). Long enough that even a slow mobile
+  // network has time to load the ~2-second clip + let it play out
+  // naturally. Routes through showSuccessThenAdvance so the player at
+  // least sees the SUCCESS overlay before the scene moves on.
+  setTimeout(() => {
+    if (advanced) return;
+    showSuccessThenAdvance();
+  }, 25000);
 }
 
 // ============================================================
@@ -10281,7 +10282,6 @@ async function startDateHere() {
   const v = VENUES[currentVenue];
   if (!v || !v.startable) return;
   closePOI();
-  el.body.classList.remove('flow-date', 'flow-map');
   if (exploreTimer) { clearInterval(exploreTimer); exploreTimer = null; }
   el.body.classList.remove('exploring','inner','choosing','inObjectImage','inObjectChar');
   el.choicePanel.classList.remove('open');
@@ -10290,6 +10290,21 @@ async function startDateHere() {
   clearCutscene();
   clearNarrativeScene();
   idx = 0;
+
+  const is1984 = activePack === '1984' && v.pack === '1984';
+
+  // CRITICAL ordering — never let the body sit without a covering class
+  // across the await below, otherwise the browser paints the bare
+  // dialog stage for one frame ("Start" flash on slow mobile).
+  //   • 1984: add `in-1984-flow` (hides the stage) BEFORE we drop
+  //           flow-date / flow-map.
+  //   • London: keep flow-date / flow-map ON during the await, drop
+  //           them only just before renderLine() — same sync block,
+  //           no paint in between.
+  if (is1984) {
+    el.body.classList.add('in-1984-flow');
+    el.body.classList.remove('flow-date', 'flow-map');
+  }
 
   // Defensive: always (re)load the active pack's script before we start a
   // date. The dropdown handler also calls this, but if the user changed
@@ -10303,23 +10318,18 @@ async function startDateHere() {
   } catch (e) {
     console.warn('startDateHere: loadActiveScript failed', e && e.message);
   }
-  // loadActiveScript itself calls renderLine on success, but that runs
-  // before casting/intro for 1984. Reset idx here just in case.
   idx = 0;
 
-  // 1984 episodes go through casting → cinematic intro → script.
-  // Other packs (London) jump straight into the script.
-  // Defensive: BOTH the active pack AND the venue's pack must be '1984'
-  // before we open casting — otherwise a misclick on a hidden hotspot
-  // (or any future cross-pack edge case) wouldn't accidentally trigger
-  // the 1984 intro on a London playthrough.
-  if (activePack === '1984' && v.pack === '1984') {
-    // Blank out the dialog stage for the entire casting + intro flow
-    // so the engine's first line can never flash through during modal
-    // hand-offs. Removed in finishCinematicIntro().
-    el.body.classList.add('in-1984-flow');
+  if (is1984) {
+    // Casting modal + cinematic intro overlay both fully cover the
+    // dialog stage — `in-1984-flow` keeps it blanked underneath until
+    // finishCinematicIntro() removes the class.
     openCasting();
   } else {
+    // London: drop flow-date / flow-map and render in the SAME sync
+    // tick. Browser sees the new dialog content + the now-revealed
+    // stage in a single paint — no bare-state flash.
+    el.body.classList.remove('flow-date', 'flow-map');
     renderLine();
   }
 }
