@@ -10688,7 +10688,13 @@ document.addEventListener('DOMContentLoaded', () => {
   const fpC = document.getElementById('fpCancel');
   if (fpC) fpC.addEventListener('click', closeFriendPicker);
   const ciOverlay = document.getElementById('cinematicIntro');
-  if (ciOverlay) ciOverlay.addEventListener('click', finishCinematicIntro);
+  // Tap-to-skip is only honoured once the "Tap to skip" hint is
+  // actually on screen (i.e. starting from the cast cards). Without
+  // this guard a user tapping the disclaimer / production credits by
+  // accident would silently jump straight into the episode.
+  if (ciOverlay) ciOverlay.addEventListener('click', () => {
+    if (ciOverlay.classList.contains('skip-visible')) finishCinematicIntro();
+  });
 });
 
 // ----- Gesture + tap-to-flip on the top card --------------------
