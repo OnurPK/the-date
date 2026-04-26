@@ -244,11 +244,12 @@
   </div>
 </div>
 
+<!-- Action buttons removed: ↺ Restart and ⏮ Replay Intro could send a
+     restart / showIntro signal that briefly flashed the "Start" screen
+     during gameplay. The phone-frame stays clean; the in-game restart
+     path is reachable via the in-game UI. -->
 <div class="actions">
   <a class="act-btn primary" id="btnEditor" href="editor.html" target="_blank" rel="noopener">✎ Open Editor</a>
-  <button class="act-btn" id="btnRestart">↺ Restart</button>
-  <button class="act-btn" id="btnResetIntro" title="Replay the onboarding / character creation">⏮ Replay Intro</button>
-  <button class="act-btn" id="btnSkipEnd" title="Jump straight to the music finale">⏭ Skip to End</button>
 </div>
 
 <script>
@@ -256,7 +257,6 @@
   const frame      = document.getElementById('gameFrame');
   const sizeLabel  = document.getElementById('sizeLabel');
   const pills      = document.querySelectorAll('.size-pill');
-  const btnRestart = document.getElementById('btnRestart');
   // "Open Editor" is a real <a> link — no JS handler needed.
 
   let phoneW = 390;
@@ -302,16 +302,8 @@
     });
   });
 
-  // External controls → iframe via postMessage
-  function send(type) {
-    if (!frame.contentWindow) return;
-    frame.contentWindow.postMessage({ type }, '*');
-  }
-  btnRestart.addEventListener('click', () => send('restart'));
-  document.getElementById('btnResetIntro').addEventListener('click', () => {
-    frame.src = 'dialog.html?reset=1&t=' + Date.now();
-  });
-  document.getElementById('btnSkipEnd').addEventListener('click', () => send('jumpEnd'));
+  // External controls removed — they could trigger showIntro / iframe
+  // reload signals that flashed "Start" on slow mobile.
 
   window.addEventListener('resize', fit);
   applySize(390, 844, 'iPhone 14');

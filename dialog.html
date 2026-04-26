@@ -3331,6 +3331,25 @@
   body.in-1984-flow #narrativeScene,
   body.in-1984-flow #choicePanel { visibility: hidden !important; }
 
+  /* Defensive: once the player is in gameplay (dialog stage shown), the
+     intro screen, onboarding screens, and the dark intro video can NEVER
+     paint, no matter what stray code path or mobile browser quirk tries
+     to flip a flow-* class on. Removed when the player is intentionally
+     sent back to onboarding via setFlow(). */
+  body.in-game-locked #introScreen,
+  body.in-game-locked #introVideo,
+  body.in-game-locked .intro-overlay,
+  body.in-game-locked #loadingScreen,
+  body.in-game-locked #surveyScreen,
+  body.in-game-locked #addSelfScreen,
+  body.in-game-locked #finalScreen,
+  body.in-game-locked #galleryScreen {
+    display: none !important;
+    visibility: hidden !important;
+    pointer-events: none !important;
+    opacity: 0 !important;
+  }
+
   /* While the EndScene video overlay is fading in (0.6s opacity tween)
      the dialog stage underneath used to bleed through — last line of
      dialogue + leftover cutscene image were visible for half a second
@@ -10320,6 +10339,12 @@ async function startDateHere() {
   clearCutscene();
   clearNarrativeScene();
   idx = 0;
+  // Defensive lock: from this point on, intro / onboarding / loading
+  // overlays are CSS-blocked from ever painting. If a stray code path
+  // (mobile tap quirk, browser-back, etc.) flips a flow-* class on,
+  // the user no longer sees a "Start" flash. Cleared when setFlow()
+  // explicitly takes us back to an onboarding screen.
+  el.body.classList.add('in-game-locked');
 
   const is1984 = activePack === '1984' && v.pack === '1984';
 
@@ -11044,6 +11069,9 @@ function setFlow(name) {
   const cl = el.body.classList;
   cl.remove.apply(cl, _FLOW_CLASSES);
   if (name) cl.add('flow-' + name);
+  // Whenever we explicitly re-enter an onboarding screen, drop the
+  // in-game lockdown so the intro/form/loading layers can paint again.
+  cl.remove('in-game-locked');
   // Ensure video plays (Safari sometimes pauses when display toggles)
   const v = document.getElementById('introVideo');
   if (v) { v.play().catch(()=>{}); }
@@ -11926,13 +11954,15 @@ window.addEventListener('message', (e) => {
   const data = e && e.data;
   if (!data || !data.type) return;
   if (data.type === 'restart') {
-    // Full restart — clear all in-game state and go back to the intro logo.
-    // The user's saved profile is preserved (use "Replay Intro" to wipe it).
+    // Restart — clear in-game state and return to the date picker
+    // (NOT the intro/start logo). Going back to showIntro would briefly
+    // flash the Start button on whatever screen the player was on,
+    // which has been the source of the "Start" flash bug.
     if (exploreTimer) { clearInterval(exploreTimer); exploreTimer = null; }
     el.body.classList.remove(
       'exploring','inner','choosing','inObjectImage','inObjectChar',
-      'flow-date','flow-map','flow-gallery','flow-addself','flow-final',
-      'narrativeScene','scene-inner','narrating-over-scene','cutscene-active','pickingAction'
+      'narrativeScene','scene-inner','narrating-over-scene','cutscene-active','pickingAction',
+      'in-1984-flow','in-endscene','narrative-active'
     );
     el.choicePanel.classList.remove('open');
     closePOI();
@@ -11943,7 +11973,7 @@ window.addEventListener('message', (e) => {
     idx = 0;
     currentCardIndex = 0;
     renderStack();
-    showIntro();
+    showDate();
   } else if (data.type === 'loadScript') {
     // External editor pushed a new script — load it and play from the
     // top, bypassing the date/map intro so iteration is fast.
