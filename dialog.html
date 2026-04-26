@@ -9535,8 +9535,12 @@ function startVideo(src) {
     if (overlay.classList.contains('success')) { advance(); }
     else { showSuccessThenAdvance(); }
   };
-  // Hard safety cap — advance after 10s no matter what
-  setTimeout(advance, 10000);
+  // Soft safety cap — if the video is still loading / playing after 12s
+  // (slow mobile connection), force the SUCCESS state instead of skip-
+  // advancing past it. Then the regular 2.5s success timer hands off to
+  // advance(). Hard cap at 18s for the absolute pathological case.
+  setTimeout(showSuccessThenAdvance, 12000);
+  setTimeout(advance, 18000);
 }
 
 // ============================================================
