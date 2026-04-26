@@ -3331,6 +3331,21 @@
   body.in-1984-flow #narrativeScene,
   body.in-1984-flow #choicePanel { visibility: hidden !important; }
 
+  /* While the EndScene video overlay is fading in (0.6s opacity tween)
+     the dialog stage underneath used to bleed through — last line of
+     dialogue + leftover cutscene image were visible for half a second
+     and looked like a flash. Hide them the moment the overlay opens
+     so the hand-off reads as a clean cut. Removed in closeEndScene(). */
+  body.in-endscene #backdrop,
+  body.in-endscene .char,
+  body.in-endscene #dialogBox,
+  body.in-endscene #cutsceneLayer,
+  body.in-endscene #scoreBadge,
+  body.in-endscene #voicePreview,
+  body.in-endscene #narrativeScene,
+  body.in-endscene #choicePanel,
+  body.in-endscene #narrativeBgFixed { visibility: hidden !important; }
+
   .map-hotspot {
     position: absolute;
     transform: translate(-50%, -50%);
@@ -8635,6 +8650,10 @@ function startEndScene() {
 
   scene.classList.remove('fade-out', 'dashboard', 'awaiting-continue');
   scene.setAttribute('aria-hidden', 'false');
+  // Hide the dialog stage UNDER the overlay before the overlay starts
+  // its 0.6s fade-in. Without this the last dialogue line + leftover
+  // cutscene image bleed through during the fade and read as a flash.
+  el.body.classList.add('in-endscene');
   scene.classList.add('open');
 
   // Reset dialog strip + character portrait
@@ -8870,6 +8889,11 @@ function closeEndScene() {
   }
   idx++;
   renderLine();
+  // The next line is usually (Music) — its overlay opens immediately
+  // and covers the stage. Drop in-endscene AFTER renderLine so the
+  // music scene's first paint is the first thing the user sees on the
+  // stage layer (no flash of empty dialog box in between).
+  el.body.classList.remove('in-endscene');
 }
 
 // ============================================================
