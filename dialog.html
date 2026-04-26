@@ -8143,8 +8143,13 @@ function clearCutscene() {
   layer.classList.remove('active');
   el.body.classList.remove('cutscene-active');
   // Give the fade-out animation a beat before dropping the image.
+  // Replace with the blank 1×1 PNG (defined further down) so iOS
+  // Safari actually drops the previous decoded raster from RAM.
   setTimeout(() => {
-    if (!activeCutscene) layer.style.backgroundImage = '';
+    if (!activeCutscene) {
+      layer.style.backgroundImage =
+        (typeof _BLANK_PIXEL === 'string' ? _BLANK_PIXEL : '');
+    }
   }, 900);
 }
 
@@ -10713,11 +10718,38 @@ function showNextCiCard() {
   ciTimer = setTimeout(showNextCiCard, scene.dur);
 }
 
+// Tiny transparent 1×1 PNG used to replace large background-images so
+// the browser can drop the previous decoded raster from RAM. (Setting
+// background-image to '' alone often keeps the old buffer cached on
+// iOS Safari — assigning a new URL forces a swap, and a 1×1 PNG is
+// effectively free.)
+const _BLANK_PIXEL =
+  'url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=")';
+
 function finishCinematicIntro() {
   if (ciTimer) { clearTimeout(ciTimer); ciTimer = null; }
   const overlay = document.getElementById('cinematicIntro');
   overlay.classList.remove('open');
   overlay.setAttribute('aria-hidden', 'true');
+
+  // Free the cinematic intro's image RAM. Three full-bleed JPGs
+  // (intro01/02/03) + four cast character bodies sat in the decoded
+  // raster cache for the rest of the session — on iOS Safari that's
+  // ~50–80 MB of pressure that contributed to the silent reload kill.
+  // Replacing the background-image with a 1×1 PNG drops the old buffer.
+  const bd = document.getElementById('ciBackdrop');
+  if (bd) {
+    bd.classList.remove('show');
+    bd.style.backgroundImage = _BLANK_PIXEL;
+  }
+  ciCurrentBg = null;
+  document.querySelectorAll('#cinematicIntro .ci-cast-figure').forEach(n => {
+    n.style.backgroundImage = _BLANK_PIXEL;
+  });
+  document.querySelectorAll('#cinematicIntro .ci-cast-avatar').forEach(n => {
+    n.style.backgroundImage = _BLANK_PIXEL;
+  });
+
   // The intro is fading out; un-blank the stage so the first line +
   // cutscene actually appear underneath as the overlay disappears.
   el.body.classList.remove('in-1984-flow');
