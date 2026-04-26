@@ -3,6 +3,12 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+<!-- Discourage stale-HTML caches so a Railway redeploy reaches the
+     player on next visit. The asset URLs themselves still get HTTP
+     caching (good — videos / images stay in cache). -->
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+<meta http-equiv="Pragma" content="no-cache" />
+<meta http-equiv="Expires" content="0" />
 <title>The Date</title>
 
 <!-- PWA / iOS web-app metadata -->
@@ -6340,7 +6346,11 @@
      (state persisted in localStorage). Skipped when a profile
      already exists.
      ========================================================= -->
-<video id="introVideo" autoplay loop muted playsinline preload="auto">
+<!-- preload=none on the welcome ambient video — Safari only buffers
+     it when it actually becomes visible (flow-intro/form/loading/etc.
+     classes set on body). Was preload=auto, which kept ~5MB in the
+     video buffer for the entire 1984 game session. -->
+<video id="introVideo" autoplay loop muted playsinline preload="none">
   <source src="assets/intro/loop.mov" type="video/mp4">
   <source src="assets/intro/loop.mov" type="video/quicktime">
 </video>
@@ -6883,7 +6893,11 @@
 <!-- End scene: 15s cinematic video (endscene.mp4) with timed
      narrative + inner-voice strip, then a recap dashboard. -->
 <div id="endScene" aria-hidden="true">
-  <video id="endVideo" src="worlds/london/locations/herplace/cutscenes/endscene.mp4" muted playsinline preload="auto"></video>
+  <!-- preload=none + no src on boot — startEndScene() sets the right
+       per-pack src lazily so iOS Safari doesn't buffer ~7MB of video
+       in RAM during 1984 gameplay (was contributing to the silent
+       memory-pressure reload). -->
+  <video id="endVideo" muted playsinline preload="none"></video>
   <div id="endFadeOut"></div>
 
   <!-- Explore-style subtitle strip at the bottom (character portrait on the
@@ -6967,7 +6981,9 @@
      lights-up transition + karaoke + share. Assets: guitar.mp4,
      music.mp3, albumart.png. -->
 <div id="musicScene" aria-hidden="true">
-  <video id="musicVideo" src="worlds/london/locations/herplace/music/guitar.mp4" muted loop playsinline preload="auto"></video>
+  <!-- Same lazy-load treatment for the music scene's video. The
+       startMusicScene() call sets the per-pack src right before play. -->
+  <video id="musicVideo" muted loop playsinline preload="none"></video>
 
   <!-- Loader (overlay while the song is "baking") -->
   <div id="musicLoader">
@@ -10344,6 +10360,13 @@ async function startDateHere() {
   const v = VENUES[currentVenue];
   if (!v || !v.startable) return;
   closePOI();
+  // Free the welcome ambient video's buffer — it's hidden during
+  // gameplay but iOS Safari keeps the decoded frames alive until we
+  // explicitly drop the source. Big chunk of memory back to the OS.
+  const _iv = document.getElementById('introVideo');
+  if (_iv) {
+    try { _iv.pause(); _iv.removeAttribute('src'); _iv.load(); } catch (e) {}
+  }
   if (exploreTimer) { clearInterval(exploreTimer); exploreTimer = null; }
   el.body.classList.remove('exploring','inner','choosing','inObjectImage','inObjectChar');
   el.choicePanel.classList.remove('open');
