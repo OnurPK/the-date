@@ -12242,10 +12242,25 @@ loadActiveScript();
 // Build the 4-card stack used by the date picker
 buildStack();
 renderStack();
-// Always open on the logo screen. First-run users tap Start → full
-// onboarding flow. Returning users tap Start → straight to the date
-// picker (handled by the introStart click handler above).
-showIntro();
+// First-run users see the welcome / Start screen. RETURNING users
+// (have a saved profile, or marked themselves "in-game" before) skip
+// straight to the date picker so an accidental iOS Safari reload mid-
+// gameplay no longer dumps them on the Start screen — they self-
+// recover into the picker instead.
+const _hasPlayed = !!(introProfile && introProfile.name) ||
+                   (function () {
+                     try { return sessionStorage.getItem('thedate.in-session') === '1'; }
+                     catch (e) { return false; }
+                   })();
+if (_hasPlayed) {
+  showDate();
+} else {
+  showIntro();
+}
+// Mark the session — once the player has navigated past the welcome,
+// any later reload (memory pressure, network hiccup, accidental
+// gesture) lands on the date picker instead of the Start logo.
+try { sessionStorage.setItem('thedate.in-session', '1'); } catch (e) {}
 // Pre-render the (hidden) main dialog so when the flow completes,
 // everything is already set up behind the scenes.
 renderLine();
