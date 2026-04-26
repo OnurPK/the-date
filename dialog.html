@@ -12060,107 +12060,41 @@ window.addEventListener('message', (e) => {
 // pack-selector dropdown changes. Cheap: just `new Image().src = url`
 // for each entry, the browser handles caching from there.
 // ============================================================
+// IMPORTANT — keep this list MINIMAL.
+//
+// Earlier we eagerly preloaded ~47 1984 assets (3 huge cinematic intro
+// images, 11 cutscenes, 5 objects, 4 character bodies, 8 voice
+// portraits, 5 profile photos, 7 covers, the dialog backdrop and
+// album art). On mobile Safari that decoded into 80–150 MB of image
+// RAM in addition to the music + endscene video buffers, the casting
+// pravatar avatars, the cinematic intro images, and the inline
+// scripts. iOS Safari's per-tab budget is roughly 200–300 MB; once
+// crossed it silently kills the page and reloads it on next tap —
+// which is exactly the "Start" flash the user kept reporting in 1984
+// (London never crossed the budget because it has fewer assets).
+//
+// Strategy now: only preload what the player will see in the FIRST
+// few seconds of each pack — the date-picker covers + map + Iris's
+// profile photo. Cutscenes / cinematic intro / character silhouettes
+// / voice portraits / objects / album art now load lazily on demand
+// via the engine's normal CSS background-image / video.src wiring.
+// The browser still benefits from HTTP caching on subsequent visits.
 const PRELOAD_ASSETS = {
-  // Loaded once at boot regardless of pack — small shared assets.
+  // Always preloaded at boot — tiny shared UI bits.
   common: [
-    'assets/shared/dog.png',
     'assets/ui/PK.png',
     'assets/ui/logo.png',
   ],
   london: [
     'worlds/london/map.jpg',
-    // POI covers
-    'worlds/london/locations/bigben/cover.jpg',
-    'worlds/london/locations/londoneye/cover.jpg',
-    'worlds/london/locations/thepub/cover.jpg',
-    'worlds/london/locations/coffeeshop/cover.jpg',
     'worlds/london/locations/herplace/cover.jpg',
-    'worlds/london/locations/myplace/cover.jpg',
-    'worlds/london/locations/boattrip/cover.jpg',
-    // Cutscenes (script references)
-    'worlds/london/locations/herplace/cutscenes/cutscene01.jpg',
-    'worlds/london/locations/herplace/cutscenes/cutscene02.jpg',
-    'worlds/london/locations/herplace/cutscenes/cutscene03.jpg',
-    'worlds/london/locations/herplace/cutscenes/narrativescene01.jpg',
-    'worlds/london/locations/herplace/cutscenes/hugscene.jpg',
-    // Explore + objects + music album
-    'worlds/london/locations/herplace/explore/backdrop.jpeg',
-    'worlds/london/locations/herplace/objects/fridge.jpg',
-    'worlds/london/locations/herplace/objects/vinyl.jpg',
-    'worlds/london/locations/herplace/music/albumart.jpg',
-    // Character body + voices for London
-    'characters/you/appearances/london.png',
-    'characters/iris/appearances/london.png',
-    'characters/you/voices/london/eros/portrait.png',
-    'characters/you/voices/london/valium/portrait.png',
-    'characters/you/voices/london/romeo/portrait.png',
-    'characters/you/voices/london/professore/portrait.png',
-    'characters/iris/voices/london/scheggia/portrait.png',
-    'characters/iris/voices/london/giulietta/portrait.png',
-    'characters/iris/voices/london/trilli/portrait.png',
-    'characters/iris/voices/london/alfa/portrait.png',
-    // Date-picker profile photos
     'characters/iris/profile/london.jpg',
-    'characters/emma/profile/london.jpg',
-    'characters/zoe/profile/london.jpg',
-    'characters/maya/profile/london.jpg',
-    'characters/lila/profile/london.jpg',
-    'characters/sienna/profile/london.jpg',
   ],
   '1984': [
-    'assets/ui/1984/background.jpg',
     'worlds/1984/map.jpg',
-    // POI covers
     'worlds/1984/locations/safehouse/cover.jpg',
-    'worlds/1984/locations/golden-country/cover.jpg',
-    'worlds/1984/locations/winstons-flat/cover.jpg',
-    'worlds/1984/locations/ministry-canteen/cover.jpg',
-    'worlds/1984/locations/victory-square/cover.jpg',
-    'worlds/1984/locations/prole-market/cover.jpg',
-    'worlds/1984/locations/chestnut-cafe/cover.jpg',
-    // Cinematic intro cards
-    'worlds/1984/locations/safehouse/cutscenes/intro01.jpg',
-    'worlds/1984/locations/safehouse/cutscenes/intro02.jpg',
-    'worlds/1984/locations/safehouse/cutscenes/intro03.jpg',
-    // Story cutscenes
-    'worlds/1984/locations/safehouse/cutscenes/prolequarter01.jpg',
-    'worlds/1984/locations/safehouse/cutscenes/vendor-distant.jpg',
-    'worlds/1984/locations/safehouse/cutscenes/vendor-closeup.jpg',
-    'worlds/1984/locations/safehouse/cutscenes/streetvendor.jpg',
-    'worlds/1984/locations/safehouse/cutscenes/knock.jpg',
-    'worlds/1984/locations/safehouse/cutscenes/charrington-handoff.jpg',
-    'worlds/1984/locations/safehouse/cutscenes/stairs.jpg',
-    'worlds/1984/locations/safehouse/cutscenes/julia.jpg',
-    'worlds/1984/locations/safehouse/cutscenes/coffee-share.jpg',
-    'worlds/1984/locations/safehouse/cutscenes/room-above.jpg',
-    'worlds/1984/locations/safehouse/cutscenes/embrace.jpg',
-    // Explore + objects + music album
-    'worlds/1984/locations/safehouse/explore/backdrop.jpg',
-    'worlds/1984/locations/safehouse/objects/paperweight.jpg',
-    'worlds/1984/locations/safehouse/objects/gramophone.jpg',
-    'worlds/1984/locations/safehouse/objects/engraving.jpg',
-    'worlds/1984/locations/safehouse/objects/diary.jpg',
-    'worlds/1984/locations/safehouse/objects/photograph.jpg',
-    'worlds/1984/locations/safehouse/music/albumart.jpg',
-    // Character body + voices for 1984
-    'characters/you/appearances/1984.png',
-    'characters/iris/appearances/1984.png',
-    'characters/liam/appearances/1984.png',
-    'characters/matt/appearances/1984.png',
-    'characters/you/voices/1984/the-rebel/portrait.png',
-    'characters/you/voices/1984/the-loyalist/portrait.png',
-    'characters/you/voices/1984/the-fear/portrait.png',
-    'characters/you/voices/1984/the-lover/portrait.png',
-    'characters/iris/voices/1984/the-rebel-body/portrait.png',
-    'characters/iris/voices/1984/the-practical-survivor/portrait.png',
-    'characters/iris/voices/1984/the-mask/portrait.png',
-    'characters/iris/voices/1984/the-intimate-self/portrait.png',
-    // Date-picker profile photos
     'characters/iris/profile/1984.jpg',
-    'characters/emma/profile/1984.jpg',
-    'characters/zoe/profile/1984.jpg',
-    'characters/maya/profile/1984.jpg',
-    'characters/sienna/profile/1984.jpg',
+    'assets/ui/1984/background.jpg',
   ],
 };
 
@@ -12170,9 +12104,10 @@ function preloadAssets(list) {
   for (const url of list) {
     if (_preloadedSet.has(url)) continue;
     _preloadedSet.add(url);
-    // Image() works for both .png and .jpg. The browser caches the
-    // response and uses it the next time the URL appears in any
-    // background-image, src, or fetch.
+    // Local Image() reference — drops out of scope at function end so
+    // the JS engine can GC the Image once the HTTP cache is warm. We
+    // never hold these in a long-lived array (avoiding the memory
+    // pressure that was killing iOS Safari mid-1984).
     const im = new Image();
     im.decoding = 'async';
     im.loading  = 'eager';
