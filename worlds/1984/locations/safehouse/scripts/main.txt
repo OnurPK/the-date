@@ -1,0 +1,173 @@
+Narrative: Oceania, evening. The bells strike thirteen. You slip into the prole quarter with your collar up. (prolequarter01.jpg)
+Narrative: Up ahead through the fog, a single warm halo — a stall, a lone vendor, his hands moving over the goods. (vendor-distant.jpg)
+The-Fear: Don't slow down. Walk like a man with somewhere to be.
+The-Lover: But she'll be in that room in an hour. You can't go empty-handed.
+Narrative: You reach the table. The old man looks up; his eyes know more than his face shows. (vendor-closeup.jpg)
+Streetseller: Looking for something for someone, comrade?
+Boy: Maybe.
+Streetseller: Take your time. Some of these were people's lives once.
+The-Rebel: Look properly. Pre-Revolution things. The kind that prove there was a before.
+The-Loyalist: One transaction. No conversation. Move on.
+
+(Choice:3)
+The-Rebel: The glass paperweight. A piece of the old world, kept on purpose.
+The-Lover: The dried flowers. They weren't grown for the Party.
+The-Loyalist: The brass coin. Plain, heavy, traceable to nothing.
+
+Narrative: Your hand finds the GLASS PAPERWEIGHT — coral frozen inside, as if a piece of an unknown sea had agreed to wait. (streetvendor.jpg)
+Streetseller: Good eye. Eight cents. And you didn't get it from me.
+Boy: I never saw you.
+Streetseller: Small mercy. Now go.
+The-Fear: Pocket it. Don't look at his face again.
+
+Narrative: Three streets later, you reach the junk shop. The door is shut, the brass knob worn smooth by other hands. You raise your knuckles. (knock.jpg)
+Narrative: Three short raps. The latch turns. Mr. Charrington stands inside, key in hand. (charrington-handoff.jpg)
+Charrington: Upstairs is yours, sir. Until midnight.
+Boy: Thank you.
+Charrington: Don't thank me. Don't remember me.
+The-Fear: Why is he leaving? Why now?
+The-Loyalist: Because he is the kind that always leaves. That's how they keep their license.
+Narrative: Charrington pulls his coat closer and disappears into the alley behind the shop.
+
+Narrative: Seventeen narrow steps. Each creak louder than the last. The parcel from the vendor pressed against your ribs. (stairs.jpg)
+The-Lover: She'll be there. She'll be there. She'll be there.
+
+Narrative: At the top, the door eases open from the inside. She's already there — coat off, hair down, the lamp behind her warming the edges of her face. (julia.jpg)
+Girl: Hey. You made it.
+Boy: I came as fast as I could.
+Girl: Patrol on Victory Square again?
+Boy: Always.
+Narrative: She has unwrapped a small feast on the table — real coffee, sugar, chocolate in silver foil. (coffee-share.jpg)
+Girl: Sit. Let me make it properly.
+The-Lover: Watch her work. Don't speak yet. Just watch.
+The-Practical-Survivor: He's tired. Three minutes and the shoulders drop.
+Girl: I need a minute with the kettle. Make yourself at home — there isn't much, but it's all here.
+The-Rebel: Look around. Every object in this room is a small crime against the Party.
+The-Fear: Look around. Every object in this room is something they could find.
+(Explore:30)
+Girl: There. As properly as Oceania allows.
+
+(Scene:room-above.jpg)
+The-Intimate-Self: He's here. He's really here.
+The-Mask: Keep your face plain. The door doesn't lock.
+Girl: So — tell me. What have you actually been writing?
+
+(Choice:3)
+The-Rebel: Tell her about the diary under the floorboard.
+The-Lover: Keep it small. A poem. A paragraph.
+The-Loyalist: Deflect. Ask about her Ministry rota.
+
+Boy: I've been writing about before.
+The-Mask: Don't react too fast. Let him say it again.
+Girl: Before what? (+8)
+Boy: Before the posters. Before the hate. When my mother was here.
+Girl: (quietly) I never really knew mine. (+5)
+The-Intimate-Self: He says the word "mother." Like it's a song.
+
+Narrative: You set the parcel on the table. You unwrap it. The paperweight catches the lamp like a small heart.
+Girl: What is this?
+Boy: A piece of something nobody made today.
+Girl: (taking it carefully) ... where did you find it?
+Boy: A man without a name on a street that won't be there next month.
+The-Rebel-Body: It's warmer than glass should be. Or her hands are.
+The-Lover: Tell her. Before you can stop yourself.
+Boy: It's for you.
+Girl: Then it's mine. (+6)
+The-Intimate-Self: Don't let go of it. Ever.
+
+(Choice:2)
+The-Lover: Take her hand. Three slow heartbeats.
+The-Practical-Survivor: Don't overplay it. A nod is enough.
+
+Boy: Your hand is warmer than I expected.
+Girl: Cheers, by the way.
+Boy: Cheers. To before. (+5)
+
+Narrative: The gramophone clock ticks. The prole woman outside keeps singing, oblivious to all of this.
+Girl: Well... now what?
+
+(Choice:4)
+The-Rebel: Close the gap. Kiss her.
+The-Fear: Stay where you are. Listen first.
+The-Loyalist: Crack a joke. Defuse this before it crystallises.
+Write: Write your own move…
+
+Narrative: The thought arrives, clean and whole — {{input}}.
+The-Mask: Wait. He's about to do something.
+The-Intimate-Self: Oh. Oh. He's deciding.
+The-Rebel-Body: Chaos energy in Oceania. About time.
+The-Practical-Survivor: Read her face. Shoulders soft, eyes open. She's ready.
+The-Rebel: Move. The silence was made for this.
+The-Fear: Count to three. Make sure no one's on the stairs.
+The-Lover: If you do this, do it like you mean it.
+The-Loyalist: For the record — high-risk. But the ledger has more than one column.
+
+(Scene:embrace.jpg)
+Narrative: You cross the small distance before your mind can argue.
+Boy: Come here.
+Girl: Oh—
+Narrative: Her arms fold around your shoulders. Behind her on the table, the paperweight catches the lamp — a small frozen sun.
+The-Intimate-Self: Did we just... did we just do it?
+The-Rebel-Body: Don't ruin it by thinking. Be a body for ten seconds.
+The-Mask: Composure. Hold it. The door still doesn't lock.
+The-Lover: Remember this exact second. (+10)
+The-Fear: Warm. Real. Stay here. Stay here.
+The-Rebel: I told you. Some moments the Party has not won.
+The-Loyalist: For the record — the choice was made. By you.
+
+Girl: You're such a mess, Winston.
+Boy: Yeah.
+Girl: Don't stop being one. Not in this room. Not while we have it. (+6)
+
+(Scene:none)
+(EndScene)
+(Music)
+
+(Object:paperweight image=paperweight.jpg)
+Narrative: The glass paperweight on the table. The same one you carried up the seventeen stairs an hour ago, pressed against your ribs.
+The-Lover: You could have died bringing this here. (+4)
+The-Fear: You almost did. The patrol on Victory Square — you were lucky.
+The-Rebel: But you did it. And the coral is still inside. (+6)
+
+(Object:gramophone image=gramophone.jpg)
+(Action)
+The-Rebel: Press play
+Narrative: A warm crackle. Then dance music of a bygone age comes through the brass horn. Julia's eyes close. (+8)
+The-Rebel: Songs the Party never wrote. Proof.
+
+(Action)
+The-Fear: Don't touch it
+Narrative: You leave the needle hovering. The room stays in its own quiet. (+2)
+The-Fear: Music draws ears. Some music draws Thinkpol.
+
+(Object:engraving image=engraving.jpg)
+(Action)
+The-Lover: Read the rhyme aloud
+Narrative: "Oranges and lemons, say the bells of St Clement's…"
+Girl: "You owe me five farthings, say the bells of St Martin's." She knows the next line. (+7)
+
+(Action)
+The-Loyalist: Don't sing it
+The-Loyalist: That rhyme is a crime you haven't been formally told about yet. (+3)
+
+(Object:diary image=diary.jpg)
+(Action)
+The-Rebel: Read the page
+Narrative: "DOWN WITH BIG BROTHER" — written down the page in increasingly nervous slants. Whoever wrote this was you, or could have been. (+10)
+The-Rebel: Add a line. Make this room yours.
+
+(Action)
+The-Fear: Close it
+Narrative: You ease the floorboard back into place. Three fibres of dust resettle.
+The-Fear: Some things are stronger when you don't touch them. (+3)
+
+(Object:photograph image=photograph.jpg)
+(Action)
+The-Lover: Pick it up
+Narrative: Julia sees you holding the small silver frame. "She looks like my mother. Or what I imagined her looking like. I never had a photograph." (+8)
+The-Lover: Tell her she has one now.
+
+(Action)
+The-Practical-Survivor: Read the back
+Narrative: Faded blue ink: "For our Margaret. May 1923. We were the lucky ones." (+5)
+The-Practical-Survivor: Whoever Margaret was, she stays Margaret. The room keeps its dead.

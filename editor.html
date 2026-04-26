@@ -481,6 +481,14 @@
   <button class="hbtn" id="duplicateScenario" title="Duplicate current scenario"><span class="icon">⎘</span>Dup</button>
   <button class="hbtn" id="renameScenario" title="Rename scenario">Rename</button>
   <button class="hbtn danger" id="deleteScenario" title="Delete scenario"><span class="icon">×</span>Delete</button>
+  <button class="hbtn" id="resetToDefault" title="Replace the current scenario's text with the bundled default sample"><span class="icon">↺</span>Reset</button>
+  <div class="sc-select-wrap">
+    <label>Load from game</label>
+    <select id="loadFromGame">
+      <option value="">— pick a location —</option>
+      <option value="worlds/london/locations/herplace/scripts/main.txt">London · Her Place · main</option>
+    </select>
+  </div>
   <button class="hbtn" id="exportScript" title="Export to .txt"><span class="icon">↓</span>Export</button>
   <button class="hbtn" id="importScript" title="Import .txt"><span class="icon">↑</span>Import</button>
   <input type="file" id="importFile" accept=".txt" style="display:none">
@@ -654,9 +662,47 @@ Professore: Don't overplay it. A nod is enough.
 Boy: Tuesday it is.
 Girl: Cheers, by the way.
 Boy: Cheers. To Tuesday nights. (+5)
+Narrative: The couch dip holds you both. Her laugh fades slowly, like a song ending. She tilts her head and just looks at you.
+Girl: Well... now what?
+(Choice:4)
+Eros: Close the gap. Kiss her — don't overthink it.
+Valium: Stay where you are. Let her take the next breath.
+Professore: Crack a joke. Undercut the tension.
+Write: Write your own move…
+Narrative: The impulse arrives, clean and whole — {{input}}.
+Scheggia: Wait. He's about to do something.
+Giulietta: Oh. Oh. I can feel him deciding.
+Trilli: Chaos energy incoming. I'm here for it.
+Alfa: Read her face. Shoulders tight, eyes soft — she's open to it.
+Eros: Go. The silence was waiting for exactly this.
+Valium: Careful. Count to three before you move.
+Romeo: If you do this, do it like you mean it.
+Professore: Hold on. This is a high-variance play. Let me check the odds.
+Professore: A coin. Fair and square. Heads — we commit. Tails — we retreat.
+(Video:coinflip.mp4)
+Professore: Heads. That settles it.
+Eros: Move. Now.
+(Scene:hugscene.png)
+Narrative: You close the gap before your mind can stop you.
+Boy: Come here.
+Girl: Oh—
+Narrative: Her arms fold around your shoulders. She laughs into your collar.
+Giulietta: Did we just... did we just do the whole thing?
+Scheggia: Don't ruin it by overthinking. Hug him back.
+Trilli: This is the cutest disaster I have ever witnessed.
+Alfa: Composure. Hold the composure.
+Romeo: Remember this exact second. (+10)
+Valium: Warm. Real. Stay here.
+Eros: I told you. I always tell you.
+Professore: For the record — the coin didn't decide. You did. (+3)
+Girl: You're such a mess.
+Boy: Yeah.
+Girl: Don't stop being one. (+6)
 (Scene:none)
+(EndScene)
+(Music)
 
-(Object:coffee image=cofeemachine.jpeg)
+(Object:coffee image=coffeemachine.jpeg)
 Narrative: The red espresso machine hums on the counter.
 Valium: Maybe grab a cup. Something warm will steady your hands. (+4)
 Professore: Careful — the cord is touching the wet floor.
@@ -888,6 +934,42 @@ $('deleteScenario').addEventListener('click', () => {
   setCurrentScenario(currentName);
   renderScenarioList();
   loadCurrent();
+});
+
+// Reset current scenario to the bundled default sample (useful after the
+// app ships a new default — localStorage keeps an old copy unless reset).
+$('resetToDefault').addEventListener('click', () => {
+  if (!confirm(`Replace "${currentName}" with the default sample scenario? Your current text will be lost.`)) return;
+  scenarios[currentName] = DEFAULT_SAMPLE;
+  saveScenarios(scenarios);
+  scriptArea.value = DEFAULT_SAMPLE;
+  updateCharCount();
+  refreshImageList();
+  flashSaved();
+  pushToPreview('loadScript');
+});
+
+// Load a script from the game's worlds/ tree (e.g. the canonical
+// herplace/scripts/main.txt) into the current scenario.
+$('loadFromGame').addEventListener('change', async (e) => {
+  const url = e.target.value;
+  e.target.value = '';       // reset the select
+  if (!url) return;
+  if (!confirm(`Replace "${currentName}" with the script at ${url}? Your current text will be lost.`)) return;
+  try {
+    const res = await fetch(url, { cache: 'no-store' });
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const txt = await res.text();
+    scenarios[currentName] = txt;
+    saveScenarios(scenarios);
+    scriptArea.value = txt;
+    updateCharCount();
+    refreshImageList();
+    flashSaved();
+    pushToPreview('loadScript');
+  } catch (err) {
+    alert('Could not load the script from the game.\n\n' + (err && err.message || err));
+  }
 });
 
 // ============================================================

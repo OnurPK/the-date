@@ -3,7 +3,33 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-<title>Room · Mobile Preview</title>
+<title>The Date</title>
+
+<!-- PWA / iOS web-app metadata -->
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="The Date">
+<meta name="theme-color" content="#0a0a0f">
+<meta name="color-scheme" content="dark">
+<meta name="format-detection" content="telephone=no">
+<link rel="icon" type="image/png" href="assets/ui/app-icon.png">
+<link rel="apple-touch-icon" href="assets/ui/app-icon.png">
+<link rel="manifest" href="manifest.json">
+
+<!-- On a phone-sized screen, go straight to the game -->
+<script>
+  (function() {
+    try {
+      var qs = new URLSearchParams(window.location.search);
+      var skip = qs.get('noredirect') === '1';
+      if (!skip && window.innerWidth <= 700 &&
+          !/[?&]embed=1/.test(window.location.search)) {
+        window.location.replace('dialog.html' + window.location.search);
+      }
+    } catch (e) {}
+  })();
+</script>
 <style>
   :root {
     --phone-w: 390px;
@@ -222,6 +248,7 @@
   <a class="act-btn primary" id="btnEditor" href="editor.html" target="_blank" rel="noopener">✎ Open Editor</a>
   <button class="act-btn" id="btnRestart">↺ Restart</button>
   <button class="act-btn" id="btnResetIntro" title="Replay the onboarding / character creation">⏮ Replay Intro</button>
+  <button class="act-btn" id="btnSkipEnd" title="Jump straight to the music finale">⏭ Skip to End</button>
 </div>
 
 <script>
@@ -284,6 +311,7 @@
   document.getElementById('btnResetIntro').addEventListener('click', () => {
     frame.src = 'dialog.html?reset=1&t=' + Date.now();
   });
+  document.getElementById('btnSkipEnd').addEventListener('click', () => send('jumpEnd'));
 
   window.addEventListener('resize', fit);
   applySize(390, 844, 'iPhone 14');

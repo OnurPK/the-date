@@ -1,0 +1,19 @@
+{
+  "name": "The Date",
+  "short_name": "The Date",
+  "description": "A visual novel dating experience.",
+  "start_url": "/dialog.html",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0a0a0f",
+  "theme_color": "#0a0a0f",
+  "icons": [
+    {
+      "src": "assets/ui/app-icon.png",
+      "sizes": "1024x1024",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
