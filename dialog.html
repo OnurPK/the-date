@@ -5335,7 +5335,13 @@
     color: rgba(240,232,218,0.42);
     pointer-events: none;
     z-index: 10;
+    /* Hidden by default — only revealed once the cast cards begin
+       (intro02 backdrop). Disclaimer + production credits are short
+       enough that no skip hint is needed there. */
+    opacity: 0;
+    transition: opacity 0.6s ease;
   }
+  #cinematicIntro.skip-visible .ci-skip { opacity: 1; }
 
   /* ============================================================
      ============================================================
@@ -10575,6 +10581,10 @@ function startCinematicIntro() {
 
   const overlay = document.getElementById('cinematicIntro');
   overlay.classList.add('open');
+  // "Tap to skip" stays hidden until the cast cards (intro02 backdrop)
+  // start — the disclaimer + production credits are short enough that
+  // an early skip prompt feels rushed.
+  overlay.classList.remove('skip-visible');
   overlay.setAttribute('aria-hidden', 'false');
   ciIdx = 0;
   showNextCiCard();
@@ -10601,6 +10611,13 @@ function showNextCiCard() {
       bd.classList.remove('show');
     }
     ciCurrentBg = scene.bg;
+  }
+
+  // Reveal "Tap to skip" once the cast cards (intro02) begin and keep
+  // it visible through the title card to the end of the intro.
+  const overlay = document.getElementById('cinematicIntro');
+  if (overlay && scene.bg === 'intro02.jpg') {
+    overlay.classList.add('skip-visible');
   }
 
   const cur = document.getElementById(scene.card);
