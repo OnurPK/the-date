@@ -64,7 +64,20 @@
     color: #fff;
     user-select: none;
     -webkit-user-select: none;
+    /* iOS Safari pull-to-refresh kept reloading the page mid-dialog
+       when a tap had a tiny vertical drift, sending the player back to
+       the Start screen. Lock the rubber-band scroll. */
+    overscroll-behavior-y: none;
+    -webkit-overscroll-behavior-y: none;
+    /* Disable browser-managed gestures (pull-to-refresh, swipe nav)
+       while still allowing scripted scrolls (explore strip, list
+       sheets — those use their own scroll containers with overflow). */
+    touch-action: manipulation;
   }
+  /* Belt-and-braces: also lock overscroll on the whole document so any
+     fixed-position layer can't bubble its drag up to the browser
+     refresh handler. */
+  html { overscroll-behavior: none; }
 
   /* ---------- Cutscene layer ---------- */
   /* A full-screen image triggered by narrative lines ending with
