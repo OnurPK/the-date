@@ -3344,6 +3344,43 @@
   }
   .map-back:active { transform: scale(0.96); }
 
+  /* Bottom-left map toggle — pack-aware: rain on/off on 1984,
+     day/night on London. Glassy round chip, sits above the rain
+     layer (z 310 like the rest of the map controls). Hidden by
+     default; only shown while the map flow is active. */
+  .map-toggle {
+    position: fixed;
+    left: 12px;
+    bottom: max(14px, calc(env(safe-area-inset-bottom) + 8px));
+    z-index: 310;
+    width: 48px; height: 48px;
+    border-radius: 50%;
+    background: rgba(0,0,0,0.55);
+    -webkit-backdrop-filter: blur(10px);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255,255,255,0.22);
+    color: #fff;
+    cursor: pointer;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    transition: background 0.2s, transform 0.15s, border-color 0.2s;
+  }
+  body.flow-map .map-toggle { display: inline-flex; }
+  .map-toggle:hover  { background: rgba(0,0,0,0.7); border-color: rgba(255,255,255,0.32); }
+  .map-toggle:active { transform: scale(0.92); }
+  .map-toggle svg { width: 22px; height: 22px; display: block; }
+  .map-toggle .ico { display: none; }
+
+  /* Per-pack/per-state icon visibility — exactly one of these renders. */
+  body[data-pack="london"] .map-toggle .ico-sun                 { display: block; }
+  body[data-pack="london"].london-night .map-toggle .ico-sun    { display: none; }
+  body[data-pack="london"].london-night .map-toggle .ico-moon   { display: block; }
+  body[data-pack="1984"]   .map-toggle .ico-rain-on             { display: block; }
+  body[data-pack="1984"].rain-off .map-toggle .ico-rain-on      { display: none; }
+  body[data-pack="1984"].rain-off .map-toggle .ico-rain-off     { display: block; }
+
   .map-scroll {
     position: absolute; inset: 0;
     overflow-x: auto; overflow-y: hidden;
@@ -3365,6 +3402,115 @@
   }
   body[data-pack="1984"] .map-world {
     background-image: url("worlds/1984/map.jpg");
+  }
+
+  /* London night-map overlay — sits on top of the day-map background
+     but below the hotspots (pseudo-elements paint behind children).
+     Cross-fades in when body has .london-night. */
+  body[data-pack="london"] .map-world::before {
+    content: '';
+    position: absolute; inset: 0;
+    background: url("worlds/london/map-night.jpg") center / cover no-repeat;
+    opacity: 0;
+    transition: opacity 0.85s ease;
+    pointer-events: none;
+  }
+  body[data-pack="london"].london-night .map-world::before {
+    opacity: 1;
+  }
+
+  /* ============================================================
+     1984 WEATHER — heavy rain + occasional lightning. Three rain
+     layers give depth (back / mid / front) plus a storm tint and
+     a full-screen lightning flash that pulses irregularly.
+     Only shown on body[data-pack="1984"] while flow is "map".
+     pointer-events: none so hotspot taps still register through.
+     ============================================================ */
+  .weather-1984 {
+    position: absolute; inset: 0;
+    pointer-events: none;
+    overflow: hidden;
+    z-index: 200;
+    display: none;
+    opacity: 1;
+    transition: opacity 0.7s ease;
+  }
+  body[data-pack="1984"].flow-map .weather-1984 { display: block; }
+  /* Toggle off — the user pressed the rain switch */
+  body.rain-off .weather-1984 { opacity: 0; pointer-events: none; }
+
+  /* Storm tint — dims and cools the whole map for stormy mood. */
+  .weather-1984 .storm-tint {
+    position: absolute; inset: 0;
+    background:
+      radial-gradient(ellipse at 50% 25%, rgba(20,28,46,0) 0%, rgba(8,12,24,0.55) 90%),
+      linear-gradient(180deg, rgba(8,12,24,0.40) 0%, rgba(4,6,14,0.55) 100%);
+    mix-blend-mode: multiply;
+  }
+
+  /* Rain layers — six total: a primary + offset secondary at each
+     depth (back/mid/front). Each pair runs at slightly different
+     speeds so the streaks never travel in lockstep, killing the
+     "wallpaper stream" feel. Tile content is generated at runtime
+     (see buildRainTiles in JS) with truly random streak positions,
+     varied lengths, and a mix of stroke widths. */
+  .weather-1984 .rain-layer {
+    position: absolute; inset: 0;
+    background-repeat: repeat;
+    will-change: background-position;
+  }
+
+  /* Tile sizes are chosen so width/height = tan(20°) ≈ 0.364 — that
+     way one full-tile background-position step is the rain's isometric
+     trajectory. Each layer's keyframe matches its tile size. */
+  .weather-1984 .rain-back   { background-size: 360px 1000px; opacity: 0.50; animation: rainFallBack   1.10s linear infinite;       }
+  .weather-1984 .rain-back2  { background-size: 360px 1000px; opacity: 0.45; animation: rainFallBack   1.45s linear infinite -0.5s; }
+  .weather-1984 .rain-mid    { background-size: 260px  720px; opacity: 0.70; animation: rainFallMid    0.62s linear infinite;       }
+  .weather-1984 .rain-mid2   { background-size: 260px  720px; opacity: 0.62; animation: rainFallMid    0.78s linear infinite -0.3s; }
+  .weather-1984 .rain-front  { background-size: 200px  560px; opacity: 0.95; animation: rainFallFront  0.38s linear infinite;
+                               filter: drop-shadow(0 0 0.8px rgba(255,255,255,0.45)); }
+  .weather-1984 .rain-front2 { background-size: 200px  560px; opacity: 0.85; animation: rainFallFront  0.48s linear infinite -0.18s;
+                               filter: drop-shadow(0 0 0.8px rgba(255,255,255,0.45)); }
+
+  /* One full tile per loop ⇒ trajectory tilt ≈ atan(tile_w / tile_h) ≈ 20°. */
+  @keyframes rainFallBack  { from { background-position: 0 0; } to { background-position: -360px 1000px; } }
+  @keyframes rainFallMid   { from { background-position: 0 0; } to { background-position: -260px  720px; } }
+  @keyframes rainFallFront { from { background-position: 0 0; } to { background-position: -200px  560px; } }
+
+  /* Lightning — full-screen overlay that flashes white. Two flashes
+     close together (initial strike + secondary), then a longer pause.
+     Repeats irregularly because the cycle uses long total duration. */
+  .weather-1984 .lightning {
+    position: absolute; inset: 0;
+    background: rgba(255,255,255,0);
+    mix-blend-mode: screen;
+    animation: lightningStrike 11s linear infinite;
+  }
+  @keyframes lightningStrike {
+    0%, 36%   { background: rgba(255,255,255,0); }
+    36.3%     { background: rgba(255,255,255,0.92); }
+    36.8%     { background: rgba(255,255,255,0.05); }
+    37.3%     { background: rgba(255,255,255,0.65); }
+    38%       { background: rgba(255,255,255,0); }
+    71%       { background: rgba(255,255,255,0); }
+    71.3%     { background: rgba(255,255,255,0.55); }
+    71.8%     { background: rgba(255,255,255,0); }
+    71.9%     { background: rgba(255,255,255,0.78); }
+    72.5%     { background: rgba(255,255,255,0); }
+    100%      { background: rgba(255,255,255,0); }
+  }
+
+  /* Subtle fog/mist on the lower 30% — gives depth and grounds the
+     storm in the city skyline. */
+  .weather-1984 .storm-fog {
+    position: absolute;
+    left: 0; right: 0; bottom: 0;
+    height: 38%;
+    background: linear-gradient(180deg,
+      rgba(20,28,46,0) 0%,
+      rgba(40,52,76,0.18) 50%,
+      rgba(60,72,96,0.32) 100%);
+    pointer-events: none;
   }
   /* Pack-aware hotspots — only show pins matching the active pack. */
   body[data-pack="london"] .map-hotspot[data-pack="1984"]   { display: none; }
@@ -7353,6 +7499,45 @@
 <div id="mapScreen">
   <button class="map-back" id="mapBack">‹ Back</button>
 
+  <!-- Bottom-left toggle — context-aware:
+         · 1984 pack → rain on/off
+         · London pack → day/night
+       Only one icon renders at a time (driven by body class). -->
+  <button class="map-toggle" id="mapToggle" type="button" aria-label="Toggle weather/time">
+    <!-- London: sun (day) -->
+    <svg class="ico ico-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+         stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <circle cx="12" cy="12" r="4"/>
+      <line x1="12" y1="2"  x2="12" y2="4"/>
+      <line x1="12" y1="20" x2="12" y2="22"/>
+      <line x1="4.93" y1="4.93"   x2="6.34"  y2="6.34"/>
+      <line x1="17.66" y1="17.66" x2="19.07" y2="19.07"/>
+      <line x1="2"  y1="12" x2="4"  y2="12"/>
+      <line x1="20" y1="12" x2="22" y2="12"/>
+      <line x1="4.93"  y1="19.07" x2="6.34"  y2="17.66"/>
+      <line x1="17.66" y1="6.34"  x2="19.07" y2="4.93"/>
+    </svg>
+    <!-- London: moon (night) -->
+    <svg class="ico ico-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+         stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+    </svg>
+    <!-- 1984: cloud + drops (rain on) -->
+    <svg class="ico ico-rain-on" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+         stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <path d="M16 13a4 4 0 0 0-7-3 5 5 0 1 0-3 8h10a3 3 0 0 0 0-5z"/>
+      <line x1="8"  y1="19" x2="8"  y2="22"/>
+      <line x1="12" y1="19" x2="12" y2="23"/>
+      <line x1="16" y1="19" x2="16" y2="22"/>
+    </svg>
+    <!-- 1984: cloud with slash (rain off) -->
+    <svg class="ico ico-rain-off" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+         stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <path d="M16 13a4 4 0 0 0-7-3 5 5 0 1 0-3 8h10a3 3 0 0 0 0-5z"/>
+      <line x1="3" y1="3" x2="21" y2="21"/>
+    </svg>
+  </button>
+
   <!-- Top-right actions: coin count · list view · store -->
   <div class="map-top-actions">
     <button class="map-icon-btn" id="mapCoins" type="button" title="Your coins">
@@ -7399,6 +7584,21 @@
       <div class="map-hotspot" data-pack="1984" data-poi="prole-market"     style="left:22%; top:76%;"><div class="dot-wrap"><div class="pulse"></div><div class="dot"></div></div><div class="label">Prole Market</div></div>
       <div class="map-hotspot" data-pack="1984" data-poi="chestnut-cafe"    style="left:84%; top:82%;"><div class="dot-wrap"><div class="pulse"></div><div class="dot"></div></div><div class="label">Chestnut Café</div></div>
     </div>
+  </div>
+
+  <!-- 1984 weather overlay — heavy rain (3 parallax depths × 2 offset
+       sub-layers each) + storm tint + lightning + ground fog. Hidden
+       by default; CSS only reveals it on body[data-pack="1984"].flow-map. -->
+  <div class="weather-1984" aria-hidden="true">
+    <div class="storm-tint"></div>
+    <div class="rain-layer rain-back"></div>
+    <div class="rain-layer rain-back2"></div>
+    <div class="rain-layer rain-mid"></div>
+    <div class="rain-layer rain-mid2"></div>
+    <div class="rain-layer rain-front"></div>
+    <div class="rain-layer rain-front2"></div>
+    <div class="storm-fog"></div>
+    <div class="lightning"></div>
   </div>
 </div>
 
@@ -11280,6 +11480,90 @@ function showDate() {
   // dialog box can't flash its default "Start" HTML on mobile.
   setFlow('date');
 }
+// ============================================================
+// 1984 RAIN — generate random tile content for each rain layer.
+// Each tile holds a random scatter of streaks (no row-grid), with
+// varied lengths and a mix of stroke widths. Two sub-layers per
+// depth let the rain look chaotic instead of a wallpaper stream.
+// ============================================================
+function buildRainTile(opts) {
+  const { w, h, count, lenMin, lenMax, color, strokeMin, strokeMax } = opts;
+  const angle = 20 * Math.PI / 180;
+  const sin = Math.sin(angle), cos = Math.cos(angle);
+  const lines = [];
+  for (let i = 0; i < count; i++) {
+    const x  = Math.random() * w;
+    const y  = Math.random() * h;
+    const L  = lenMin + Math.random() * (lenMax - lenMin);
+    const sw = (strokeMin + Math.random() * (strokeMax - strokeMin)).toFixed(2);
+    const x2 = (x - L * sin).toFixed(1);
+    const y2 = (y + L * cos).toFixed(1);
+    lines.push(
+      `<line x1='${x.toFixed(1)}' y1='${y.toFixed(1)}' x2='${x2}' y2='${y2}' stroke-width='${sw}'/>`
+    );
+  }
+  const svg =
+    `<svg xmlns='http://www.w3.org/2000/svg' width='${w}' height='${h}'>` +
+    `<g stroke='${color}' stroke-linecap='round' fill='none'>${lines.join('')}</g>` +
+    `</svg>`;
+  return `url("data:image/svg+xml;utf8,${encodeURIComponent(svg)}")`;
+}
+
+function paintRainLayers() {
+  const cfg = [
+    // Two sub-layers per depth — same tile size (so seamless looping
+    // matches the keyframe), but different random streak distributions
+    // generated independently each call.
+    { sel: '.rain-back',   w: 360, h: 1000, count: 110, lenMin: 3,  lenMax: 5.5, color: 'rgba(190,208,235,0.55)', strokeMin: 0.55, strokeMax: 0.9  },
+    { sel: '.rain-back2',  w: 360, h: 1000, count: 95,  lenMin: 3,  lenMax: 5.5, color: 'rgba(195,212,238,0.45)', strokeMin: 0.55, strokeMax: 0.9  },
+    { sel: '.rain-mid',    w: 260, h:  720, count: 70,  lenMin: 5,  lenMax: 9,   color: 'rgba(212,224,244,0.70)', strokeMin: 0.85, strokeMax: 1.25 },
+    { sel: '.rain-mid2',   w: 260, h:  720, count: 60,  lenMin: 5,  lenMax: 9,   color: 'rgba(218,230,248,0.62)', strokeMin: 0.85, strokeMax: 1.25 },
+    { sel: '.rain-front',  w: 200, h:  560, count: 42,  lenMin: 9,  lenMax: 14,  color: 'rgba(228,238,255,0.92)', strokeMin: 1.10, strokeMax: 1.70 },
+    { sel: '.rain-front2', w: 200, h:  560, count: 38,  lenMin: 9,  lenMax: 14,  color: 'rgba(232,242,255,0.85)', strokeMin: 1.10, strokeMax: 1.70 },
+  ];
+  cfg.forEach(c => {
+    const el = document.querySelector('.weather-1984 ' + c.sel);
+    if (!el) return;
+    el.style.backgroundImage = buildRainTile(c);
+  });
+}
+// Paint tiles once at boot — the layers exist in the DOM whether or
+// not the 1984 map is currently shown, and they're cheap to leave in.
+paintRainLayers();
+
+// ============================================================
+// MAP BOTTOM-LEFT TOGGLE — pack-aware switch:
+//   · 1984 pack   → rain on / off  (default: on)
+//   · London pack → day / night    (default: time-of-day driven)
+// Smooth transitions are handled by CSS opacity transitions on
+// .weather-1984 and .map-world::before.
+// ============================================================
+function isNightTime() {
+  // 9pm (21:00) through 4:59am counts as night.
+  const h = new Date().getHours();
+  return h >= 21 || h < 5;
+}
+// Apply the time-driven default once at boot. The user can flip it
+// with the toggle button regardless of the clock.
+if (isNightTime()) {
+  el.body.classList.add('london-night');
+}
+// 1984 default: rain OFF. The toggle still flips it on if the user wants it.
+el.body.classList.add('rain-off');
+
+(function initMapToggle() {
+  const btn = document.getElementById('mapToggle');
+  if (!btn) return;
+  btn.addEventListener('click', () => {
+    if (activePack === '1984') {
+      el.body.classList.toggle('rain-off');
+    } else {
+      // Treat anything non-1984 (london or fallback) as the day/night case.
+      el.body.classList.toggle('london-night');
+    }
+  });
+})();
+
 function showMap() {
   setFlow('map');
   flowEl.mapScroll.scrollTo({ left: 0, behavior: 'auto' });
