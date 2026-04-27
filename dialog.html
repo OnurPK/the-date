@@ -2947,25 +2947,51 @@
   }
   body.flow-date #dateScreen { display: block; }
 
-  /* Pack selector dropdown — replaces the old date title. */
+  /* Date-picker top bar — flex row, icons left, dropdown right. */
   .date-pack-wrap {
     position: absolute;
     left: 0; right: 0;
     top: max(28px, calc(env(safe-area-inset-top) + 18px));
-    text-align: center;
+    padding: 0 18px;
     z-index: 6;
     pointer-events: none;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
   }
-  .date-pack-label {
-    font-size: 10px;
-    font-weight: 800;
-    letter-spacing: 0.3em;
-    text-transform: uppercase;
-    color: rgba(255,255,255,0.55);
-    margin-bottom: 6px;
-    text-shadow: 0 2px 6px rgba(0,0,0,0.55);
+  .dp-top-left {
+    display: flex;
+    gap: 8px;
+    pointer-events: auto;
   }
+  .dp-top-right {
+    pointer-events: auto;
+  }
+  /* Round glass icon button — same chrome style as the dropdown so the
+     two ends of the bar feel like one set. 1.5× the previous size so
+     the profile + messages CTAs sit comfortably on the date picker. */
+  .dp-iconbtn {
+    width: 63px; height: 63px;
+    border-radius: 50%;
+    background: rgba(0,0,0,0.55);
+    -webkit-backdrop-filter: blur(10px);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255,255,255,0.22);
+    color: #fff;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    transition: background 0.2s, border-color 0.2s, transform 0.15s;
+  }
+  .dp-iconbtn:hover  { background: rgba(0,0,0,0.7); border-color: rgba(255,255,255,0.3); }
+  .dp-iconbtn:active { transform: scale(0.94); }
+  .dp-iconbtn svg { width: 28px; height: 28px; }
+  .dp-top-left { gap: 10px; }
   .date-pack-select {
+    /* 1.2× bigger than before — font 15→18, padding 10/36/10/16 → 12/44/12/20 */
     pointer-events: auto;
     appearance: none;
     -webkit-appearance: none;
@@ -2978,14 +3004,14 @@
     font-size: 18px;
     font-weight: 800;
     letter-spacing: -0.005em;
-    padding: 10px 38px 10px 18px;
+    padding: 12px 44px 12px 20px;
     border-radius: 999px;
     cursor: pointer;
     background-image:
       url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><path d='M3 6l5 5 5-5' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' fill='none'/></svg>");
     background-repeat: no-repeat;
-    background-position: right 14px center;
-    background-size: 14px 14px;
+    background-position: right 16px center;
+    background-size: 17px 17px;
     text-shadow: 0 2px 8px rgba(0,0,0,0.5);
     transition: background 0.2s, border-color 0.2s, transform 0.15s;
   }
@@ -3020,10 +3046,12 @@
     touch-action: pan-y;
     will-change: transform;
   }
-  .date-card.pos-0 { z-index: 4; transform: translateY(0)   scale(1);    filter: brightness(1); }
-  .date-card.pos-1 { z-index: 3; transform: translateY(12px) scale(0.96); filter: brightness(0.88); pointer-events: none; }
-  .date-card.pos-2 { z-index: 2; transform: translateY(24px) scale(0.92); filter: brightness(0.78); pointer-events: none; }
-  .date-card.pos-3 { z-index: 1; transform: translateY(36px) scale(0.88); filter: brightness(0.66); pointer-events: none; }
+  .date-card.pos-0 { z-index: 6; transform: translateY(0)   scale(1);    filter: brightness(1);    }
+  .date-card.pos-1 { z-index: 5; transform: translateY(10px) scale(0.96); filter: brightness(0.90); pointer-events: none; }
+  .date-card.pos-2 { z-index: 4; transform: translateY(20px) scale(0.92); filter: brightness(0.80); pointer-events: none; }
+  .date-card.pos-3 { z-index: 3; transform: translateY(30px) scale(0.88); filter: brightness(0.70); pointer-events: none; }
+  .date-card.pos-4 { z-index: 2; transform: translateY(40px) scale(0.84); filter: brightness(0.60); pointer-events: none; }
+  .date-card.pos-5 { z-index: 1; transform: translateY(50px) scale(0.80); filter: brightness(0.50); pointer-events: none; }
   .date-card:active { cursor: grabbing; }
 
   .card-face {
@@ -3099,6 +3127,14 @@
     font-size: 13.5px; line-height: 1.45;
     color: rgba(255,255,255,0.92);
     margin-top: 10px;
+  }
+  /* Blind venue cards: hide flip-hint (no back face), bigger world badge */
+  .date-card.blind-card .card-flip-hint { display: none; }
+  .date-card.blind-card .card-sign {
+    font-size: 11px;
+    letter-spacing: 0.18em;
+    color: #ff8fc1;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.45);
   }
   /* Flip-hint icon in the corner of each face (tap anywhere on card to flip) */
   .card-flip-hint {
@@ -5061,6 +5097,694 @@
   .fp-friend-btn.invited:hover { background: transparent; }
 
   /* ============================================================
+     PROFILE SHEET — full-screen, swipeable cover gallery + tabs +
+     dates list. Opened from the date-picker top-bar profile icon.
+     ============================================================ */
+  #profileSheet {
+    position: fixed; inset: 0;
+    z-index: 740;
+    background: #0a0a0f;
+    color: #fff;
+    display: flex;
+    flex-direction: column;
+    transform: translateY(100%);
+    opacity: 0;
+    pointer-events: none;
+    transition: transform 0.45s cubic-bezier(0.25,0.9,0.3,1.05),
+                opacity 0.35s ease;
+  }
+  #profileSheet.open {
+    transform: translateY(0);
+    opacity: 1;
+    pointer-events: auto;
+  }
+  /* ---------- Cover gallery ---------- */
+  .ps-cover {
+    position: relative;
+    width: 100%;
+    /* Height is driven by --cover-h, set by the JS scroll listener so
+       the gallery shrinks as the dates list scrolls up. Defaults to a
+       generous 48vh on first render. */
+    height: var(--cover-h, 48vh);
+    min-height: 120px;     /* never collapses below the compact band */
+    flex-shrink: 0;
+    overflow: hidden;
+    background: #1a1625;
+    transition: height 0.18s ease-out;
+  }
+  .ps-cover-track {
+    display: flex;
+    height: 100%;
+    overflow-x: auto;
+    overflow-y: hidden;
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+  .ps-cover-track::-webkit-scrollbar { display: none; }
+  .ps-cover-slide {
+    flex: 0 0 100%;
+    height: 100%;
+    background-size: cover;
+    background-position: center;
+    scroll-snap-align: start;
+    background-color: #1a1625;
+  }
+  /* Bottom darkening so the name + meta read against busy photos */
+  .ps-cover::after {
+    content: '';
+    position: absolute;
+    left: 0; right: 0; bottom: 0;
+    height: 60%;
+    background: linear-gradient(180deg,
+      rgba(10,10,15,0) 0%,
+      rgba(10,10,15,0.3) 35%,
+      rgba(10,10,15,0.85) 100%);
+    pointer-events: none;
+  }
+  .ps-back {
+    position: absolute;
+    top: max(18px, calc(env(safe-area-inset-top) + 14px));
+    left: 16px;
+    width: 38px; height: 38px;
+    border-radius: 50%;
+    background: rgba(0,0,0,0.55);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid rgba(255,255,255,0.18);
+    color: #fff;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 5;
+    padding: 0;
+  }
+  .ps-back:active { transform: scale(0.94); }
+  .ps-back svg { width: 18px; height: 18px; }
+  .ps-cover-dots {
+    position: absolute;
+    left: 50%;
+    top: max(20px, calc(env(safe-area-inset-top) + 16px));
+    transform: translateX(-50%);
+    display: flex;
+    gap: 4px;
+    z-index: 5;
+  }
+  .ps-cover-dots span {
+    width: 18px; height: 3px;
+    border-radius: 2px;
+    background: rgba(255,255,255,0.32);
+    transition: background 0.2s;
+  }
+  .ps-cover-dots span.active { background: #fff; }
+  .ps-cover-info {
+    position: absolute;
+    left: 22px; right: 22px;
+    bottom: 22px;
+    z-index: 4;
+  }
+  .ps-cover-name {
+    font-size: 28px;
+    letter-spacing: -0.01em;
+    margin-bottom: 4px;
+    text-shadow: 0 2px 14px rgba(0,0,0,0.6);
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+  }
+  /* First name: bold; age: normal weight + slightly muted alpha. */
+  .ps-cover-fname { font-weight: 800; }
+  .ps-cover-age   { font-weight: 400; opacity: 0.85; }
+  /* Verified checkmark chip — small blue circle with a white tick,
+     same metaphor every dating-app uses. */
+  .ps-cover-verified {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 22px; height: 22px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #4aa3ff, #2c7ee0);
+    color: #fff;
+    flex: 0 0 auto;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.45);
+  }
+  .ps-cover-verified svg { width: 14px; height: 14px; }
+  .ps-cover-meta {
+    font-size: 13px;
+    color: rgba(255,255,255,0.85);
+    letter-spacing: 0.04em;
+    text-shadow: 0 2px 12px rgba(0,0,0,0.55);
+  }
+
+  /* ---------- Tabs ---------- */
+  .ps-tabs {
+    display: flex;
+    gap: 6px;
+    padding: 14px 18px 4px;
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+    flex-shrink: 0;
+  }
+  .ps-tab {
+    background: transparent;
+    border: none;
+    color: rgba(255,255,255,0.5);
+    font: inherit;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    padding: 10px 14px 14px;
+    cursor: pointer;
+    position: relative;
+    transition: color 0.2s;
+  }
+  .ps-tab:hover { color: rgba(255,255,255,0.8); }
+  .ps-tab.active { color: #fff; }
+  .ps-tab.active::after {
+    content: '';
+    position: absolute;
+    left: 14px; right: 14px;
+    bottom: -1px;
+    height: 2px;
+    background: #ff7eb9;
+    border-radius: 2px;
+  }
+
+  /* ---------- Body / panes ---------- */
+  .ps-body {
+    flex: 1;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    padding-bottom: max(28px, calc(env(safe-area-inset-bottom) + 18px));
+  }
+  .ps-pane { display: none; }
+  .ps-pane.active { display: block; }
+  .ps-empty {
+    padding: 60px 18px;
+    text-align: center;
+    color: rgba(255,255,255,0.4);
+    font-size: 13px;
+    font-style: italic;
+  }
+
+  /* ---------- Casting row (Castings tab) ----------
+     2:1 rounded location poster on the left, name + role centre,
+     "Recap" chip on the right. Same row chrome as My Dates so the
+     two tabs feel like one product. */
+  .ps-cast-row {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 14px 18px;
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+  }
+  .ps-cast-row:last-child { border-bottom: none; }
+  .ps-cast-cover {
+    flex: 0 0 auto;
+    width: 90px;
+    aspect-ratio: 2 / 1;
+    border-radius: 10px;
+    background-size: cover;
+    background-position: center;
+    background-color: rgba(255,255,255,0.06);
+    box-shadow: inset 0 0 0 1px rgba(255,255,255,0.10);
+  }
+  .ps-cast-info {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  .ps-cast-name {
+    font-size: 15px;
+    font-weight: 700;
+    color: #fff;
+    letter-spacing: -0.005em;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .ps-cast-role {
+    font-size: 12px;
+    color: rgba(255,255,255,0.55);
+    letter-spacing: 0.02em;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .ps-cast-recap {
+    flex: 0 0 auto;
+    background: transparent;
+    border: 1.5px solid rgba(255,255,255,0.32);
+    color: #fff;
+    font: inherit;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    padding: 8px 14px;
+    border-radius: 999px;
+    cursor: pointer;
+    transition: background 0.15s, border-color 0.15s, transform 0.12s;
+  }
+  .ps-cast-recap:hover  { background: rgba(255,255,255,0.08); border-color: rgba(255,255,255,0.55); }
+  .ps-cast-recap:active { transform: scale(0.96); }
+
+  /* ============================================================
+     MESSAGES SHEET — full-screen, bottom-up reveal. Two stacked
+     panes (contact list + chat thread); tapping a contact slides
+     the thread in from the right.
+     ============================================================ */
+  #messagesSheet {
+    position: fixed; inset: 0;
+    z-index: 740;
+    background: #0a0a0f;
+    color: #fff;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    transform: translateY(100%);
+    opacity: 0;
+    pointer-events: none;
+    transition: transform 0.45s cubic-bezier(0.25,0.9,0.3,1.05),
+                opacity 0.35s ease;
+  }
+  #messagesSheet.open {
+    transform: translateY(0);
+    opacity: 1;
+    pointer-events: auto;
+  }
+  /* Each pane fills the sheet; .active is the one on screen. */
+  .ms-pane {
+    position: absolute; inset: 0;
+    display: flex;
+    flex-direction: column;
+    background: #0a0a0f;
+    transform: translateX(100%);
+    transition: transform 0.35s cubic-bezier(0.25,0.9,0.3,1.05);
+  }
+  .ms-pane.active { transform: translateX(0); }
+  .ms-pane-list  { transform: translateX(0); }   /* default visible */
+  .ms-pane-list.away { transform: translateX(-30%); opacity: 0.6; }
+
+  /* ---------- Header ---------- */
+  .ms-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: max(16px, calc(env(safe-area-inset-top) + 12px)) 18px 14px;
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+    flex-shrink: 0;
+  }
+  .ms-title {
+    font-size: 22px;
+    font-weight: 800;
+    letter-spacing: -0.01em;
+  }
+  .ms-close {
+    width: 38px; height: 38px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.16);
+    color: #fff;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    transition: background 0.15s, transform 0.12s;
+  }
+  .ms-close:hover  { background: rgba(255,255,255,0.12); }
+  .ms-close:active { transform: scale(0.94); }
+  .ms-close svg { width: 16px; height: 16px; }
+
+  /* ---------- Contact list ---------- */
+  .ms-list {
+    flex: 1;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    padding-bottom: max(28px, calc(env(safe-area-inset-bottom) + 18px));
+  }
+  .ms-row {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 12px 18px;
+    cursor: pointer;
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+    transition: background 0.15s;
+  }
+  .ms-row:hover  { background: rgba(255,255,255,0.03); }
+  .ms-row:active { background: rgba(255,255,255,0.06); }
+  .ms-row-avatar {
+    flex: 0 0 auto;
+    width: 50px; height: 50px;
+    border-radius: 50%;
+    background-size: cover;
+    background-position: center;
+    background-color: rgba(255,255,255,0.06);
+    box-shadow: inset 0 0 0 1px rgba(255,255,255,0.10);
+  }
+  .ms-row-body { flex: 1; min-width: 0; }
+  .ms-row-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 10px;
+    margin-bottom: 2px;
+  }
+  .ms-row-name {
+    font-size: 15px;
+    font-weight: 700;
+    color: #fff;
+    letter-spacing: -0.005em;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .ms-row-time {
+    font-size: 11px;
+    color: rgba(255,255,255,0.45);
+    letter-spacing: 0.02em;
+    flex: 0 0 auto;
+  }
+  .ms-row-bottom {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+  }
+  .ms-row-preview {
+    font-size: 13px;
+    color: rgba(255,255,255,0.55);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .ms-row-unread {
+    flex: 0 0 auto;
+    min-width: 20px;
+    height: 20px;
+    padding: 0 6px;
+    border-radius: 999px;
+    background: #ff5f98;
+    color: #fff;
+    font-size: 11px;
+    font-weight: 800;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* ---------- Chat pane ---------- */
+  .ms-chat-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: max(14px, calc(env(safe-area-inset-top) + 10px)) 16px 12px;
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+    flex-shrink: 0;
+  }
+  .ms-chat-back {
+    width: 36px; height: 36px;
+    border-radius: 50%;
+    background: transparent;
+    border: none;
+    color: #fff;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    transition: background 0.15s;
+  }
+  .ms-chat-back:hover  { background: rgba(255,255,255,0.06); }
+  .ms-chat-back:active { background: rgba(255,255,255,0.10); }
+  .ms-chat-back svg { width: 18px; height: 18px; }
+  .ms-chat-avatar {
+    width: 40px; height: 40px;
+    border-radius: 50%;
+    background-size: cover;
+    background-position: center;
+    background-color: rgba(255,255,255,0.06);
+    box-shadow: inset 0 0 0 1px rgba(255,255,255,0.10);
+    flex: 0 0 auto;
+  }
+  .ms-chat-name {
+    font-size: 16px;
+    font-weight: 700;
+    color: #fff;
+    letter-spacing: -0.005em;
+  }
+  .ms-chat-thread {
+    flex: 1;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    padding: 14px 14px 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  /* Bubble */
+  .ms-bubble {
+    max-width: 75%;
+    padding: 9px 13px 8px;
+    border-radius: 18px;
+    font-size: 14.5px;
+    line-height: 1.35;
+    word-wrap: break-word;
+    overflow-wrap: anywhere;
+    position: relative;
+  }
+  .ms-bubble-time {
+    display: block;
+    font-size: 10px;
+    margin-top: 4px;
+    opacity: 0.55;
+    letter-spacing: 0.02em;
+  }
+  /* Outgoing — pink gradient, right side */
+  .ms-bubble.me {
+    align-self: flex-end;
+    background: linear-gradient(135deg, #ff7eb9, #ff5f98);
+    color: #fff;
+    border-bottom-right-radius: 4px;
+  }
+  /* Incoming — graphite chip, left side */
+  .ms-bubble.them {
+    align-self: flex-start;
+    background: rgba(255,255,255,0.08);
+    color: rgba(255,255,255,0.95);
+    border-bottom-left-radius: 4px;
+  }
+  /* Group consecutive same-author bubbles tighter */
+  .ms-bubble + .ms-bubble.me   { margin-top: -2px; }
+  .ms-bubble + .ms-bubble.them { margin-top: -2px; }
+
+  /* ---------- Input bar ---------- */
+  .ms-chat-input {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 12px max(12px, calc(env(safe-area-inset-bottom) + 8px));
+    border-top: 1px solid rgba(255,255,255,0.06);
+    background: #0a0a0f;
+    flex-shrink: 0;
+  }
+  .ms-chat-input-field {
+    flex: 1;
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.12);
+    color: #fff;
+    font: inherit;
+    font-size: 14.5px;
+    padding: 10px 14px;
+    border-radius: 999px;
+    outline: none;
+  }
+  .ms-chat-input-field::placeholder { color: rgba(255,255,255,0.4); }
+  .ms-chat-input-field:focus { border-color: rgba(255,126,185,0.55); }
+  .ms-chat-send {
+    flex: 0 0 auto;
+    width: 38px; height: 38px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #ff7eb9, #ff5f98);
+    border: none;
+    color: #fff;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    transition: transform 0.12s;
+  }
+  .ms-chat-send:active { transform: scale(0.92); }
+  .ms-chat-send svg { width: 16px; height: 16px; }
+
+  /* ---------- Date row ---------- */
+  .ps-date-row {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 14px 18px;
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+  }
+  .ps-date-row:last-child { border-bottom: none; }
+  /* Avatar hosts the small zodiac chip in its bottom-right corner. */
+  .ps-date-avatar {
+    position: relative;
+    flex: 0 0 auto;
+    width: 56px; height: 56px;
+    border-radius: 50%;
+    background-size: cover;
+    background-position: center;
+    background-color: rgba(255,255,255,0.06);
+    box-shadow: inset 0 0 0 1px rgba(255,255,255,0.10);
+  }
+  .ps-date-zodiac {
+    position: absolute;
+    right: -4px; bottom: -4px;
+    width: 22px; height: 22px;
+    border-radius: 50%;
+    background: #1a1625;
+    border: 2px solid #0a0a0f;
+    color: #ff7eb9;
+    font-size: 11px;
+    line-height: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.5);
+  }
+  .ps-date-main {
+    flex: 1;
+    min-width: 0;
+    display: grid;
+    grid-template-columns: 1.05fr 0.7fr 0.7fr;
+    gap: 10px;
+    align-items: center;
+  }
+  .ps-date-cell {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+  }
+  .ps-date-cell .lbl {
+    font-size: 14px;
+    font-weight: 700;
+    color: #fff;
+    letter-spacing: -0.005em;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .ps-date-cell .sub {
+    font-size: 11px;
+    color: rgba(255,255,255,0.5);
+    letter-spacing: 0.02em;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  /* Centered numeric cells (date counts + best score) */
+  .ps-date-main .ps-date-cell.num {
+    align-items: center;
+    text-align: center;
+  }
+  .ps-date-cell.num .lbl {
+    font-size: 16px;
+    font-weight: 800;
+    line-height: 1.1;
+  }
+
+  /* ---------- Goto / Locked action wrapper ---------- */
+  .ps-date-action {
+    position: relative;
+    flex: 0 0 auto;
+    width: 40px; height: 40px;
+  }
+  .ps-date-goto,
+  .ps-date-lock {
+    position: absolute; inset: 0;
+    width: 100%; height: 100%;
+    border-radius: 50%;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    transition: background 0.15s, transform 0.12s;
+  }
+  /* Unlocked → pink "go to date" arrow chip */
+  .ps-date-goto {
+    background: rgba(255,126,185,0.18);
+    border: 1px solid rgba(255,126,185,0.45);
+    color: #ff7eb9;
+  }
+  .ps-date-goto:hover  { background: rgba(255,126,185,0.28); }
+  .ps-date-goto:active { transform: scale(0.92); }
+  .ps-date-goto svg { width: 14px; height: 14px; }
+
+  /* Locked → same circle footprint, lock icon centered, SVG progress
+     ring drawn around the perimeter showing how much cooldown is left. */
+  .ps-date-lock {
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.10);
+    color: rgba(255,255,255,0.65);
+  }
+  .ps-date-lock:active { transform: scale(0.92); }
+  .ps-date-lock svg.lock-icon {
+    width: 14px; height: 14px;
+    z-index: 2;
+  }
+  .ps-date-lock-ring {
+    position: absolute; inset: 0;
+    width: 100%; height: 100%;
+    pointer-events: none;
+    transform: rotate(-90deg);
+  }
+  .ps-date-lock-ring .ring-bg {
+    fill: none;
+    stroke: rgba(255,255,255,0.10);
+    stroke-width: 2;
+  }
+  .ps-date-lock-ring .ring-fill {
+    fill: none;
+    stroke: #d4a55a;             /* amber — "filling back up" */
+    stroke-width: 2;
+    stroke-linecap: round;
+    transition: stroke-dashoffset 0.4s ease;
+  }
+  /* Tap → reveal "Available in Xh Ymin" tooltip below the lock chip. */
+  .ps-date-lock-info {
+    position: absolute;
+    right: 0;
+    top: calc(100% + 6px);
+    background: rgba(20,16,12,0.95);
+    color: #f1e2c4;
+    border: 1px solid rgba(212,165,90,0.4);
+    border-radius: 6px;
+    padding: 6px 10px;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    white-space: nowrap;
+    pointer-events: none;
+    opacity: 0;
+    transform: translateY(-4px);
+    transition: opacity 0.2s, transform 0.2s;
+    box-shadow: 0 6px 18px rgba(0,0,0,0.55);
+    z-index: 5;
+  }
+  .ps-date-action.show-info .ps-date-lock-info {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  /* ============================================================
      CINEMATIC INTRO — disclaimer → production → cast → title
      ============================================================
      Layered architecture:
@@ -5435,31 +6159,10 @@
       url("assets/ui/1984/background.jpg") center / cover no-repeat #1a1410;
   }
 
-  /* Pack selector — paper-tab style, mono caps, no glassy pill */
-  body[data-pack="1984"] .date-pack-label {
-    color: rgba(232,220,184,0.78);
-    font-family: "IBM Plex Mono", monospace;
-    letter-spacing: 0.36em;
-    text-shadow: 0 2px 6px rgba(0,0,0,0.7);
-  }
-  body[data-pack="1984"] .date-pack-select {
-    background-color: rgba(34,28,22,0.78);
-    border: 1px solid rgba(232,220,184,0.32);
-    border-radius: 4px;
-    color: #e8dcb8;
-    font-family: "IBM Plex Mono", monospace;
-    font-weight: 500;
-    letter-spacing: 0.16em;
-    text-shadow: 0 2px 6px rgba(0,0,0,0.6);
-    /* Replace the rounded chevron with a solid arrow that matches the
-       typewriter aesthetic. */
-    background-image:
-      url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><path d='M4 6l4 4 4-4z' fill='%23e8dcb8'/></svg>");
-  }
-  body[data-pack="1984"] .date-pack-select:hover {
-    background-color: rgba(34,28,22,0.92);
-    border-color: rgba(232,220,184,0.5);
-  }
+  /* Top bar (profile/messages icons + dropdown) is pinned to the
+     default UI — glassy dark pill — regardless of the active pack.
+     The 1984 paper-tab styling has been intentionally removed for
+     these elements so the top bar stays consistent across worlds. */
 
   /* ---------- Date cards — yellowed paper, square corners ---------- */
   body[data-pack="1984"] .card-face {
@@ -6611,9 +7314,31 @@
      Card contents are populated by JS (see renderStack).
      ========================================================= -->
 <div id="dateScreen">
+  <!-- Date-picker top bar:
+         left  → mode dropdown (All / Blind Dates) — 1.2× the previous size
+         right → profile icon + messages icon (round glass chips) -->
   <div class="date-pack-wrap">
-    <div class="date-pack-label">Choose your pack</div>
-    <select class="date-pack-select" id="datePackSelect" aria-label="Date pack"></select>
+    <div class="dp-top-left">
+      <select class="date-pack-select" id="datePackSelect" aria-label="Date mode">
+        <option value="all">All</option>
+        <option value="blind">Blind Dates</option>
+        <option value="london" selected>London</option>
+        <option value="1984">1984</option>
+      </select>
+    </div>
+    <div class="dp-top-right">
+      <button class="dp-iconbtn" id="dpOpenProfile" type="button" aria-label="Open profile">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <circle cx="12" cy="8" r="4"/>
+          <path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/>
+        </svg>
+      </button>
+      <button class="dp-iconbtn" id="dpOpenMessages" type="button" aria-label="Messages">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M4 6h16v11H8l-4 3z"/>
+        </svg>
+      </button>
+    </div>
   </div>
   <div class="date-stack" id="dateStack"></div>
   <div class="date-actions">
@@ -7070,6 +7795,81 @@
 
 <!-- 1984 Casting modal: pick friends to play the NPC roles before the
      episode begins. Shows once before each 1984 date starts. -->
+<!-- Profile sheet — opened by the profile icon on the date picker.
+     Cover gallery on top + tabs (My Dates / Castings) + dates list. -->
+<div id="profileSheet" aria-hidden="true">
+  <div class="ps-cover" id="psCover">
+    <button class="ps-back" id="psBack" type="button" aria-label="Close">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <line x1="6"  y1="6"  x2="18" y2="18"/>
+        <line x1="18" y1="6"  x2="6"  y2="18"/>
+      </svg>
+    </button>
+    <div class="ps-cover-track" id="psCoverTrack"></div>
+    <div class="ps-cover-dots" id="psCoverDots"></div>
+    <div class="ps-cover-info">
+      <div class="ps-cover-name" id="psCoverName">
+        <span class="ps-cover-fname">Adrian</span><span class="ps-cover-age">, 33</span>
+        <span class="ps-cover-verified" aria-label="Verified">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <polyline points="5 12 10 17 19 8"/>
+          </svg>
+        </span>
+      </div>
+      <div class="ps-cover-meta" id="psCoverMeta">Istanbul · ♓ Pisces</div>
+    </div>
+  </div>
+
+  <div class="ps-tabs">
+    <button class="ps-tab active" data-tab="dates" type="button">My Dates</button>
+    <button class="ps-tab" data-tab="castings" type="button">Castings</button>
+  </div>
+
+  <div class="ps-body">
+    <div class="ps-pane ps-pane-dates active" id="psPaneDates"></div>
+    <div class="ps-pane ps-pane-castings" id="psPaneCastings"></div>
+  </div>
+</div>
+
+<!-- Messages sheet — bottom-up reveal. Two stacked panes: contact list
+     (default) and the active chat thread. Tap a contact to slide in the
+     thread; tap chat-header back to return to contacts. -->
+<div id="messagesSheet" aria-hidden="true">
+  <div class="ms-pane ms-pane-list active" id="msPaneList">
+    <div class="ms-header">
+      <div class="ms-title">Messages</div>
+      <button class="ms-close" id="msClose" type="button" aria-label="Close">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <line x1="6"  y1="6"  x2="18" y2="18"/>
+          <line x1="18" y1="6"  x2="6"  y2="18"/>
+        </svg>
+      </button>
+    </div>
+    <div class="ms-list" id="msList"></div>
+  </div>
+
+  <div class="ms-pane ms-pane-chat" id="msPaneChat">
+    <div class="ms-chat-header">
+      <button class="ms-chat-back" id="msChatBack" type="button" aria-label="Back">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M15 6l-6 6 6 6"/>
+        </svg>
+      </button>
+      <div class="ms-chat-avatar" id="msChatAvatar"></div>
+      <div class="ms-chat-name"   id="msChatName"></div>
+    </div>
+    <div class="ms-chat-thread" id="msChatThread"></div>
+    <div class="ms-chat-input">
+      <input class="ms-chat-input-field" id="msChatInput" type="text" placeholder="Message…" />
+      <button class="ms-chat-send" id="msChatSend" type="button" aria-label="Send">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M3 12l18-9-6 18-3-9z"/>
+        </svg>
+      </button>
+    </div>
+  </div>
+</div>
+
 <div id="castingModal" aria-hidden="true">
   <div class="casting-tag" id="castingEpisodeTag">1984 · The Room Above</div>
   <h2 class="casting-title">Pick your cast</h2>
@@ -7690,6 +8490,34 @@ function profilesForPack(pack) {
 
 let PROFILES = profilesForPack(activePack);
 
+// Date-picker mode: 'all'  → character cards (existing behaviour, pack-filtered)
+//                  'blind' → location cards (Tinder-style venues across packs)
+// Driven by the top-bar dropdown. Blind mode rebuilds the stack using
+// BLIND_VENUES instead of PROFILES, and the right-swipe goes straight
+// to the venue's POI on the appropriate pack's map.
+let dateMode = 'all';
+
+// Friendly display name for a pack id (shown on blind venue cards
+// underneath the location title — e.g. "London", "1984").
+function packDisplayName(packId) {
+  const p = PACKS.find(pp => pp.id === packId);
+  return p ? p.name : packId;
+}
+
+// Blind venue list — populated after VENUES is defined, see
+// `buildBlindVenues()` below the VENUES const.
+let BLIND_VENUES = [];
+function buildBlindVenues() {
+  BLIND_VENUES = Object.entries(VENUES).map(([id, v]) => ({
+    id,
+    name:  v.title,
+    pack:  v.pack,
+    world: packDisplayName(v.pack),
+    img:   v.cover,
+    bio:   v.desc || '',
+  }));
+}
+
 // ============================================================
 // VENUES — map POIs. Only `startable: true` actually plays the script.
 // `cover` is the background image for the POI bottom-sheet.
@@ -7825,6 +8653,9 @@ const VENUES = {
     pack: '1984',
   },
 };
+
+// Now that VENUES exists, populate the blind-date card list from it.
+buildBlindVenues();
 
 // Store catalog — cities (london is purchased, included in the game)
 const CITIES_STORE = [
@@ -10183,7 +11014,7 @@ const flowEl = {
 };
 
 // ----- Stack of cards (top is interactive, rest are previews) -----
-const STACK_SIZE = 4;
+const STACK_SIZE = 6;
 let stackCards = [];
 
 function buildStack() {
@@ -10210,11 +11041,13 @@ function buildStack() {
       </div>
     `;
     // Direct click-to-flip on each card. Only the current top card flips,
-    // and only when the click wasn't actually a drag.
+    // and only when the click wasn't actually a drag. Blind venue cards
+    // skip the flip — they have no inner-voices back face.
     card.addEventListener('click', () => {
       if (swipeInFlight) return;
       if (cardWasDragged) { cardWasDragged = false; return; }
       if (card !== stackCards[0]) return;
+      if (card.classList.contains('blind-card')) return;
       card.classList.toggle('flipped');
     });
 
@@ -10224,6 +11057,29 @@ function buildStack() {
 }
 
 function populateCard(card, profileIdx) {
+  // Branch on date mode — character cards (with inner voices on the
+  // back face) vs blind venue cards (location image + world badge,
+  // no flip target).
+  if (dateMode === 'blind') {
+    const list = BLIND_VENUES;
+    if (!list.length) return;
+    const v = list[profileIdx % list.length];
+    card.classList.add('blind-card');
+    const front = card.querySelector('.card-front');
+    front.style.backgroundImage = v.img ? `url("${v.img}")` : '';
+    const nameEl = card.querySelector('.card-name');
+    nameEl.textContent = v.name;
+    // World badge instead of zodiac sign
+    card.querySelector('.card-sign').textContent = v.world.toUpperCase();
+    card.querySelector('.card-bio').textContent  = v.bio;
+    // Blind cards don't flip — clear the back face contents so an
+    // accidental flip lands on a clean panel.
+    card.querySelector('.card-back-intro').textContent = '';
+    card.querySelector('.card-back-voices').innerHTML  = '';
+    return;
+  }
+
+  card.classList.remove('blind-card');
   const p = PROFILES[profileIdx % PROFILES.length];
   const front = card.querySelector('.card-front');
   front.style.backgroundImage = `url("${p.img}")`;
@@ -10253,17 +11109,30 @@ function populateCard(card, profileIdx) {
   }
 }
 
+// Source list for the active mode — characters in 'all', venues in 'blind'.
+function activeStackList() {
+  return dateMode === 'blind' ? BLIND_VENUES : PROFILES;
+}
+
 function renderStack() {
+  const list = activeStackList();
   for (let i = 0; i < STACK_SIZE; i++) {
-    const profileIdx = (currentCardIndex + i) % PROFILES.length;
     const card = stackCards[i];
+    if (!list.length) {
+      card.style.display = 'none';
+      continue;
+    }
+    card.style.display = '';
+    const profileIdx = (currentCardIndex + i) % list.length;
     populateCard(card, profileIdx);
     // Snap each card to its position WITHOUT animating
     card.style.transition = 'none';
     card.style.transform  = '';
     card.style.opacity    = '';
     card.classList.remove('flipped');
-    card.className = 'date-card pos-' + i;
+    // Preserve mode class set by populateCard
+    const blindCls = card.classList.contains('blind-card') ? ' blind-card' : '';
+    card.className = 'date-card pos-' + i + blindCls;
     void card.offsetWidth;           // force reflow
     card.style.transition = '';
   }
@@ -10271,8 +11140,72 @@ function renderStack() {
 }
 
 function updateDateBtnLabel() {
-  const p = PROFILES[currentCardIndex % PROFILES.length];
-  flowEl.dateBtn.textContent = `Date with ${p.name}`;
+  if (dateMode === 'blind') {
+    const v = BLIND_VENUES[currentCardIndex % Math.max(1, BLIND_VENUES.length)];
+    flowEl.dateBtn.textContent = v ? 'Goto Blind Date' : 'Goto Blind Date';
+    return;
+  }
+  const p = PROFILES[currentCardIndex % Math.max(1, PROFILES.length)];
+  flowEl.dateBtn.textContent = p ? `Date with ${p.name}` : 'Date with …';
+}
+
+// Entry animation — when the date picker becomes visible, fly the
+// cards in from the right one after another so they land into the
+// stack like dealt cards. The bottom card (pos-N-1) settles first,
+// the top card (pos-0) lands last so the "deal" feels like the stack
+// is being assembled in front of the player.
+function dealCardsIn() {
+  if (!stackCards || !stackCards.length) return;
+  // Off-screen starting transforms — one per stack position. translateX
+  // shoves them off the right edge; translateY/scale match their final
+  // pos-N so the only visible motion is a horizontal slide + tilt.
+  const startTransforms = [
+    'translateX(125vw) translateY(0)    scale(1)    rotate(8deg)',
+    'translateX(130vw) translateY(10px) scale(0.96) rotate(10deg)',
+    'translateX(135vw) translateY(20px) scale(0.92) rotate(12deg)',
+    'translateX(140vw) translateY(30px) scale(0.88) rotate(14deg)',
+    'translateX(145vw) translateY(40px) scale(0.84) rotate(16deg)',
+    'translateX(150vw) translateY(50px) scale(0.80) rotate(18deg)',
+  ];
+  // Per-card transition during the deal — slower than the default
+  // 0.45s so the stack assembles with weight. Cleared after the
+  // animation completes so subsequent swipes use the normal speed.
+  const DEAL_TRANSITION =
+    'transform 0.85s cubic-bezier(0.2,0.85,0.3,1.05),' +
+    ' opacity 0.7s ease,' +
+    ' filter 0.6s ease';
+  const STAGGER_MS = 180;
+
+  // 1) Snap every card to its off-screen start with no transition
+  for (let i = 0; i < stackCards.length; i++) {
+    const card = stackCards[i];
+    if (!card || card.style.display === 'none') continue;
+    card.style.transition = 'none';
+    card.style.transform  = startTransforms[i] || startTransforms[startTransforms.length - 1];
+    card.style.opacity    = '0';
+  }
+  // 2) Force a reflow so the off-screen positions are committed before
+  //    we re-enable transitions on the animate-back step.
+  void flowEl.dateStack.offsetWidth;
+  // 3) Animate each card back to its natural .pos-N transform, starting
+  //    from the bottom of the stack and working up to the top card.
+  for (let i = stackCards.length - 1; i >= 0; i--) {
+    const card = stackCards[i];
+    if (!card || card.style.display === 'none') continue;
+    const delay = (stackCards.length - 1 - i) * STAGGER_MS;
+    setTimeout(() => {
+      card.style.transition = DEAL_TRANSITION;
+      card.style.transform  = '';
+      card.style.opacity    = '';
+      // Once the deal-in transition ends, hand control back to the
+      // default CSS transition so swipes/snaps use the normal timing.
+      const onDone = () => {
+        card.style.transition = '';
+        card.removeEventListener('transitionend', onDone);
+      };
+      card.addEventListener('transitionend', onDone);
+    }, delay);
+  }
 }
 
 // ----- Swipe / fly-out animation --------------------------------
@@ -10297,16 +11230,33 @@ function swipeCard(dir) {
   }
 
   setTimeout(() => {
-    if (dir === 'right') {
-      selectedProfile = PROFILES[currentCardIndex % PROFILES.length];
-      showMap();
+    const list = activeStackList();
+    if (dir === 'right' && list.length) {
+      if (dateMode === 'blind') {
+        // Blind dates: jump to that venue's POI on the right pack's map.
+        const v = BLIND_VENUES[currentCardIndex % BLIND_VENUES.length];
+        if (v) gotoBlindDate(v);
+      } else {
+        const chosen = PROFILES[currentCardIndex % PROFILES.length];
+        // In "All" mode characters may carry a `_pack` hint pointing to
+        // a different world than the active one — switch packs first so
+        // the map and script load the right scenario.
+        if (chosen && chosen._pack && chosen._pack !== activePack) {
+          activePack = chosen._pack;
+          el.body.dataset.pack = activePack;
+          if (typeof preloadPack === 'function')   preloadPack(activePack);
+          if (typeof loadActiveScript === 'function') loadActiveScript();
+        }
+        selectedProfile = chosen;
+        showMap();
+      }
     }
     // Rotate: flown-out card moves to the back of the stack with new data.
     const flown = stackCards.shift();
     stackCards.push(flown);
     flowEl.dateStack.appendChild(flown);   // move to end of DOM
-    currentCardIndex = (currentCardIndex + 1) % PROFILES.length;
-    populateCard(flown, (currentCardIndex + STACK_SIZE - 1) % PROFILES.length);
+    currentCardIndex = (currentCardIndex + 1) % Math.max(1, list.length);
+    populateCard(flown, (currentCardIndex + STACK_SIZE - 1) % Math.max(1, list.length));
     // Snap the flown card to pos-3 instantly — no "fly back in" animation
     flown.style.transition = 'none';
     flown.style.transform  = '';
@@ -10322,6 +11272,10 @@ function swipeCard(dir) {
 }
 
 function showDate() {
+  // Pre-snap cards to their off-screen starting positions BEFORE the
+  // date screen becomes visible — guarantees no frame where the cards
+  // appear in their natural stack position before flying off.
+  if (typeof dealCardsIn === 'function') dealCardsIn();
   // Atomic swap via setFlow — no transient "no-flow" frame so the
   // dialog box can't flash its default "Start" HTML on mobile.
   setFlow('date');
@@ -10438,6 +11392,97 @@ async function startDateHere() {
 // (Cast button), others don't (Invite button). For the prototype, the
 // only real cast targets are Liam (Charrington) and Matt (Street Seller)
 // — see ROLE_DATA.forcedActorId. All other "Cast" choices are remapped.
+// Fake roster of 12 women the player has dated (or is about to). Used
+// by the profile sheet's "My Dates" tab. Numbers are flavor — the live
+// game doesn't track these yet, so they're hard-coded for the UI demo.
+//   totalDates  = how many sessions overall (top number on the row)
+//   locationsHit = how many distinct locations played   (bottom: X/16)
+//   cooldownMin  = minutes until next date is available; 0 = unlocked
+const MY_DATES = [
+  { id: 'iris',     name: 'Iris',     age: 22, city: 'London',       sign: '\u2653',  totalDates: 11, locationsHit: 7,  totalMax: 16, bestScore: 92, avgScore: 71.4, cooldownMin: 0,    avatar: 'https://i.pravatar.cc/200?img=47' },
+  { id: 'emma',     name: 'Emma',     age: 27, city: 'Brooklyn',     sign: '\u2651',  totalDates:  8, locationsHit: 5,  totalMax: 16, bestScore: 84, avgScore: 62.0, cooldownMin: 743,  avatar: 'https://i.pravatar.cc/200?img=49' },
+  { id: 'zoe',      name: 'Zoe',      age: 24, city: 'Berlin',       sign: '\u264A',  totalDates:  4, locationsHit: 3,  totalMax: 16, bestScore: 76, avgScore: 49.5, cooldownMin: 0,    avatar: 'https://i.pravatar.cc/200?img=44' },
+  { id: 'maya',     name: 'Maya',     age: 29, city: 'Lisbon',       sign: '\u264C',  totalDates:  6, locationsHit: 4,  totalMax: 16, bestScore: 81, avgScore: 58.2, cooldownMin: 162,  avatar: 'https://i.pravatar.cc/200?img=20' },
+  { id: 'lila',     name: 'Lila',     age: 26, city: 'Paris',        sign: '\u264E',  totalDates:  3, locationsHit: 2,  totalMax: 16, bestScore: 67, avgScore: 41.0, cooldownMin: 0,    avatar: 'https://i.pravatar.cc/200?img=45' },
+  { id: 'sienna',   name: 'Sienna',   age: 31, city: 'Madrid',       sign: '\u264F',  totalDates: 14, locationsHit: 6,  totalMax: 16, bestScore: 88, avgScore: 66.8, cooldownMin: 0,    avatar: 'https://i.pravatar.cc/200?img=24' },
+  { id: 'aiyana',   name: 'Aiyana',   age: 25, city: 'Toronto',      sign: '\u2650',  totalDates:  2, locationsHit: 1,  totalMax: 16, bestScore: 54, avgScore: 54.0, cooldownMin: 1320, avatar: 'https://i.pravatar.cc/200?img=26' },
+  { id: 'priya',    name: 'Priya',    age: 28, city: 'Mumbai',       sign: '\u2649',  totalDates:  5, locationsHit: 3,  totalMax: 16, bestScore: 73, avgScore: 51.7, cooldownMin: 0,    avatar: 'https://i.pravatar.cc/200?img=23' },
+  { id: 'noor',     name: 'Noor',     age: 23, city: 'Dubai',        sign: '\u264B',  totalDates:  9, locationsHit: 4,  totalMax: 16, bestScore: 79, avgScore: 55.5, cooldownMin: 0,    avatar: 'https://i.pravatar.cc/200?img=29' },
+  { id: 'mei',      name: 'Mei',      age: 30, city: 'Shanghai',     sign: '\u264D',  totalDates:  3, locationsHit: 2,  totalMax: 16, bestScore: 70, avgScore: 47.5, cooldownMin: 467,  avatar: 'https://i.pravatar.cc/200?img=32' },
+  { id: 'isabella', name: 'Isabella', age: 26, city: 'Buenos Aires', sign: '\u2652',  totalDates: 12, locationsHit: 5,  totalMax: 16, bestScore: 86, avgScore: 64.6, cooldownMin: 0,    avatar: 'https://i.pravatar.cc/200?img=10' },
+  { id: 'amara',    name: 'Amara',    age: 27, city: 'Lagos',        sign: '\u2648',  totalDates:  4, locationsHit: 2,  totalMax: 16, bestScore: 65, avgScore: 43.5, cooldownMin: 89,   avatar: 'https://i.pravatar.cc/200?img=42' },
+];
+// Cooldown copy: 743min = 12h23m (Emma's example), used as the on-tap info text.
+const ZODIAC_COOLDOWN_TOTAL = 24 * 60;  // 24h reference window for the progress ring
+
+// ============================================================
+// MESSAGES — contact list + per-contact chat threads (WhatsApp-style)
+// ============================================================
+// Friends the player has chats open with. last/lastTime drive the
+// row's preview line and timestamp. unread > 0 paints the small chip.
+const MY_CONTACTS = [
+  { id: 'liam',   name: 'Liam',   avatar: 'https://i.pravatar.cc/120?img=12', unread: 0, last: "i'll take it as a compliment",         lastTime: '2:14pm' },
+  { id: 'matt',   name: 'Matt',   avatar: 'https://i.pravatar.cc/120?img=33', unread: 2, last: 'the street seller scene was 🔥',       lastTime: '11:42am' },
+  { id: 'sophie', name: 'Sophie', avatar: 'https://i.pravatar.cc/120?img=45', unread: 0, last: 'paris next month, save the date',     lastTime: 'Yesterday' },
+  { id: 'chloe',  name: 'Chloe',  avatar: 'https://i.pravatar.cc/120?img=44', unread: 1, last: 'saw your iris recap. 92? insane',     lastTime: 'Yesterday' },
+  { id: 'zara',   name: 'Zara',   avatar: 'https://i.pravatar.cc/120?img=20', unread: 0, last: 'lol the coin flip was rigged',        lastTime: 'Mon' },
+  { id: 'hannah', name: 'Hannah', avatar: 'https://i.pravatar.cc/120?img=47', unread: 0, last: 'need a Tour Guide cast — you in?',    lastTime: 'Sun' },
+];
+
+// Per-contact thread. Times in chronological order. `from: 'me'` means
+// the player; `from: 'them'` is the contact.
+const MY_CHATS = {
+  liam: [
+    { from: 'them', text: 'bro did you really cast me as Charrington 😳',                time: '2:01pm' },
+    { from: 'me',   text: 'best fit for you tbh',                                       time: '2:09pm' },
+    { from: 'them', text: 'shopkeeper energy got it',                                   time: '2:10pm' },
+    { from: 'me',   text: 'julia loved the paperweight btw',                            time: '2:11pm' },
+    { from: 'them', text: 'wait you gave her the paperweight',                          time: '2:12pm' },
+    { from: 'me',   text: 'eight cents from the prole vendor',                          time: '2:13pm' },
+    { from: 'them', text: "i'll take it as a compliment",                               time: '2:14pm' },
+  ],
+  matt: [
+    { from: 'me',   text: 'how was the prole quarter scene',                            time: '11:30am' },
+    { from: 'them', text: 'rainy as hell, foggy lamps, very atmospheric',               time: '11:31am' },
+    { from: 'me',   text: 'the gas lamp on the cart is a nice touch',                   time: '11:33am' },
+    { from: 'them', text: 'the street seller scene was 🔥',                              time: '11:42am' },
+    { from: 'them', text: 'recap me when you have a minute',                            time: '11:42am' },
+  ],
+  sophie: [
+    { from: 'them', text: 'paris next month, save the date',                            time: 'Yesterday' },
+  ],
+  chloe: [
+    { from: 'them', text: 'saw your iris recap. 92? insane',                            time: 'Yesterday' },
+    { from: 'them', text: 'how did you handle the coin flip',                           time: 'Yesterday' },
+  ],
+  zara: [
+    { from: 'me',   text: 'professore made me actually flip a coin',                    time: 'Mon' },
+    { from: 'them', text: 'lol the coin flip was rigged',                               time: 'Mon' },
+  ],
+  hannah: [
+    { from: 'them', text: 'need a Tour Guide cast — you in?',                           time: 'Sun' },
+  ],
+};
+
+// Episodes the player was cast in by FRIENDS (not their own dates).
+// Listed under the "Castings" tab — cover image is the venue's poster.
+const MY_CASTINGS = [
+  { id: 'cast1', location: 'Safe House',  pack: '1984',   role: 'Street Seller',   cover: 'worlds/1984/locations/safehouse/cover.jpg' },
+  { id: 'cast2', location: 'Her Place',   pack: 'london', role: 'Doorman',         cover: 'worlds/london/locations/herplace/cover.jpg' },
+  { id: 'cast3', location: 'The Pub',     pack: 'london', role: 'Bartender',       cover: 'worlds/london/locations/thepub/cover.jpg' },
+  { id: 'cast4', location: 'Coffee Shop', pack: 'london', role: 'Barista',         cover: 'worlds/london/locations/coffeeshop/cover.jpg' },
+  { id: 'cast5', location: 'Safe House',  pack: '1984',   role: 'Mr. Charrington', cover: 'worlds/1984/locations/safehouse/cover.jpg' },
+  { id: 'cast6', location: 'Big Ben',     pack: 'london', role: 'Tour Guide',      cover: 'worlds/london/locations/bigben/cover.jpg' },
+];
+
+// Profile cover gallery — swipe through these on the player's profile page.
+const PROFILE_COVERS = [
+  'https://i.pravatar.cc/600?img=12',
+  'https://i.pravatar.cc/600?img=33',
+  'https://i.pravatar.cc/600?img=14',
+  'https://i.pravatar.cc/600?img=11',
+];
+
 const FRIEND_LIST = [
   // 7 own the 1984 pack → "Cast" — Liam + Matt are forced targets, the
   // other 5 are real-looking distractors so the player has a meaningful
@@ -10853,47 +11898,451 @@ let cardWasDragged = false;
 // "Date with X" button → same as a right swipe
 flowEl.dateBtn.addEventListener('click', () => swipeCard('right'));
 
-// Pack selector — populate options from PACKS, swap the date stack when
-// the user picks a new world pack.
-(function initPackSelect() {
+// Top-bar dropdown — 4 options:
+//   • London      → character cards filtered to the london pack    (default UI)
+//   • All         → character cards across both packs combined     (default UI)
+//   • Blind Dates → location cards (Tinder-style venue stack)      (default UI)
+//   • 1984        → character cards filtered to the 1984 pack      (1984 UI)
+// Default selection is "London". The top bar itself stays pinned to the
+// default chrome regardless of pack — only the body/cards re-theme.
+function allCharactersAsProfiles() {
+  // Combined list across packs, deduped by character id. Each character
+  // uses its first available pack's portrait (london wins when present).
+  return CHARACTERS.map(c => {
+    const pack = c.packs.includes('london') ? 'london' : c.packs[0];
+    return {
+      id:     c.id,
+      name:   c.name,
+      age:    c.age,
+      sign:   c.sign,
+      bio:    c.bio,
+      intro:  c.intro,
+      img:    `characters/${c.id}/profile/${pack}.jpg`,
+      voices: IRIS_VOICES,
+      _pack:  pack,
+    };
+  });
+}
+
+(function initModeSelect() {
   const sel = document.getElementById('datePackSelect');
   if (!sel) return;
-  sel.innerHTML = '';
-  PACKS.forEach(p => {
-    const opt = document.createElement('option');
-    opt.value = p.id;
-    opt.textContent = p.name;
-    if (p.id === activePack) opt.selected = true;
-    sel.appendChild(opt);
-  });
+  sel.value = 'london';
   sel.addEventListener('change', (e) => {
-    activePack = e.target.value;
-    PROFILES = profilesForPack(activePack);
-    if (!PROFILES.length) {
-      // Empty pack — keep the previous selection so the screen isn't blank.
-      activePack = sel.dataset.last || 'london';
-      PROFILES = profilesForPack(activePack);
-      sel.value = activePack;
-      return;
-    }
-    sel.dataset.last = activePack;
-    // Pack-aware visuals: swap map background, hide non-matching hotspots,
-    // and let any pack-scoped CSS rules re-apply.
-    el.body.dataset.pack = activePack;
-    // Warm the browser cache for this pack's cutscenes / covers /
-    // character art so they paint instantly when reached.
-    if (typeof preloadPack === 'function') preloadPack(activePack);
+    const v = e.target.value;
     currentCardIndex = 0;
     selectedProfile = null;
+
+    if (v === 'blind') {
+      dateMode = 'blind';
+      // Blind always uses the default (london) chrome for body too,
+      // since blind cards may belong to any pack.
+      activePack = 'london';
+      el.body.dataset.pack = 'london';
+      PROFILES = profilesForPack('london');
+      buildBlindVenues();
+    } else if (v === '1984') {
+      dateMode = 'all';
+      activePack = '1984';
+      el.body.dataset.pack = '1984';
+      PROFILES = profilesForPack('1984');
+      if (typeof preloadPack === 'function')   preloadPack('1984');
+      if (typeof loadActiveScript === 'function') loadActiveScript();
+    } else if (v === 'all') {
+      dateMode = 'all';
+      activePack = 'london';
+      el.body.dataset.pack = 'london';
+      PROFILES = allCharactersAsProfiles();
+    } else {
+      // 'london' — default
+      dateMode = 'all';
+      activePack = 'london';
+      el.body.dataset.pack = 'london';
+      PROFILES = profilesForPack('london');
+      if (typeof preloadPack === 'function')   preloadPack('london');
+      if (typeof loadActiveScript === 'function') loadActiveScript();
+    }
+
+    if (!PROFILES.length && dateMode !== 'blind') {
+      // Defensive fallback so the screen doesn't go blank.
+      activePack = 'london';
+      el.body.dataset.pack = 'london';
+      PROFILES = profilesForPack('london');
+      sel.value = 'london';
+    }
+
     buildStack();
     renderStack();
-    // Reload the active pack's script so the date plays the right scenario.
-    if (typeof loadActiveScript === 'function') loadActiveScript();
+    // Re-deal the freshly built stack so the new source list (London,
+    // 1984, All, or Blind Dates) flies in instead of snapping into place.
+    requestAnimationFrame(() => dealCardsIn());
   });
 })();
 
+// Right-swipe handler for blind venue cards. Routes to the venue's
+// pack and opens its POI sheet on the map (which then either lets the
+// player Start the scenario, or shows the unlock requirement).
+function gotoBlindDate(venue) {
+  if (!venue) return;
+  // Switch to the venue's pack so the map, script, and visuals match.
+  if (venue.pack && venue.pack !== activePack) {
+    activePack = venue.pack;
+    PROFILES = profilesForPack(activePack);
+    el.body.dataset.pack = activePack;
+    if (typeof preloadPack === 'function') preloadPack(activePack);
+    if (typeof loadActiveScript === 'function') loadActiveScript();
+  }
+  showMap();
+  // openPOI builds the bottom-sheet for that venue (Start CTA if startable,
+  // requirement chip otherwise). Run after the map paints so the sheet
+  // sits on top of the right background.
+  setTimeout(() => {
+    if (typeof openPOI === 'function') openPOI(venue.id);
+  }, 50);
+}
+
 // Map back → return to date stack
 document.getElementById('mapBack').addEventListener('click', showDate);
+
+// ============================================================
+// PROFILE SHEET — opened by the date-picker top-bar profile icon.
+// ============================================================
+// "743 minutes" → "12hrs 23mins". Drops the hour part when under an hour.
+function formatCooldown(minutes) {
+  if (!minutes || minutes <= 0) return 'now';
+  const h = Math.floor(minutes / 60);
+  const m = minutes % 60;
+  if (h <= 0) return `${m}min${m === 1 ? '' : 's'}`;
+  return `${h}hr${h === 1 ? '' : 's'} ${m}min${m === 1 ? '' : 's'}`;
+}
+
+function openProfileSheet() {
+  const sheet = document.getElementById('profileSheet');
+  if (!sheet) return;
+  // Header info pulled from onboarding profile, with friendly fallbacks.
+  const name = (introProfile && introProfile.name) || 'Adrian';
+  const age  = (introProfile && introProfile.age)  || 33;
+  const loc  = (introProfile && introProfile.location) || 'Istanbul';
+  const sign = (introProfile && introProfile.sign) || '\u2653 Pisces';
+  // "<bold name>, <regular age>" + verified checkmark — age uses
+  // normal font weight per design, verified badge is always shown
+  // for the player's own profile.
+  const nameEl = document.getElementById('psCoverName');
+  if (nameEl) {
+    nameEl.innerHTML =
+      `<span class="ps-cover-fname"></span>` +
+      `<span class="ps-cover-age"></span>` +
+      `<span class="ps-cover-verified" aria-label="Verified">
+         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+              stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"
+              aria-hidden="true">
+           <polyline points="5 12 10 17 19 8"/>
+         </svg>
+       </span>`;
+    nameEl.querySelector('.ps-cover-fname').textContent = name;
+    nameEl.querySelector('.ps-cover-age').textContent   = `, ${age}`;
+  }
+  document.getElementById('psCoverMeta').textContent = `${loc} \u00B7 ${sign}`;
+
+  // Build cover gallery (lazy — only on open)
+  const track = document.getElementById('psCoverTrack');
+  const dots  = document.getElementById('psCoverDots');
+  if (track && !track.dataset.built) {
+    PROFILE_COVERS.forEach((url, i) => {
+      const slide = document.createElement('div');
+      slide.className = 'ps-cover-slide';
+      slide.style.backgroundImage = `url("${url}")`;
+      track.appendChild(slide);
+      const dot = document.createElement('span');
+      if (i === 0) dot.classList.add('active');
+      dots.appendChild(dot);
+    });
+    // Update active dot on scroll
+    track.addEventListener('scroll', () => {
+      const idx = Math.round(track.scrollLeft / track.clientWidth);
+      const ds = dots.querySelectorAll('span');
+      ds.forEach((d, i) => d.classList.toggle('active', i === idx));
+    });
+    track.dataset.built = '1';
+  }
+
+  // Build the dates list (idempotent — overwrite each open)
+  const pane = document.getElementById('psPaneDates');
+  if (pane) {
+    pane.innerHTML = '';
+    // Ring math — circumference of an r=18 circle at 40px viewBox.
+    const RING_R = 18;
+    const RING_CIRC = 2 * Math.PI * RING_R;
+    MY_DATES.forEach(d => {
+      const row = document.createElement('div');
+      row.className = 'ps-date-row';
+      const isLocked = d.cooldownMin > 0;
+      const ratioRemaining = isLocked
+        ? Math.min(1, d.cooldownMin / ZODIAC_COOLDOWN_TOTAL)
+        : 0;
+      // Stroke offset = full circumference × (1 - progress filled).
+      // We *fill* the arc as time elapses, so amount drawn = (1 - ratioRemaining).
+      const dashOffset = RING_CIRC * ratioRemaining;
+      row.innerHTML = `
+        <div class="ps-date-avatar">
+          <div class="ps-date-zodiac" aria-hidden="true"></div>
+        </div>
+        <div class="ps-date-main">
+          <div class="ps-date-cell">
+            <div class="lbl"></div>
+            <div class="sub"></div>
+          </div>
+          <div class="ps-date-cell num">
+            <div class="lbl"></div>
+            <div class="sub"></div>
+          </div>
+          <div class="ps-date-cell num">
+            <div class="lbl"></div>
+            <div class="sub"></div>
+          </div>
+        </div>
+        <div class="ps-date-action${isLocked ? ' locked' : ''}">
+          ${isLocked ? `
+            <button class="ps-date-lock" type="button" aria-label="Locked">
+              <svg class="ps-date-lock-ring" viewBox="0 0 40 40" aria-hidden="true">
+                <circle class="ring-bg"   cx="20" cy="20" r="${RING_R}"></circle>
+                <circle class="ring-fill" cx="20" cy="20" r="${RING_R}"
+                        stroke-dasharray="${RING_CIRC.toFixed(2)}"
+                        stroke-dashoffset="${dashOffset.toFixed(2)}"></circle>
+              </svg>
+              <svg class="lock-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="5" y="11" width="14" height="9" rx="1.5"/>
+                <path d="M8 11V8a4 4 0 0 1 8 0v3"/>
+              </svg>
+            </button>
+            <div class="ps-date-lock-info"></div>
+          ` : `
+            <button class="ps-date-goto" type="button" aria-label="Go to date">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="9 6 15 12 9 18"/>
+              </svg>
+            </button>
+          `}
+        </div>
+      `;
+      row.querySelector('.ps-date-avatar').style.backgroundImage = `url("${d.avatar}")`;
+      row.querySelector('.ps-date-zodiac').textContent = d.sign;
+      const cells = row.querySelectorAll('.ps-date-cell');
+      cells[0].querySelector('.lbl').textContent = d.name;
+      cells[0].querySelector('.sub').textContent = `${d.city} · ${d.age}`;
+      cells[1].querySelector('.lbl').textContent = String(d.totalDates);
+      cells[1].querySelector('.sub').textContent = `${d.locationsHit}/${d.totalMax} Dated`;
+      cells[2].querySelector('.lbl').textContent = String(d.bestScore);
+      cells[2].querySelector('.sub').textContent = `Avg ${d.avgScore.toFixed(1)}`;
+      // Lock tooltip + tap toggling
+      if (isLocked) {
+        const info  = row.querySelector('.ps-date-lock-info');
+        const wrap  = row.querySelector('.ps-date-action');
+        const lockBtn = row.querySelector('.ps-date-lock');
+        info.textContent = `Available in ${formatCooldown(d.cooldownMin)}`;
+        lockBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          wrap.classList.add('show-info');
+          // Auto-hide after 2.5s so the row goes back to its calm state.
+          clearTimeout(wrap._infoTimer);
+          wrap._infoTimer = setTimeout(() => wrap.classList.remove('show-info'), 2500);
+        });
+      }
+      pane.appendChild(row);
+    });
+  }
+
+  // Build the castings list (Castings tab) — same idempotent pattern.
+  const castPane = document.getElementById('psPaneCastings');
+  if (castPane) {
+    castPane.innerHTML = '';
+    if (!MY_CASTINGS.length) {
+      const empty = document.createElement('div');
+      empty.className = 'ps-empty';
+      empty.textContent = 'No castings yet.';
+      castPane.appendChild(empty);
+    } else {
+      MY_CASTINGS.forEach(c => {
+        const row = document.createElement('div');
+        row.className = 'ps-cast-row';
+        row.innerHTML = `
+          <div class="ps-cast-cover"></div>
+          <div class="ps-cast-info">
+            <div class="ps-cast-name"></div>
+            <div class="ps-cast-role"></div>
+          </div>
+          <button class="ps-cast-recap" type="button">Recap</button>
+        `;
+        row.querySelector('.ps-cast-cover').style.backgroundImage = `url("${c.cover}")`;
+        row.querySelector('.ps-cast-name').textContent = c.location;
+        row.querySelector('.ps-cast-role').textContent = `Casted as ${c.role}`;
+        // Recap button is a placeholder for now — wire to a real recap
+        // sheet when one exists.
+        row.querySelector('.ps-cast-recap').addEventListener('click', () => {
+          console.log('[castings] recap tap →', c.id, c.location, c.role);
+        });
+        castPane.appendChild(row);
+      });
+    }
+  }
+
+  // Scroll-driven cover shrink — as the user scrolls the dates list
+  // upward, lerp the cover height from its full 48vh down to a compact
+  // 120px band. List naturally gets more vertical room as cover shrinks.
+  const cover = document.getElementById('psCover');
+  const body  = sheet.querySelector('.ps-body');
+  if (cover && body && !body.dataset.scrollWired) {
+    const baseVH = Math.round(window.innerHeight * 0.48);
+    const minPx  = 120;
+    const range  = 200;   // scroll distance over which the cover collapses
+    const onScroll = () => {
+      const ratio = Math.min(1, body.scrollTop / range);
+      const h = baseVH + (minPx - baseVH) * ratio;
+      cover.style.setProperty('--cover-h', h + 'px');
+    };
+    body.addEventListener('scroll', onScroll, { passive: true });
+    onScroll();
+    body.dataset.scrollWired = '1';
+  }
+
+  sheet.classList.add('open');
+  sheet.setAttribute('aria-hidden', 'false');
+}
+function closeProfileSheet() {
+  const sheet = document.getElementById('profileSheet');
+  if (sheet) {
+    sheet.classList.remove('open');
+    sheet.setAttribute('aria-hidden', 'true');
+  }
+}
+
+document.getElementById('dpOpenProfile').addEventListener('click', openProfileSheet);
+document.getElementById('psBack').addEventListener('click', closeProfileSheet);
+
+// ============================================================
+// MESSAGES SHEET — open/close + two-pane (list ↔ chat) navigation
+// ============================================================
+// Builds the contact list once (idempotent via dataset.built); the
+// chat thread is rebuilt on each open since it depends on the chosen
+// contact. Pane switching is pure CSS class flips: the list pane gets
+// `.away` when chat is active, the chat pane gets `.active` to slide
+// in from the right.
+function buildMessagesList() {
+  const list = document.getElementById('msList');
+  if (!list || list.dataset.built === '1') return;
+  list.innerHTML = MY_CONTACTS.map(c => `
+    <div class="ms-row" data-contact="${c.id}">
+      <div class="ms-row-avatar" style="background-image:url('${c.avatar}')"></div>
+      <div class="ms-row-body">
+        <div class="ms-row-top">
+          <div class="ms-row-name">${escapeHtml(c.name)}</div>
+          <div class="ms-row-time">${escapeHtml(c.lastTime || '')}</div>
+        </div>
+        <div class="ms-row-bottom">
+          <div class="ms-row-preview">${escapeHtml(c.last || '')}</div>
+          ${c.unread ? `<div class="ms-row-unread">${c.unread}</div>` : ''}
+        </div>
+      </div>
+    </div>
+  `).join('');
+  list.dataset.built = '1';
+
+  // Wire row taps → open chat
+  list.querySelectorAll('.ms-row').forEach(row => {
+    row.addEventListener('click', () => openChat(row.dataset.contact));
+  });
+}
+
+function renderChatThread(contactId) {
+  const contact = MY_CONTACTS.find(c => c.id === contactId);
+  const thread  = MY_CHATS[contactId] || [];
+  if (!contact) return;
+
+  document.getElementById('msChatName').textContent = contact.name;
+  document.getElementById('msChatAvatar').style.backgroundImage = `url('${contact.avatar}')`;
+
+  const threadEl = document.getElementById('msChatThread');
+  threadEl.innerHTML = thread.map(m => `
+    <div class="ms-bubble ${m.from === 'me' ? 'me' : 'them'}">
+      ${escapeHtml(m.text)}
+      <span class="ms-bubble-time">${escapeHtml(m.time || '')}</span>
+    </div>
+  `).join('');
+
+  // Scroll to latest message
+  requestAnimationFrame(() => {
+    threadEl.scrollTop = threadEl.scrollHeight;
+  });
+
+  // Clear unread chip on the source row, since the user just read it
+  const row = document.querySelector(`#msList .ms-row[data-contact="${contactId}"] .ms-row-unread`);
+  if (row) row.remove();
+  const target = MY_CONTACTS.find(c => c.id === contactId);
+  if (target) target.unread = 0;
+}
+
+function openMessagesSheet() {
+  buildMessagesList();
+  const sheet = document.getElementById('messagesSheet');
+  sheet.classList.add('open');
+  sheet.setAttribute('aria-hidden', 'false');
+  // Always start on the contact list, never lingering on a previous chat
+  document.getElementById('msPaneList').classList.remove('away');
+  document.getElementById('msPaneChat').classList.remove('active');
+}
+function closeMessagesSheet() {
+  const sheet = document.getElementById('messagesSheet');
+  if (!sheet) return;
+  sheet.classList.remove('open');
+  sheet.setAttribute('aria-hidden', 'true');
+  // Reset to list pane after close transition so re-opens look clean
+  setTimeout(() => {
+    document.getElementById('msPaneList').classList.remove('away');
+    document.getElementById('msPaneChat').classList.remove('active');
+  }, 450);
+}
+function openChat(contactId) {
+  renderChatThread(contactId);
+  document.getElementById('msPaneList').classList.add('away');
+  document.getElementById('msPaneChat').classList.add('active');
+}
+function closeChat() {
+  document.getElementById('msPaneChat').classList.remove('active');
+  document.getElementById('msPaneList').classList.remove('away');
+}
+
+document.getElementById('dpOpenMessages').addEventListener('click', openMessagesSheet);
+document.getElementById('msClose').addEventListener('click', closeMessagesSheet);
+document.getElementById('msChatBack').addEventListener('click', closeChat);
+
+// Send button + Enter — prototype-only: clear the field, no real send
+(function wireMessageSend() {
+  const input = document.getElementById('msChatInput');
+  const send  = document.getElementById('msChatSend');
+  if (!input || !send) return;
+  const submit = () => {
+    const text = input.value.trim();
+    if (!text) return;
+    input.value = '';
+    // Could append a `me` bubble here in the future; left intentionally
+    // inert for the prototype so the seeded conversations stay clean.
+  };
+  send.addEventListener('click', submit);
+  input.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') { e.preventDefault(); submit(); }
+  });
+})();
+
+// Tab switching inside the profile sheet
+document.querySelectorAll('#profileSheet .ps-tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    const target = tab.dataset.tab;
+    document.querySelectorAll('#profileSheet .ps-tab').forEach(t =>
+      t.classList.toggle('active', t === tab));
+    document.querySelectorAll('#profileSheet .ps-pane').forEach(p =>
+      p.classList.toggle('active', p.classList.contains('ps-pane-' + target)));
+  });
+});
 
 // ----- Map: click-drag to pan (on top of native touch scrolling) -
 (function initMapDrag() {
