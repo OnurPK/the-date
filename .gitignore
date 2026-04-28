@@ -7,3 +7,5 @@ node_modules
 _legacy/
 _backup/
 _debug_frames/
+# Local config (proxy URL for the AI portrait API). Never commit.
+_config/

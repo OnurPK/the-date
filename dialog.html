@@ -22,6 +22,12 @@
 <link rel="icon" type="image/png" href="assets/ui/app-icon.png">
 <link rel="apple-touch-icon" href="assets/ui/app-icon.png">
 <link rel="manifest" href="manifest.json">
+<!-- Optional local config — sets window.AI_PORTRAIT_PROXY (the URL
+     of the Cloudflare Worker / proxy that holds the OpenAI key).
+     This file is in .gitignore so the proxy URL is never committed.
+     If it's missing the script just 404s silently and AI portrait
+     generation is disabled. -->
+<script src="_config/api.js" onerror="void 0"></script>
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -1347,6 +1353,54 @@
   }
   body.flow-intro   #introScreen,
   body.flow-form    #introScreen   { display: block; }   /* shared screen */
+
+  /* ---------- Demo / AI toggle (intro screen, top-right) ---------- */
+  .demo-toggle {
+    position: fixed;
+    top: max(14px, calc(env(safe-area-inset-top) + 6px));
+    right: 16px;
+    z-index: 50;
+    display: none;             /* only on intro */
+    align-items: center;
+    gap: 9px;
+    padding: 5px 12px 5px 6px;
+    border-radius: 999px;
+    background: rgba(0,0,0,0.45);
+    border: 1px solid rgba(255,255,255,0.18);
+    -webkit-backdrop-filter: blur(10px);
+    backdrop-filter: blur(10px);
+    color: rgba(255,255,255,0.85);
+    cursor: pointer;
+    font-family: inherit;
+    transition: background 0.2s, border-color 0.2s, transform 0.15s;
+  }
+  body.flow-intro .demo-toggle { display: inline-flex; }
+  .demo-toggle:hover  { background: rgba(0,0,0,0.65); border-color: rgba(255,255,255,0.3); }
+  .demo-toggle:active { transform: scale(0.96); }
+  .demo-toggle .dt-track {
+    position: relative;
+    width: 36px; height: 18px;
+    border-radius: 999px;
+    background: rgba(255,255,255,0.18);
+    transition: background 0.22s ease;
+  }
+  .demo-toggle .dt-thumb {
+    position: absolute;
+    top: 2px; left: 2px;
+    width: 14px; height: 14px;
+    border-radius: 50%;
+    background: #fff;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.4);
+    transition: transform 0.22s ease;
+  }
+  .demo-toggle.on .dt-track { background: linear-gradient(135deg, #ff7eb9, #ff5f98); }
+  .demo-toggle.on .dt-thumb { transform: translateX(18px); }
+  .demo-toggle .dt-label {
+    font-size: 10.5px;
+    font-weight: 800;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+  }
   body.flow-loading #loadingScreen { display: flex; }
   body.flow-survey  #surveyScreen  { display: flex; }
 
@@ -1746,8 +1800,15 @@
     opacity: 1;
     transform: translate(-50%, -50%) scale(1);
   }
-  .avatar-cloud-photo {
+  /* Wrapper that contains either the captured photo OR the live
+     video feed. Both are absolutely-positioned siblings so we can
+     swap them without layout shift. */
+  .avatar-photo-frame {
+    position: relative;
     width: 240px; height: 240px;
+  }
+  .avatar-cloud-photo {
+    position: absolute; inset: 0;
     border-radius: 50%;
     background-size: cover;
     background-position: center top;
@@ -1756,6 +1817,34 @@
       0 0 0 2px rgba(255,255,255,0.15) inset,
       0 0 36px rgba(255,126,185,0.25);
   }
+  /* Live camera video — inside the same oval as the captured photo,
+     mirrored so the player sees themselves naturally. Hidden until
+     .camera-live is set on .avatar-cloud. */
+  .avatar-cloud-video {
+    position: absolute; inset: 0;
+    width: 240px; height: 240px;
+    border-radius: 50%;
+    object-fit: cover;
+    transform: scaleX(-1);
+    box-shadow:
+      0 18px 48px rgba(0,0,0,0.55),
+      0 0 0 2px rgba(255,255,255,0.18) inset,
+      0 0 40px rgba(255,126,185,0.30);
+    display: none;
+    background: #0a0a0f;
+  }
+  /* In live-camera mode, reveal the stage (same as has-photo) but
+     show the <video> instead of the <div> photo. */
+  .avatar-cloud.camera-live .avatar-photo-stage {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+    pointer-events: auto;
+  }
+  .avatar-cloud.camera-live > .avatar-row { opacity: 0; }
+  .avatar-cloud.camera-live .avatar-cloud-photo { display: none; }
+  .avatar-cloud.camera-live .avatar-cloud-video { display: block; }
+  .avatar-cloud.camera-live .avatar-photo-title { visibility: hidden; }
+  .avatar-cloud.camera-live .avatar-photo-sub   { visibility: hidden; }
   .avatar-photo-title {
     margin: 0;
     font-size: 22px;
@@ -1979,6 +2068,34 @@
     filter: drop-shadow(0 22px 28px rgba(0,0,0,0.55));
     animation: finalFadeIn 0.9s ease both;
   }
+  /* When the user has a generated AI portrait, .final-boy turns into
+     a flex container that holds an actual <img>. The <img> sizes
+     itself with object-fit:contain — this is the only reliable way
+     to keep a transparent PNG fully visible inside an arbitrary
+     container without clipping head or feet. */
+  .final-boy.has-photo {
+    aspect-ratio: auto;
+    width: 100%;
+    height: 100%;
+    max-width: 100%;
+    max-height: 100%;
+    background-image: none;
+    filter: none;             /* drop-shadow now lives on the <img> */
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+  }
+  .final-boy-img {
+    display: none;
+    max-width: 100%;
+    max-height: 100%;
+    width: auto;
+    height: auto;
+    object-fit: contain;
+    object-position: center bottom;
+    filter: drop-shadow(0 22px 28px rgba(0,0,0,0.55));
+  }
+  .final-boy.has-photo .final-boy-img { display: block; }
   .final-dog {
     position: absolute;
     z-index: 2;              /* behind the boy, in front of the ground */
@@ -2264,6 +2381,59 @@
   .survey-skip-all:hover { color: #fff; }
   .survey-skip-all:active { transform: scale(0.97); }
 
+  /* ---------- Background AI generation status chip ----------
+     Sits at the very top of the survey screen, horizontally
+     centered, with the progress bar below. */
+  .survey-gen-status {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 12px 6px 10px;
+    margin: 0 auto 10px;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.14);
+    color: rgba(255,255,255,0.72);
+    transition: background 0.35s ease, color 0.35s ease, border-color 0.35s ease;
+  }
+  /* The wrapper is the .survey-top flex/block container — center
+     the chip on its own line by making it a centered block. */
+  .survey-top { display: flex; flex-direction: column; align-items: stretch; }
+  .survey-gen-status:not([hidden]) { display: inline-flex; }
+  .survey-gen-status { align-self: center; }
+  .survey-gen-status .gs-icon {
+    width: 14px; height: 14px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .survey-gen-status.pending {
+    background: rgba(255,178,213,0.10);
+    border-color: rgba(255,178,213,0.30);
+    color: #ffd1e6;
+  }
+  .gs-spinner {
+    width: 12px; height: 12px;
+    border: 1.5px solid rgba(255,255,255,0.20);
+    border-top-color: #fff;
+    border-radius: 50%;
+    animation: gsSpin 0.85s linear infinite;
+  }
+  @keyframes gsSpin { to { transform: rotate(360deg); } }
+  .survey-gen-status.done {
+    background: rgba(140,255,180,0.12);
+    border-color: rgba(140,255,180,0.36);
+    color: #c2ffd5;
+  }
+  .survey-gen-status.error {
+    background: rgba(255,140,140,0.12);
+    border-color: rgba(255,140,140,0.36);
+    color: #ffd0d0;
+  }
+
   .survey-body {
     width: 100%;
     max-width: 400px;
@@ -2460,6 +2630,65 @@
   body.flow-gallery #galleryScreen { display: flex; }
   body.flow-addself #addSelfScreen { display: flex; }
   body.flow-final   #finalScreen   { display: flex; }
+
+  /* ---------- Live camera modal (getUserMedia) ---------- */
+  #cameraModal {
+    position: fixed; inset: 0;
+    z-index: 9999;
+    background: #000;
+    display: none;
+    align-items: center; justify-content: center;
+  }
+  #cameraModal.open { display: flex; }
+  #cameraModal video {
+    width: 100%; height: 100%;
+    object-fit: cover;
+    /* Mirror the front camera so the user sees themselves in the
+       expected "selfie" orientation. The captured frame is also
+       mirrored to match (see drawImage in JS). */
+    transform: scaleX(-1);
+  }
+  #cameraModal .cam-close {
+    position: absolute;
+    top: max(16px, env(safe-area-inset-top));
+    right: 16px;
+    width: 42px; height: 42px;
+    border-radius: 50%;
+    background: rgba(0,0,0,0.55);
+    border: 1px solid rgba(255,255,255,0.25);
+    color: #fff;
+    font-size: 22px; line-height: 1;
+    cursor: pointer;
+    -webkit-backdrop-filter: blur(10px);
+    backdrop-filter: blur(10px);
+    z-index: 2;
+  }
+  #cameraModal .cam-capture {
+    position: absolute;
+    bottom: max(28px, calc(env(safe-area-inset-bottom) + 22px));
+    left: 50%;
+    transform: translateX(-50%);
+    width: 78px; height: 78px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.10);
+    border: 4px solid rgba(255,255,255,0.95);
+    cursor: pointer;
+    padding: 0;
+    -webkit-backdrop-filter: blur(8px);
+    backdrop-filter: blur(8px);
+    transition: transform 0.12s ease;
+    z-index: 2;
+  }
+  #cameraModal .cam-capture:active { transform: translateX(-50%) scale(0.92); }
+  #cameraModal .cam-capture-inner {
+    display: block;
+    width: 100%; height: 100%;
+    border-radius: 50%;
+    background: #fff;
+    transform: scale(0.86);
+    transition: transform 0.12s ease;
+  }
+  #cameraModal .cam-capture:active .cam-capture-inner { transform: scale(0.78); }
   #galleryScreen {
     position: fixed; inset: 0;
     z-index: 410;
@@ -2895,42 +3124,42 @@
   body.flow-intro   #backdrop,     body.flow-form    #backdrop,
   body.flow-loading #backdrop,     body.flow-survey  #backdrop,
   body.flow-gallery #backdrop,     body.flow-addself #backdrop,
-  body.flow-final   #backdrop,
+  body.flow-final   #backdrop,     body.flow-worlds  #backdrop,
   body.flow-date    #backdrop,     body.flow-map     #backdrop,
   body.flow-intro   .vignette,     body.flow-form    .vignette,
   body.flow-loading .vignette,     body.flow-survey  .vignette,
   body.flow-gallery .vignette,     body.flow-addself .vignette,
-  body.flow-final   .vignette,
+  body.flow-final   .vignette,     body.flow-worlds  .vignette,
   body.flow-date    .vignette,     body.flow-map     .vignette,
   body.flow-intro   #stage,        body.flow-form    #stage,
   body.flow-loading #stage,        body.flow-survey  #stage,
   body.flow-gallery #stage,        body.flow-addself #stage,
-  body.flow-final   #stage,
+  body.flow-final   #stage,        body.flow-worlds  #stage,
   body.flow-date    #stage,        body.flow-map     #stage,
   body.flow-intro   #dialogBox,    body.flow-form    #dialogBox,
   body.flow-loading #dialogBox,    body.flow-survey  #dialogBox,
   body.flow-gallery #dialogBox,    body.flow-addself #dialogBox,
-  body.flow-final   #dialogBox,
+  body.flow-final   #dialogBox,    body.flow-worlds  #dialogBox,
   body.flow-date    #dialogBox,    body.flow-map     #dialogBox,
   body.flow-intro   #lineCounter,  body.flow-form    #lineCounter,
   body.flow-loading #lineCounter,  body.flow-survey  #lineCounter,
   body.flow-gallery #lineCounter,  body.flow-addself #lineCounter,
-  body.flow-final   #lineCounter,
+  body.flow-final   #lineCounter,  body.flow-worlds  #lineCounter,
   body.flow-date    #lineCounter,  body.flow-map     #lineCounter,
   body.flow-intro   #playerControls, body.flow-form  #playerControls,
   body.flow-loading #playerControls, body.flow-survey #playerControls,
   body.flow-gallery #playerControls, body.flow-addself #playerControls,
-  body.flow-final   #playerControls,
+  body.flow-final   #playerControls, body.flow-worlds #playerControls,
   body.flow-date    #playerControls, body.flow-map   #playerControls,
   body.flow-intro   #topControls, body.flow-form    #topControls,
   body.flow-loading #topControls, body.flow-survey  #topControls,
   body.flow-gallery #topControls, body.flow-addself #topControls,
-  body.flow-final   #topControls,
+  body.flow-final   #topControls, body.flow-worlds  #topControls,
   body.flow-date    #topControls, body.flow-map     #topControls,
   body.flow-intro   .voice-aura,  body.flow-form    .voice-aura,
   body.flow-loading .voice-aura,  body.flow-survey  .voice-aura,
   body.flow-gallery .voice-aura,  body.flow-addself .voice-aura,
-  body.flow-final   .voice-aura,
+  body.flow-final   .voice-aura,  body.flow-worlds  .voice-aura,
   body.flow-date    .voice-aura,  body.flow-map     .voice-aura {
     display: none !important;
   }
@@ -2946,6 +3175,245 @@
       #0a0a0f;
   }
   body.flow-date #dateScreen { display: block; }
+
+  /* ============================================================
+     WORLD LIST — pick a world, then enter its map.
+     ============================================================ */
+  #worldListScreen {
+    position: fixed; inset: 0;
+    display: none;
+    flex-direction: column;
+    z-index: 300;
+    color: #fff;
+    background:
+      radial-gradient(ellipse at 22% 10%, rgba(255,126,185,0.10), transparent 55%),
+      radial-gradient(ellipse at 80% 90%, rgba(155,127,255,0.10), transparent 50%),
+      #0a0a0f;
+    padding: max(28px, calc(env(safe-area-inset-top) + 18px))
+             20px
+             max(24px, env(safe-area-inset-bottom));
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  body.flow-worlds #worldListScreen { display: flex; }
+  /* Hide scrollbar — page still scrolls (overflow-y:auto), just no
+     visible track/handle. */
+  #worldListScreen { scrollbar-width: none; -ms-overflow-style: none; }
+  #worldListScreen::-webkit-scrollbar { display: none; }
+
+  /* ---------- Top bar (hero text on the left, icons on the right) ---------- */
+  .wl-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 22px;
+  }
+  .wl-top-icons {
+    display: flex;
+    gap: 10px;
+    flex: 0 0 auto;
+  }
+
+  /* ---------- Hero header (now nested inside .wl-top) ---------- */
+  .wl-header { text-align: left; min-width: 0; }
+  .wl-title {
+    margin: 0;
+    font-size: 22px;
+    font-weight: 800;
+    letter-spacing: -0.015em;
+    line-height: 1.1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .wl-sub {
+    margin: 4px 0 0;
+    font-size: 12.5px;
+    line-height: 1.4;
+    color: rgba(255,255,255,0.6);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  /* ---------- Section head (Available Worlds + Get more worlds) ---------- */
+  .wl-section-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 10px;
+    margin: 6px 0 12px;
+  }
+  .wl-section-title {
+    margin: 0;
+    font-size: 17px;
+    font-weight: 800;
+    letter-spacing: -0.01em;
+    color: #fff;
+  }
+  .wl-link {
+    background: none;
+    border: 0;
+    padding: 4px 0;
+    font: inherit;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    color: #ff8fc1;
+    cursor: pointer;
+    transition: color 0.15s;
+  }
+  .wl-link:hover { color: #ffb3d4; }
+
+  /* ---------- World cards ---------- */
+  .wl-cards {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 14px;
+    padding-bottom: 14px;
+  }
+  /* Aspect halved (was 16/11 → ~16/22 effectively): 16/5.5 ≈ 32:11. */
+  .wl-card {
+    position: relative;
+    aspect-ratio: 32 / 11;
+    border-radius: 18px;
+    overflow: hidden;
+    background-color: #1a1423;
+    background-size: cover;
+    background-position: center;
+    cursor: pointer;
+    box-shadow:
+      0 14px 28px rgba(0,0,0,0.45),
+      inset 0 0 0 1px rgba(255,255,255,0.08);
+    transition: transform 0.18s ease, box-shadow 0.25s ease;
+  }
+  .wl-card:active { transform: scale(0.98); }
+  .wl-card::after {
+    content: '';
+    position: absolute; inset: 0;
+    background: linear-gradient(180deg, rgba(0,0,0,0) 35%, rgba(0,0,0,0.78) 100%);
+    pointer-events: none;
+  }
+  .wl-card-body {
+    position: absolute;
+    left: 0; bottom: 0;
+    padding: 12px 16px 14px;
+    z-index: 2;
+  }
+  .wl-card-name {
+    font-size: 22px; font-weight: 800; letter-spacing: -0.01em;
+    color: #fff;
+    text-shadow: 0 2px 8px rgba(0,0,0,0.6);
+    line-height: 1;
+  }
+  .wl-card-tag {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    color: rgba(255,255,255,0.82);
+    margin-top: 6px;
+  }
+  /* Progress ring + label — stacked vertically, right-aligned, with
+     the ring sitting directly above the "%X Completed" text. */
+  .wl-card-progress {
+    position: absolute;
+    right: 12px; bottom: 12px;
+    z-index: 2;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 4px;
+  }
+  .wl-card-progress-ring {
+    width: 30px; height: 30px;
+    /* Rotate so the dasharray starts at 12 o'clock. */
+    transform: rotate(-90deg);
+    overflow: visible;
+  }
+  .wl-card-progress-ring circle {
+    fill: none;
+    stroke-width: 3;
+    /* cx/cy/r are HTML attributes on the <circle> elements — set in
+       progressRingMarkup() — because Safari treats those as content
+       attributes, not CSS properties. */
+  }
+  .wl-card-progress-ring .ring-track { stroke: rgba(255,255,255,0.22); }
+  .wl-card-progress-ring .ring-fill  { stroke: #ff7eb9; stroke-linecap: round;
+                                        transition: stroke-dashoffset 0.5s ease; }
+  .wl-card-progress-text {
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    color: #fff;
+    text-shadow: 0 1px 4px rgba(0,0,0,0.5);
+  }
+
+  /* ---------- Netflix-style horizontal rows ---------- */
+  .wl-row { margin: 18px -20px 0; }   /* bleed to edges so swipe feels native */
+  .wl-row-head {
+    padding: 0 20px;
+    margin-bottom: 10px;
+  }
+  .wl-row-title {
+    margin: 0;
+    font-size: 15px;
+    font-weight: 800;
+    letter-spacing: -0.005em;
+    color: #fff;
+  }
+  .wl-row-track {
+    display: flex;
+    gap: 10px;
+    padding: 4px 20px 18px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+  .wl-row-track::-webkit-scrollbar { display: none; }
+  .wl-tile {
+    flex: 0 0 auto;
+    width: 130px;
+    aspect-ratio: 2 / 3;
+    border-radius: 12px;
+    overflow: hidden;
+    background-color: #1a1423;
+    background-size: cover;
+    background-position: center;
+    position: relative;
+    cursor: pointer;
+    box-shadow:
+      0 8px 18px rgba(0,0,0,0.35),
+      inset 0 0 0 1px rgba(255,255,255,0.05);
+    transition: transform 0.15s ease;
+  }
+  .wl-tile:active { transform: scale(0.96); }
+  .wl-tile::after {
+    content: '';
+    position: absolute; inset: 0;
+    background: linear-gradient(180deg, rgba(0,0,0,0) 45%, rgba(0,0,0,0.72) 100%);
+    pointer-events: none;
+  }
+  .wl-tile-text {
+    position: absolute;
+    left: 10px; right: 10px; bottom: 10px;
+    z-index: 2;
+  }
+  .wl-tile-name {
+    font-size: 12.5px; font-weight: 700;
+    color: #fff;
+    text-shadow: 0 2px 6px rgba(0,0,0,0.6);
+    line-height: 1.2;
+  }
+  .wl-tile-meta {
+    margin-top: 2px;
+    font-size: 10.5px;
+    font-weight: 600;
+    color: rgba(255,255,255,0.78);
+    text-shadow: 0 1px 4px rgba(0,0,0,0.6);
+    line-height: 1.2;
+  }
 
   /* Date-picker top bar — flex row, icons left, dropdown right. */
   .date-pack-wrap {
@@ -2989,6 +3457,50 @@
   .dp-iconbtn:hover  { background: rgba(0,0,0,0.7); border-color: rgba(255,255,255,0.3); }
   .dp-iconbtn:active { transform: scale(0.94); }
   .dp-iconbtn svg { width: 28px; height: 28px; }
+
+  /* Cancel button — only visible when the date picker is opened from
+     the casting screen as a cast-actor selector. */
+  .dp-cancel-btn {
+    pointer-events: auto;
+    background: rgba(0,0,0,0.55);
+    -webkit-backdrop-filter: blur(10px);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255,255,255,0.22);
+    color: #fff;
+    border-radius: 999px;
+    padding: 11px 16px;
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    cursor: pointer;
+    transition: background 0.2s, border-color 0.2s, transform 0.15s;
+  }
+  .dp-cancel-btn:hover  { background: rgba(0,0,0,0.7); border-color: rgba(255,255,255,0.3); }
+  .dp-cancel-btn:active { transform: scale(0.96); }
+
+  /* Round glass back arrow on the date picker — returns to the
+     casting modal. Same chrome as the casting modal's back arrow
+     so the navigation reads as a single back action. */
+  .dp-back-btn {
+    pointer-events: auto;
+    width: 48px; height: 48px;
+    border-radius: 50%;
+    background: rgba(0,0,0,0.55);
+    -webkit-backdrop-filter: blur(10px);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255,255,255,0.22);
+    color: #fff;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    transition: background 0.2s, border-color 0.2s, transform 0.15s;
+  }
+  .dp-back-btn:hover  { background: rgba(0,0,0,0.7); border-color: rgba(255,255,255,0.3); }
+  .dp-back-btn:active { transform: scale(0.94); }
+  .dp-back-btn svg { width: 20px; height: 20px; display: block; }
   .dp-top-left { gap: 10px; }
   .date-pack-select {
     /* 1.2× bigger than before — font 15→18, padding 10/36/10/16 → 12/44/12/20 */
@@ -3327,22 +3839,31 @@
     display: block;
   }
   .map-icon-btn.square { padding: 11px 14px; }
+  /* Same round-glass chrome as the casting / date-picker back arrows
+     so all "back" affordances feel identical across screens. */
   .map-back {
     position: fixed;
-    top: max(12px, env(safe-area-inset-top));
+    top: max(12px, calc(env(safe-area-inset-top) + 6px));
     left: 12px;
     z-index: 310;
+    width: 48px; height: 48px;
+    border-radius: 50%;
     background: rgba(0,0,0,0.55);
     backdrop-filter: blur(10px);
     -webkit-backdrop-filter: blur(10px);
     color: #fff;
-    border: 1px solid rgba(255,255,255,0.2);
-    border-radius: 999px;
-    padding: 8px 12px;
-    font-size: 11.5px; cursor: pointer;
+    border: 1px solid rgba(255,255,255,0.22);
+    cursor: pointer;
     font-family: inherit;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    transition: background 0.2s, border-color 0.2s, transform 0.15s;
   }
-  .map-back:active { transform: scale(0.96); }
+  .map-back:hover  { background: rgba(0,0,0,0.7); border-color: rgba(255,255,255,0.3); }
+  .map-back:active { transform: scale(0.94); }
+  .map-back svg { width: 20px; height: 20px; display: block; }
 
   /* Bottom-left map toggle — pack-aware: rain on/off on 1984,
      day/night on London. Glassy round chip, sits above the rain
@@ -4959,6 +5480,32 @@
     transition: opacity 0.45s ease;
   }
   #castingModal.open { opacity: 1; pointer-events: auto; }
+
+  /* Round glass back arrow — same chrome as the Tinder date picker
+     back button so all "back" affordances read identically. */
+  .casting-back {
+    position: absolute;
+    top: max(14px, calc(env(safe-area-inset-top) + 8px));
+    left: 16px;
+    width: 48px; height: 48px;
+    border-radius: 50%;
+    background: rgba(0,0,0,0.55);
+    -webkit-backdrop-filter: blur(10px);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255,255,255,0.22);
+    color: #fff;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    transition: background 0.2s, border-color 0.2s, transform 0.15s;
+    z-index: 5;
+  }
+  .casting-back:hover  { background: rgba(0,0,0,0.7);  border-color: rgba(255,255,255,0.3); }
+  .casting-back:active { transform: scale(0.94); }
+  .casting-back svg { width: 20px; height: 20px; display: block; }
+
   .casting-tag {
     font-size: 11px; font-weight: 800;
     letter-spacing: 0.32em; text-transform: uppercase;
@@ -4972,11 +5519,17 @@
     margin-bottom: 10px;
     text-align: center;
   }
+  /* Sub-text two-line cap so the cast cards sit higher and the
+     Confirm button doesn't get pushed off the bottom on phones. */
   .casting-sub {
-    font-size: 13px; line-height: 1.5;
+    font-size: 13px; line-height: 1.45;
     color: rgba(255,255,255,0.6);
-    text-align: center; max-width: 360px;
-    margin-bottom: 80px;
+    text-align: center; max-width: 320px;
+    margin-bottom: 36px;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
   }
   .casting-roles {
     /* Slots are bottom-anchored so the character only spills ~30px above
@@ -5328,6 +5881,33 @@
   }
   .ps-back:active { transform: scale(0.94); }
   .ps-back svg { width: 18px; height: 18px; }
+
+  /* Sign Out — mirror of the close button on the right side of the
+     cover. Tapping wipes the in-session profile and returns to Start. */
+  .ps-signout {
+    position: absolute;
+    top: max(18px, calc(env(safe-area-inset-top) + 14px));
+    right: 16px;
+    height: 38px;
+    padding: 0 14px;
+    border-radius: 999px;
+    background: rgba(0,0,0,0.55);
+    -webkit-backdrop-filter: blur(10px);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255,255,255,0.18);
+    color: #fff;
+    font-family: inherit;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    cursor: pointer;
+    z-index: 5;
+    display: inline-flex;
+    align-items: center;
+    transition: background 0.2s, border-color 0.2s, transform 0.15s;
+  }
+  .ps-signout:hover  { background: rgba(0,0,0,0.7); border-color: rgba(255,255,255,0.3); }
+  .ps-signout:active { transform: scale(0.96); }
   .ps-cover-dots {
     position: absolute;
     left: 50%;
@@ -7210,6 +7790,16 @@
        body.flow-intro → Start visible, logo centered
        body.flow-form  → Start fades, logo slides up, form slides in -->
 <div id="introScreen" class="intro-layer">
+  <!-- AI / Demo toggle (top-right). ON = real GPT Image generation.
+       OFF = pull a random portrait from the local IndexedDB cache,
+       useful for demos so we don't pay or wait every time. -->
+  <button class="demo-toggle" id="demoToggle" type="button"
+          aria-label="Toggle AI generation vs demo cache"
+          title="ON: real AI generation. OFF: pick a cached portrait.">
+    <span class="dt-track"><span class="dt-thumb"></span></span>
+    <span class="dt-label" id="demoToggleLabel">AI ON</span>
+  </button>
+
   <div class="logo-wrap">
     <img class="logo-img" src="assets/ui/logo.png" alt="The Date" draggable="false">
     <div class="logo-sub">Know her, know yourself</div>
@@ -7269,7 +7859,10 @@
     <div class="avatar-row row-ltr"><div class="avatar-row-track" id="avatarRow1"></div></div>
     <div class="avatar-row row-rtl"><div class="avatar-row-track" id="avatarRow2"></div></div>
     <div class="avatar-photo-stage">
-      <div class="avatar-cloud-photo" id="avatarCloudPhoto"></div>
+      <div class="avatar-photo-frame">
+        <div class="avatar-cloud-photo" id="avatarCloudPhoto"></div>
+        <video class="avatar-cloud-video" id="avatarCloudVideo" playsinline autoplay muted></video>
+      </div>
       <h3 class="avatar-photo-title">Looking good.</h3>
       <p class="avatar-photo-sub">
         Your photo will be edited with AI — please add only yourself and avoid inappropriate content.
@@ -7312,6 +7905,11 @@
       <!-- Initial state: camera + upload -->
       <button class="intro-btn"        id="openCameraBtn"  type="button">Open Camera</button>
       <button class="intro-btn ghost"  id="uploadPhotoBtn" type="button">Upload Photo</button>
+      <!-- Live-camera state: capture frame + cancel -->
+      <button class="intro-btn"        id="liveCaptureBtn" type="button" hidden>Capture</button>
+      <button class="line-btn"         id="liveCancelBtn"  type="button" hidden>
+        <span class="lb-label">Cancel</span>
+      </button>
       <!-- Photo-added state: Continue primary + Remove Photo line-btn -->
       <button class="intro-btn"        id="selfContinueBtn" type="button" hidden>Continue</button>
       <button class="line-btn"         id="removePhotoBtn"  type="button" hidden>
@@ -7328,6 +7926,18 @@
   </div>
 </div>
 
+<!-- Live camera modal — opened by "Open Camera". Uses getUserMedia
+     to get a real video stream, snapshots a frame on capture, hands
+     it to onSelfPhotoPicked. Falls back to the file picker if camera
+     permission is denied or no camera is present. -->
+<div id="cameraModal" aria-hidden="true">
+  <video id="cameraVideo" playsinline autoplay muted></video>
+  <button class="cam-close"   id="cameraClose"   type="button" aria-label="Close">×</button>
+  <button class="cam-capture" id="cameraCapture" type="button" aria-label="Capture photo">
+    <span class="cam-capture-inner"></span>
+  </button>
+</div>
+
 <!-- Final screen — hero "generated" portrait: full boy + dog at his feet -->
 <div id="finalScreen" class="intro-layer">
   <div class="final-caption">
@@ -7335,7 +7945,9 @@
   </div>
   <div class="final-stage">
     <div class="final-ground" aria-hidden="true"></div>
-    <div class="final-boy"    aria-hidden="true"></div>
+    <div class="final-boy" id="finalBoy" aria-hidden="true">
+      <img class="final-boy-img" id="finalBoyImg" alt="" />
+    </div>
     <div class="final-dog" id="finalDog" aria-hidden="true"></div>
   </div>
   <div class="final-actions">
@@ -7364,6 +7976,13 @@
 <!-- Survey — fixed top bar, centered question, fixed bottom Next button -->
 <div id="surveyScreen" class="intro-layer">
   <div class="survey-top">
+    <!-- Background-generation status chip — centered above the
+         progress bar so the player sees portrait progress as the
+         primary signal at the top of the screen. -->
+    <div class="survey-gen-status" id="surveyGenStatus" hidden>
+      <span class="gs-icon" id="gsIcon"></span>
+      <span class="gs-text" id="gsText">Generating character</span>
+    </div>
     <div class="survey-progress"><div class="survey-progress-fill" id="surveyFill"></div></div>
     <div class="survey-top-row">
       <span class="survey-tag" id="surveyTag">Question 1 of 10</span>
@@ -7454,37 +8073,87 @@
 </div>
 
 <!-- =========================================================
+     WORLD LIST — entry point of the gameplay flow. Player
+     picks a world, which sets activePack and opens that
+     world's map. Profile + messages icons live up here.
+     ========================================================= -->
+<div id="worldListScreen">
+  <!-- Top bar:
+       Left  → "Welcome <name>," + tagline (hero header)
+       Right → messages icon + profile icon -->
+  <div class="wl-top">
+    <div class="wl-header">
+      <h1 class="wl-title" id="wlGreeting">Welcome,</h1>
+      <p class="wl-sub">New Friends, Best Friends.</p>
+    </div>
+    <div class="wl-top-icons">
+      <button class="dp-iconbtn" id="wlOpenMessages" type="button" aria-label="Messages">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M4 6h16v11H8l-4 3z"/>
+        </svg>
+      </button>
+      <button class="dp-iconbtn" id="wlOpenProfile" type="button" aria-label="Open profile">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <circle cx="12" cy="8" r="4"/>
+          <path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/>
+        </svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- Available Worlds — section header + horizontal-grid of world cards -->
+  <div class="wl-section-head">
+    <h2 class="wl-section-title">Available Worlds</h2>
+    <button class="wl-link" id="wlGetMoreWorlds" type="button">Get more worlds ›</button>
+  </div>
+  <div class="wl-cards" id="wlCards"></div>
+
+  <!-- Netflix-style horizontal sections -->
+  <div class="wl-row">
+    <div class="wl-row-head"><h3 class="wl-row-title">Blind Dates</h3></div>
+    <div class="wl-row-track" id="wlRowBlind"></div>
+  </div>
+
+  <div class="wl-row">
+    <div class="wl-row-head"><h3 class="wl-row-title">Recently Casted</h3></div>
+    <div class="wl-row-track" id="wlRowRecent"></div>
+  </div>
+
+  <div class="wl-row">
+    <div class="wl-row-head"><h3 class="wl-row-title">Most Popular</h3></div>
+    <div class="wl-row-track" id="wlRowPopular"></div>
+  </div>
+</div>
+
+<!-- =========================================================
      DATE SELECTION (Tinder-style card stack)
      Swipe LEFT → next profile. Swipe RIGHT / tap CTA → go to map.
      Tap the card anywhere to flip; tap again to flip back.
      Card contents are populated by JS (see renderStack).
      ========================================================= -->
 <div id="dateScreen">
-  <!-- Date-picker top bar:
-         left  → mode dropdown (All / Blind Dates) — 1.2× the previous size
-         right → profile icon + messages icon (round glass chips) -->
+  <!-- Date-picker top bar — left side has the round back arrow
+       (returns to the casting modal). The All / Blind Dates / pack
+       dropdown is hidden for now; we'll bring it back when blind
+       dating ships as a real feature. -->
   <div class="date-pack-wrap">
     <div class="dp-top-left">
-      <select class="date-pack-select" id="datePackSelect" aria-label="Date mode">
+      <button class="dp-back-btn" id="dpBackToCasting" type="button" aria-label="Back to casting">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M15 6l-6 6 6 6"/>
+        </svg>
+      </button>
+      <!-- Mode dropdown is intentionally hidden but kept in the DOM so
+           the existing JS (`datePackSelect.value`, dateMode handlers)
+           keeps working. Will be unhidden once Blind Dates ships. -->
+      <select class="date-pack-select" id="datePackSelect" aria-label="Date mode" hidden>
         <option value="all">All</option>
         <option value="blind">Blind Dates</option>
         <option value="london" selected>London</option>
         <option value="1984">1984</option>
       </select>
     </div>
-    <div class="dp-top-right">
-      <button class="dp-iconbtn" id="dpOpenProfile" type="button" aria-label="Open profile">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-          <circle cx="12" cy="8" r="4"/>
-          <path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/>
-        </svg>
-      </button>
-      <button class="dp-iconbtn" id="dpOpenMessages" type="button" aria-label="Messages">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-          <path d="M4 6h16v11H8l-4 3z"/>
-        </svg>
-      </button>
-    </div>
+    <div class="dp-top-right"></div>
   </div>
   <div class="date-stack" id="dateStack"></div>
   <div class="date-actions">
@@ -7497,7 +8166,11 @@
      starts the scripted scenario for now.
      ========================================================= -->
 <div id="mapScreen">
-  <button class="map-back" id="mapBack">‹ Back</button>
+  <button class="map-back" id="mapBack" type="button" aria-label="Back to world list">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <path d="M15 6l-6 6 6 6"/>
+    </svg>
+  </button>
 
   <!-- Bottom-left toggle — context-aware:
          · 1984 pack → rain on/off
@@ -7622,7 +8295,7 @@
       <span id="poiReqText"></span>
     </div>
     <div class="poi-actions">
-      <button class="poi-btn start" id="poiStart">Start Date</button>
+      <button class="poi-btn start" id="poiStart">Go to Here</button>
     </div>
   </div>
 </div>
@@ -8005,6 +8678,7 @@
         <line x1="18" y1="6"  x2="6"  y2="18"/>
       </svg>
     </button>
+    <button class="ps-signout" id="psSignOut" type="button" aria-label="Sign out">Sign Out</button>
     <div class="ps-cover-track" id="psCoverTrack"></div>
     <div class="ps-cover-dots" id="psCoverDots"></div>
     <div class="ps-cover-info">
@@ -8071,46 +8745,19 @@
 </div>
 
 <div id="castingModal" aria-hidden="true">
-  <div class="casting-tag" id="castingEpisodeTag">1984 · The Room Above</div>
-  <h2 class="casting-title">Pick your cast</h2>
-  <p class="casting-sub">
-    This episode features 2 supporting roles. Cast friends from your
-    list — when the scene plays, you'll see their faces as the characters.
+  <button class="casting-back" id="castingBack" type="button" aria-label="Back to map">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <path d="M15 6l-6 6 6 6"/>
+    </svg>
+  </button>
+  <div class="casting-tag" id="castingEpisodeTag">Episode</div>
+  <h2 class="casting-title" id="castingTitle">Pick your cast</h2>
+  <p class="casting-sub" id="castingSub">
+    Cast each role — when the scene plays, you'll see their faces as the characters.
   </p>
 
-  <div class="casting-roles">
-    <div class="role-slot empty" data-role="charrington" id="rowCharrington">
-      <div class="role-character" id="charCharrington" aria-hidden="true"></div>
-      <div class="role-info">
-        <div class="role-name">Mr. Charrington</div>
-        <div class="role-desc-empty">The shopkeeper who rents you the room above his junk shop. Knows more than he says.</div>
-        <div class="role-actor-filled" hidden>
-          <div class="role-actor-avatar" id="avatarCharrington"></div>
-          <div class="role-actor-text">
-            <div class="role-actor-name" id="nameCharrington"></div>
-            <div class="role-actor-loc"  id="locCharrington"></div>
-          </div>
-        </div>
-        <button class="role-cast-btn" id="btnCharrington" type="button">Cast</button>
-      </div>
-    </div>
-
-    <div class="role-slot empty" data-role="streetseller" id="rowStreetseller">
-      <div class="role-character" id="charStreetseller" aria-hidden="true"></div>
-      <div class="role-info">
-        <div class="role-name">Street Seller</div>
-        <div class="role-desc-empty">An old man at a stall in the prole quarter. Sells objects pulled from a vanished world.</div>
-        <div class="role-actor-filled" hidden>
-          <div class="role-actor-avatar" id="avatarStreetseller"></div>
-          <div class="role-actor-text">
-            <div class="role-actor-name" id="nameStreetseller"></div>
-            <div class="role-actor-loc"  id="locStreetseller"></div>
-          </div>
-        </div>
-        <button class="role-cast-btn" id="btnStreetseller" type="button">Cast</button>
-      </div>
-    </div>
-  </div>
+  <!-- Slots are injected by refreshCastingUI based on activePack. -->
+  <div class="casting-roles" id="castingRoles"></div>
 
   <button class="casting-confirm" id="castingConfirm" type="button" disabled>
     Confirm Cast
@@ -8953,24 +9600,50 @@ function npcImagePath(role) {
   return `characters/${c.actorId}/appearances/${activePack}.png`;
 }
 
-// Static role data — display label, description, the character body
-// image, and the actor that this role is hardcoded to in the prototype
-// (no matter who the player taps Cast on, Charrington = Liam, Street
-// Seller = Matt).
+// Static role data — `pack` declares which world the role belongs to,
+// `pickerKind` decides which UI fills it:
+//   • 'friend' → friend-list picker (existing 1984 NPC casting)
+//   • 'date'   → Tinder date-picker in casting mode (Girl/Julia)
+// Order matters: rolesForPack() preserves declaration order, which
+// is what the casting modal uses for slot order. Julia is listed
+// FIRST for 1984 so the lead-female slot sits above the NPCs.
 const ROLE_DATA = {
+  julia: {
+    label: 'Julia',
+    desc:  "The young woman from the Fiction Department. Bold, hungry, hard to read.",
+    body:  'characters/iris/appearances/1984.png',
+    pack: '1984',
+    pickerKind: 'date',
+  },
   charrington: {
     label: 'Mr. Charrington',
     desc:  'The shopkeeper who rents you the room above his junk shop. Knows more than he says.',
     body:  'characters/liam/appearances/1984.png',
     forcedActorId: 'liam',
+    pack: '1984',
+    pickerKind: 'friend',
   },
   streetseller: {
     label: 'Street Seller',
     desc:  'An old man at a stall in the prole quarter. Sells objects pulled from a vanished world.',
     body:  'characters/matt/appearances/1984.png',
     forcedActorId: 'matt',
+    pack: '1984',
+    pickerKind: 'friend',
+  },
+  girl: {
+    label: 'Girl',
+    desc:  'Your date for the evening.',
+    body:  'characters/iris/appearances/london.png',
+    pack: 'london',
+    pickerKind: 'date',
   },
 };
+
+// Roles that need to be cast for a given pack, in display order.
+function rolesForPack(pack) {
+  return Object.keys(ROLE_DATA).filter(k => ROLE_DATA[k].pack === pack);
+}
 
 // ---- Dynamic style injection ------------------------------------------
 // Adding 8 new inner voices + 2 NPC speakers would mean ~120 hand-written
@@ -11101,10 +11774,10 @@ document.getElementById('btnRestart').addEventListener('click', () => {
   clearCutscene();
   clearNarrativeScene();
   idx = 0;
-  // Restart rewinds the whole flow: date → map → game
+  // Restart rewinds the whole flow: world list → map → game
   currentCardIndex = 0;
   renderStack();
-  showDate();
+  showWorldList();
 });
 
 // Script loader — invoked by the external editor (editor.html) via postMessage.
@@ -11340,6 +12013,12 @@ function renderStack() {
 }
 
 function updateDateBtnLabel() {
+  // Casting-picker mode: CTA reads "Cast <Profile name>".
+  if (castingPickerMode) {
+    const p = PROFILES[currentCardIndex % Math.max(1, PROFILES.length)];
+    flowEl.dateBtn.textContent = p ? `Cast ${p.name}` : 'Cast';
+    return;
+  }
   if (dateMode === 'blind') {
     const v = BLIND_VENUES[currentCardIndex % Math.max(1, BLIND_VENUES.length)];
     flowEl.dateBtn.textContent = v ? 'Goto Blind Date' : 'Goto Blind Date';
@@ -11432,7 +12111,20 @@ function swipeCard(dir) {
   setTimeout(() => {
     const list = activeStackList();
     if (dir === 'right' && list.length) {
-      if (dateMode === 'blind') {
+      if (castingPickerMode) {
+        // Cast-actor selection: capture the visible profile into the
+        // role's slot, then return to the casting modal.
+        const chosen = PROFILES[currentCardIndex % PROFILES.length];
+        if (chosen && castingPickerRole) {
+          cast[castingPickerRole] = {
+            actorId:   chosen.id,
+            actorName: chosen.name,
+            location:  chosen.city || '',
+            avatar:    chosen.img,
+          };
+        }
+        closeCastingDatePicker(true);
+      } else if (dateMode === 'blind') {
         // Blind dates: jump to that venue's POI on the right pack's map.
         const v = BLIND_VENUES[currentCardIndex % BLIND_VENUES.length];
         if (v) gotoBlindDate(v);
@@ -11479,6 +12171,10 @@ function showDate() {
   // Atomic swap via setFlow — no transient "no-flow" frame so the
   // dialog box can't flash its default "Start" HTML on mobile.
   setFlow('date');
+  // Refresh the CTA label — the picker may have been re-entered in a
+  // different mode (normal vs. casting-picker), so the label can have
+  // gone stale since the last renderStack() call.
+  if (typeof updateDateBtnLabel === 'function') updateDateBtnLabel();
 }
 // ============================================================
 // 1984 RAIN — generate random tile content for each rain layer.
@@ -11569,6 +12265,157 @@ function showMap() {
   flowEl.mapScroll.scrollTo({ left: 0, behavior: 'auto' });
 }
 
+// ============================================================
+// WORLD LIST — entry screen of the gameplay flow.
+// Renders three things:
+//   1. Hero header greeting (uses player's first name)
+//   2. "Available Worlds" — full-width cards with progress ring
+//   3. Three horizontal rows (Blind Dates / Recently Casted /
+//      Most Popular) populated from existing data sources.
+// ============================================================
+
+// Episode count for a pack = number of venues in VENUES with that pack.
+function venueCountForPack(packId) {
+  return Object.values(VENUES || {}).filter(v => v.pack === packId).length;
+}
+
+// Faux per-pack progress (0-100). Wire to real save data later.
+const WORLD_PROGRESS = {
+  london: 59,
+  '1984':  18,
+};
+
+// Builds the SVG progress-ring markup for a given percent (0-100).
+// cx/cy/r live on the <circle> elements as HTML attributes, NOT in
+// CSS — Safari (and historically Firefox) ignore them when set via
+// `circle { cx: ... }` in a stylesheet.
+function progressRingMarkup(percent) {
+  const r      = 14;
+  const circ   = 2 * Math.PI * r;
+  const offset = circ * (1 - (percent / 100));
+  return (
+    '<svg class="wl-card-progress-ring" viewBox="0 0 32 32" aria-hidden="true">' +
+      '<circle class="ring-track" cx="16" cy="16" r="' + r + '"></circle>' +
+      '<circle class="ring-fill"  cx="16" cy="16" r="' + r + '"' +
+              ' stroke-dasharray="' + circ.toFixed(2) + '"' +
+              ' stroke-dashoffset="' + offset.toFixed(2) + '"></circle>' +
+    '</svg>'
+  );
+}
+
+function renderWorldList() {
+  // Greeting
+  const firstName = (introProfile && introProfile.name && introProfile.name.split(/\s+/)[0]) || 'friend';
+  const greet = document.getElementById('wlGreeting');
+  if (greet) greet.textContent = `Welcome ${firstName},`;
+
+  // Available worlds (full-width cards)
+  const wrap = document.getElementById('wlCards');
+  if (wrap) {
+    wrap.innerHTML = '';
+    PACKS.forEach(p => {
+      const episodes = venueCountForPack(p.id);
+      const percent  = WORLD_PROGRESS[p.id] != null ? WORLD_PROGRESS[p.id] : 0;
+      const card = document.createElement('div');
+      card.className   = 'wl-card';
+      card.dataset.pack = p.id;
+      card.style.backgroundImage = `url("worlds/${p.id}/map.jpg")`;
+      card.innerHTML =
+        '<div class="wl-card-body">' +
+          '<div class="wl-card-name">' + p.name + '</div>' +
+          '<div class="wl-card-tag">' + episodes + ' Episodes</div>' +
+        '</div>' +
+        '<div class="wl-card-progress">' +
+          progressRingMarkup(percent) +
+          '<span class="wl-card-progress-text">%' + percent + ' Completed</span>' +
+        '</div>';
+      card.addEventListener('click', () => {
+        activePack = p.id;
+        el.body.dataset.pack = activePack;
+        if (typeof preloadPack === 'function')   preloadPack(activePack);
+        if (typeof loadActiveScript === 'function') loadActiveScript();
+        showMap();
+      });
+      wrap.appendChild(card);
+    });
+  }
+
+  // ---------- Netflix-style horizontal rows ----------
+  // Helpers
+  const sampleN = (arr, n) => {
+    const copy = [...arr];
+    for (let i = copy.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [copy[i], copy[j]] = [copy[j], copy[i]];
+    }
+    return copy.slice(0, n);
+  };
+  const venueAsTile = (id, v, meta) => {
+    const tile = document.createElement('div');
+    tile.className = 'wl-tile';
+    tile.style.backgroundImage = `url("${v.cover}")`;
+    tile.innerHTML =
+      '<div class="wl-tile-text">' +
+        '<div class="wl-tile-name">' + v.title + '</div>' +
+        (meta ? '<div class="wl-tile-meta">' + meta + '</div>' : '') +
+      '</div>';
+    tile.addEventListener('click', () => {
+      if (typeof gotoBlindDate === 'function') {
+        gotoBlindDate({
+          id, name: v.title, pack: v.pack,
+          img: v.cover, bio: v.desc || '',
+        });
+      }
+    });
+    return tile;
+  };
+
+  // All venues as [id, v] pairs — every row pulls from this.
+  const allVenues = Object.entries(VENUES || {});
+
+  // Build three INDEPENDENT random samples so the same location
+  // doesn't appear identically across the rows. Each sample is 6.
+  const blindPick   = sampleN(allVenues, 6);
+  const recentPick  = sampleN(allVenues, 6);
+  const popularPick = sampleN(allVenues, 6);
+
+  // Blind Dates — 6 random locations (no extra meta)
+  const blindRow = document.getElementById('wlRowBlind');
+  if (blindRow) {
+    blindRow.innerHTML = '';
+    blindPick.forEach(([id, v]) => blindRow.appendChild(venueAsTile(id, v)));
+  }
+
+  // Recently Casted — 6 random locations WITH a role label
+  // ("as Bartender", "as Tour Guide", …). Roles are paired by index
+  // from a stable pool so the labels are believable but not random
+  // per refresh.
+  const ROLE_POOL = [
+    'Bartender', 'Tour Guide', 'Doorman', 'Barista', 'Street Seller',
+    'Mr. Charrington', 'Concierge', 'Cabbie', 'Waiter',
+  ];
+  const recentRow = document.getElementById('wlRowRecent');
+  if (recentRow) {
+    recentRow.innerHTML = '';
+    recentPick.forEach(([id, v], i) => {
+      const role = ROLE_POOL[i % ROLE_POOL.length];
+      recentRow.appendChild(venueAsTile(id, v, 'as ' + role));
+    });
+  }
+
+  // Most Popular — 6 random locations
+  const popRow = document.getElementById('wlRowPopular');
+  if (popRow) {
+    popRow.innerHTML = '';
+    popularPick.forEach(([id, v]) => popRow.appendChild(venueAsTile(id, v)));
+  }
+}
+
+function showWorldList() {
+  renderWorldList();
+  setFlow('worlds');
+}
+
 function openPOI(id) {
   const v = VENUES[id];
   if (!v) return;
@@ -11589,7 +12436,7 @@ function openPOI(id) {
   }
 
   flowEl.poiStart.disabled    = !v.startable;
-  flowEl.poiStart.textContent = v.startable ? 'Start Date' : 'Locked';
+  flowEl.poiStart.textContent = v.startable ? 'Go to Here' : 'Locked';
   flowEl.poiModal.classList.add('open');
   flowEl.poiBackdrop.classList.add('open');
 }
@@ -11654,17 +12501,20 @@ async function startDateHere() {
   }
   idx = 0;
 
+  // Every pack now goes through the casting screen. London has a
+  // single Girl slot; 1984 has Charrington + Street Seller + Julia.
   if (is1984) {
-    // Casting modal + cinematic intro overlay both fully cover the
-    // dialog stage — `in-1984-flow` keeps it blanked underneath until
-    // finishCinematicIntro() removes the class.
+    // 1984 keeps the cinematic intro overlay path; in-1984-flow
+    // already blanks the stage underneath.
     openCasting();
   } else {
-    // London: drop flow-date / flow-map and render in the SAME sync
-    // tick. Browser sees the new dialog content + the now-revealed
-    // stage in a single paint — no bare-state flash.
-    el.body.classList.remove('flow-date', 'flow-map');
-    renderLine();
+    // London: KEEP flow-map on the body during the casting modal's
+    // 0.45s opacity fade-in. Without it, dialog-stage CSS hide rules
+    // would lift the moment we drop the class and the first scene
+    // ("the room") would briefly paint behind the still-translucent
+    // modal. Confirm Cast handler clears flow-* on its own when it's
+    // time to actually show the dialog.
+    openCasting();
   }
 }
 
@@ -11797,48 +12647,69 @@ function actorPhotoFor(actorId) {
   return `characters/${actorId}/appearances/${activePack}.png`;
 }
 
-// Refresh both cast slots in the modal — show the empty state (role
-// description + "Cast" button) when not yet cast, and the filled state
-// (friend avatar + name + location + "Recast" button) once a friend has
-// been chosen for the role. Also gates the Confirm Cast button.
+// Render the casting modal's role slots from scratch for the active
+// pack: each role gets a card (character body, name, description /
+// filled actor, Cast/Recast button). Clicking Cast routes to either
+// the friend picker (NPCs) or the Tinder date picker (Girl/Julia).
 function refreshCastingUI() {
-  ['charrington','streetseller'].forEach(role => {
-    const c   = cast[role];
-    const cap = role.charAt(0).toUpperCase() + role.slice(1);
-    const slot = document.getElementById(role === 'charrington' ? 'rowCharrington' : 'rowStreetseller');
-    if (!slot) return;
+  const wrap   = document.getElementById('castingRoles');
+  const roles  = rolesForPack(activePack);
+  const tagEl  = document.getElementById('castingEpisodeTag');
+  const subEl  = document.getElementById('castingSub');
+  const venue  = VENUES[currentVenue];
+  const venueTitle = venue ? venue.title : '';
+  // Pack name removed — players now see only the venue title.
+  if (tagEl) tagEl.textContent = venueTitle;
+  if (subEl) {
+    subEl.textContent = roles.length === 1
+      ? 'Cast your date for this episode.'
+      : `Cast all ${roles.length} roles to begin.`;
+  }
 
-    // Character body image always shown — sticks up out of the slot
-    const charEl = document.getElementById('char' + cap);
-    if (charEl) charEl.style.backgroundImage = `url("${ROLE_DATA[role].body}")`;
-
-    const empty  = slot.querySelector('.role-desc-empty');
-    const filled = slot.querySelector('.role-actor-filled');
-    const btn    = document.getElementById('btn' + cap);
-
-    if (c) {
-      slot.classList.remove('empty');
-      slot.classList.add('cast');
-      if (empty)  empty.hidden  = true;
-      if (filled) filled.hidden = false;
-      const av = document.getElementById('avatar' + cap);
-      const nm = document.getElementById('name'   + cap);
-      const lo = document.getElementById('loc'    + cap);
-      if (av) av.style.backgroundImage = `url("${c.avatar}")`;
-      if (nm) nm.textContent = c.actorName;
-      if (lo) lo.textContent = c.location;
-      if (btn) btn.textContent = 'Recast';
-    } else {
-      slot.classList.add('empty');
-      slot.classList.remove('cast');
-      if (empty)  empty.hidden  = false;
-      if (filled) filled.hidden = true;
-      if (btn) btn.textContent = 'Cast';
-    }
+  if (!wrap) return;
+  wrap.innerHTML = '';
+  roles.forEach(role => {
+    const data = ROLE_DATA[role];
+    const c    = cast[role];
+    const slot = document.createElement('div');
+    slot.className = 'role-slot ' + (c ? 'cast' : 'empty');
+    slot.dataset.role = role;
+    slot.innerHTML = `
+      <div class="role-character" aria-hidden="true"
+           style="background-image:url('${data.body}')"></div>
+      <div class="role-info">
+        <div class="role-name">${data.label}</div>
+        <div class="role-desc-empty"${c ? ' hidden' : ''}>${data.desc}</div>
+        <div class="role-actor-filled"${c ? '' : ' hidden'}>
+          <div class="role-actor-avatar"
+               style="background-image:url('${c ? c.avatar : ''}')"></div>
+          <div class="role-actor-text">
+            <div class="role-actor-name">${c ? c.actorName : ''}</div>
+            <div class="role-actor-loc">${c ? (c.location || '') : ''}</div>
+          </div>
+        </div>
+        <button class="role-cast-btn" data-role-btn="${role}" type="button">${c ? 'Recast' : 'Cast'}</button>
+      </div>
+    `;
+    wrap.appendChild(slot);
   });
-  // Both roles must be filled before the player can confirm.
+
+  // Wire each Cast/Recast button to its picker kind.
+  wrap.querySelectorAll('[data-role-btn]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const role = btn.dataset.roleBtn;
+      const kind = ROLE_DATA[role].pickerKind;
+      if (kind === 'date') {
+        openCastingDatePicker(role);
+      } else {
+        openFriendPicker(role);
+      }
+    });
+  });
+
+  // Confirm enable: every role of this pack must be filled.
   const confirm = document.getElementById('castingConfirm');
-  if (confirm) confirm.disabled = !(cast.charrington && cast.streetseller);
+  if (confirm) confirm.disabled = !roles.every(r => cast[r]);
 }
 
 function openCasting() {
@@ -11847,6 +12718,68 @@ function openCasting() {
   m.setAttribute('aria-hidden', 'false');
   m.classList.add('open');
 }
+
+// ============================================================
+// Cast-actor picker mode for the date picker
+// ============================================================
+// When the player taps "Cast" on a Girl/Julia slot, we hide the
+// casting modal and show the Tinder date picker in a special
+// "picker" state. Right-swiping or tapping the CTA captures the
+// shown profile into cast[role] and re-opens the casting modal.
+let castingPickerMode = false;
+let castingPickerRole = null;
+
+function openCastingDatePicker(role) {
+  castingPickerMode = true;
+  castingPickerRole = role;
+  // Close the casting modal so the date picker has the screen.
+  closeCasting();
+  // Date picker only ever browses character profiles in this mode —
+  // force "all" mode (not blind venues).
+  if (typeof dateMode !== 'undefined' && dateMode === 'blind') {
+    dateMode = 'all';
+    const sel = document.getElementById('datePackSelect');
+    if (sel) sel.value = activePack;
+  }
+  // Make sure the stack reflects the active pack's profiles so that
+  // the visible card matches what we're casting.
+  PROFILES = profilesForPack(activePack);
+  currentCardIndex = 0;
+  buildStack();
+  renderStack();
+  showDate();
+}
+
+function closeCastingDatePicker(reopenCasting) {
+  castingPickerMode = false;
+  castingPickerRole = null;
+  if (reopenCasting) {
+    // Keep flow-date on the body so its CSS rules continue to hide the
+    // in-game dialog stage (#backdrop, #dialogBox, #stage, etc.). The
+    // casting modal's z-index 750 covers the date picker visually
+    // while it fades in. If we dropped flow-date here, the dialog
+    // stage would briefly paint underneath the still-translucent
+    // modal — that's the "room flicker" the player was seeing.
+    openCasting();
+  }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  // Date picker back arrow (top-left of the date stack) →
+  // returns to the casting modal during cast-actor selection.
+  const dpBack = document.getElementById('dpBackToCasting');
+  if (dpBack) dpBack.addEventListener('click', () => closeCastingDatePicker(true));
+
+  // Casting modal back arrow → close casting and return to the map.
+  // Drops the in-1984-flow class too, otherwise 1984's stage-blank
+  // rule would keep the map hidden underneath.
+  const cBack = document.getElementById('castingBack');
+  if (cBack) cBack.addEventListener('click', () => {
+    closeCasting();
+    el.body.classList.remove('in-1984-flow', 'in-game-locked');
+    setFlow('map');
+  });
+});
 
 function closeCasting() {
   const m = document.getElementById('castingModal');
@@ -12089,24 +13022,30 @@ function finishCinematicIntro() {
 document.addEventListener('DOMContentLoaded', () => {
   const cConf = document.getElementById('castingConfirm');
   if (cConf) cConf.addEventListener('click', () => {
-    // Confirm is gated by both roles being filled (refreshCastingUI
-    // sets the disabled state). Bail just in case.
     if (cConf.disabled) return;
-    // Open the cinematic intro BEFORE closing the casting modal, so the
-    // intro's black background is already painted on top of the dialog
-    // stage as casting fades out. Without this overlap there's a brief
-    // gap (~280ms previously) where the dialog stage is visible and the
-    // first 1984 line / cutscene flickers into view.
-    console.log('[1984] Cast confirmed:', cast);
-    startCinematicIntro();
-    closeCasting();
+    console.log('[cast] confirmed for', activePack, cast);
+    // Drop any leftover flow class so the dialog stage's CSS hide
+    // rules (body.flow-date #dialogBox { display:none } etc.) stop
+    // blocking the scene. We keep `in-game-locked` so any onboarding
+    // overlays stay invisible.
+    el.body.classList.remove('flow-date', 'flow-map', 'flow-worlds');
+    el.body.classList.add('in-game-locked');
+    if (activePack === '1984') {
+      // 1984 keeps the cinematic intro path. The intro's own backdrop
+      // covers the dialog stage so there's no flash between casting
+      // fade-out and the first line.
+      startCinematicIntro();
+      closeCasting();
+    } else {
+      // London: no cinematic intro yet — go straight into the dialog.
+      // Closing casting drops its backdrop; renderLine paints the
+      // first scene in the same sync tick so nothing flickers.
+      closeCasting();
+      renderLine();
+    }
   });
-  // Cast / Recast buttons inside each role slot open the full-screen
-  // friend picker for that role.
-  const btnChar = document.getElementById('btnCharrington');
-  if (btnChar) btnChar.addEventListener('click', () => openFriendPicker('charrington'));
-  const btnSell = document.getElementById('btnStreetseller');
-  if (btnSell) btnSell.addEventListener('click', () => openFriendPicker('streetseller'));
+  // Cast / Recast buttons are wired dynamically inside refreshCastingUI
+  // (they're created per pack), so no static listeners here.
   const fpC = document.getElementById('fpCancel');
   if (fpC) fpC.addEventListener('click', closeFriendPicker);
   const ciOverlay = document.getElementById('cinematicIntro');
@@ -12286,7 +13225,8 @@ function gotoBlindDate(venue) {
 }
 
 // Map back → return to date stack
-document.getElementById('mapBack').addEventListener('click', showDate);
+// Map back → return to the world list (the new entry screen).
+document.getElementById('mapBack').addEventListener('click', showWorldList);
 
 // ============================================================
 // PROFILE SHEET — opened by the date-picker top-bar profile icon.
@@ -12500,8 +13440,23 @@ function closeProfileSheet() {
   }
 }
 
-document.getElementById('dpOpenProfile').addEventListener('click', openProfileSheet);
+// Profile + messages icons live on the World List screen now.
+document.getElementById('wlOpenProfile').addEventListener('click', openProfileSheet);
 document.getElementById('psBack').addEventListener('click', closeProfileSheet);
+
+// Sign Out (top-right of profile cover) → close everything in
+// progress and drop the player back on the Start (intro) screen.
+// We deliberately don't wipe localStorage so the player's saved
+// onboarding answers remain on next sign-in.
+document.getElementById('psSignOut').addEventListener('click', () => {
+  closeProfileSheet();
+  if (typeof closeMessagesSheet === 'function') closeMessagesSheet();
+  if (typeof closeCasting       === 'function') closeCasting();
+  if (typeof closePOI           === 'function') closePOI();
+  el.body.classList.remove('in-1984-flow', 'in-game-locked');
+  if (typeof showIntro === 'function') showIntro();
+  else setFlow('intro');
+});
 
 // ============================================================
 // MESSAGES SHEET — open/close + two-pane (list ↔ chat) navigation
@@ -12595,7 +13550,7 @@ function closeChat() {
   document.getElementById('msPaneList').classList.remove('away');
 }
 
-document.getElementById('dpOpenMessages').addEventListener('click', openMessagesSheet);
+document.getElementById('wlOpenMessages').addEventListener('click', openMessagesSheet);
 document.getElementById('msClose').addEventListener('click', closeMessagesSheet);
 document.getElementById('msChatBack').addEventListener('click', closeChat);
 
@@ -12860,7 +13815,7 @@ function saveUserProfile(p) {
 const _FLOW_CLASSES = [
   'flow-intro','flow-form','flow-loading','flow-survey',
   'flow-gallery','flow-addself','flow-final',
-  'flow-date','flow-map'
+  'flow-worlds','flow-date','flow-map'
 ];
 
 function setFlow(name) {
@@ -13037,6 +13992,10 @@ function showSurveyQuestion() {
 
   document.getElementById('surveyNext').textContent =
     (surveyIdx === SURVEY_QUESTIONS.length - 1) ? 'Continue' : 'Next';
+
+  // Reflect background-generation progress in the top-bar chip on
+  // every question render (it persists across questions).
+  updateGenStatusUI();
 }
 
 function captureSurveyAnswer() {
@@ -13092,12 +14051,36 @@ function skipAllRemainingQuestions() {
   finishOnboarding();
 }
 
-function finishOnboarding() {
+async function finishOnboarding() {
   // Fill survey bar to 100%
   document.getElementById('surveyFill').style.width = '100%';
   saveUserProfile(introProfile || { survey: {} });
-  // After the survey, invite the player to add themselves to the game
-  setTimeout(showAddSelfScreen, 260);
+
+  // If background generation is still running, hand off to the real
+  // loading screen — the phrases cycle until the API response lands,
+  // at which point we commit the result and move to the final hero.
+  if (_genState === 'pending') {
+    setFlow('loading');
+    const textEl = document.getElementById('loadingText');
+    let i = 0;
+    const showPhrase = () => {
+      if (!textEl) return;
+      textEl.style.opacity = '1';
+      textEl.style.transform = 'translateY(0)';
+      textEl.textContent = CHARACTER_PHRASES[i % CHARACTER_PHRASES.length];
+      i++;
+    };
+    showPhrase();
+    const tick = setInterval(showPhrase, 1800);
+    // Poll generation state. Resolves when 'done' or 'error'.
+    while (_genState === 'pending') {
+      await new Promise(r => setTimeout(r, 250));
+    }
+    clearInterval(tick);
+  }
+
+  commitGenResult();
+  showFinalScreen();
 }
 
 function showAddSelfScreen() {
@@ -13268,18 +14251,384 @@ function wireBodySlider(inputId, valueId, fillId, labels, profileKey) {
   render();
 }
 
-function onSelfPhotoPicked(dataUrl) {
+// Reference file the user just picked / captured. Held alongside the
+// data-URL preview so we can POST it as multipart to OpenAI's image
+// edit endpoint without re-encoding.
+let stagedPhotoFile = null;
+
+function onSelfPhotoPicked(dataUrl, file) {
   // Stage the photo visually; the user confirms with Continue.
+  stagedPhotoFile = file || null;
   setAddSelfPhoto(dataUrl);
 }
 
+// ============================================================
+// AI portrait generation — feeds the user's reference photo +
+// body slider readout + a default outfit description into
+// OpenAI's image edit endpoint (gpt-image-1) and writes the
+// returned portrait back into introProfile.photo.
+// ============================================================
+const HEIGHT_PROMPT_WORDS = [
+  'very petite, short stature',
+  'short, below average height',
+  'average height',
+  'tall',
+  'very tall',
+  'towering, exceptionally tall',
+];
+const BODY_PROMPT_WORDS = [
+  'very lean, slight frame',
+  'slim build',
+  'average athletic build',
+  'athletic, well-toned',
+  'sturdy, broad-shouldered',
+  'heavyset, full-figured',
+];
+const DEFAULT_OUTFIT =
+  'an unbuttoned olive-green overshirt over a soft beige t-shirt, ' +
+  'comfortable brown trousers and worn canvas sneakers';
+
+// Two reference illustrations the API uses purely for STYLE — they
+// define the project's painted, semi-realistic, transparent-background
+// look. They are NOT meant to influence likeness; the user's selfie
+// supplies the face.
+const STYLE_REF_PATHS = [
+  'characters/you/base.png',
+  'characters/iris/base.png',
+];
+
+function buildSelfPortraitPrompt() {
+  const p    = introProfile || {};
+  const body = p.body || {};
+  const height = HEIGHT_PROMPT_WORDS[Math.min(5, Math.max(0, body.height   ?? 2))];
+  const build  = BODY_PROMPT_WORDS  [Math.min(5, Math.max(0, body.bodyType ?? 2))];
+  return [
+    'Create a full-body standing character illustration.',
+    'IDENTITY: use the SELFIE reference for face, hair, skin tone, eye colour and overall likeness. The face MUST match the selfie exactly — same features, same hair.',
+    'STYLE: Semi-realistic digital character illustration with a painterly anime-inspired style, clean expressive linework, and warm natural shading. Soft brush strokes, visible painterly texture, stylized realism, subtle facial and fabric details, muted earthy color palette, warm skin tones, loose but confident edges, fashion concept-art aesthetic, high-detail clothing folds, hand-painted digital rendering, soft ambient lighting, polished editorial illustration look. Match the style of the other reference images.',
+    'EXPRESSION: a gentle, subtle, light smile — friendly, calm, approachable. Eyes warm and softened, mouth corners slightly upturned. Do NOT make the character look serious, sulking, brooding, frowning, stern, or sad.',
+    'POSE: full body, head to feet visible, standing relaxed, weight on one leg, hands at sides or in pockets, facing camera at a slight 3/4 angle.',
+    `BODY: ${height}, ${build}.`,
+    `OUTFIT: wearing ${DEFAULT_OUTFIT}.`,
+    'BACKGROUND: completely transparent. Do not draw any background, ground, shadow plate, frame, border, vignette, or color fill — only the standing character on a fully transparent canvas.',
+    'COMPOSITION (CRITICAL): the ENTIRE figure must be inside the canvas — top of the hair has at least 8% transparent space above it, soles of the shoes have at least 5% transparent space below them, arms have margin to the left/right edges. Do NOT crop, cut off, or touch the edges with any part of the body, hair, shoes, or clothing. Treat the canvas as a portrait photo with generous padding around the subject.',
+    'NEGATIVE: no head crop, no hair crop, no foot crop, no shoe crop, no edge-touching, no body parts running off-frame.',
+    'OUTPUT: PNG with alpha channel, transparent background.',
+  ].join(' ');
+}
+
+// Proxy endpoint — a Cloudflare Worker (or similar) that holds the
+// OpenAI API key as an environment variable, validates origin, and
+// forwards the multipart request to /v1/images/edits. Players never
+// see or supply a key; the worker URL is public but the key is not.
+//
+// Configure: set window.AI_PORTRAIT_PROXY in a small loader script
+// loaded from your deploy environment (or paste it inline below).
+// Falls back to a build-time placeholder so the source repo doesn't
+// hardcode anything.
+const AI_PORTRAIT_PROXY =
+  (typeof window !== 'undefined' && window.AI_PORTRAIT_PROXY) ||
+  '';   // ← fill in via window.AI_PORTRAIT_PROXY at deploy time
+
+// Cache of style-reference Files so we don't re-fetch on each call.
+let _styleRefFilesCache = null;
+async function getStyleReferenceFiles() {
+  if (_styleRefFilesCache) return _styleRefFilesCache;
+  const out = [];
+  for (const path of STYLE_REF_PATHS) {
+    try {
+      const r = await fetch(path, { cache: 'force-cache' });
+      if (!r.ok) throw new Error('fetch ' + path + ' → ' + r.status);
+      const blob = await r.blob();
+      const name = path.split('/').pop() || 'style-ref.png';
+      out.push(new File([blob], name, { type: blob.type || 'image/png' }));
+    } catch (e) {
+      console.warn('[style-ref] could not load', path, e);
+    }
+  }
+  _styleRefFilesCache = out;
+  return out;
+}
+
+async function generateSelfPortrait(file) {
+  if (!AI_PORTRAIT_PROXY) {
+    throw new Error('AI_PORTRAIT_PROXY is not configured');
+  }
+  const styleRefs = await getStyleReferenceFiles();
+
+  const fd = new FormData();
+  fd.append('model',         'gpt-image-1');
+  fd.append('prompt',        buildSelfPortraitPrompt());
+  fd.append('size',          '1024x1536');
+  fd.append('quality',       'high');
+  fd.append('n',             '1');
+  fd.append('background',    'transparent');
+  fd.append('output_format', 'png');
+  fd.append('image[]', file, file.name || 'selfie.png');
+  styleRefs.forEach((f, i) => fd.append('image[]', f, f.name || `style-${i}.png`));
+
+  // No Authorization header — the worker injects the key on its side.
+  // Pass X-User-Id so the worker stores the result in this user's
+  // private R2 folder and can later return their own portraits in
+  // demo mode.
+  const res = await fetch(AI_PORTRAIT_PROXY, {
+    method:  'POST',
+    headers: { 'X-User-Id': getUserId() },
+    body:    fd,
+  });
+  if (!res.ok) {
+    const txt = await res.text().catch(() => '');
+    throw new Error('Proxy ' + res.status + ': ' + txt.slice(0, 240));
+  }
+  const data = await res.json();
+  const b64  = data.data?.[0]?.b64_json;
+  if (b64) return 'data:image/png;base64,' + b64;
+  const url  = data.data?.[0]?.url;
+  if (url) return url;
+  throw new Error('No image returned by proxy');
+}
+
+// ============================================================
+// User identity — a per-browser id used as the R2 folder name on
+// the worker side. Persists in localStorage so the same device
+// keeps seeing only its own portraits.
+// ============================================================
+function getUserId() {
+  let id = localStorage.getItem('thedate.user-id');
+  if (!id) {
+    // Random short id — alphanumerics only (worker also sanitizes).
+    id = 'u-' + Math.random().toString(36).slice(2, 10) +
+                Math.random().toString(36).slice(2, 6);
+    localStorage.setItem('thedate.user-id', id);
+  }
+  return id;
+}
+
+// ============================================================
+// Generated-portrait cache (IndexedDB) — local fallback that we
+// keep around for offline / proxy-down scenarios. Primary cache
+// is now the R2 bucket on the worker side.
+// ============================================================
+const CACHE_DB_NAME    = 'thedate-cache';
+const CACHE_DB_VERSION = 1;
+const CACHE_STORE      = 'portraits';
+
+let _cacheDbPromise = null;
+function cacheOpen() {
+  if (_cacheDbPromise) return _cacheDbPromise;
+  _cacheDbPromise = new Promise((resolve, reject) => {
+    const req = indexedDB.open(CACHE_DB_NAME, CACHE_DB_VERSION);
+    req.onupgradeneeded = () => {
+      const db = req.result;
+      if (!db.objectStoreNames.contains(CACHE_STORE)) {
+        db.createObjectStore(CACHE_STORE, { keyPath: 'id', autoIncrement: true });
+      }
+    };
+    req.onsuccess = () => resolve(req.result);
+    req.onerror   = () => reject(req.error);
+  });
+  return _cacheDbPromise;
+}
+async function cachePut(dataUrl, meta) {
+  try {
+    const db = await cacheOpen();
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction(CACHE_STORE, 'readwrite');
+      tx.objectStore(CACHE_STORE).add({ ts: Date.now(), meta: meta || {}, dataUrl });
+      tx.oncomplete = () => resolve();
+      tx.onerror    = () => reject(tx.error);
+    });
+  } catch (e) { console.warn('[cache] put failed', e); }
+}
+async function cacheList() {
+  try {
+    const db = await cacheOpen();
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction(CACHE_STORE, 'readonly');
+      const req = tx.objectStore(CACHE_STORE).getAll();
+      req.onsuccess = () => resolve(req.result || []);
+      req.onerror   = () => reject(req.error);
+    });
+  } catch (e) { return []; }
+}
+async function cacheRandom() {
+  const list = await cacheList();
+  if (!list.length) return null;
+  return list[Math.floor(Math.random() * list.length)];
+}
+
+// Demo toggle — true when the player wants real AI generation.
+// Default ON. Stored under 'thedate.demo-toggle' as '1' (AI) / '0' (demo).
+function isAiMode() {
+  return localStorage.getItem('thedate.demo-toggle') !== '0';
+}
+function setAiMode(on) {
+  localStorage.setItem('thedate.demo-toggle', on ? '1' : '0');
+  syncDemoToggleUI();
+}
+function syncDemoToggleUI() {
+  const btn = document.getElementById('demoToggle');
+  const lbl = document.getElementById('demoToggleLabel');
+  if (!btn) return;
+  const on = isAiMode();
+  btn.classList.toggle('on', on);
+  if (lbl) lbl.textContent = on ? 'AI ON' : 'DEMO';
+}
+
+// ============================================================
+// Background generation orchestrator
+// ============================================================
+// State while AI portrait generation runs in parallel with the survey:
+//   _genState        — 'idle' | 'pending' | 'done' | 'error'
+//   _genResultPhoto  — data URL of generated PNG once available
+//   _genFallback     — original selfie data URL, used if generation fails
+// ============================================================
+let _genState       = 'idle';
+let _genResultPhoto = null;
+let _genFallback    = null;
+
+function updateGenStatusUI() {
+  const el   = document.getElementById('surveyGenStatus');
+  const icon = document.getElementById('gsIcon');
+  const text = document.getElementById('gsText');
+  if (!el || !icon || !text) return;
+  el.classList.remove('pending', 'done', 'error');
+  if (_genState === 'pending') {
+    el.hidden = false;
+    el.classList.add('pending');
+    icon.innerHTML = '<span class="gs-spinner"></span>';
+    text.textContent = 'Generating character';
+  } else if (_genState === 'done') {
+    el.hidden = false;
+    el.classList.add('done');
+    icon.innerHTML =
+      '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"' +
+      ' stroke-width="3" stroke-linecap="round" stroke-linejoin="round"' +
+      ' width="14" height="14"><polyline points="5 13 10 18 19 7"/></svg>';
+    text.textContent = 'Character ready';
+  } else if (_genState === 'error') {
+    el.hidden = false;
+    el.classList.add('error');
+    icon.innerHTML =
+      '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"' +
+      ' stroke-width="2.6" stroke-linecap="round" width="14" height="14">' +
+      '<line x1="6" y1="6" x2="18" y2="18"/>' +
+      '<line x1="18" y1="6" x2="6" y2="18"/></svg>';
+    text.textContent = 'Generation failed';
+  } else {
+    el.hidden = true;
+  }
+}
+
+function startBackgroundGeneration(file, fallbackDataUrl) {
+  _genFallback    = fallbackDataUrl || null;
+  _genResultPhoto = null;
+  _genState       = 'pending';
+  updateGenStatusUI();
+
+  generateSelfPortrait(file)
+    .then(dataUrl => {
+      _genResultPhoto = dataUrl;
+      _genState       = 'done';
+      updateGenStatusUI();
+      // Save to local cache so demo mode can replay this portrait.
+      cachePut(dataUrl, {
+        ts:       Date.now(),
+        name:     introProfile?.name      || null,
+        height:   introProfile?.body?.height,
+        bodyType: introProfile?.body?.bodyType,
+      });
+    })
+    .catch(err => {
+      console.error('[bg-gen]', err);
+      _genState = 'error';
+      updateGenStatusUI();
+    });
+}
+
+// Demo-mode "generation": pulls a random portrait from THIS user's
+// R2 folder via the worker's /random endpoint (zero OpenAI cost).
+// Falls back to the local IndexedDB cache if the worker is
+// unreachable or the user has nothing saved yet.
+async function fetchRandomFromProxy() {
+  if (!AI_PORTRAIT_PROXY) return null;
+  const url = AI_PORTRAIT_PROXY.replace(/\/+$/, '') + '/random';
+  const res = await fetch(url, {
+    method:  'GET',
+    headers: { 'X-User-Id': getUserId() },
+  });
+  if (!res.ok) return null;
+  const data = await res.json();
+  const b64  = data && data.data && data.data[0] && data.data[0].b64_json;
+  return b64 ? 'data:image/png;base64,' + b64 : null;
+}
+
+function startCachedPortraitFlow(fallbackDataUrl) {
+  _genFallback    = fallbackDataUrl || null;
+  _genResultPhoto = null;
+  _genState       = 'pending';
+  updateGenStatusUI();
+  setTimeout(async () => {
+    try {
+      // Worker /random returns either the user's own portraits or
+      // the shared demo/ pool as a server-side fallback. We do NOT
+      // fall back to the local IndexedDB cache anymore — those old
+      // entries can be from earlier (broken) prompt versions.
+      const dataUrl = await fetchRandomFromProxy().catch(() => null);
+      if (dataUrl) {
+        _genResultPhoto = dataUrl;
+        _genState       = 'done';
+      } else {
+        _genState = 'error';     // nothing in user's folder + no demo pool → use original photo
+      }
+    } catch (e) {
+      console.warn('[cache] random failed', e);
+      _genState = 'error';
+    }
+    updateGenStatusUI();
+  }, 700);
+}
+
+// Apply whatever portrait we have to the profile — generated if it
+// finished, otherwise the original uploaded photo as a graceful fallback.
+function commitGenResult() {
+  introProfile = introProfile || { survey: {} };
+  if (_genState === 'done' && _genResultPhoto) {
+    introProfile.photo = _genResultPhoto;
+  } else if (_genFallback) {
+    introProfile.photo = _genFallback;
+  }
+  saveUserProfile(introProfile);
+}
+
+// "Continue" on the Add-self screen now fires generation in the
+// background and immediately moves the player to the survey. By the
+// time they finish answering questions, the portrait is usually ready.
 function confirmSelfPhoto() {
   if (!pendingSelfPhoto) return;
+
+  // Pre-save the original photo so the rest of the app has *something*
+  // to render even if generation hasn't completed yet.
   introProfile = introProfile || { survey: {} };
   introProfile.photo = pendingSelfPhoto;
   saveUserProfile(introProfile);
-  // Second fake loading → final (character + pet) screen
-  playLoadingPhrases(CHARACTER_PHRASES, showFinalScreen);
+
+  // Branch on the demo toggle: ON = real generation, OFF = pull a
+  // random portrait from the local cache instead.
+  if (!isAiMode()) {
+    startCachedPortraitFlow(pendingSelfPhoto);
+  } else if (stagedPhotoFile) {
+    startBackgroundGeneration(stagedPhotoFile, pendingSelfPhoto);
+  } else {
+    _genState = 'idle';
+    _genFallback = pendingSelfPhoto;
+  }
+
+  // Move on to the survey. The generation chip in the survey top bar
+  // will reflect progress.
+  surveyIdx = 0;
+  showSurveyQuestion();
+  updateGenStatusUI();
 }
 
 function showFinalScreen() {
@@ -13298,6 +14647,25 @@ function renderFinalHero() {
   const nameEl   = document.getElementById('finalHeroName');
   if (nameEl) nameEl.textContent = `${userName} & ${petName}`;
 
+  // Show the AI-generated (or uploaded) user portrait in the hero
+  // slot. When a photo exists, swap into "has-photo" mode and load
+  // it into the <img> element — using a real image (instead of a
+  // background) means object-fit guarantees the figure stays fully
+  // visible (no clipped head or feet) regardless of aspect ratio.
+  const boyEl    = document.getElementById('finalBoy');
+  const boyImgEl = document.getElementById('finalBoyImg');
+  if (boyEl) {
+    if (p.photo) {
+      boyEl.classList.add('has-photo');
+      boyEl.style.backgroundImage = '';      // clear any old default
+      if (boyImgEl) boyImgEl.src = p.photo;
+    } else {
+      boyEl.classList.remove('has-photo');
+      boyEl.style.backgroundImage = '';
+      if (boyImgEl) boyImgEl.removeAttribute('src');
+    }
+  }
+
   // Always show the dog — it's part of the hero composition regardless of
   // what the user answered in the survey.
   const dogEl = document.getElementById('finalDog');
@@ -13308,45 +14676,142 @@ function renderFinalHero() {
   }
 }
 
-// Add-self wiring
-// - Open Camera   → prototype: same fake flow as Upload Photo (loads selfie.jpeg)
-// - Upload Photo  → fake file pick, always loads ./selfie.jpeg
-// - Remove Photo  → back to initial state
-// - Continue      → confirm and advance to the final screen
+// Add-self wiring — real photo picker. "Open Camera" tries
+// getUserMedia first for a true live preview + capture; if that's
+// not available (permission denied, no camera, http on iOS) it
+// falls back to a file <input> with capture="user" so mobile still
+// opens the camera app. "Upload Photo" always opens the file picker.
 (function initAddSelf() {
-  async function fakePickSelfie() {
-    try {
-      const res = await fetch('assets/shared/selfie.jpeg', { cache: 'no-store' });
-      if (!res.ok) throw new Error('selfie.jpeg not found (' + res.status + ')');
-      const blob = await res.blob();
-      const url  = await new Promise((resolve, reject) => {
-        const r = new FileReader();
-        r.onload  = () => resolve(r.result);
-        r.onerror = () => reject(r.error);
-        r.readAsDataURL(blob);
-      });
-      onSelfPhotoPicked(url);
-    } catch (err) {
-      // If the file is missing we just fall back to the raw path so the image
-      // still appears (most servers will serve it directly).
-      onSelfPhotoPicked('assets/shared/selfie.jpeg');
-      console.warn('Selfie fetch fallback:', err);
+  // ----- File picker fallback ---------------------------------
+  function pickPhotoFromFile({ useCamera }) {
+    const input = document.createElement('input');
+    input.type   = 'file';
+    input.accept = 'image/*';
+    // Must use setAttribute — the property reflection is unreliable
+    // across Safari versions.
+    if (useCamera) input.setAttribute('capture', 'user');
+    input.style.display = 'none';
+    input.addEventListener('change', () => {
+      const file = input.files && input.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload  = () => onSelfPhotoPicked(reader.result, file);
+      reader.onerror = () => alert('Could not read that file. Try another.');
+      reader.readAsDataURL(file);
+      requestAnimationFrame(() => input.remove());
+    });
+    document.body.appendChild(input);
+    input.click();
+  }
+
+  // ----- In-screen live camera (getUserMedia, no full-page modal) -----
+  const inlineVideo = document.getElementById('avatarCloudVideo');
+  const cloud       = document.getElementById('avatarCloud');
+  const liveCapBtn  = document.getElementById('liveCaptureBtn');
+  const liveCanBtn  = document.getElementById('liveCancelBtn');
+  let activeStream  = null;
+
+  function stopStream() {
+    if (!activeStream) return;
+    activeStream.getTracks().forEach(t => t.stop());
+    activeStream = null;
+    if (inlineVideo) inlineVideo.srcObject = null;
+  }
+
+  // Toggle the on-screen UI between "ready to take a photo" and the
+  // live camera view. Buttons swap accordingly so the bottom dock
+  // always shows exactly what the player can do next.
+  function setLiveCameraMode(active) {
+    const camBtn  = document.getElementById('openCameraBtn');
+    const upBtn   = document.getElementById('uploadPhotoBtn');
+    if (active) {
+      cloud.classList.add('camera-live');
+      camBtn.hidden = true;
+      upBtn.hidden  = true;
+      liveCapBtn.hidden = false;
+      liveCanBtn.hidden = false;
+    } else {
+      cloud.classList.remove('camera-live');
+      // Only restore the initial buttons if we don't have a staged photo.
+      if (!pendingSelfPhoto) {
+        camBtn.hidden = false;
+        upBtn.hidden  = false;
+      }
+      liveCapBtn.hidden = true;
+      liveCanBtn.hidden = true;
     }
   }
 
-  // Both primary buttons now share the same prototype flow
-  document.getElementById('openCameraBtn').addEventListener('click', fakePickSelfie);
-  document.getElementById('uploadPhotoBtn').addEventListener('click', fakePickSelfie);
+  async function openLiveCamera() {
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      pickPhotoFromFile({ useCamera: true });
+      return;
+    }
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: 'user', width: { ideal: 1280 }, height: { ideal: 1280 } },
+        audio: false,
+      });
+      activeStream = stream;
+      inlineVideo.srcObject = stream;
+      setLiveCameraMode(true);
+    } catch (err) {
+      console.warn('[camera] getUserMedia denied/failed:', err);
+      pickPhotoFromFile({ useCamera: true });
+    }
+  }
+
+  function captureFrame() {
+    if (!activeStream) return;
+    const v = inlineVideo;
+    const w = v.videoWidth  || 1024;
+    const h = v.videoHeight || 1024;
+    const canvas = document.createElement('canvas');
+    canvas.width  = w; canvas.height = h;
+    const ctx = canvas.getContext('2d');
+    // The preview is CSS-mirrored — flip the canvas so the saved
+    // image matches what the user just saw.
+    ctx.translate(w, 0);
+    ctx.scale(-1, 1);
+    ctx.drawImage(v, 0, 0, w, h);
+    canvas.toBlob((blob) => {
+      if (!blob) { alert('Could not capture frame, try again.'); return; }
+      const file = new File([blob], 'selfie.jpg', { type: 'image/jpeg' });
+      const reader = new FileReader();
+      reader.onload = () => {
+        stopStream();
+        setLiveCameraMode(false);
+        onSelfPhotoPicked(reader.result, file);
+      };
+      reader.readAsDataURL(blob);
+    }, 'image/jpeg', 0.92);
+  }
+
+  function cancelLiveCamera() {
+    stopStream();
+    setLiveCameraMode(false);
+  }
+
+  liveCapBtn.addEventListener('click', captureFrame);
+  liveCanBtn.addEventListener('click', cancelLiveCamera);
+
+  // ----- Wire the buttons -------------------------------------
+  document.getElementById('openCameraBtn')
+    .addEventListener('click', openLiveCamera);
+  document.getElementById('uploadPhotoBtn')
+    .addEventListener('click', () => pickPhotoFromFile({ useCamera: false }));
 
   document.getElementById('removePhotoBtn').addEventListener('click', () => {
+    stagedPhotoFile = null;
     setAddSelfPhoto(null);
   });
   document.getElementById('selfContinueBtn').addEventListener('click', confirmSelfPhoto);
 })();
 
-// Final → jump to the date picker
+// Final → cast gallery (your-cast). The gallery's Continue button
+// then sends the player into the date picker.
 document.getElementById('finalContinue').addEventListener('click', () => {
-  showDate();   // setFlow('date') is atomic — no intermediate empty frame
+  showGallery('voices');
 });
 
 // Final → "Edit your character" opens the full cast gallery (me + pet + voices)
@@ -13593,8 +15058,8 @@ function regenerateAndExit() {
 }
 
 // Gallery Continue → either regenerate (while editing), return to the final
-// hero screen (if we entered via "Edit your character"), or advance to the
-// survey (first-run flow).
+// hero screen (if we entered via "Edit your character"), or finish onboarding
+// and drop the player into the World List (first-run flow).
 document.getElementById('galleryContinue').addEventListener('click', () => {
   if (currentCastEditIdx >= 0) {
     regenerateAndExit();
@@ -13602,9 +15067,9 @@ document.getElementById('galleryContinue').addEventListener('click', () => {
     // Came in from the final screen to tweak the cast — just go back.
     showFinalScreen();
   } else {
-    // showSurveyQuestion() already calls setFlow('survey') atomically.
-    surveyIdx = 0;
-    showSurveyQuestion();
+    // First-run: cast gallery now plays AFTER the final hero, so its
+    // Continue is the last onboarding gate before the gameplay.
+    showWorldList();
   }
 });
 
@@ -13640,6 +15105,18 @@ function applyPhotoTile(tile, dataUrl) {
 }
 
 // --- Wiring ---
+// Demo / AI toggle on the intro screen — paint initial state and
+// flip on click. Stored in localStorage; default is AI ON.
+(function initDemoToggle() {
+  const btn = document.getElementById('demoToggle');
+  if (!btn) return;
+  syncDemoToggleUI();
+  btn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    setAiMode(!isAiMode());
+  });
+})();
+
 document.getElementById('introStart').addEventListener('click', () => {
   // Start = always go through the onboarding form, even for returning
   // users. The Sign in line button next to it is the explicit shortcut
@@ -13648,10 +15125,9 @@ document.getElementById('introStart').addEventListener('click', () => {
 });
 document.getElementById('introSignIn').addEventListener('click', () => {
   // Sign in = treat as a returning user. Skip the form, drop straight
-  // into the date picker. Profile-driven UI (cinematic intro player
-  // name, dashboard portrait) already has fallbacks for an empty
-  // profile so this works even on a fresh install.
-  showDate();
+  // into the World List (new entry point). Profile-driven UI has its
+  // own fallbacks so this works even on a fresh install.
+  showWorldList();
 });
 
 document.getElementById('formContinue').addEventListener('click', () => {
@@ -13668,7 +15144,9 @@ document.getElementById('formContinue').addEventListener('click', () => {
   introProfile.dob      = dob;
   introProfile.tob      = tob;
   introProfile.location = location;
-  showLoadingScreen();
+  // New flow: form → add-self (no fake loader, no cast gallery here).
+  // Cast gallery now plays AFTER the final hero screen.
+  showAddSelfScreen();
 });
 
 // Survey wiring
@@ -13774,7 +15252,7 @@ window.addEventListener('message', (e) => {
     idx = 0;
     currentCardIndex = 0;
     renderStack();
-    showDate();
+    showWorldList();
   } else if (data.type === 'loadScript') {
     // External editor pushed a new script — load it and play from the
     // top, bypassing the date/map intro so iteration is fast.
@@ -13837,7 +15315,7 @@ window.addEventListener('message', (e) => {
     idx = 0;
     currentCardIndex = 0;
     renderStack();
-    showDate();
+    showWorldList();
   }
 });
 
