@@ -14320,15 +14320,18 @@ function buildSelfPortraitPrompt() {
 // Proxy endpoint — a Cloudflare Worker (or similar) that holds the
 // OpenAI API key as an environment variable, validates origin, and
 // forwards the multipart request to /v1/images/edits. Players never
-// see or supply a key; the worker URL is public but the key is not.
+// see or supply a key; the worker URL is public, but the key is not,
+// and the worker rejects requests from origins not in ALLOWED_ORIGINS.
 //
-// Configure: set window.AI_PORTRAIT_PROXY in a small loader script
-// loaded from your deploy environment (or paste it inline below).
-// Falls back to a build-time placeholder so the source repo doesn't
-// hardcode anything.
+// Configuration order:
+//   1. Local development: `_config/api.js` (gitignored) sets
+//      window.AI_PORTRAIT_PROXY — overrides everything below.
+//   2. Production / hosted (Railway, GitHub Pages, etc.):
+//      _config/api.js is absent in the repo, so the fallback URL
+//      below is used. The worker still rejects unknown origins.
 const AI_PORTRAIT_PROXY =
   (typeof window !== 'undefined' && window.AI_PORTRAIT_PROXY) ||
-  '';   // ← fill in via window.AI_PORTRAIT_PROXY at deploy time
+  'https://thedate-portrait.onur-377.workers.dev';
 
 // Cache of style-reference Files so we don't re-fetch on each call.
 let _styleRefFilesCache = null;
