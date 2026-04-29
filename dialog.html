@@ -28,6 +28,9 @@
      If it's missing the script just 404s silently and AI portrait
      generation is disabled. -->
 <script src="_config/api.js" onerror="void 0"></script>
+<!-- exifr — EXIF metadata reader for Q10 photo memories
+     (auto-fills date + GPS coordinates → reverse-geocoded place). -->
+<script src="https://cdn.jsdelivr.net/npm/exifr/dist/full.umd.min.js" defer></script>
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -2009,17 +2012,25 @@
   }
   body.flow-final #introVideo,
   body.flow-final .intro-overlay { display: none !important; }
-  body.flow-final #finalScreen { display: flex; }
+  body.flow-final #finalScreen { display: flex; flex-direction: column; }
 
-  /* Top caption */
+  /* Top caption — left text, right "Continue" pill */
   .final-caption {
     width: 100%;
-    text-align: center;
     padding: 0 22px;
-    z-index: 2;
+    z-index: 6;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+  }
+  .final-cap-text {
+    flex: 1 1 auto;
+    min-width: 0;
+    text-align: left;
   }
   .final-caption-name {
-    font-size: 24px;
+    font-size: 22px;
     font-weight: 700;
     color: #fff;
     letter-spacing: -0.01em;
@@ -2029,8 +2040,87 @@
     overflow: hidden;
     text-overflow: ellipsis;
   }
+  .final-caption-sub {
+    margin-top: 4px;
+    font-size: 12.5px;
+    color: rgba(255,255,255,0.65);
+    letter-spacing: 0.02em;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  /* Top-left "X" close — only shown in date mode. */
+  .final-cap-close {
+    flex: 0 0 auto;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    width: 38px; height: 38px;
+    border-radius: 50%;
+    background: rgba(0,0,0,0.45);
+    border: 1px solid rgba(255,255,255,0.20);
+    color: #fff;
+    cursor: pointer;
+    -webkit-backdrop-filter: blur(8px);
+    backdrop-filter: blur(8px);
+    transition: background 0.18s, transform 0.12s;
+  }
+  .final-cap-close svg { width: 18px; height: 18px; }
+  .final-cap-close:hover  { background: rgba(0,0,0,0.65); }
+  .final-cap-close:active { transform: scale(0.94); }
+  #finalScreen[data-mode="date"] .final-cap-close { display: inline-flex; }
 
-  /* Hero stage — boy standing, dog at the feet */
+  /* Top-right "Continue" — primary pink pill */
+  .final-cta-top {
+    flex: 0 0 auto;
+    background: linear-gradient(135deg, #ff7eb9, #ff5f98);
+    color: #fff;
+    border: 0;
+    padding: 10px 20px;
+    border-radius: 999px;
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 800;
+    letter-spacing: 0.06em;
+    cursor: pointer;
+    box-shadow: 0 8px 22px rgba(255,95,152,0.32);
+    transition: transform 0.15s, box-shadow 0.2s;
+  }
+  .final-cta-top:hover  { box-shadow: 0 12px 28px rgba(255,95,152,0.42); }
+  .final-cta-top:active { transform: scale(0.96); }
+
+  /* Pages container — horizontal slider. The two pages each take
+     up the full width and are translated left/right to navigate.
+     `overflow: hidden` clips the off-screen page so only the active
+     one is visible — no peeking voices behind the character. */
+  .final-pages {
+    flex: 1;
+    position: relative;
+    width: 100%;
+    overflow: hidden;
+    min-height: 0;
+  }
+  .final-pages-track {
+    display: flex;
+    width: 200%;
+    height: 100%;
+    transition: transform 0.4s cubic-bezier(0.25,0.9,0.3,1.05);
+    will-change: transform;
+  }
+  .final-page {
+    flex: 0 0 50%;
+    width: 50%;
+    height: 100%;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+  }
+  /* When the screen is on page 1 (voices), slide the inner row. */
+  #finalScreen[data-page="0"] .final-pages-track { transform: translateX(0); }
+  #finalScreen[data-page="1"] .final-pages-track { transform: translateX(-50%); }
+
+  /* Hero stage — character standing, anchored to the bottom but
+     pushed up so the feet stay visible above the bottom sheet. */
   .final-stage {
     flex: 1;
     position: relative;
@@ -2038,8 +2128,442 @@
     display: flex;
     justify-content: center;
     align-items: flex-end;
-    min-height: 0;              /* allow flex-shrink inside a column flex */
+    min-height: 0;
+    padding-bottom: 18vh;
   }
+
+  /* ---------- Voices page — 4 full-body figures side-by-side ----------
+     Each figure is a tall, narrow column (25% of width) with the
+     character art as a contained background. The active one scales
+     up slightly and lifts forward; the others stay at base scale
+     and fade. The same `.final-stage` padding-bottom keeps every
+     figure's feet above the sheet. */
+
+  /* Backdrop behind both final-screen pages — a 9:16 painterly
+     room/wall + floor illustration so the characters feel grounded
+     rather than floating in the void. Painted on #finalScreen via a
+     pseudo-element so it covers the FULL screen (including the area
+     behind the title caption at the top). z-index: -1 keeps it
+     behind every positioned child while sitting above #finalScreen's
+     own gradient background. */
+  #finalScreen::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: url("assets/ui/profile-back01.png") center bottom / cover no-repeat;
+    z-index: -1;
+    pointer-events: none;
+    opacity: 1;
+  }
+  /* The soft ground-shadow disc isn't needed when there's a real
+     painted floor in the backdrop — hide it on both pages. */
+  .final-stage .final-ground { display: none; }
+  /* Four voices stand together like a group photo — slight overlap
+     so they're touching shoulders. By default everyone is "on";
+     once the player taps one, the others retreat a little and dim
+     so the chosen voice feels foregrounded. */
+  .voice-figures {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    padding-bottom: 42vh;        /* lift the row well above the sheet
+                                     so the caption has room below */
+    gap: 0;
+  }
+  .voice-figure {
+    flex: 0 0 27%;
+    margin: 0 -2.5%;          /* slight overlap between neighbours */
+    height: 100%;
+    max-height: 580px;
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center bottom;
+    cursor: pointer;
+    position: relative;
+    filter: drop-shadow(0 16px 24px rgba(0,0,0,0.50));
+    opacity: 1;
+    transform: translateY(0);
+    transform-origin: center bottom;
+    transition: transform 0.28s cubic-bezier(0.25,0.9,0.3,1.05),
+                filter    0.28s ease,
+                opacity   0.28s ease;
+  }
+  /* Professor's portrait is shorter than the others — stretch it
+     so all four read at roughly the same height. */
+  .voice-figure[data-id="professore"] {
+    transform: scaleY(1.18);
+  }
+  /* Scheggia's source PNG is narrower (412 × 1539 vs the others'
+     ~520 × 1570), which makes `background-size: contain` render
+     her ~20% taller than the other voices. Squish her vertically
+     so the four read at the same height. */
+  .voice-figure[data-id="scheggia"] {
+    transform: scaleY(0.82);
+  }
+
+  /* When a voice has been tapped (.has-active on the row), the
+     UNSELECTED siblings retreat into the background. The active
+     one stays exactly where it was — no movement, no glow, no
+     effect of any kind. */
+  .voice-figures.has-active .voice-figure:not(.active) {
+    opacity: 0.40;
+    filter: drop-shadow(0 10px 18px rgba(0,0,0,0.45)) brightness(0.55) saturate(0.7);
+    transform: translateY(-22px) scale(0.92);
+    z-index: 1;
+  }
+  .voice-figures.has-active .voice-figure[data-id="professore"]:not(.active) {
+    transform: translateY(-22px) scale(0.92) scaleY(1.18);
+  }
+  .voice-figures.has-active .voice-figure[data-id="scheggia"]:not(.active) {
+    transform: translateY(-22px) scale(0.92) scaleY(0.82);
+  }
+
+  /* Per-figure name labels are hidden — name + description show
+     in the central caption block below the figures instead. */
+  .voice-figure-name { display: none; }
+
+  /* Ambient speech bubble that pops below each voice's feet in date
+     mode — like a footing label with a tail pointing up at her. */
+  .voice-bubble {
+    position: absolute;
+    bottom: -88px;        /* below the feet, but not as far as before */
+    left: 50%;
+    transform: translateX(-50%) translateY(-6px);
+    width: 220px;         /* wider bubble — single bubble visible at a time
+                             so neighbour overlap isn't an issue */
+    max-width: 220px;
+    background: rgba(255,255,255,0.97);
+    color: #1a1426;
+    padding: 10px 14px;
+    border-radius: 14px;
+    font-size: 13px;
+    line-height: 1.35;
+    font-weight: 700;
+    text-align: left;
+    box-shadow: 0 6px 16px rgba(0,0,0,0.45);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.32s ease, transform 0.32s ease;
+    z-index: 4;
+    white-space: normal;
+  }
+  .voice-bubble.show {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+  /* Speaker name above the line — small uppercase label. */
+  .voice-bubble-name {
+    display: block;
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 0.20em;
+    text-transform: uppercase;
+    color: #c8336d;
+    margin-bottom: 4px;
+  }
+  .voice-bubble-text { display: block; }
+  /* Leftmost figure (idx 0) — anchor the bubble's LEFT edge to the
+     figure's left edge. Bubble extends rightward into the empty
+     space; the LEFT edge can never go off-screen because it stays
+     within the figure's column. */
+  .voice-figure[data-idx="0"] .voice-bubble {
+    left: 0;
+    transform: translateY(-6px);
+  }
+  .voice-figure[data-idx="0"] .voice-bubble.show {
+    transform: translateY(0);
+  }
+  /* Tail near the LEFT side of the bubble, over the figure centre. */
+  .voice-figure[data-idx="0"] .voice-bubble::after {
+    left: 22%;
+  }
+  /* Rightmost figure (idx 3) — anchor the bubble's RIGHT edge to the
+     figure's right edge. Bubble extends leftward; right edge always
+     stays within the figure's column, so it can never clip the screen. */
+  .voice-figure[data-idx="3"] .voice-bubble {
+    left: auto;
+    right: 0;
+    transform: translateY(-6px);
+  }
+  .voice-figure[data-idx="3"] .voice-bubble.show {
+    transform: translateY(0);
+  }
+  /* Tail near the RIGHT side of the bubble, over the figure centre. */
+  .voice-figure[data-idx="3"] .voice-bubble::after {
+    left: 78%;
+  }
+  /* Tail at the TOP of the bubble, pointing up at the figure's feet. */
+  .voice-bubble::after {
+    content: '';
+    position: absolute;
+    top: -7px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 0; height: 0;
+    border-left: 7px solid transparent;
+    border-right: 7px solid transparent;
+    border-bottom: 7px solid rgba(255,255,255,0.97);
+  }
+  /* The figure itself uses a Y-scale to harmonise heights across the
+     four voices. Counter-scale the bubble so its text isn't squished
+     /stretched to match the figure. */
+  .voice-figure[data-id="scheggia"] .voice-bubble {
+    transform: translateX(-50%) translateY(-6px) scaleY(1.22);
+  }
+  .voice-figure[data-id="scheggia"] .voice-bubble.show {
+    transform: translateX(-50%) translateY(0) scaleY(1.22);
+  }
+  .voice-figure[data-id="professore"] .voice-bubble {
+    transform: translateX(-50%) translateY(-6px) scaleY(0.847);
+  }
+  .voice-figure[data-id="professore"] .voice-bubble.show {
+    transform: translateX(-50%) translateY(0) scaleY(0.847);
+  }
+  /* Professore is also the rightmost in the player's pack — combine
+     the right-edge anchor with her counter-scale. */
+  .voice-figure[data-idx="3"][data-id="professore"] .voice-bubble {
+    left: auto;
+    right: 0;
+    transform: translateY(-6px) scaleY(0.847);
+  }
+  .voice-figure[data-idx="3"][data-id="professore"] .voice-bubble.show {
+    transform: translateY(0) scaleY(0.847);
+  }
+  /* Self mode doesn't run the talk cycle — keep the bubbles
+     invisible there even if the show class were applied. */
+  #finalScreen[data-mode="self"] .voice-bubble { display: none; }
+
+  /* Onboarding copy — visible on first arrival, before any voice
+     is tapped. Single all-white paragraph, no shadow. */
+  .voice-onboarding {
+    position: absolute;
+    left: 0; right: 0;
+    bottom: calc(20vh + 40px);
+    padding: 0 28px;
+    text-align: center;
+    color: #ffffff;
+    pointer-events: none;
+    transition: opacity 0.32s ease, transform 0.32s ease;
+    z-index: 3;
+  }
+  .voice-onboarding p {
+    margin: 0 auto;
+    max-width: 360px;
+    font-size: 15px;
+    line-height: 1.55;
+    font-weight: 600;
+    color: #ffffff;
+  }
+
+  /* Animated tap-hand hint — pinned over one of the four figures
+     (roughly centred on the second voice), bounces with two ripple
+     rings, then auto-fades after ~3 seconds so the player has time
+     to see it but isn't distracted by it later. */
+  .voice-onb-tap {
+    position: absolute;
+    bottom: 50vh;
+    left: 36%;
+    transform: translateX(-50%);
+    width: 56px;
+    height: 56px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
+    z-index: 5;
+    animation: onbHandShow 4.4s ease-out forwards;
+  }
+  @keyframes onbHandShow {
+    0%, 75%   { opacity: 1; }   /* visible ~3.3s — covers 2 bounces */
+    100%      { opacity: 0; }   /* fade over ~1.1s, stays hidden */
+  }
+  /* Tap as soon as the player picks a voice — hide instantly. */
+  .voice-figures.has-active ~ .voice-onb-tap {
+    opacity: 0;
+    animation: none;
+  }
+  .tap-hand {
+    width: 38px;
+    height: 38px;
+    filter: drop-shadow(0 2px 6px rgba(0,0,0,0.55));
+    /* Run the bounce exactly twice, then settle. */
+    animation: onbTapBounce 1.6s ease-in-out 2 forwards;
+    transform-origin: center;
+  }
+  @keyframes onbTapBounce {
+    0%, 100% { transform: translateY(0)   scale(1);    }
+    35%      { transform: translateY(5px) scale(0.92); }
+    55%      { transform: translateY(5px) scale(0.92); }
+  }
+  /* Two ripple rings expanding outward, staggered. */
+  .tap-ring {
+    position: absolute;
+    top: 50%; left: 50%;
+    width: 28px; height: 28px;
+    margin: -14px 0 0 -14px;
+    border-radius: 50%;
+    border: 2px solid rgba(255,255,255,0.85);
+    opacity: 0;
+    /* Ripple twice, in sync with the two bounce cycles. */
+    animation: onbTapRipple 1.6s ease-out 2 forwards;
+  }
+  .tap-ring.r2 { animation-delay: 0.5s; }
+  @keyframes onbTapRipple {
+    0%   { transform: scale(0.45); opacity: 0.85; }
+    80%  { transform: scale(2.10); opacity: 0;    }
+    100% { transform: scale(2.10); opacity: 0;    }
+  }
+
+  /* Once a voice is tapped, the onboarding fades out so the caption
+     can take its place. */
+  .voice-figures.has-active ~ .voice-onboarding {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+
+  /* Caption shown when a voice is tapped — sits between the figures
+     and the line buttons / iOS sheet at the bottom of the screen. */
+  .voice-caption {
+    position: absolute;
+    left: 0; right: 0;
+    bottom: 27vh;                /* sits above the chips, below the figures */
+    text-align: center;
+    padding: 0 28px;
+    pointer-events: none;
+    opacity: 0;
+    transform: translateY(8px);
+    transition: opacity 0.32s ease, transform 0.32s ease;
+  }
+  .voice-caption.show {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  .voice-caption-name {
+    font-size: 22px;
+    font-weight: 800;
+    letter-spacing: 0.22em;
+    color: #ffd1e6;
+    text-transform: uppercase;
+  }
+  .voice-caption-desc {
+    margin: 8px auto 0;
+    max-width: 360px;
+    font-size: 14px;
+    line-height: 1.5;
+    color: rgba(255,255,255,0.92);
+    text-shadow: 0 1px 6px rgba(0,0,0,0.65);
+  }
+
+  /* Two small chips — Change / Edit — under the voice description.
+     Hidden until a voice is selected. */
+  .vc-chips {
+    position: absolute;
+    left: 50%;
+    bottom: 18vh;
+    transform: translateX(-50%) translateY(6px);
+    display: inline-flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    gap: 15px;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.28s ease, transform 0.28s ease;
+  }
+  .voice-figures.has-active ~ .vc-chips {
+    opacity: 1;
+    pointer-events: auto;
+    transform: translateX(-50%) translateY(0);
+  }
+  .vc-chip {
+    appearance: none;
+    -webkit-appearance: none;
+    margin: 0;
+    padding: 13px 28px;
+    font: 700 16px/1 -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+    letter-spacing: 0.06em;
+    color: rgba(255,255,255,0.92);
+    background: rgba(0,0,0,0.40);
+    border: 1px solid rgba(255,255,255,0.28);
+    border-radius: 999px;
+    cursor: pointer;
+    white-space: nowrap;
+    -webkit-backdrop-filter: blur(8px);
+    backdrop-filter: blur(8px);
+    transition: background 0.15s, transform 0.10s;
+  }
+  .vc-chip:hover  { background: rgba(0,0,0,0.55); }
+  .vc-chip:active { transform: scale(0.95); }
+
+  /* Character page (Page 0) — single "Change Outfit" chip, same look
+     as the voices pills, always visible. */
+  .char-chips {
+    position: absolute;
+    left: 50%;
+    bottom: 18vh;
+    transform: translateX(-50%);
+    display: inline-flex;
+    z-index: 3;            /* below the bottom sheet (z-index 4) */
+  }
+
+  /* Page navigation arrows — circular glass chrome, aligned to the
+     same bottom + height as the .vc-chip pills on the voices page
+     so the row reads as a single horizontal control band.
+     The chips live inside .final-page (which sits ABOVE #finalScreen's
+     padding-bottom), so we add that padding here to push the arrows
+     down to the same y-coordinate. */
+  .page-arrow {
+    position: absolute;
+    bottom: calc(18vh + max(22px, env(safe-area-inset-bottom) + 14px));
+    width: 44px; height: 44px;
+    border-radius: 50%;
+    background: rgba(0,0,0,0.55);
+    border: 1px solid rgba(255,255,255,0.20);
+    -webkit-backdrop-filter: blur(10px);
+    backdrop-filter: blur(10px);
+    color: #fff;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 3;          /* below the bottom sheet (z-index 4) so
+                            the sheet covers the arrows when expanded */
+    transition: opacity 0.2s, transform 0.15s;
+  }
+  .page-arrow:hover  { background: rgba(0,0,0,0.7); }
+  .page-arrow:active { transform: scale(0.94); }
+  .page-arrow svg { width: 18px; height: 18px; }
+  .page-arrow-left  { left: 14px; }
+  .page-arrow-right { right: 14px; }
+  /* Dim the arrow that points to a page you're already on. */
+  #finalScreen[data-page="0"] .page-arrow-left  { opacity: 0; pointer-events: none; }
+  #finalScreen[data-page="1"] .page-arrow-right { opacity: 0; pointer-events: none; }
+  /* Date-mode + page 0 — the stats panel is taller than the arrow.
+     Lift the right arrow ~14px so its centre aligns with the panel
+     centre. Other pages/modes keep the original alignment. */
+  #finalScreen[data-mode="date"][data-page="0"] .page-arrow-right {
+    bottom: calc(18vh + max(22px, env(safe-area-inset-bottom) + 14px) + 14px);
+  }
+
+  /* Page dot indicators — hidden (the arrows + chips already make
+     the page navigation obvious). */
+  .page-dots {
+    display: none;
+  }
+  .page-dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.30);
+    transition: background 0.2s, width 0.2s;
+  }
+  .page-dot.active {
+    background: #ff7eb9;
+    width: 18px;
+    border-radius: 999px;
+  }
+
+  /* Sheet stays visible on both pages — its content is what swaps. */
   .final-ground {
     position: absolute;
     left: 50%;
@@ -2067,6 +2591,10 @@
     background-position: center bottom;
     filter: drop-shadow(0 22px 28px rgba(0,0,0,0.55));
     animation: finalFadeIn 0.9s ease both;
+    /* The box can grow to 100% × 100% in .has-photo mode while the
+       actual image sits contained inside. Don't let the empty box
+       swallow clicks meant for siblings (e.g., the dog beside her). */
+    pointer-events: none;
   }
   /* When the user has a generated AI portrait, .final-boy turns into
      a flex container that holds an actual <img>. The <img> sizes
@@ -2115,6 +2643,291 @@
   @keyframes finalFadeIn {
     from { opacity: 0; transform: translateY(18px); }
     to   { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ---------- iOS-style bottom sheet (My Character data) ----------
+     Light, almost-paper card. Default at 15% height (just the
+     handle + first line of prose visible) so the character
+     portrait dominates the screen. Scrolling inside the sheet
+     grows it instead of moving the body. */
+  .final-sheet {
+    position: absolute;
+    left: 0; right: 0; bottom: 0;
+    background: linear-gradient(180deg, #fdf7f3 0%, #f6ecf2 100%);
+    color: #1d1426;
+    border-radius: 22px 22px 0 0;
+    z-index: 4;
+    box-shadow:
+      0 -14px 36px rgba(0,0,0,0.32),
+      inset 0 1px 0 rgba(255,255,255,0.45);
+    overflow: hidden;
+    height: 15%;
+    transition: height 0.35s cubic-bezier(0.25,0.9,0.3,1.05);
+    display: flex;
+    flex-direction: column;
+    touch-action: none;
+  }
+  .final-sheet[data-snap="collapsed"] { height: 10%; }
+  .final-sheet[data-snap="half"]      { height: 15%; }
+  .final-sheet[data-snap="expanded"]  { height: 82%; }
+  .final-sheet.dragging { transition: none; }
+
+  .final-sheet-handle {
+    flex: 0 0 auto;
+    width: 40px; height: 4px;
+    border-radius: 999px;
+    background: rgba(30, 18, 40, 0.22);
+    margin: 8px auto 6px;
+    cursor: grab;
+    user-select: none;
+  }
+  .final-sheet-handle:active { cursor: grabbing; }
+
+  .final-sheet-body {
+    flex: 1 1 auto;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    padding: 22px 22px max(80px, env(safe-area-inset-bottom) + 72px);
+    touch-action: pan-y;
+  }
+  .final-sheet-body::-webkit-scrollbar { display: none; }
+
+  /* ---------- Prose intro (warm summary with highlights) ---------- */
+  .sheet-prose {
+    font-size: 18px;
+    line-height: 1.35;
+    color: rgba(28, 18, 42, 0.95);
+    font-weight: 700;
+    letter-spacing: 0;
+  }
+  .sheet-prose p { margin: 0 0 16px; }
+  .sheet-prose p:last-child { margin-bottom: 0; }
+  /* Inline survey-answer highlight — no pill, just a bolder warmer
+     accent colour so the words pop without breaking the reading flow. */
+  .sheet-prose .hl {
+    color: #c8336d;
+    font-weight: 900;
+    white-space: nowrap;
+  }
+
+  /* Pet / memory mini-cards (if shown) — light variant */
+  .sheet-mini { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 6px; }
+  .sheet-mini-item {
+    display: flex; gap: 8px; align-items: center;
+    padding: 6px 10px 6px 6px;
+    border-radius: 999px;
+    background: rgba(35, 22, 50, 0.05);
+    border: 1px solid rgba(35, 22, 50, 0.08);
+  }
+  .sheet-mini-thumb {
+    width: 30px; height: 30px;
+    border-radius: 50%;
+    background: rgba(35, 22, 50, 0.12);
+    background-size: cover;
+    background-position: center;
+  }
+  .sheet-mini-thumb.square { border-radius: 6px; }
+  .sheet-mini-text {
+    font-size: 12px;
+    color: #382048;
+    font-weight: 600;
+    max-width: 180px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  /* Dog is hidden by default in self mode (the player has no pet
+     beside them on screen — survey data lives in the sheet). It is
+     re-shown in date mode beside the visiting character. */
+  .final-dog { display: none; }
+  #finalScreen[data-mode="date"] .final-dog {
+    display: block;
+    cursor: pointer;
+    pointer-events: auto;
+    /* The figure (Iris) sits 18vh above the .final-stage bottom because
+       of the stage's padding-bottom; lift the dog by the same amount so
+       the two share a ground line. */
+    bottom: 18vh;
+    /* Tighten the side offset so the dog sits right beside her. */
+    left: calc(50% + 64px);
+    height: 26%;
+    max-height: 200px;
+  }
+
+  /* Tappable speech bubble that pops over the dog when clicked. */
+  .dog-bubble {
+    position: absolute;
+    top: -28px;
+    left: 50%;
+    transform: translateX(-50%) translateY(6px);
+    background: #ffffff;
+    color: #1a1426;
+    padding: 6px 12px;
+    border-radius: 14px;
+    font-size: 13px;
+    font-weight: 800;
+    letter-spacing: 0.02em;
+    white-space: nowrap;
+    box-shadow: 0 6px 14px rgba(0,0,0,0.35);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.22s ease, transform 0.22s ease;
+  }
+  .dog-bubble::after {
+    content: '';
+    position: absolute;
+    bottom: -6px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 0; height: 0;
+    border-left: 6px solid transparent;
+    border-right: 6px solid transparent;
+    border-top: 6px solid #ffffff;
+  }
+  .dog-bubble.show {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+
+  /* Date-mode stats — wide glass panel sitting between the two
+     page arrows. Three slots: progress ring · completed · available.
+     Same chrome as the page arrows + voice chips so the controls
+     read as one design family. */
+  .char-stats {
+    position: absolute;
+    left: 14px;          /* page 0 has no left arrow — claim the gap */
+    right: 70px;
+    bottom: 18vh;
+    display: none;
+    align-items: center;
+    justify-content: space-around;
+    gap: 8px;
+    padding: 10px 14px;
+    border-radius: 18px;
+    background: rgba(0,0,0,0.45);
+    border: 1px solid rgba(255,255,255,0.20);
+    -webkit-backdrop-filter: blur(10px);
+    backdrop-filter: blur(10px);
+    box-shadow: 0 8px 22px rgba(0,0,0,0.30);
+    z-index: 3;
+  }
+  #finalScreen[data-mode="date"] .char-stats { display: flex; }
+  /* In date mode, hide every "edit"-flavoured control, since the
+     player can't edit another character. */
+  #finalScreen[data-mode="date"] .char-chips     { display: none; }
+  #finalScreen[data-mode="date"] .vc-chips       { display: none; }
+  #finalScreen[data-mode="date"] .voice-onboarding { display: none; }
+  #finalScreen[data-mode="date"] .voice-onb-tap  { display: none; }
+
+  /* Progress ring button (left slot). */
+  .cs-progress {
+    appearance: none;
+    -webkit-appearance: none;
+    background: transparent;
+    border: 0;
+    padding: 0;
+    margin: 0;
+    width: 52px; height: 52px;
+    flex: 0 0 auto;
+    position: relative;
+    cursor: pointer;
+    color: #fff;
+  }
+  .cs-progress svg {
+    width: 100%; height: 100%;
+    display: block;
+  }
+  .cs-progress-bg {
+    fill: none;
+    stroke: rgba(255,255,255,0.22);
+    stroke-width: 3.4;
+  }
+  .cs-progress-fill {
+    fill: none;
+    stroke: #ff7eb9;
+    stroke-width: 3.4;
+    stroke-linecap: round;
+    transition: stroke-dashoffset 0.6s cubic-bezier(0.25,0.9,0.3,1.05);
+    filter: drop-shadow(0 0 4px rgba(255,126,185,0.55));
+  }
+  .cs-progress-num {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12.5px;
+    font-weight: 800;
+    letter-spacing: 0.02em;
+    color: #fff;
+    text-shadow: 0 1px 3px rgba(0,0,0,0.6);
+  }
+  .cs-progress:active { transform: scale(0.95); }
+
+  /* Dividers hidden — keep markup for spacing rhythm but no line. */
+  .cs-divider { display: none; }
+
+  /* Two text slots (completed / available). */
+  .cs-text {
+    flex: 1 1 0;
+    text-align: center;
+    color: #fff;
+    min-width: 0;
+  }
+  .cs-num {
+    font-size: 22px;
+    font-weight: 800;
+    line-height: 1;
+    letter-spacing: 0.02em;
+  }
+  .cs-sub {
+    margin-top: 5px;
+    font-size: 9.5px;
+    font-weight: 700;
+    letter-spacing: 0.10em;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.72);
+  }
+
+  /* Tooltip surfaced when the progress ring is tapped. Floats just
+     above the stats panel and auto-dismisses. */
+  .cs-tooltip {
+    position: absolute;
+    left: 50%;
+    bottom: calc(18vh + 78px);
+    transform: translateX(-50%) translateY(8px);
+    max-width: 260px;
+    padding: 10px 14px;
+    background: rgba(0,0,0,0.88);
+    color: #fff;
+    border-radius: 14px;
+    font-size: 12.5px;
+    line-height: 1.35;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    white-space: normal;        /* allow wrapping for long sentences */
+    text-align: center;
+    box-shadow: 0 6px 14px rgba(0,0,0,0.4);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.22s ease, transform 0.22s ease;
+    z-index: 5;
+  }
+  .cs-tooltip.show {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+  .cs-tooltip::after {
+    content: '';
+    position: absolute;
+    bottom: -6px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 0; height: 0;
+    border-left: 6px solid transparent;
+    border-right: 6px solid transparent;
+    border-top: 6px solid rgba(0,0,0,0.85);
   }
 
   /* Actions at the bottom */
@@ -2449,8 +3262,18 @@
     line-height: 1.32;
     color: #fff;
     letter-spacing: -0.015em;
-    margin-bottom: 4px;
+    margin-bottom: 0;
     text-shadow: 0 2px 10px rgba(0,0,0,0.5);
+  }
+  /* Optional helper line below the question (e.g. "You can pick more
+     than one."). Hidden when the question doesn't define `q.sub`.
+     Tucked tight under the question. */
+  .survey-subtext {
+    font-size: 13px;
+    color: rgba(255,255,255,0.55);
+    line-height: 1.35;
+    margin: 2px 0 14px;
+    letter-spacing: 0.01em;
   }
 
   .survey-text-wrap textarea,
@@ -2476,6 +3299,70 @@
   .survey-text-wrap input:focus {
     border-color: rgba(255,126,185,0.65);
     background: rgba(255,255,255,0.08);
+  }
+
+  /* ---------- Multi-select tag picker (Q1) ----------
+     Tags and the "add your own" input share one flex-wrap so the
+     input flows inline next to the last tag — no dedicated row. */
+  .tag-picker {
+    width: 100%;
+    margin-top: 6px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
+  }
+  .tag {
+    /* Mobile-friendly tap target (~46px tall, ample horizontal padding). */
+    padding: 12px 18px;
+    min-height: 44px;
+    border-radius: 999px;
+    font-size: 14.5px;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.18);
+    color: rgba(255,255,255,0.85);
+    cursor: pointer;
+    user-select: none;
+    transition: background 0.18s, border-color 0.18s, color 0.18s, transform 0.12s;
+    font-family: inherit;
+    display: inline-flex;
+    align-items: center;
+    line-height: 1;
+  }
+  .tag:hover  { background: rgba(255,255,255,0.10); border-color: rgba(255,255,255,0.30); }
+  .tag:active { transform: scale(0.96); }
+  .tag.selected {
+    background: linear-gradient(135deg, rgba(255,126,185,0.22), rgba(255,95,152,0.22));
+    border-color: rgba(255,178,213,0.55);
+    color: #ffd8ea;
+  }
+  /* Inline "add your own" — same height/shape as the tags so it
+     reads as one of them. Width grows with the placeholder/value. */
+  .tag-add-input {
+    appearance: none;
+    -webkit-appearance: none;
+    padding: 12px 18px;
+    min-height: 44px;
+    border-radius: 999px;
+    font-size: 14.5px;
+    font-weight: 600;
+    background: rgba(255,255,255,0.04);
+    border: 1px dashed rgba(255,255,255,0.30);
+    color: #fff;
+    outline: none;
+    width: 180px;
+    max-width: 100%;
+    font-family: inherit;
+    transition: background 0.2s, border-color 0.2s, width 0.2s;
+    line-height: 1;
+  }
+  .tag-add-input::placeholder { color: rgba(255,255,255,0.50); }
+  .tag-add-input:focus {
+    border-color: rgba(255,126,185,0.55);
+    background: rgba(255,255,255,0.08);
+    width: 240px;
   }
 
   /* Instagram button */
@@ -2598,6 +3485,297 @@
     from { opacity: 0; transform: translateY(8px); }
     to   { opacity: 1; transform: translateY(0); }
   }
+
+  /* ---------- Q9: multi-pet rows ---------- */
+  .pets-wrap {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .pets-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .pet-row {
+    display: flex;
+    align-items: stretch;
+    gap: 12px;
+    padding: 10px;
+    border-radius: 14px;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.10);
+    position: relative;
+  }
+  /* Photo placeholder on the LEFT — circular, tappable, becomes a
+     thumbnail once a photo is added. */
+  .pet-row .pet-photo {
+    flex: 0 0 auto;
+    width: 72px; height: 72px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.05);
+    border: 1px dashed rgba(255,255,255,0.25);
+    color: rgba(255,255,255,0.55);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    background-size: cover;
+    background-position: center;
+    overflow: hidden;
+    position: relative;
+    transition: border-color 0.2s, background-color 0.2s;
+  }
+  .pet-row .pet-photo:hover {
+    border-color: rgba(255,126,185,0.55);
+  }
+  .pet-row .pet-photo.has-image {
+    border-style: solid;
+    border-color: rgba(255,178,213,0.45);
+  }
+  .pet-row .pet-photo .pp-plus {
+    font-size: 28px;
+    font-weight: 300;
+    line-height: 1;
+  }
+  .pet-row .pet-photo input[type="file"] {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    cursor: pointer;
+  }
+
+  /* Right column: kind icons (top) + name input (bottom) */
+  .pet-row .pet-row-right {
+    flex: 1 1 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    min-width: 0;
+  }
+  .pet-row .pet-kind-row {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+  }
+  .pet-row .pet-kind-btn {
+    flex: 0 0 auto;
+    height: 32px;
+    min-width: 56px;
+    padding: 0 10px;
+    border-radius: 999px;
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.16);
+    color: rgba(255,255,255,0.78);
+    cursor: pointer;
+    font-size: 11.5px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    font-family: inherit;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    transition: background 0.18s, border-color 0.18s, color 0.18s;
+  }
+  .pet-row .pet-kind-btn:hover  { background: rgba(255,255,255,0.10); border-color: rgba(255,255,255,0.30); }
+  .pet-row .pet-kind-btn.active {
+    background: linear-gradient(135deg, rgba(255,126,185,0.22), rgba(255,95,152,0.22));
+    border-color: rgba(255,178,213,0.55);
+    color: #ffd8ea;
+  }
+  .pet-row .pet-name-input {
+    width: 100%;
+    height: 36px;
+    padding: 0 12px;
+    border-radius: 8px;
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.14);
+    color: #fff;
+    font-family: inherit;
+    font-size: 13px;
+    outline: none;
+    transition: border-color 0.15s, background 0.15s;
+  }
+  .pet-row .pet-name-input::placeholder { color: rgba(255,255,255,0.4); }
+  .pet-row .pet-name-input:focus {
+    border-color: rgba(255,126,185,0.55);
+    background: rgba(255,255,255,0.10);
+  }
+  .pet-row .pet-row-remove {
+    position: absolute;
+    top: 4px; right: 4px;
+    width: 24px; height: 24px;
+    border-radius: 50%;
+    background: rgba(0,0,0,0.4);
+    border: 1px solid rgba(255,255,255,0.18);
+    color: rgba(255,255,255,0.7);
+    cursor: pointer;
+    font-size: 14px;
+    line-height: 1;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    font-family: inherit;
+    transition: background 0.15s, color 0.15s;
+  }
+  .pet-row .pet-row-remove:hover { background: rgba(0,0,0,0.6); color: #fff; }
+  /* Hide the remove button when only one row exists. */
+  .pets-list[data-count="1"] .pet-row-remove { display: none; }
+
+  .pets-add-btn,
+  .memories-add-btn {
+    align-self: flex-start;
+    background: none;
+    border: 1px dashed rgba(255,255,255,0.30);
+    color: rgba(255,255,255,0.78);
+    padding: 10px 16px;
+    border-radius: 999px;
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.18s, border-color 0.18s, color 0.18s;
+  }
+  .pets-add-btn:hover,
+  .memories-add-btn:hover { background: rgba(255,255,255,0.06); border-color: rgba(255,178,213,0.55); color: #fff; }
+  .pets-add-btn[disabled],
+  .memories-add-btn[disabled] { opacity: 0.4; cursor: not-allowed; }
+
+  /* ---------- Q10: photo memory rows ---------- */
+  .memories-wrap, .memories-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .memory-row {
+    display: flex;
+    align-items: stretch;
+    gap: 12px;
+    padding: 10px;
+    border-radius: 14px;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.10);
+    position: relative;
+  }
+  .memory-row .mem-photo {
+    flex: 0 0 auto;
+    width: 92px; height: 92px;
+    border-radius: 12px;
+    background: rgba(255,255,255,0.05);
+    border: 1px dashed rgba(255,255,255,0.25);
+    color: rgba(255,255,255,0.55);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    background-size: cover;
+    background-position: center;
+    overflow: hidden;
+    position: relative;
+    transition: border-color 0.2s;
+  }
+  .memory-row .mem-photo:hover { border-color: rgba(255,126,185,0.55); }
+  .memory-row .mem-photo.has-image {
+    border-style: solid;
+    border-color: rgba(255,178,213,0.45);
+  }
+  .memory-row .mem-photo .pp-plus {
+    font-size: 32px;
+    font-weight: 300;
+    line-height: 1;
+  }
+  .memory-row .mem-photo input[type="file"] {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    cursor: pointer;
+  }
+  .memory-row .mem-right {
+    flex: 1 1 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    min-width: 0;
+  }
+  .memory-row .mem-note {
+    width: 100%;
+    min-height: 50px;
+    padding: 8px 10px;
+    border-radius: 8px;
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.14);
+    color: #fff;
+    font-family: inherit;
+    font-size: 13px;
+    line-height: 1.35;
+    outline: none;
+    resize: none;
+    transition: border-color 0.15s, background 0.15s;
+  }
+  .memory-row .mem-note::placeholder { color: rgba(255,255,255,0.4); }
+  .memory-row .mem-note:focus {
+    border-color: rgba(255,126,185,0.55);
+    background: rgba(255,255,255,0.10);
+  }
+  /* Meta row: place + date pills (auto-filled from EXIF, editable). */
+  .memory-row .mem-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    align-items: center;
+  }
+  .memory-row .mem-meta .mem-pill {
+    flex: 1 1 auto;
+    height: 28px;
+    padding: 0 12px;
+    border-radius: 999px;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.14);
+    color: rgba(255,255,255,0.72);
+    font-family: inherit;
+    font-size: 11.5px;
+    font-weight: 600;
+    line-height: 1;
+    outline: none;
+    min-width: 0;
+    width: 100%;
+  }
+  .memory-row .mem-meta .mem-pill:focus {
+    border-color: rgba(255,126,185,0.55);
+    background: rgba(255,255,255,0.10);
+    color: #fff;
+  }
+  .memory-row .mem-meta .mem-pill.auto {
+    background: rgba(255,178,213,0.10);
+    border-color: rgba(255,178,213,0.30);
+    color: #ffd1e6;
+  }
+  .memory-row .mem-meta .mem-pill svg {
+    width: 11px; height: 11px; flex: 0 0 auto;
+    opacity: 0.8;
+  }
+  .memory-row .mem-row-remove {
+    position: absolute;
+    top: 4px; right: 4px;
+    width: 24px; height: 24px;
+    border-radius: 50%;
+    background: rgba(0,0,0,0.4);
+    border: 1px solid rgba(255,255,255,0.18);
+    color: rgba(255,255,255,0.7);
+    cursor: pointer;
+    font-size: 14px;
+    line-height: 1;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    font-family: inherit;
+    transition: background 0.15s, color 0.15s;
+  }
+  .memory-row .mem-row-remove:hover { background: rgba(0,0,0,0.6); color: #fff; }
+  .memories-list[data-count="1"] .mem-row-remove { display: none; }
 
   /* Fixed bottom Next button — large CTA */
   .survey-next-btn {
@@ -5804,8 +6982,6 @@
     z-index: 740;
     background: #0a0a0f;
     color: #fff;
-    display: flex;
-    flex-direction: column;
     transform: translateY(100%);
     opacity: 0;
     pointer-events: none;
@@ -5818,18 +6994,17 @@
     pointer-events: auto;
   }
   /* ---------- Cover gallery ---------- */
+  /* Cover sits BEHIND the scroll layer and stays put. The scrollable
+     .ps-body in front gradually rises over it. Cover height matches
+     the spacer so the bottom of the cover (where the memory caption
+     sits) is never hidden behind the sheet at rest. */
   .ps-cover {
-    position: relative;
-    width: 100%;
-    /* Height is driven by --cover-h, set by the JS scroll listener so
-       the gallery shrinks as the dates list scrolls up. Defaults to a
-       generous 48vh on first render. */
-    height: var(--cover-h, 48vh);
-    min-height: 120px;     /* never collapses below the compact band */
-    flex-shrink: 0;
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 42vh;
     overflow: hidden;
     background: #1a1625;
-    transition: height 0.18s ease-out;
+    z-index: 1;
   }
   .ps-cover-track {
     display: flex;
@@ -5849,18 +7024,11 @@
     scroll-snap-align: start;
     background-color: #1a1625;
   }
-  /* Bottom darkening so the name + meta read against busy photos */
-  .ps-cover::after {
-    content: '';
-    position: absolute;
-    left: 0; right: 0; bottom: 0;
-    height: 60%;
-    background: linear-gradient(180deg,
-      rgba(10,10,15,0) 0%,
-      rgba(10,10,15,0.3) 35%,
-      rgba(10,10,15,0.85) 100%);
-    pointer-events: none;
-  }
+  /* The legacy 60% bottom darkening was used by the old design where
+     the player's name lived at the bottom-left. With the name at the
+     top centre and a per-slide gradient handling the memory caption,
+     this outer overlay is gone — it was painting a heavy band at the
+     bottom of the cover which read as a dead "gap" before the tabs. */
   .ps-back {
     position: absolute;
     top: max(18px, calc(env(safe-area-inset-top) + 14px));
@@ -5876,14 +7044,13 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    z-index: 5;
+    z-index: 10;       /* above both the cover and the rising sheet */
     padding: 0;
   }
   .ps-back:active { transform: scale(0.94); }
   .ps-back svg { width: 18px; height: 18px; }
 
-  /* Sign Out — mirror of the close button on the right side of the
-     cover. Tapping wipes the in-session profile and returns to Start. */
+  /* Sign Out — mirror of the close button, top-right corner. */
   .ps-signout {
     position: absolute;
     top: max(18px, calc(env(safe-area-inset-top) + 14px));
@@ -5901,75 +7068,121 @@
     font-weight: 700;
     letter-spacing: 0.06em;
     cursor: pointer;
-    z-index: 5;
+    z-index: 10;       /* above the rising sheet */
     display: inline-flex;
     align-items: center;
     transition: background 0.2s, border-color 0.2s, transform 0.15s;
   }
   .ps-signout:hover  { background: rgba(0,0,0,0.7); border-color: rgba(255,255,255,0.3); }
   .ps-signout:active { transform: scale(0.96); }
-  .ps-cover-dots {
+  /* Page indicator dots removed — the swipe gesture is the only
+     navigation, no visual pager. */
+  .ps-cover-dots { display: none; }
+
+  /* Page heading — vertically centred with the 38px X / Sign Out
+     buttons sitting at the same top inset. Same `top` + same height
+     means the centres line up exactly. Fades out as the sheet rises. */
+  .ps-cover-id {
     position: absolute;
+    top: max(18px, calc(env(safe-area-inset-top) + 14px));
+    height: 38px;
     left: 50%;
-    top: max(20px, calc(env(safe-area-inset-top) + 16px));
     transform: translateX(-50%);
     display: flex;
-    gap: 4px;
+    align-items: center;
+    justify-content: center;
     z-index: 5;
-  }
-  .ps-cover-dots span {
-    width: 18px; height: 3px;
-    border-radius: 2px;
-    background: rgba(255,255,255,0.32);
-    transition: background 0.2s;
-  }
-  .ps-cover-dots span.active { background: #fff; }
-  .ps-cover-info {
-    position: absolute;
-    left: 22px; right: 22px;
-    bottom: 22px;
-    z-index: 4;
+    text-align: center;
+    pointer-events: none;
+    opacity: var(--cover-fade, 1);
+    transition: opacity 0.18s ease-out;
   }
   .ps-cover-name {
-    font-size: 28px;
+    font-size: 20px;
+    font-weight: 800;
+    line-height: 1;
     letter-spacing: -0.01em;
-    margin-bottom: 4px;
-    text-shadow: 0 2px 14px rgba(0,0,0,0.6);
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
+    text-shadow: 0 2px 14px rgba(0,0,0,0.7);
+    color: #fff;
   }
-  /* First name: bold; age: normal weight + slightly muted alpha. */
   .ps-cover-fname { font-weight: 800; }
-  .ps-cover-age   { font-weight: 400; opacity: 0.85; }
-  /* Verified checkmark chip — small blue circle with a white tick,
-     same metaphor every dating-app uses. */
+  /* Verified checkmark chip — small blue circle with white tick. */
   .ps-cover-verified {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 22px; height: 22px;
+    width: 18px; height: 18px;
     border-radius: 50%;
     background: linear-gradient(135deg, #4aa3ff, #2c7ee0);
     color: #fff;
     flex: 0 0 auto;
-    box-shadow: 0 2px 6px rgba(0,0,0,0.45);
+    box-shadow: 0 2px 5px rgba(0,0,0,0.45);
   }
-  .ps-cover-verified svg { width: 14px; height: 14px; }
+  .ps-cover-verified svg { width: 11px; height: 11px; }
   .ps-cover-meta {
-    font-size: 13px;
-    color: rgba(255,255,255,0.85);
+    margin-top: 2px;
+    font-size: 12px;
+    color: rgba(255,255,255,0.88);
     letter-spacing: 0.04em;
-    text-shadow: 0 2px 12px rgba(0,0,0,0.55);
+    text-shadow: 0 2px 10px rgba(0,0,0,0.6);
   }
 
-  /* ---------- Tabs ---------- */
+  /* Per-slide memory info — caption + pack/location/with line. Sits
+     in the bottom-left corner of the active slide. */
+  .ps-cover-slide {
+    position: relative;
+  }
+  .ps-memory-info {
+    position: absolute;
+    left: 18px;
+    right: 18px;
+    bottom: 36px;            /* lifted up off the very bottom edge */
+    z-index: 3;
+    pointer-events: none;
+    /* Fades out as the foreground sheet rises over the cover. */
+    opacity: var(--cover-fade, 1);
+    transition: opacity 0.18s ease-out;
+  }
+  .ps-memory-caption {
+    font-size: 14px;
+    font-weight: 700;
+    line-height: 1.3;
+    color: #fff;
+    text-shadow: 0 2px 12px rgba(0,0,0,0.85), 0 1px 4px rgba(0,0,0,0.7);
+    margin-bottom: 6px;
+  }
+  /* The meta line is intentionally faded — visible but quieter. */
+  .ps-memory-meta {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.10em;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.55);
+    text-shadow: 0 2px 8px rgba(0,0,0,0.7);
+  }
+  /* Subtle bottom gradient on slides to keep memory text readable. */
+  .ps-cover-slide::after {
+    content: '';
+    position: absolute;
+    inset: auto 0 0 0;
+    height: 55%;
+    background: linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0.78) 100%);
+    pointer-events: none;
+    z-index: 2;
+  }
+
+  /* Tabs sit at the top of the rising sheet and stick UNDER the
+     X close + Sign Out band (top: ~18px + 38px button height ≈ 64px)
+     so they never run on top of those controls. */
   .ps-tabs {
     display: flex;
     gap: 6px;
-    padding: 14px 18px 4px;
+    padding: 0 18px;
     border-bottom: 1px solid rgba(255,255,255,0.08);
-    flex-shrink: 0;
+    position: sticky;
+    top: max(64px, calc(env(safe-area-inset-top) + 60px));
+    z-index: 5;
+    background: #0a0a0f;
   }
   .ps-tab {
     background: transparent;
@@ -5980,7 +7193,7 @@
     font-weight: 700;
     letter-spacing: 0.18em;
     text-transform: uppercase;
-    padding: 10px 14px 14px;
+    padding: 12px 14px;
     cursor: pointer;
     position: relative;
     transition: color 0.2s;
@@ -5997,12 +7210,31 @@
     border-radius: 2px;
   }
 
-  /* ---------- Body / panes ---------- */
+  /* ---------- Body — foreground scroll layer over the cover ----------
+     The body fills the whole sheet and scrolls; its first child is
+     a transparent spacer that lets the cover show through, followed
+     by an opaque sheet that slides over the cover as the player scrolls. */
   .ps-body {
-    flex: 1;
+    position: absolute;
+    inset: 0;
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
+    z-index: 2;
+    background: transparent;
     padding-bottom: max(28px, calc(env(safe-area-inset-bottom) + 18px));
+  }
+  /* Transparent spacer = the height of cover that's visible at rest. */
+  .ps-spacer {
+    height: 42vh;
+    pointer-events: none;
+  }
+  /* The dark sheet that holds tabs + cards. Rounded top corners
+     gently overlap the cover on initial open, like an iOS sheet. */
+  .ps-sheet {
+    background: #0a0a0f;
+    border-radius: 22px 22px 0 0;
+    box-shadow: 0 -16px 40px rgba(0,0,0,0.45);
+    min-height: calc(100vh - 42vh + 1px);
   }
   .ps-pane { display: none; }
   .ps-pane.active { display: block; }
@@ -6013,6 +7245,113 @@
     font-size: 13px;
     font-style: italic;
   }
+
+  /* ---------- Dates grid (My Dates tab) ----------
+     Two cards per row. Each card is a vertical poster with the
+     character's London-pack appearance filling the body and a
+     glass stats panel at the bottom (progress ring · completed ·
+     available — same shape as Iris's stats panel). Locked dates
+     dim the card and show a lock badge on the cover. */
+  .ps-dates-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    padding: 14px 14px 0;
+  }
+  .ps-card {
+    position: relative;
+    aspect-ratio: 3 / 4;
+    border-radius: 16px;
+    overflow: hidden;
+    background-color: #1a1423;
+    background-size: cover;
+    background-position: center;
+    box-shadow:
+      0 10px 22px rgba(0,0,0,0.40),
+      inset 0 0 0 1px rgba(255,255,255,0.08);
+    cursor: pointer;
+    transition: transform 0.18s ease;
+  }
+  .ps-card:active { transform: scale(0.98); }
+  /* Locked cards are NOT blurred and stay clickable — only the lock
+     icon distinguishes them from unlocked ones. */
+  /* Bottom darker gradient so info text reads cleanly. */
+  .ps-card::after {
+    content: '';
+    position: absolute; inset: 0;
+    background: linear-gradient(180deg,
+      rgba(0,0,0,0) 50%,
+      rgba(0,0,0,0.55) 80%,
+      rgba(0,0,0,0.88) 100%);
+    pointer-events: none;
+    z-index: 1;
+  }
+  .ps-card-info {
+    position: absolute;
+    left: 10px;
+    right: 60px;             /* leave room for the progress ring on right */
+    bottom: 10px;
+    z-index: 3;
+    pointer-events: none;
+  }
+  .ps-card-name {
+    font-size: 17px;
+    font-weight: 800;
+    color: #fff;
+    text-shadow: 0 2px 8px rgba(0,0,0,0.7);
+    letter-spacing: -0.01em;
+    line-height: 1.1;
+  }
+  .ps-card-meta {
+    margin-top: 3px;
+    font-size: 11px;
+    font-weight: 600;
+    color: rgba(255,255,255,0.85);
+    letter-spacing: 0.02em;
+    text-shadow: 0 2px 6px rgba(0,0,0,0.6);
+  }
+  /* Single progress ring on the right of the card — 1.5× the size
+     of the previous compact ring. Only stat shown on the card. */
+  .psc-progress {
+    position: absolute;
+    right: 10px;
+    bottom: 10px;
+    width: 46px; height: 46px;
+    z-index: 3;
+    pointer-events: none;
+  }
+  .psc-progress svg { width: 100%; height: 100%; display: block; }
+  .psc-progress .ring-bg {
+    fill: none; stroke: rgba(255,255,255,0.28); stroke-width: 3.6;
+  }
+  .psc-progress .ring-fill {
+    fill: none; stroke: #ff7eb9; stroke-width: 3.6; stroke-linecap: round;
+    filter: drop-shadow(0 0 4px rgba(255,126,185,0.55));
+  }
+  .psc-progress-num {
+    position: absolute; inset: 0;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px; font-weight: 800;
+    color: #fff;
+    text-shadow: 0 1px 3px rgba(0,0,0,0.6);
+  }
+  /* Lock badge — top-right of card when cooldownMin > 0. */
+  .ps-card-lock {
+    position: absolute;
+    top: 8px; right: 8px;
+    z-index: 4;
+    width: 32px; height: 32px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0,0,0,0.65);
+    border: 1px solid rgba(255,255,255,0.22);
+    color: #fff;
+    -webkit-backdrop-filter: blur(8px);
+    backdrop-filter: blur(8px);
+  }
+  .ps-card-lock svg { width: 16px; height: 16px; }
 
   /* ---------- Casting row (Castings tab) ----------
      2:1 rounded location poster on the left, name + role centre,
@@ -7938,23 +9277,129 @@
   </button>
 </div>
 
-<!-- Final screen — hero "generated" portrait: full boy + dog at his feet -->
-<div id="finalScreen" class="intro-layer">
+<!-- Final screen — two horizontally-swipeable pages:
+       Page 0  = "My Character" (AI portrait + survey sheet)
+       Page 1  = "Inner Voices" (4 voice cards + active description)
+     Top caption + Continue stay above both pages. -->
+<div id="finalScreen" class="intro-layer" data-page="0" data-mode="self">
   <div class="final-caption">
-    <h2 class="final-caption-name" id="finalHeroName">You</h2>
-  </div>
-  <div class="final-stage">
-    <div class="final-ground" aria-hidden="true"></div>
-    <div class="final-boy" id="finalBoy" aria-hidden="true">
-      <img class="final-boy-img" id="finalBoyImg" alt="" />
-    </div>
-    <div class="final-dog" id="finalDog" aria-hidden="true"></div>
-  </div>
-  <div class="final-actions">
-    <button class="line-btn"  id="finalEdit"     type="button">
-      <span class="lb-label">Edit your character</span>
+    <!-- Date-mode close button (X) — only visible when viewing a
+         date profile. Tap to leave and reopen the profile sheet. -->
+    <button class="final-cap-close" id="finalClose" type="button" aria-label="Close">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <line x1="6"  y1="6"  x2="18" y2="18"/>
+        <line x1="18" y1="6"  x2="6"  y2="18"/>
+      </svg>
     </button>
-    <button class="intro-btn" id="finalContinue" type="button">Continue</button>
+    <div class="final-cap-text">
+      <h2 class="final-caption-name" id="finalTitle">My Character</h2>
+      <div class="final-caption-sub" id="finalCaptionSub">Onur · ♓ Pisces · Istanbul</div>
+    </div>
+    <button class="final-cta-top" id="finalContinue" type="button">Continue</button>
+  </div>
+
+  <!-- Pages container — viewport + inner track that translates X. -->
+  <div class="final-pages" id="finalPages">
+    <div class="final-pages-track" id="finalPagesTrack">
+      <!-- PAGE 0: Character -->
+      <div class="final-page" data-page="character">
+        <div class="final-stage">
+          <div class="final-ground" aria-hidden="true"></div>
+          <!-- Date-mode dog: stands beside the date, taps trigger a bark. -->
+          <div class="final-dog" id="finalDog">
+            <div class="dog-bubble" id="finalDogBubble">Woof!</div>
+          </div>
+          <div class="final-boy" id="finalBoy" aria-hidden="true">
+            <img class="final-boy-img" id="finalBoyImg" alt="" />
+          </div>
+          <!-- Self-mode chip: change the player's own outfit. -->
+          <div class="char-chips">
+            <button type="button" class="vc-chip" id="finalOutfit">Change Outfit</button>
+          </div>
+          <!-- Date-mode stats: glass-effect panel with three slots —
+               progress ring (92%), completed count, available count. -->
+          <div class="char-stats" id="finalStats">
+            <button class="cs-progress" id="finalStatProgress" type="button" aria-label="Character progress">
+              <svg viewBox="0 0 40 40" aria-hidden="true">
+                <circle class="cs-progress-bg"   cx="20" cy="20" r="16"/>
+                <circle class="cs-progress-fill" cx="20" cy="20" r="16"
+                        id="finalStatProgressFill"
+                        stroke-dasharray="100.53"
+                        stroke-dashoffset="8.04"
+                        transform="rotate(-90 20 20)"/>
+              </svg>
+              <span class="cs-progress-num" id="finalStatProgressNum">92%</span>
+            </button>
+            <div class="cs-divider"></div>
+            <div class="cs-text">
+              <div class="cs-num" id="finalStatCompleted">11</div>
+              <div class="cs-sub">dates completed</div>
+            </div>
+            <div class="cs-divider"></div>
+            <div class="cs-text">
+              <div class="cs-num" id="finalStatAvailable">7/16</div>
+              <div class="cs-sub">date<br>available</div>
+            </div>
+          </div>
+          <!-- Tooltip surfaced when the player taps the progress ring. -->
+          <div class="cs-tooltip" id="finalStatTooltip" role="status"></div>
+        </div>
+      </div>
+
+      <!-- PAGE 1: Inner Voices — 4 full-body figures side-by-side -->
+      <div class="final-page" data-page="voices">
+        <div class="final-stage voices-stage">
+          <div class="final-ground" aria-hidden="true"></div>
+          <div class="voice-figures" id="finalVoicesRow"></div>
+          <!-- Onboarding copy — shown until the player taps a voice. -->
+          <div class="voice-onboarding" id="finalVoiceOnboarding">
+            <p>These four were shaped by your birth chart and the answers you gave — the voices that live inside your head, companions for every episode ahead.</p>
+          </div>
+          <!-- Tap-hand hint — appears over one of the four figures, then
+               fades itself out after a few seconds. Sits as a sibling of
+               the figures so it can be positioned freely on the stage. -->
+          <div class="voice-onb-tap" aria-hidden="true">
+            <span class="tap-ring r1"></span>
+            <span class="tap-ring r2"></span>
+            <svg class="tap-hand" viewBox="0 0 24 24" fill="white" xmlns="http://www.w3.org/2000/svg">
+              <path d="M9 11.24V7.5C9 6.12 10.12 5 11.5 5S14 6.12 14 7.5v3.74c1.21-.81 2-2.18 2-3.74C16 5.01 13.99 3 11.5 3S7 5.01 7 7.5c0 1.56.79 2.93 2 3.74zm9.84 4.63l-4.54-2.26c-.17-.07-.35-.11-.54-.11H13v-6c0-.83-.67-1.5-1.5-1.5S10 6.67 10 7.5v10.74l-3.43-.72c-.08-.01-.15-.03-.24-.03-.31 0-.59.13-.79.33l-.79.8 4.94 4.94c.27.27.65.44 1.06.44h6.79c.75 0 1.33-.55 1.44-1.28l.75-5.27c.01-.07.02-.14.02-.2 0-.62-.38-1.16-.91-1.38z"/>
+            </svg>
+          </div>
+          <!-- Description shown when a voice is tapped -->
+          <div class="voice-caption" id="finalVoiceCaption" aria-live="polite">
+            <div class="voice-caption-name" id="finalVoiceCaptionName"></div>
+            <div class="voice-caption-desc" id="finalVoiceCaptionDesc"></div>
+          </div>
+          <!-- Two action chips, side-by-side, under the description. -->
+          <div class="vc-chips" id="vcChips">
+            <button type="button" class="vc-chip" id="vcChange">Change</button>
+            <button type="button" class="vc-chip" id="vcEdit">Edit</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Page navigation: left/right arrows + dot indicators -->
+  <button class="page-arrow page-arrow-left"  id="finalPagePrev" type="button" aria-label="Previous page">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <path d="M15 6l-6 6 6 6"/>
+    </svg>
+  </button>
+  <button class="page-arrow page-arrow-right" id="finalPageNext" type="button" aria-label="Next page">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <path d="M9 6l6 6-6 6"/>
+    </svg>
+  </button>
+  <div class="page-dots" id="finalPageDots">
+    <span class="page-dot active" data-page-idx="0"></span>
+    <span class="page-dot"         data-page-idx="1"></span>
+  </div>
+
+  <!-- iOS-style sheet — only on the Character page (hidden on voices). -->
+  <div class="final-sheet" id="finalSheet" data-snap="half">
+    <div class="final-sheet-handle" id="finalSheetHandle" aria-label="Drag to expand"></div>
+    <div class="final-sheet-body" id="finalSheetBody"></div>
   </div>
 </div>
 
@@ -7992,9 +9437,19 @@
 
   <div class="survey-body">
     <div class="survey-question" id="surveyQuestion"></div>
+    <div class="survey-subtext"  id="surveySubtext" hidden></div>
 
     <div class="survey-text-wrap" id="surveyTextWrap">
       <textarea id="surveyInput" rows="3" placeholder="Type your answer"></textarea>
+    </div>
+
+    <!-- Multi-select tag picker (Q1: Secret keeper, etc.).
+         Tags + the "add your own" input share a single flex-wrap
+         container so the input sits inline next to the last tag
+         on the same row instead of dropping to a new line. -->
+    <div class="tag-picker" id="tagPicker" hidden>
+      <input class="tag-add-input" id="tagAddInput" type="text"
+             placeholder="+ Add names" maxlength="40">
     </div>
 
     <button class="instagram-btn" id="surveyInstagram" type="button" hidden>
@@ -8006,66 +9461,19 @@
       Connect Instagram
     </button>
 
-    <!-- Q9: pet choice -->
-    <div class="pet-picker" id="petPicker" hidden>
-      <button class="pet-option" type="button" data-pet="cat">
-        <span class="pet-svg" aria-hidden="true">
-          <svg viewBox="0 0 64 64" fill="currentColor">
-            <path d="M8 22 L14 8 L20 22 Z M44 22 L50 8 L56 22 Z
-                     M12 22 Q8 30 10 40 Q14 54 32 56 Q50 54 54 40 Q56 30 52 22
-                     Q48 24 44 24 L20 24 Q16 24 12 22 Z"/>
-          </svg>
-        </span>
-        <span class="pet-label">Cat</span>
-      </button>
-      <button class="pet-option" type="button" data-pet="dog">
-        <span class="pet-svg" aria-hidden="true">
-          <svg viewBox="0 0 64 64" fill="currentColor">
-            <path d="M6 14 Q6 6 14 8 L20 18 Q26 20 32 20 Q38 20 44 18 L50 8
-                     Q58 6 58 14 L56 24 Q56 36 52 44 Q46 56 32 56 Q18 56 12 44
-                     Q8 36 8 24 Z"/>
-          </svg>
-        </span>
-        <span class="pet-label">Dog</span>
-      </button>
-      <button class="pet-option" type="button" data-pet="none">
-        <span class="pet-svg" aria-hidden="true">
-          <svg viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="5" stroke-linecap="round">
-            <circle cx="32" cy="32" r="24"/>
-            <line x1="18" y1="18" x2="46" y2="46"/>
-          </svg>
-        </span>
-        <span class="pet-label">None</span>
-      </button>
+    <!-- Q9: multi-pet list. Each row is { photo + (kind icons) + name }.
+         Up to 4 rows; "Add another" button appends a new row. -->
+    <div class="pets-wrap" id="petsWrap" hidden>
+      <div class="pets-list" id="petsList"></div>
+      <button class="pets-add-btn" id="petsAddBtn" type="button">+ Add another</button>
     </div>
 
-    <!-- Q9: after cat/dog selected — name + photo -->
-    <div class="pet-details" id="petDetails" hidden>
-      <div class="survey-text-wrap">
-        <input id="petName" type="text" placeholder="What's their name?">
-      </div>
-      <label class="photo-tile" id="surveyPhotoTile">
-        <span class="icon">📷</span>
-        <span class="placeholder">Add a photo</span>
-        <input id="surveyPhoto" type="file" accept="image/*">
-      </label>
-    </div>
-
-    <!-- Q10: photo memory -->
-    <div class="memory-photo-wrap" id="memoryPhotoWrap" hidden>
-      <label class="line-btn" id="memoryPhotoTile">
-        <svg class="lb-ico" width="20" height="20" viewBox="0 0 24 24" fill="none"
-             stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
-          <circle cx="12" cy="13" r="4"/>
-        </svg>
-        <span class="lb-label" id="memoryPhotoLabel">Add a photo</span>
-        <svg class="lb-check" width="18" height="18" viewBox="0 0 24 24" fill="none"
-             stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-          <polyline points="20 6 9 17 4 12"/>
-        </svg>
-        <input id="memoryPhoto" type="file" accept="image/*">
-      </label>
+    <!-- Q10: photo memories (multi-row, max 4). Each row = one photo
+         + a short note. Date and place are auto-filled from EXIF
+         when available; otherwise the user types them. -->
+    <div class="memories-wrap" id="memoriesWrap" hidden>
+      <div class="memories-list" id="memoriesList"></div>
+      <button class="memories-add-btn" id="memoriesAddBtn" type="button">+ Add another</button>
     </div>
   </div>
 
@@ -8671,37 +10079,38 @@
 <!-- Profile sheet — opened by the profile icon on the date picker.
      Cover gallery on top + tabs (My Dates / Castings) + dates list. -->
 <div id="profileSheet" aria-hidden="true">
+  <!-- Top controls — pulled OUT of the cover so they sit above the
+       rising sheet and remain reachable on full scroll. -->
+  <button class="ps-back" id="psBack" type="button" aria-label="Close">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <line x1="6"  y1="6"  x2="18" y2="18"/>
+      <line x1="18" y1="6"  x2="6"  y2="18"/>
+    </svg>
+  </button>
+  <button class="ps-signout" id="psSignOut" type="button" aria-label="Sign out">Sign Out</button>
+
+  <!-- Cover sits behind everything else, fixed in place. The .ps-body
+       layer scrolls on top of it and gradually covers the photo. -->
   <div class="ps-cover" id="psCover">
-    <button class="ps-back" id="psBack" type="button" aria-label="Close">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-        <line x1="6"  y1="6"  x2="18" y2="18"/>
-        <line x1="18" y1="6"  x2="6"  y2="18"/>
-      </svg>
-    </button>
-    <button class="ps-signout" id="psSignOut" type="button" aria-label="Sign out">Sign Out</button>
     <div class="ps-cover-track" id="psCoverTrack"></div>
     <div class="ps-cover-dots" id="psCoverDots"></div>
-    <div class="ps-cover-info">
-      <div class="ps-cover-name" id="psCoverName">
-        <span class="ps-cover-fname">Adrian</span><span class="ps-cover-age">, 33</span>
-        <span class="ps-cover-verified" aria-label="Verified">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-            <polyline points="5 12 10 17 19 8"/>
-          </svg>
-        </span>
-      </div>
-      <div class="ps-cover-meta" id="psCoverMeta">Istanbul · ♓ Pisces</div>
+    <div class="ps-cover-id">
+      <div class="ps-cover-name" id="psCoverName">My Profile</div>
     </div>
   </div>
-
-  <div class="ps-tabs">
-    <button class="ps-tab active" data-tab="dates" type="button">My Dates</button>
-    <button class="ps-tab" data-tab="castings" type="button">Castings</button>
-  </div>
-
+  <!-- Foreground scroll layer — a transparent spacer over the cover
+       followed by an opaque sheet that holds the tabs + cards. As the
+       player scrolls, the sheet rises over the cover. -->
   <div class="ps-body">
-    <div class="ps-pane ps-pane-dates active" id="psPaneDates"></div>
-    <div class="ps-pane ps-pane-castings" id="psPaneCastings"></div>
+    <div class="ps-spacer" aria-hidden="true"></div>
+    <div class="ps-sheet">
+      <div class="ps-tabs">
+        <button class="ps-tab active" data-tab="dates" type="button">My Dates</button>
+        <button class="ps-tab" data-tab="castings" type="button">Castings</button>
+      </div>
+      <div class="ps-pane ps-pane-dates active" id="psPaneDates"></div>
+      <div class="ps-pane ps-pane-castings" id="psPaneCastings"></div>
+    </div>
   </div>
 </div>
 
@@ -12532,19 +13941,33 @@ async function startDateHere() {
 //   totalDates  = how many sessions overall (top number on the row)
 //   locationsHit = how many distinct locations played   (bottom: X/16)
 //   cooldownMin  = minutes until next date is available; 0 = unlocked
+// Six London-pack girls. Card stats mirror Iris's stats panel —
+// progress | completed | available. cooldownMin > 0 is locked.
 const MY_DATES = [
-  { id: 'iris',     name: 'Iris',     age: 22, city: 'London',       sign: '\u2653',  totalDates: 11, locationsHit: 7,  totalMax: 16, bestScore: 92, avgScore: 71.4, cooldownMin: 0,    avatar: 'https://i.pravatar.cc/200?img=47' },
-  { id: 'emma',     name: 'Emma',     age: 27, city: 'Brooklyn',     sign: '\u2651',  totalDates:  8, locationsHit: 5,  totalMax: 16, bestScore: 84, avgScore: 62.0, cooldownMin: 743,  avatar: 'https://i.pravatar.cc/200?img=49' },
-  { id: 'zoe',      name: 'Zoe',      age: 24, city: 'Berlin',       sign: '\u264A',  totalDates:  4, locationsHit: 3,  totalMax: 16, bestScore: 76, avgScore: 49.5, cooldownMin: 0,    avatar: 'https://i.pravatar.cc/200?img=44' },
-  { id: 'maya',     name: 'Maya',     age: 29, city: 'Lisbon',       sign: '\u264C',  totalDates:  6, locationsHit: 4,  totalMax: 16, bestScore: 81, avgScore: 58.2, cooldownMin: 162,  avatar: 'https://i.pravatar.cc/200?img=20' },
-  { id: 'lila',     name: 'Lila',     age: 26, city: 'Paris',        sign: '\u264E',  totalDates:  3, locationsHit: 2,  totalMax: 16, bestScore: 67, avgScore: 41.0, cooldownMin: 0,    avatar: 'https://i.pravatar.cc/200?img=45' },
-  { id: 'sienna',   name: 'Sienna',   age: 31, city: 'Madrid',       sign: '\u264F',  totalDates: 14, locationsHit: 6,  totalMax: 16, bestScore: 88, avgScore: 66.8, cooldownMin: 0,    avatar: 'https://i.pravatar.cc/200?img=24' },
-  { id: 'aiyana',   name: 'Aiyana',   age: 25, city: 'Toronto',      sign: '\u2650',  totalDates:  2, locationsHit: 1,  totalMax: 16, bestScore: 54, avgScore: 54.0, cooldownMin: 1320, avatar: 'https://i.pravatar.cc/200?img=26' },
-  { id: 'priya',    name: 'Priya',    age: 28, city: 'Mumbai',       sign: '\u2649',  totalDates:  5, locationsHit: 3,  totalMax: 16, bestScore: 73, avgScore: 51.7, cooldownMin: 0,    avatar: 'https://i.pravatar.cc/200?img=23' },
-  { id: 'noor',     name: 'Noor',     age: 23, city: 'Dubai',        sign: '\u264B',  totalDates:  9, locationsHit: 4,  totalMax: 16, bestScore: 79, avgScore: 55.5, cooldownMin: 0,    avatar: 'https://i.pravatar.cc/200?img=29' },
-  { id: 'mei',      name: 'Mei',      age: 30, city: 'Shanghai',     sign: '\u264D',  totalDates:  3, locationsHit: 2,  totalMax: 16, bestScore: 70, avgScore: 47.5, cooldownMin: 467,  avatar: 'https://i.pravatar.cc/200?img=32' },
-  { id: 'isabella', name: 'Isabella', age: 26, city: 'Buenos Aires', sign: '\u2652',  totalDates: 12, locationsHit: 5,  totalMax: 16, bestScore: 86, avgScore: 64.6, cooldownMin: 0,    avatar: 'https://i.pravatar.cc/200?img=10' },
-  { id: 'amara',    name: 'Amara',    age: 27, city: 'Lagos',        sign: '\u2648',  totalDates:  4, locationsHit: 2,  totalMax: 16, bestScore: 65, avgScore: 43.5, cooldownMin: 89,   avatar: 'https://i.pravatar.cc/200?img=42' },
+  { id: 'iris',   name: 'Iris',   city: 'London',  sign: '\u2653',
+    progress: 92, progressLabel: "You've discovered 92% of Iris's character.",
+    completed: 11, available: '7/16', cooldownMin: 0,
+    img: 'characters/iris/profile/london.jpg' },
+  { id: 'emma',   name: 'Emma',   city: 'Brooklyn', sign: '\u2651',
+    progress: 67, progressLabel: "You've discovered 67% of Emma's character.",
+    completed:  8, available: '5/16', cooldownMin: 743,
+    img: 'characters/emma/profile/london.jpg' },
+  { id: 'maya',   name: 'Maya',   city: 'Lisbon',   sign: '\u264C',
+    progress: 58, progressLabel: "You've discovered 58% of Maya's character.",
+    completed:  6, available: '4/16', cooldownMin: 162,
+    img: 'characters/maya/profile/london.jpg' },
+  { id: 'lila',   name: 'Lila',   city: 'Paris',    sign: '\u264E',
+    progress: 41, progressLabel: "You've discovered 41% of Lila's character.",
+    completed:  3, available: '2/16', cooldownMin: 0,
+    img: 'characters/lila/profile/london.jpg' },
+  { id: 'sienna', name: 'Sienna', city: 'Madrid',   sign: '\u264F',
+    progress: 81, progressLabel: "You've discovered 81% of Sienna's character.",
+    completed: 14, available: '6/16', cooldownMin: 0,
+    img: 'characters/sienna/profile/london.jpg' },
+  { id: 'zoe',    name: 'Zoe',    city: 'Berlin',   sign: '\u264A',
+    progress: 35, progressLabel: "You've discovered 35% of Zoe's character.",
+    completed:  4, available: '3/16', cooldownMin: 0,
+    img: 'characters/zoe/profile/london.jpg' },
 ];
 // Cooldown copy: 743min = 12h23m (Emma's example), used as the on-tap info text.
 const ZODIAC_COOLDOWN_TOTAL = 24 * 60;  // 24h reference window for the progress ring
@@ -12609,12 +14032,25 @@ const MY_CASTINGS = [
   { id: 'cast6', location: 'Big Ben',     pack: 'london', role: 'Tour Guide',      cover: 'worlds/london/locations/bigben/cover.jpg' },
 ];
 
-// Profile cover gallery — swipe through these on the player's profile page.
-const PROFILE_COVERS = [
-  'https://i.pravatar.cc/600?img=12',
-  'https://i.pravatar.cc/600?img=33',
-  'https://i.pravatar.cc/600?img=14',
-  'https://i.pravatar.cc/600?img=11',
+// Profile cover gallery — swipeable memories from past episodes.
+// Each slide shows a cutscene image + a one-line memory caption +
+// pack / location / partner meta line in the bottom-left.
+const PROFILE_MEMORIES = [
+  { img: 'worlds/1984/locations/safehouse/cutscenes/coffee-share.jpg',
+    caption: 'Best coffee I ever drank, despite all the surveillance.',
+    pack: '1984', location: 'Safehouse', with: 'Iris' },
+  { img: 'worlds/london/locations/herplace/cutscenes/hugscene.jpg',
+    caption: 'She didn’t let go for a long time.',
+    pack: 'London', location: 'Her Place', with: 'Iris' },
+  { img: 'worlds/1984/locations/safehouse/cutscenes/embrace.jpg',
+    caption: 'Held tight in a room I knew was wired.',
+    pack: '1984', location: 'Safehouse', with: 'Iris' },
+  { img: 'worlds/london/locations/herplace/cutscenes/narrativescene01.jpg',
+    caption: 'The first time she said my name out loud.',
+    pack: 'London', location: 'Her Place', with: 'Iris' },
+  { img: 'worlds/1984/locations/safehouse/cutscenes/room-above.jpg',
+    caption: 'The room above the shop. A small forever.',
+    pack: '1984', location: 'Safehouse', with: 'Iris' },
 ];
 
 const FRIEND_LIST = [
@@ -13243,45 +14679,39 @@ function formatCooldown(minutes) {
 function openProfileSheet() {
   const sheet = document.getElementById('profileSheet');
   if (!sheet) return;
-  // Header info pulled from onboarding profile, with friendly fallbacks.
-  const name = (introProfile && introProfile.name) || 'Adrian';
-  const age  = (introProfile && introProfile.age)  || 33;
-  const loc  = (introProfile && introProfile.location) || 'Istanbul';
-  const sign = (introProfile && introProfile.sign) || '\u2653 Pisces';
-  // "<bold name>, <regular age>" + verified checkmark — age uses
-  // normal font weight per design, verified badge is always shown
-  // for the player's own profile.
+  // Page heading is just "My Profile" — name / sign / city were
+  // intentionally removed. Re-set the text in case anything else
+  // mutated the node since last open.
   const nameEl = document.getElementById('psCoverName');
-  if (nameEl) {
-    nameEl.innerHTML =
-      `<span class="ps-cover-fname"></span>` +
-      `<span class="ps-cover-age"></span>` +
-      `<span class="ps-cover-verified" aria-label="Verified">
-         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
-              stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"
-              aria-hidden="true">
-           <polyline points="5 12 10 17 19 8"/>
-         </svg>
-       </span>`;
-    nameEl.querySelector('.ps-cover-fname').textContent = name;
-    nameEl.querySelector('.ps-cover-age').textContent   = `, ${age}`;
-  }
-  document.getElementById('psCoverMeta').textContent = `${loc} \u00B7 ${sign}`;
+  if (nameEl) nameEl.textContent = 'My Profile';
 
-  // Build cover gallery (lazy — only on open)
+  // Build cover memory gallery (lazy \u2014 only on open).
   const track = document.getElementById('psCoverTrack');
   const dots  = document.getElementById('psCoverDots');
   if (track && !track.dataset.built) {
-    PROFILE_COVERS.forEach((url, i) => {
+    PROFILE_MEMORIES.forEach((m, i) => {
       const slide = document.createElement('div');
       slide.className = 'ps-cover-slide';
-      slide.style.backgroundImage = `url("${url}")`;
+      slide.style.backgroundImage = `url("${m.img}")`;
+      // Memory caption + meta in the bottom-left of the slide.
+      const info = document.createElement('div');
+      info.className = 'ps-memory-info';
+      const cap  = document.createElement('div');
+      cap.className = 'ps-memory-caption';
+      cap.textContent = m.caption;
+      const meta = document.createElement('div');
+      meta.className = 'ps-memory-meta';
+      const withWho = m.with ? ` with ${m.with}` : '';
+      meta.textContent = `${m.pack} / ${m.location}${withWho}`;
+      info.appendChild(cap);
+      info.appendChild(meta);
+      slide.appendChild(info);
       track.appendChild(slide);
+
       const dot = document.createElement('span');
       if (i === 0) dot.classList.add('active');
       dots.appendChild(dot);
     });
-    // Update active dot on scroll
     track.addEventListener('scroll', () => {
       const idx = Math.round(track.scrollLeft / track.clientWidth);
       const ds = dots.querySelectorAll('span');
@@ -13290,90 +14720,65 @@ function openProfileSheet() {
     track.dataset.built = '1';
   }
 
-  // Build the dates list (idempotent — overwrite each open)
+  // Build the dates grid (idempotent — overwrite each open).
+  // Two cards per row, each card is a London-pack appearance poster
+  // with a glass stats strip at the bottom.
   const pane = document.getElementById('psPaneDates');
   if (pane) {
     pane.innerHTML = '';
-    // Ring math — circumference of an r=18 circle at 40px viewBox.
-    const RING_R = 18;
-    const RING_CIRC = 2 * Math.PI * RING_R;
+    const grid = document.createElement('div');
+    grid.className = 'ps-dates-grid';
+
+    // Ring math — r=14 circle at 36px viewBox.
+    const PCR = 14;
+    const PC_CIRC = 2 * Math.PI * PCR;
+
     MY_DATES.forEach(d => {
-      const row = document.createElement('div');
-      row.className = 'ps-date-row';
       const isLocked = d.cooldownMin > 0;
-      const ratioRemaining = isLocked
-        ? Math.min(1, d.cooldownMin / ZODIAC_COOLDOWN_TOTAL)
-        : 0;
-      // Stroke offset = full circumference × (1 - progress filled).
-      // We *fill* the arc as time elapses, so amount drawn = (1 - ratioRemaining).
-      const dashOffset = RING_CIRC * ratioRemaining;
-      row.innerHTML = `
-        <div class="ps-date-avatar">
-          <div class="ps-date-zodiac" aria-hidden="true"></div>
+      const card = document.createElement('div');
+      card.className = 'ps-card' + (isLocked ? ' locked' : '');
+      card.style.backgroundImage = `url("${d.img}")`;
+      const pct = Math.max(0, Math.min(100, Number(d.progress) || 0));
+      const dashOff = (PC_CIRC * (1 - pct / 100)).toFixed(2);
+
+      card.innerHTML = `
+        ${isLocked ? `
+          <div class="ps-card-lock" aria-label="Locked">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <rect x="5" y="11" width="14" height="9" rx="1.5"/>
+              <path d="M8 11V8a4 4 0 0 1 8 0v3"/>
+            </svg>
+          </div>
+        ` : ''}
+        <div class="ps-card-info">
+          <div class="ps-card-name"></div>
+          <div class="ps-card-meta"></div>
         </div>
-        <div class="ps-date-main">
-          <div class="ps-date-cell">
-            <div class="lbl"></div>
-            <div class="sub"></div>
-          </div>
-          <div class="ps-date-cell num">
-            <div class="lbl"></div>
-            <div class="sub"></div>
-          </div>
-          <div class="ps-date-cell num">
-            <div class="lbl"></div>
-            <div class="sub"></div>
-          </div>
-        </div>
-        <div class="ps-date-action${isLocked ? ' locked' : ''}">
-          ${isLocked ? `
-            <button class="ps-date-lock" type="button" aria-label="Locked">
-              <svg class="ps-date-lock-ring" viewBox="0 0 40 40" aria-hidden="true">
-                <circle class="ring-bg"   cx="20" cy="20" r="${RING_R}"></circle>
-                <circle class="ring-fill" cx="20" cy="20" r="${RING_R}"
-                        stroke-dasharray="${RING_CIRC.toFixed(2)}"
-                        stroke-dashoffset="${dashOffset.toFixed(2)}"></circle>
-              </svg>
-              <svg class="lock-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-                <rect x="5" y="11" width="14" height="9" rx="1.5"/>
-                <path d="M8 11V8a4 4 0 0 1 8 0v3"/>
-              </svg>
-            </button>
-            <div class="ps-date-lock-info"></div>
-          ` : `
-            <button class="ps-date-goto" type="button" aria-label="Go to date">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
-                <polyline points="9 6 15 12 9 18"/>
-              </svg>
-            </button>
-          `}
+        <div class="psc-progress">
+          <svg viewBox="0 0 36 36" aria-hidden="true">
+            <circle class="ring-bg"   cx="18" cy="18" r="${PCR}"></circle>
+            <circle class="ring-fill" cx="18" cy="18" r="${PCR}"
+                    stroke-dasharray="${PC_CIRC.toFixed(2)}"
+                    stroke-dashoffset="${dashOff}"
+                    transform="rotate(-90 18 18)"></circle>
+          </svg>
+          <span class="psc-progress-num">${pct}%</span>
         </div>
       `;
-      row.querySelector('.ps-date-avatar').style.backgroundImage = `url("${d.avatar}")`;
-      row.querySelector('.ps-date-zodiac').textContent = d.sign;
-      const cells = row.querySelectorAll('.ps-date-cell');
-      cells[0].querySelector('.lbl').textContent = d.name;
-      cells[0].querySelector('.sub').textContent = `${d.city} · ${d.age}`;
-      cells[1].querySelector('.lbl').textContent = String(d.totalDates);
-      cells[1].querySelector('.sub').textContent = `${d.locationsHit}/${d.totalMax} Dated`;
-      cells[2].querySelector('.lbl').textContent = String(d.bestScore);
-      cells[2].querySelector('.sub').textContent = `Avg ${d.avgScore.toFixed(1)}`;
-      // Lock tooltip + tap toggling
-      if (isLocked) {
-        const info  = row.querySelector('.ps-date-lock-info');
-        const wrap  = row.querySelector('.ps-date-action');
-        const lockBtn = row.querySelector('.ps-date-lock');
-        info.textContent = `Available in ${formatCooldown(d.cooldownMin)}`;
-        lockBtn.addEventListener('click', (e) => {
-          e.stopPropagation();
-          wrap.classList.add('show-info');
-          // Auto-hide after 2.5s so the row goes back to its calm state.
-          clearTimeout(wrap._infoTimer);
-          wrap._infoTimer = setTimeout(() => wrap.classList.remove('show-info'), 2500);
-        });
-      }
-      pane.appendChild(row);
+      card.querySelector('.ps-card-name').textContent = d.name;
+      card.querySelector('.ps-card-meta').textContent = `${d.sign} · ${d.city}`;
+
+      // Locked or not, every card opens the date's read-only profile
+      // (currently only Iris has a full DATE_PROFILE — others fall
+      // through to no-op).
+      card.addEventListener('click', () => {
+        if (typeof showDateProfile === 'function' && DATE_PROFILES[d.id]) {
+          showDateProfile(d.id);
+        }
+      });
+      grid.appendChild(card);
     });
+    pane.appendChild(grid);
   }
 
   // Build the castings list (Castings tab) — same idempotent pattern.
@@ -13410,24 +14815,28 @@ function openProfileSheet() {
     }
   }
 
-  // Scroll-driven cover shrink — as the user scrolls the dates list
-  // upward, lerp the cover height from its full 48vh down to a compact
-  // 120px band. List naturally gets more vertical room as cover shrinks.
+  // The cover sits behind a scrollable .ps-body. As the body scrolls,
+  // its sheet rises over the cover and we fade the cover's overlay
+  // text (My Profile + memory caption + meta) in proportion.
   const cover = document.getElementById('psCover');
   const body  = sheet.querySelector('.ps-body');
-  if (cover && body && !body.dataset.scrollWired) {
-    const baseVH = Math.round(window.innerHeight * 0.48);
-    const minPx  = 120;
-    const range  = 200;   // scroll distance over which the cover collapses
+  if (cover && body) {
+    body.scrollTop = 0;
+    if (body._psCoverScroll) {
+      body.removeEventListener('scroll', body._psCoverScroll);
+    }
+    const range = Math.max(80, Math.round(window.innerHeight * 0.32));
     const onScroll = () => {
-      const ratio = Math.min(1, body.scrollTop / range);
-      const h = baseVH + (minPx - baseVH) * ratio;
-      cover.style.setProperty('--cover-h', h + 'px');
+      const fade = Math.max(0, 1 - body.scrollTop / range);
+      cover.style.setProperty('--cover-fade', fade.toFixed(3));
     };
     body.addEventListener('scroll', onScroll, { passive: true });
+    body._psCoverScroll = onScroll;
     onScroll();
-    body.dataset.scrollWired = '1';
   }
+
+  // Auto-swipe the cover memories every 4.5s. Stops on close.
+  startCoverAutoSwipe();
 
   sheet.classList.add('open');
   sheet.setAttribute('aria-hidden', 'false');
@@ -13437,6 +14846,42 @@ function closeProfileSheet() {
   if (sheet) {
     sheet.classList.remove('open');
     sheet.setAttribute('aria-hidden', 'true');
+  }
+  stopCoverAutoSwipe();
+}
+
+// ---------------------------------------------------------------
+// Cover auto-swipe — rotates the memory carousel every 4.5s while
+// the profile sheet is open. Loops back to the first slide after
+// the last. User swipes don't fight it: the next tick computes the
+// next slide from the current scroll position, so a manual swipe
+// just shifts the rotation point.
+// ---------------------------------------------------------------
+let _coverAutoTimer = null;
+
+function startCoverAutoSwipe() {
+  stopCoverAutoSwipe();
+  const track = document.getElementById('psCoverTrack');
+  if (!track || !track.children.length) return;
+  _coverAutoTimer = setInterval(() => {
+    if (!track.children.length) return;
+    const slideW = track.clientWidth;
+    if (!slideW) return;
+    const total = track.children.length;
+    const currentIdx = Math.round(track.scrollLeft / slideW);
+    const next = (currentIdx + 1) % total;
+    try {
+      track.scrollTo({ left: next * slideW, behavior: 'smooth' });
+    } catch (_) {
+      track.scrollLeft = next * slideW;
+    }
+  }, 4500);
+}
+
+function stopCoverAutoSwipe() {
+  if (_coverAutoTimer) {
+    clearInterval(_coverAutoTimer);
+    _coverAutoTimer = null;
   }
 }
 
@@ -13745,16 +15190,62 @@ document.getElementById('storeClose').addEventListener('click', closeStore);
 const PROFILE_KEY = 'cowork.room.userProfile';
 
 const SURVEY_QUESTIONS = [
-  { key: 'secretKeeper', q: 'Who do you share your secrets with?',   kind: 'text+instagram' },
-  { key: 'luckyNumber',  q: "What's your lucky number?",             kind: 'text' },
-  { key: 'music',        q: 'What kind of music do you listen to?',  kind: 'text' },
-  { key: 'film',         q: "What's your favorite movie?",           kind: 'text' },
-  { key: 'fear',         q: "What's your biggest fear?",             kind: 'text' },
-  { key: 'hobby',        q: "What's your hobby?",                    kind: 'text' },
-  { key: 'cuisine',      q: 'Which cuisine do you love most?',       kind: 'text' },
-  { key: 'work',         q: 'What do you do for work?',              kind: 'text' },
-  { key: 'pet',          q: 'Do you have a pet?',                    kind: 'pet' },
-  { key: 'memory',       q: 'Share a photo memory.',                 kind: 'memory' },
+  // Q1 — secret keeper (tags + custom)
+  { key: 'secretKeeper', q: 'Who do you share your secrets with?',
+    sub: 'You can pick more than one.',
+    kind: 'tags',
+    options: ['Mom', 'Dad', 'Brother', 'Sister', 'Best friend', 'Partner', 'Therapist', 'Grandma', 'Cousin', 'Diary'] },
+
+  // Q2 — something almost no one knows (freeform confession)
+  { key: 'untold', q: "Something almost no one knows about you?",
+    sub: 'Light or heavy — your call.',
+    kind: 'text' },
+
+  // Q3 — music genres (tags, no custom)
+  { key: 'music', q: 'What kind of music do you listen to?',
+    sub: 'You can pick more than one.',
+    kind: 'tags', noCustom: true,
+    options: ['Rock', 'Pop', 'Hip-hop', 'R&B', 'Electronic', 'Jazz', 'Classical', 'Country', 'Indie', 'Metal', 'Folk', 'K-pop'] },
+
+  // Q4 — film genres (tags, no custom)
+  { key: 'film', q: 'What film genres do you love?',
+    sub: 'You can pick more than one.',
+    kind: 'tags', noCustom: true,
+    options: ['Comedy', 'Horror', 'Drama', 'Action', 'Sci-fi', 'Romance', 'Documentary', 'Thriller', 'Animation', 'Fantasy'] },
+
+  // Q5 — fears (tags + custom)
+  { key: 'fear', q: "What's your biggest fear?",
+    sub: 'Pick a few — yours, theirs, anything.',
+    kind: 'tags',
+    options: ['Heights', 'Spiders', 'The dark', 'Public speaking', 'Failure', 'Loneliness', 'Snakes', 'Flying', 'Deep water', 'Death'] },
+
+  // Q6 — hobbies (tags + custom)
+  { key: 'hobby', q: "What's your hobby?",
+    sub: 'You can pick more than one.',
+    kind: 'tags',
+    options: ['Travel', 'Reading', 'Cooking', 'Gaming', 'Photography', 'Music', 'Sports', 'Writing', 'Hiking', 'Gardening', 'Yoga', 'Art'] },
+
+  // Q7 — cuisines (tags, no custom)
+  { key: 'cuisine', q: 'Which cuisines do you love?',
+    sub: 'You can pick more than one.',
+    kind: 'tags', noCustom: true,
+    options: ['Italian', 'Japanese', 'Mexican', 'Indian', 'Thai', 'French', 'Mediterranean', 'Korean', 'Turkish', 'Chinese', 'American', 'Vietnamese'] },
+
+  // Q8 — work field (tags, no custom)
+  { key: 'work', q: 'What kind of work do you do?',
+    sub: 'Roughly speaking — pick what fits.',
+    kind: 'tags', noCustom: true,
+    options: ['Creative', 'Engineering', 'Office', 'Healthcare', 'Education', 'Sales', 'Hospitality', 'Service', 'Self-employed', 'Student', 'Other'] },
+
+  // Q9 — pets (multi-row, max 4)
+  { key: 'pet', q: 'Do you have a pet?',
+    sub: 'Add up to 4. Skip if none.',
+    kind: 'pets', max: 4 },
+
+  // Q10 — photo memories (multi-row, max 4)
+  { key: 'memory', q: 'Share photo memories.',
+    sub: 'Add up to 4. Date & place fill in from the photo when possible.',
+    kind: 'memories', max: 4 },
 ];
 
 const LOADING_PHRASES = [
@@ -13928,7 +15419,8 @@ function showLoadingScreen() {
   // First fake loading → inner-voice cards (no You/Pet yet)
   playLoadingPhrases(LOADING_PHRASES, () => showGallery('voices'));
 }
-let currentPetChoice = null;
+// (currentPetChoice removed — Q9 is now a multi-row pets picker;
+//  state lives on _petsState inside renderPetsPicker.)
 
 function showSurveyQuestion() {
   setFlow('survey');
@@ -13940,54 +15432,58 @@ function showSurveyQuestion() {
   document.getElementById('surveyTag').textContent =
     `Question ${surveyIdx + 1} of ${SURVEY_QUESTIONS.length}`;
   document.getElementById('surveyQuestion').textContent = q.q;
+  // Optional helper subtext (e.g. "You can pick more than one.")
+  const subEl = document.getElementById('surveySubtext');
+  if (subEl) {
+    if (q.sub) {
+      subEl.textContent = q.sub;
+      subEl.hidden = false;
+    } else {
+      subEl.textContent = '';
+      subEl.hidden = true;
+    }
+  }
   document.getElementById('surveyFill').style.width =
     (((surveyIdx + 1) / SURVEY_QUESTIONS.length) * 100) + '%';
 
   // Reset ALL controls to hidden, clear previous values
-  const textWrap  = document.getElementById('surveyTextWrap');
-  const textIn    = document.getElementById('surveyInput');
-  const instaBtn  = document.getElementById('surveyInstagram');
-  const petPicker = document.getElementById('petPicker');
-  const petDetails= document.getElementById('petDetails');
-  const petName   = document.getElementById('petName');
-  const petTile   = document.getElementById('surveyPhotoTile');
-  const memWrap   = document.getElementById('memoryPhotoWrap');
-  const memTile   = document.getElementById('memoryPhotoTile');
+  const textWrap     = document.getElementById('surveyTextWrap');
+  const textIn       = document.getElementById('surveyInput');
+  const instaBtn     = document.getElementById('surveyInstagram');
+  const tagPicker    = document.getElementById('tagPicker');
+  const tagAddInput  = document.getElementById('tagAddInput');
+  const petsWrap     = document.getElementById('petsWrap');
+  const memoriesWrap = document.getElementById('memoriesWrap');
+  if (tagPicker) tagPicker.querySelectorAll('.tag').forEach(t => t.remove());
 
   textWrap.hidden = true;
   instaBtn.hidden = true;
   instaBtn.classList.remove('connected');
-  petPicker.hidden = true;
-  petDetails.hidden = true;
-  memWrap.hidden = true;
+  if (tagPicker)    tagPicker.hidden    = true;
+  if (petsWrap)     petsWrap.hidden     = true;
+  if (memoriesWrap) memoriesWrap.hidden = true;
   textIn.value = '';
-  petName.value = '';
-  petTile.style.backgroundImage = '';
-  petTile.classList.remove('has-image');
-  delete petTile.dataset.photo;
-  // Memory photo is a line-btn — reset its label text too
-  memTile.classList.remove('has-image');
-  delete memTile.dataset.photo;
-  const memLbl = document.getElementById('memoryPhotoLabel');
-  if (memLbl) memLbl.textContent = 'Add a photo';
-  const memInput = document.getElementById('memoryPhoto');
-  if (memInput) memInput.value = '';
-  currentPetChoice = null;
-  petPicker.querySelectorAll('.pet-option').forEach(b => b.classList.remove('active'));
 
   // Show controls based on question kind
-  if (q.kind === 'text' || q.kind === 'text+instagram' || q.kind === 'memory') {
+  if (q.kind === 'text' || q.kind === 'text+instagram') {
     textWrap.hidden = false;
     setTimeout(() => textIn.focus(), 200);
   }
-  if (q.kind === 'text+instagram' || q.kind === 'memory') {
+  if (q.kind === 'text+instagram') {
     instaBtn.hidden = false;
   }
-  if (q.kind === 'pet') {
-    petPicker.hidden = false;
+  if (q.kind === 'tags') {
+    renderTagPicker(q);
+    if (tagPicker) tagPicker.hidden = false;
+    if (tagAddInput) tagAddInput.value = '';
   }
-  if (q.kind === 'memory') {
-    memWrap.hidden = false;
+  if (q.kind === 'pets') {
+    if (petsWrap) petsWrap.hidden = false;
+    renderPetsPicker(q);
+  }
+  if (q.kind === 'memories') {
+    if (memoriesWrap) memoriesWrap.hidden = false;
+    renderMemoriesPicker(q);
   }
 
   document.getElementById('surveyNext').textContent =
@@ -13996,6 +15492,486 @@ function showSurveyQuestion() {
   // Reflect background-generation progress in the top-bar chip on
   // every question render (it persists across questions).
   updateGenStatusUI();
+}
+
+// ============================================================
+// Tag picker — multi-select pills + inline "add your own".
+// State lives on the picker DOM (data-selected attr) so re-renders
+// from showSurveyQuestion don't lose user choices for THIS question.
+// ============================================================
+let _tagState = null;   // { questionKey, options: [], selected: Set }
+
+function renderTagPicker(q) {
+  const picker   = document.getElementById('tagPicker');
+  const addInput = document.getElementById('tagAddInput');
+  if (!picker) return;
+
+  // Restore previous state if the player navigated back to this Q,
+  // otherwise initialise from the question's option list.
+  let prev = (introProfile && introProfile.survey && introProfile.survey[q.key]) || null;
+  let selected = new Set();
+  let options  = (q.options || []).slice();
+  if (Array.isArray(prev)) {
+    prev.forEach(t => {
+      if (t && !options.includes(t)) options.push(t);  // custom tags from before
+      if (t) selected.add(t);
+    });
+  }
+  _tagState = { questionKey: q.key, options, selected };
+
+  // Wipe existing tag buttons but keep the input element in place.
+  picker.querySelectorAll('.tag').forEach(t => t.remove());
+  options.forEach(opt =>
+    picker.insertBefore(makeTagButton(opt, selected.has(opt)), addInput));
+
+  // Show / hide the "+ Add your own" input based on the question.
+  // Some questions (music genres, cuisines, professions) don't need
+  // a free-form addition — the preset list is the closed answer set.
+  if (addInput) {
+    addInput.hidden = !!q.noCustom;
+    if (q.noCustom) addInput.value = '';
+  }
+
+  if (addInput && !q.noCustom) {
+    addInput.onkeydown = (e) => {
+      if (e.key !== 'Enter') return;
+      e.preventDefault();
+      const v = addInput.value.trim();
+      if (!v) return;
+      // Ignore duplicates (case-insensitive); just select if it already exists.
+      const existing = options.find(o => o.toLowerCase() === v.toLowerCase());
+      if (existing) {
+        _tagState.selected.add(existing);
+        const btn = picker.querySelector(
+          `.tag[data-tag="${cssEscape(existing)}"]`
+        );
+        if (btn) btn.classList.add('selected');
+      } else {
+        options.push(v);
+        _tagState.selected.add(v);
+        picker.insertBefore(makeTagButton(v, true), addInput);
+      }
+      addInput.value = '';
+    };
+  }
+}
+
+function makeTagButton(label, isSelected) {
+  const b = document.createElement('button');
+  b.type = 'button';
+  b.className = 'tag' + (isSelected ? ' selected' : '');
+  b.textContent = label;
+  b.dataset.tag = label;
+  b.addEventListener('click', () => {
+    if (!_tagState) return;
+    if (_tagState.selected.has(label)) {
+      _tagState.selected.delete(label);
+      b.classList.remove('selected');
+    } else {
+      _tagState.selected.add(label);
+      b.classList.add('selected');
+    }
+  });
+  return b;
+}
+
+// Tiny CSS-attribute escaper so `data-tag` lookups work for tags
+// containing quotes / special chars.
+function cssEscape(s) {
+  return String(s).replace(/(["\\])/g, '\\$1');
+}
+
+// ============================================================
+// Multi-pet picker (Q9) — array of { kind, name, photo }, max N.
+// State lives on _petsState; renderPetsPicker rebuilds the rows.
+// ============================================================
+let _petsState = null;   // [{ kind: 'cat'|'dog'|'other', name, photo }, ...]
+
+function renderPetsPicker(q) {
+  const wrap     = document.getElementById('petsWrap');
+  const list     = document.getElementById('petsList');
+  const addBtn   = document.getElementById('petsAddBtn');
+  if (!wrap || !list || !addBtn) return;
+  const max = q.max || 4;
+
+  // Restore previous state if the player navigated back.
+  let prev = (introProfile && introProfile.survey && introProfile.survey[q.key]);
+  if (Array.isArray(prev) && prev.length) {
+    _petsState = prev.map(p => ({
+      kind:  p && p.kind || null,
+      name:  p && p.name || '',
+      photo: p && p.photo || '',
+    }));
+  } else {
+    _petsState = [{ kind: null, name: '', photo: '' }];
+  }
+
+  const drawAll = () => {
+    list.innerHTML = '';
+    list.dataset.count = String(_petsState.length);
+    _petsState.forEach((pet, idx) => list.appendChild(makePetRow(idx, pet)));
+    addBtn.disabled = _petsState.length >= max;
+  };
+
+  addBtn.onclick = () => {
+    if (_petsState.length >= max) return;
+    _petsState.push({ kind: null, name: '', photo: '' });
+    drawAll();
+  };
+
+  drawAll();
+}
+
+function makePetRow(idx, pet) {
+  const row = document.createElement('div');
+  row.className = 'pet-row';
+  row.dataset.idx = String(idx);
+
+  // ---------- Photo placeholder ----------
+  const photo = document.createElement('label');
+  photo.className = 'pet-photo' + (pet.photo ? ' has-image' : '');
+  if (pet.photo) photo.style.backgroundImage = `url("${pet.photo}")`;
+  const plus = document.createElement('span');
+  plus.className = 'pp-plus';
+  plus.textContent = pet.photo ? '' : '+';
+  photo.appendChild(plus);
+  const fileInput = document.createElement('input');
+  fileInput.type = 'file';
+  fileInput.accept = 'image/*';
+  fileInput.addEventListener('change', () => {
+    const f = fileInput.files && fileInput.files[0];
+    if (!f) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      _petsState[idx].photo = reader.result;
+      photo.style.backgroundImage = `url("${reader.result}")`;
+      photo.classList.add('has-image');
+      plus.textContent = '';
+    };
+    reader.readAsDataURL(f);
+  });
+  photo.appendChild(fileInput);
+  row.appendChild(photo);
+
+  // ---------- Right column: kind icons + name ----------
+  const right = document.createElement('div');
+  right.className = 'pet-row-right';
+
+  // Kind row (Cat / Dog / Other)
+  const kindRow = document.createElement('div');
+  kindRow.className = 'pet-kind-row';
+  ['cat', 'dog', 'other'].forEach(k => {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'pet-kind-btn' + (pet.kind === k ? ' active' : '');
+    b.textContent = k === 'cat'   ? '🐱  Cat'
+                  : k === 'dog'   ? '🐶  Dog'
+                                  : '✦  Other';
+    b.dataset.kind = k;
+    b.addEventListener('click', () => {
+      _petsState[idx].kind = k;
+      kindRow.querySelectorAll('.pet-kind-btn')
+        .forEach(x => x.classList.toggle('active', x.dataset.kind === k));
+    });
+    kindRow.appendChild(b);
+  });
+  right.appendChild(kindRow);
+
+  // Name input
+  const nameIn = document.createElement('input');
+  nameIn.type = 'text';
+  nameIn.className = 'pet-name-input';
+  nameIn.placeholder = 'Name';
+  nameIn.maxLength = 30;
+  nameIn.value = pet.name || '';
+  nameIn.addEventListener('input', () => {
+    _petsState[idx].name = nameIn.value;
+  });
+  right.appendChild(nameIn);
+
+  row.appendChild(right);
+
+  // ---------- Remove ----------
+  const rm = document.createElement('button');
+  rm.type = 'button';
+  rm.className = 'pet-row-remove';
+  rm.setAttribute('aria-label', 'Remove pet');
+  rm.textContent = '×';
+  rm.addEventListener('click', () => {
+    _petsState.splice(idx, 1);
+    if (!_petsState.length) {
+      _petsState.push({ kind: null, name: '', photo: '' });
+    }
+    // Re-render the whole list so indices stay correct.
+    const list = document.getElementById('petsList');
+    const addBtn = document.getElementById('petsAddBtn');
+    list.innerHTML = '';
+    list.dataset.count = String(_petsState.length);
+    _petsState.forEach((p, i) => list.appendChild(makePetRow(i, p)));
+    if (addBtn) addBtn.disabled = _petsState.length >= 4;
+  });
+  row.appendChild(rm);
+
+  return row;
+}
+
+// ============================================================
+// Multi-photo memories (Q10) — array of { photo, note, place, date },
+// up to N rows. Each photo's EXIF (DateTimeOriginal + GPS) is read
+// when available and reverse-geocoded to a friendly place name.
+// ============================================================
+let _memState = null;
+
+function renderMemoriesPicker(q) {
+  const wrap   = document.getElementById('memoriesWrap');
+  const list   = document.getElementById('memoriesList');
+  const addBtn = document.getElementById('memoriesAddBtn');
+  if (!wrap || !list || !addBtn) return;
+  const max = q.max || 4;
+
+  const prev = (introProfile && introProfile.survey && introProfile.survey[q.key]);
+  if (Array.isArray(prev) && prev.length) {
+    _memState = prev.map(m => {
+      // Older saves had separate `place` and `date` fields — merge
+      // into a single "Place, Date" string for the new combined input.
+      const parts = [];
+      if (m && m.place) parts.push(m.place);
+      if (m && m.date)  parts.push(m.date);
+      return {
+        photo: (m && m.photo) || '',
+        note:  (m && m.note)  || (m && m.text) || '',
+        place: parts.join(', '),
+      };
+    });
+  } else {
+    _memState = [{ photo: '', note: '', place: '' }];
+  }
+
+  const drawAll = () => {
+    list.innerHTML = '';
+    list.dataset.count = String(_memState.length);
+    _memState.forEach((m, i) => list.appendChild(makeMemoryRow(i, m)));
+    addBtn.disabled = _memState.length >= max;
+  };
+
+  addBtn.onclick = () => {
+    if (_memState.length >= max) return;
+    _memState.push({ photo: '', note: '', place: '' });
+    drawAll();
+  };
+
+  drawAll();
+}
+
+function makeMemoryRow(idx, mem) {
+  const row = document.createElement('div');
+  row.className = 'memory-row';
+  row.dataset.idx = String(idx);
+
+  // ---------- Photo ----------
+  const photo = document.createElement('label');
+  photo.className = 'mem-photo' + (mem.photo ? ' has-image' : '');
+  if (mem.photo) photo.style.backgroundImage = `url("${mem.photo}")`;
+  const plus = document.createElement('span');
+  plus.className = 'pp-plus';
+  plus.textContent = mem.photo ? '' : '+';
+  photo.appendChild(plus);
+  const fileInput = document.createElement('input');
+  fileInput.type   = 'file';
+  fileInput.accept = 'image/*';
+  fileInput.addEventListener('change', async () => {
+    const raw = fileInput.files && fileInput.files[0];
+    if (!raw) return;
+
+    // 1. Read EXIF from the ORIGINAL file (HEIC carries it; the
+    //    JPEG conversion strips it).
+    let metaPromise = extractPhotoMeta(raw).catch(() => null);
+
+    // 2. Convert HEIC/HEIF → JPEG so desktop browsers can render
+    //    and store the preview. JPEG/PNG files pass straight through.
+    const f = await ensureBrowserCompatibleImage(raw);
+
+    // 3. Read as data URL for preview/storage
+    const reader = new FileReader();
+    reader.onload = () => {
+      _memState[idx].photo = reader.result;
+      photo.style.backgroundImage = `url("${reader.result}")`;
+      photo.classList.add('has-image');
+      plus.textContent = '';
+    };
+    reader.readAsDataURL(f);
+
+    // 4. Apply EXIF auto-fill — combined "Place, Date" pill, only
+    //    visible when we actually got a value.
+    try {
+      const meta = await metaPromise;
+      const parts = [];
+      if (meta && meta.place) parts.push(meta.place);
+      if (meta && meta.date)  parts.push(meta.date);
+      const combined = parts.join(', ');
+      if (combined && !_memState[idx].place) {
+        _memState[idx].place = combined;
+        const placeInput = row.querySelector('.mem-place');
+        const metaWrap   = row.querySelector('.mem-meta');
+        if (placeInput) {
+          placeInput.value = combined;
+          placeInput.classList.add('auto');
+        }
+        if (metaWrap) metaWrap.style.display = '';
+      }
+    } catch (e) { /* silently ignore — EXIF is optional */ }
+  });
+  photo.appendChild(fileInput);
+  row.appendChild(photo);
+
+  // ---------- Right column ----------
+  const right = document.createElement('div');
+  right.className = 'mem-right';
+
+  const note = document.createElement('textarea');
+  note.className   = 'mem-note';
+  note.placeholder = 'A short note about this memory…';
+  note.maxLength   = 200;
+  note.value       = mem.note || '';
+  note.addEventListener('input', () => { _memState[idx].note = note.value; });
+  right.appendChild(note);
+
+  // Single combined "Place, Date" pill — only visible when EXIF
+  // auto-fill (or a previous save) gave us a value. Hidden by
+  // default, no placeholder text, no icons.
+  const meta = document.createElement('div');
+  meta.className = 'mem-meta';
+  const placeInput = document.createElement('input');
+  placeInput.type      = 'text';
+  placeInput.className = 'mem-pill mem-place';
+  placeInput.maxLength = 80;
+  placeInput.value     = mem.place || '';
+  if (!mem.place) meta.style.display = 'none';
+  placeInput.addEventListener('input', () => {
+    _memState[idx].place = placeInput.value;
+    placeInput.classList.remove('auto');
+  });
+  meta.appendChild(placeInput);
+
+  right.appendChild(meta);
+  row.appendChild(right);
+
+  // ---------- Remove ----------
+  const rm = document.createElement('button');
+  rm.type = 'button';
+  rm.className = 'mem-row-remove';
+  rm.setAttribute('aria-label', 'Remove memory');
+  rm.textContent = '×';
+  rm.addEventListener('click', () => {
+    _memState.splice(idx, 1);
+    if (!_memState.length) {
+      _memState.push({ photo: '', note: '', place: '' });
+    }
+    const list = document.getElementById('memoriesList');
+    const addBtn = document.getElementById('memoriesAddBtn');
+    list.innerHTML = '';
+    list.dataset.count = String(_memState.length);
+    _memState.forEach((m, i) => list.appendChild(makeMemoryRow(i, m)));
+    if (addBtn) addBtn.disabled = _memState.length >= 4;
+  });
+  row.appendChild(rm);
+
+  return row;
+}
+
+// Read EXIF date + GPS coords from the file, then reverse-geocode
+// the coords to a friendly "City, Country" label using OSM Nominatim.
+// Returns { date, place } where either can be undefined.
+async function extractPhotoMeta(file) {
+  if (typeof window.exifr === 'undefined') return null;
+  let exif = null;
+  try {
+    // Explicit options — needed for HEIC/HEIF iPhone files where the
+    // default tag set sometimes skips GPS / DateTimeOriginal.
+    exif = await window.exifr.parse(file, {
+      tiff:  true,
+      ifd0:  true,
+      exif:  true,
+      gps:   true,
+    });
+  } catch (e) {
+    console.warn('[exifr] parse failed', e);
+    return null;
+  }
+  if (!exif) return null;
+
+  // Date — prefer DateTimeOriginal, fall back to CreateDate / DateTime.
+  // Format as "May 2025" (month + year only — no day).
+  let dateStr = '';
+  const d = exif.DateTimeOriginal || exif.CreateDate || exif.DateTime;
+  if (d instanceof Date && !isNaN(d.getTime())) {
+    dateStr = d.toLocaleDateString(undefined,
+      { year: 'numeric', month: 'long' });
+  }
+
+  // Place — reverse-geocode if GPS is present
+  let placeStr = '';
+  if (typeof exif.latitude === 'number' && typeof exif.longitude === 'number') {
+    placeStr = await reverseGeocodePlace(exif.latitude, exif.longitude).catch(() => '');
+  }
+  return { date: dateStr, place: placeStr };
+}
+
+// HEIC / HEIF (iPhone default) → JPEG. Desktop browsers can't render
+// HEIC natively, so without this conversion the photo placeholder
+// stays empty after the user picks an iPhone image. heic2any is
+// lazy-loaded on first use (~200 KB, only the players who need it
+// pay the bandwidth).
+let _heic2anyLoading = null;
+function loadHeic2any() {
+  if (typeof window.heic2any !== 'undefined') return Promise.resolve();
+  if (_heic2anyLoading) return _heic2anyLoading;
+  _heic2anyLoading = new Promise((resolve, reject) => {
+    const s = document.createElement('script');
+    s.src = 'https://cdn.jsdelivr.net/npm/heic2any/dist/heic2any.min.js';
+    s.onload  = () => resolve();
+    s.onerror = () => reject(new Error('heic2any load failed'));
+    document.head.appendChild(s);
+  });
+  return _heic2anyLoading;
+}
+
+async function ensureBrowserCompatibleImage(file) {
+  const isHeic =
+    file.type === 'image/heic' ||
+    file.type === 'image/heif' ||
+    /\.hei[cf]$/i.test(file.name || '');
+  if (!isHeic) return file;
+  try {
+    await loadHeic2any();
+    const out = await window.heic2any({
+      blob:    file,
+      toType:  'image/jpeg',
+      quality: 0.9,
+    });
+    const blob = Array.isArray(out) ? out[0] : out;
+    return new File(
+      [blob],
+      (file.name || 'photo').replace(/\.hei[cf]$/i, '.jpg'),
+      { type: 'image/jpeg' }
+    );
+  } catch (e) {
+    console.warn('[heic2any] convert failed; using raw file', e);
+    return file;   // EXIF read may have already worked; preview will be blank
+  }
+}
+
+// OSM Nominatim — free reverse geocoder, ~1 req/s rate limit.
+async function reverseGeocodePlace(lat, lng) {
+  const url = `https://nominatim.openstreetmap.org/reverse?lat=${lat.toFixed(5)}&lon=${lng.toFixed(5)}&format=json&accept-language=en`;
+  const r = await fetch(url, { headers: { 'Accept': 'application/json' } });
+  if (!r.ok) return '';
+  const j = await r.json();
+  if (!j || !j.address) return '';
+  const a = j.address;
+  const city = a.city || a.town || a.village || a.suburb || a.county || '';
+  const country = a.country || '';
+  return [city, country].filter(Boolean).join(', ');
 }
 
 function captureSurveyAnswer() {
@@ -14012,26 +15988,20 @@ function captureSurveyAnswer() {
       text: document.getElementById('surveyInput').value.trim(),
       instagram: instaConnected,
     };
-  } else if (q.kind === 'pet') {
-    if (!currentPetChoice) { introProfile.survey[q.key] = null; return; }
-    if (currentPetChoice === 'none') {
-      introProfile.survey[q.key] = { kind: 'none' };
-    } else {
-      const petTile = document.getElementById('surveyPhotoTile');
-      introProfile.survey[q.key] = {
-        kind: currentPetChoice,
-        name: document.getElementById('petName').value.trim(),
-        photo: petTile.dataset.photo || '',
-        text: document.getElementById('petName').value.trim(),
-      };
-    }
-  } else if (q.kind === 'memory') {
-    const memTile = document.getElementById('memoryPhotoTile');
-    introProfile.survey[q.key] = {
-      text: document.getElementById('surveyInput').value.trim(),
-      photo: memTile.dataset.photo || '',
-      instagram: instaConnected,
-    };
+  } else if (q.kind === 'tags') {
+    // Save the array of selected tag labels (preset + custom).
+    const tags = (_tagState && _tagState.selected)
+      ? Array.from(_tagState.selected)
+      : [];
+    introProfile.survey[q.key] = tags;
+  } else if (q.kind === 'pets') {
+    // Save filled pet rows only (need at least a kind, name, or photo).
+    const list = (_petsState || []).filter(p => p && (p.kind || p.name || p.photo));
+    introProfile.survey[q.key] = list;
+  } else if (q.kind === 'memories') {
+    // Save rows with at least a photo OR a note.
+    const list = (_memState || []).filter(m => m && (m.photo || m.note));
+    introProfile.survey[q.key] = list;
   }
 }
 function skipSurveyAnswer() {
@@ -14305,7 +16275,11 @@ function buildSelfPortraitPrompt() {
   return [
     'FRAMING: a FULL-LENGTH WIDE SHOT of a standing person, captured from a distance so the entire body is visible head to toe. Think fashion lookbook full-body portrait, NOT a headshot, NOT a half-body crop, NOT a three-quarter crop. The camera is far back; the subject occupies roughly 70-75% of the frame height, leaving clear empty space above the head and below the shoes.',
     'SUBJECT: a full-body standing character illustration in a fashion concept-art style, similar to the two reference images.',
-    'REFERENCE USE — VERY IMPORTANT: the FIRST input image is a selfie used ONLY for facial identity (face shape, hair, skin tone, eye colour, eyebrows). DO NOT copy the selfie\'s framing, crop, camera angle, head-and-shoulders composition, lighting, or background — IGNORE all of those. The OTHER input images (full-body illustrations) define the framing, pose, body proportions, and overall composition: head-to-toe wide shot with margin around the subject. Combine: face from selfie + everything else from the full-body references.',
+    'REFERENCE USE — VERY IMPORTANT, multiple input images, each with a distinct role:',
+    '  • Image 1 (SELFIE): use ONLY for facial identity — face shape, hair, skin tone, eye colour, eyebrows. DO NOT copy its framing, crop, camera angle, head-and-shoulders composition, lighting, or background.',
+    '  • Images 2 & 3 (FULL-BODY ILLUSTRATIONS): define the art style, outfit feel, lineart and rendering. They\'re the visual DNA of the final illustration.',
+    '  • Image 4 (BODY SILHOUETTE GUIDE): a black silhouette on a transparent canvas, head-to-feet with margin. Use it ONLY as a proportion template — copy the exact head-size-to-body-length ratio, shoulder width, torso-to-leg ratio, and overall posture. DO NOT copy its black colour, T-stand pose, or featureless rendering — those are just for clarity. The pose in the final image is the relaxed standing pose described below.',
+    'Combine: face from Image 1 + style/outfit/finish from Images 2-3 + body proportions and full-body framing from Image 4.',
     'IDENTITY (face only): the face MUST match the selfie exactly — same features, same hair. Do not invent a new face.',
     'STYLE: Semi-realistic digital character illustration with a painterly anime-inspired style, clean expressive linework, and warm natural shading. Soft brush strokes, visible painterly texture, stylized realism, subtle facial and fabric details, muted earthy color palette, warm skin tones, loose but confident edges, fashion concept-art aesthetic, high-detail clothing folds, hand-painted digital rendering, soft ambient lighting, polished editorial illustration look. Match the style of the other reference images.',
     'EXPRESSION: a gentle, subtle, light smile — friendly, calm, approachable. Eyes warm and softened, mouth corners slightly upturned. Do NOT make the character look serious, sulking, brooding, frowning, stern, or sad.',
@@ -14353,6 +16327,69 @@ async function getStyleReferenceFiles() {
   }
   _styleRefFilesCache = out;
   return out;
+}
+
+// ----- Body silhouette grid (proportion reference) -----
+// Single 6×6 PNG (rows = height: Very Short → Towering, cols = build:
+// Very Lean → Heavyset). Loaded once and reused. The active cell
+// — picked from the body-type sliders — is cropped, centred on a
+// 1024×1536 transparent portrait canvas with 5% top/bottom padding,
+// then sent as the 4th reference image. The model uses it strictly
+// as a head-to-feet proportion guide.
+const BODY_GRID_PATH = 'assets/body-grid.png';
+const BODY_GRID_COLS = 6;   // build axis (Very Lean → Heavyset)
+const BODY_GRID_ROWS = 6;   // height axis (Very Short → Towering)
+
+let _bodyGridImagePromise = null;
+function loadBodyGridImage() {
+  if (_bodyGridImagePromise) return _bodyGridImagePromise;
+  _bodyGridImagePromise = new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => resolve(img);
+    img.onerror = () => reject(new Error('body-grid load failed'));
+    img.src = BODY_GRID_PATH;
+  });
+  return _bodyGridImagePromise;
+}
+
+async function buildBodySilhouetteRef(heightIdx, bodyTypeIdx) {
+  let gridImg;
+  try {
+    gridImg = await loadBodyGridImage();
+  } catch (e) {
+    console.warn('[body-grid] not found, skipping silhouette ref', e);
+    return null;
+  }
+  const row = Math.min(BODY_GRID_ROWS - 1, Math.max(0, heightIdx | 0));
+  const col = Math.min(BODY_GRID_COLS - 1, Math.max(0, bodyTypeIdx | 0));
+  const cellW = Math.floor(gridImg.naturalWidth  / BODY_GRID_COLS);
+  const cellH = Math.floor(gridImg.naturalHeight / BODY_GRID_ROWS);
+  const sx = col * cellW;
+  const sy = row * cellH;
+
+  // Output canvas matches the API's portrait output (1024×1536, 2:3).
+  const W = 1024, H = 1536;
+  const canvas = document.createElement('canvas');
+  canvas.width = W; canvas.height = H;
+  const ctx = canvas.getContext('2d');
+  ctx.clearRect(0, 0, W, H);
+
+  // Centre the silhouette with ~5% top + ~5% bottom margin so the
+  // model sees an explicit head-to-feet framing template.
+  const targetH = H * 0.90;
+  const ratio   = cellW / cellH;
+  let targetW   = targetH * ratio;
+  if (targetW > W * 0.85) targetW = W * 0.85;   // never crowd the sides
+  const dx = (W - targetW) / 2;
+  const dy = (H - targetH) / 2;
+  ctx.drawImage(gridImg, sx, sy, cellW, cellH, dx, dy, targetW, targetH);
+
+  return new Promise(resolve => {
+    canvas.toBlob(blob => {
+      if (!blob) return resolve(null);
+      resolve(new File([blob], 'body-silhouette.png', { type: 'image/png' }));
+    }, 'image/png');
+  });
 }
 
 // ----- Selfie pre-processing -----
@@ -14424,6 +16461,15 @@ async function generateSelfPortrait(file) {
 
   const styleRefs = await getStyleReferenceFiles();
 
+  // Pick the body silhouette cell that matches the player's
+  // height/build sliders — used by the model purely as a
+  // head-to-feet proportion guide.
+  const _p    = introProfile || {};
+  const _body = _p.body || {};
+  const _heightIdx = Math.min(5, Math.max(0, _body.height   ?? 2));
+  const _buildIdx  = Math.min(5, Math.max(0, _body.bodyType ?? 2));
+  const bodyRefFile = await buildBodySilhouetteRef(_heightIdx, _buildIdx).catch(() => null);
+
   const fd = new FormData();
   fd.append('model',         'gpt-image-1');
   fd.append('prompt',        buildSelfPortraitPrompt());
@@ -14434,6 +16480,9 @@ async function generateSelfPortrait(file) {
   fd.append('output_format', 'png');
   fd.append('image[]', preparedFile, preparedFile.name || 'selfie.png');
   styleRefs.forEach((f, i) => fd.append('image[]', f, f.name || `style-${i}.png`));
+  if (bodyRefFile) {
+    fd.append('image[]', bodyRefFile, bodyRefFile.name || 'body-silhouette.png');
+  }
 
   // No Authorization header — the worker injects the key on its side.
   // Pass X-User-Id so the worker stores the result in this user's
@@ -14700,32 +16749,195 @@ function confirmSelfPhoto() {
 }
 
 function showFinalScreen() {
+  // Reset to self mode every time the player views their own card.
+  const screen = document.getElementById('finalScreen');
+  if (screen) {
+    screen.dataset.mode = 'self';
+    delete screen.dataset.dateId;
+  }
+  // Restore the self-mode onboarding text in case we'd swapped it
+  // for a date.
+  const onbP = document.querySelector('#finalVoiceOnboarding p');
+  if (onbP) {
+    onbP.textContent = 'These four were shaped by your birth chart and the answers you gave — the voices that live inside your head, companions for every episode ahead.';
+  }
+  // Restore "Continue" pill text (it becomes "Cast Her" in date mode).
+  const ctaEl = document.getElementById('finalContinue');
+  if (ctaEl) ctaEl.textContent = 'Continue';
   setFlow('final');
   renderFinalHero();
 }
 
+// ---------------------------------------------------------------
+// Date-profile mode — open the same final screen but populated with
+// another character's data (e.g., Iris). Player can browse her
+// standing portrait + four inner voices, but can't edit anything.
+// ---------------------------------------------------------------
+const DATE_PROFILES = {
+  iris: {
+    id:         'iris',
+    name:       'Iris',
+    age:        22,
+    city:       'London',
+    sign:       { icon: '♓', name: 'Pisces' },
+    appearance: 'characters/iris/appearances/london.png',
+    voicePack:  'london',
+    stats: {
+      progress:      92,                                               // ring %
+      progressLabel: "You've discovered 92% of Iris's character.",     // tooltip on tap
+      completed:     11,                                               // mid slot big number
+      available:     '7/16',                                           // right slot big number
+    },
+    voices: [
+      { id: 'trilli',    name: 'Trilli',
+        desc: 'Mid-20s, glass-bright. Wants to dance on tables, refuses to be dimmed by anyone in the room. Laughs you straight into a yes you didn’t see coming.',
+        lines: [
+          'Eleven and counting — keeper energy.',
+          'He flipped a coin. Romantic in its way.',
+          'Yes again. Yes always.',
+          'She laughed so hard the wineglass cracked.',
+          'Eight cents — I’ll take it.',
+        ] },
+      { id: 'alfa',      name: 'Alfa',
+        desc: 'Holds the door; runs the room. The voice that says yes before the rest of her catches up — and doesn’t apologise for any of it. Calm, certain.',
+        lines: [
+          'Eleven chances. We earned this one.',
+          'He held the door. Every time.',
+          'Not every yes is a question.',
+          'We chose this. All of it.',
+          'Coin landed how it landed. Move on.',
+        ] },
+      { id: 'scheggia',  name: 'Scheggia',
+        desc: 'A splinter, sharp under the skin. Won’t let her forget what she swore she’d never forget. Edge first, soft never.',
+        lines: [
+          'She still has the key, you know.',
+          'Don’t pretend you forgot the flat.',
+          'He read the diary. He read the diary.',
+          'Eleven dates. One unlearned number.',
+          'Tell him about the rain.',
+        ] },
+      { id: 'giulietta', name: 'Giulietta',
+        desc: 'All romance, all balcony. Wants letters, candle wax on the floor, somebody saying the wrong thing at the right time. Aches softly. Refuses to settle.',
+        lines: [
+          'He brought her a paperweight. A paperweight.',
+          'Real letters. Imagine.',
+          'Eleven small forevers.',
+          'Candle wax on the floor — yes.',
+          'Rain on cobblestones answered everything.',
+        ] },
+    ],
+    barks: ['Woof!', 'Arf arf!', 'Woooof', 'Yip!', 'Boof!', 'Bork bork'],
+    survey: {
+      music:   ['indie folk', 'soft jazz'],
+      cuisine: ['Italian', 'Japanese'],
+      film:    ['romantic dramas', 'arthouse'],
+      work:    ['publishing'],
+      hobby:   ['record collecting', 'late-night walks'],
+      fear:    ['being too much', 'rooms going quiet'],
+      untold:  'Still keeps a key to the flat she lived in at nineteen.',
+      pet:     [{ name: 'Bowie', kind: 'dog' }],
+    },
+  },
+};
+
+function showDateProfile(dateId) {
+  const date = DATE_PROFILES[dateId];
+  if (!date) return;
+
+  // Tuck the profile sheet away — the date view is full-screen.
+  if (typeof closeProfileSheet === 'function') closeProfileSheet();
+
+  const screen = document.getElementById('finalScreen');
+  if (!screen) return;
+  screen.dataset.mode   = 'date';
+  screen.dataset.dateId = dateId;
+
+  setFlow('final');
+  renderDateHero(date);
+  setFinalPage(0);
+}
+
+function renderDateHero(date) {
+  // Caption — title is just her name, subtitle is sign + city
+  // (no name/age repeat below).
+  const titleEl = document.getElementById('finalTitle');
+  const subEl   = document.getElementById('finalCaptionSub');
+  if (titleEl) titleEl.textContent = date.name;
+  if (subEl) {
+    const bits = [
+      date.sign ? `${date.sign.icon} ${date.sign.name}` : '',
+      date.city || '',
+    ].filter(Boolean);
+    subEl.textContent = bits.join(' · ');
+  }
+  // Top-right pill becomes "Cast Her" in date mode.
+  const ctaEl = document.getElementById('finalContinue');
+  if (ctaEl) ctaEl.textContent = 'Cast Her';
+
+  // Hero portrait — date appearance via <img> in the .has-photo path.
+  const boyEl    = document.getElementById('finalBoy');
+  const boyImgEl = document.getElementById('finalBoyImg');
+  if (boyEl) {
+    boyEl.classList.add('has-photo');
+    boyEl.style.backgroundImage = '';
+    if (boyImgEl) boyImgEl.src = date.appearance;
+  }
+
+  // Stats row (replaces the "Change Outfit" chip in date mode).
+  const setText = (id, val) => {
+    const el = document.getElementById(id);
+    if (el) el.textContent = String(val);
+  };
+  // Progress ring — circumference of an r=16 circle = 2π·16 ≈ 100.53.
+  // dashoffset = circ × (1 - pct/100) so the arc fills proportionally.
+  const pct  = Math.max(0, Math.min(100, Number(date.stats.progress) || 0));
+  const RING = 2 * Math.PI * 16;
+  setText('finalStatProgressNum', pct + '%');
+  const fillEl = document.getElementById('finalStatProgressFill');
+  if (fillEl) {
+    fillEl.setAttribute('stroke-dasharray',  RING.toFixed(2));
+    fillEl.setAttribute('stroke-dashoffset', (RING * (1 - pct / 100)).toFixed(2));
+  }
+  setText('finalStatCompleted', date.stats.completed);
+  setText('finalStatAvailable', date.stats.available);
+
+  // Bottom-sheet prose — fed a date-shaped profile object so the
+  // existing renderer reads `_zodiac` instead of looking up a DOB.
+  renderSheetContent({
+    name:     date.name,
+    location: date.city,
+    _zodiac:  date.sign,
+    survey:   date.survey,
+  });
+
+  // Voices page — Iris's four inner voices, portraits under her
+  // own folder.
+  renderFinalVoices({
+    list: date.voices,
+    path: `characters/${date.id}/voices/${date.voicePack}`,
+  });
+}
+
 function renderFinalHero() {
-  const p      = introProfile || {};
-  const survey = p.survey || {};
-  const petEntry = survey.pet || {};
+  const p = introProfile || {};
 
-  // Pet name (falls back to a friendly default so we can always show "& name")
-  const userName = p.name || 'You';
-  const petName  = (petEntry.name || petEntry.text || '').trim() || 'Buddy';
-  const nameEl   = document.getElementById('finalHeroName');
-  if (nameEl) nameEl.textContent = `${userName} & ${petName}`;
+  // Subtitle: "Onur · ♓ Pisces · Istanbul"
+  const userName = (p.name || 'You').trim();
+  const z        = zodiacFromDob(p.dob);
+  const zodiacStr = z ? `${z.icon} ${z.name}` : '';
+  const loc      = (p.location || '').trim();
+  const subEl    = document.getElementById('finalCaptionSub');
+  if (subEl) {
+    subEl.textContent = [userName, zodiacStr, loc].filter(Boolean).join(' · ');
+  }
 
-  // Show the AI-generated (or uploaded) user portrait in the hero
-  // slot. When a photo exists, swap into "has-photo" mode and load
-  // it into the <img> element — using a real image (instead of a
-  // background) means object-fit guarantees the figure stays fully
-  // visible (no clipped head or feet) regardless of aspect ratio.
+  // Hero portrait — same logic as before (img + has-photo class).
   const boyEl    = document.getElementById('finalBoy');
   const boyImgEl = document.getElementById('finalBoyImg');
   if (boyEl) {
     if (p.photo) {
       boyEl.classList.add('has-photo');
-      boyEl.style.backgroundImage = '';      // clear any old default
+      boyEl.style.backgroundImage = '';
       if (boyImgEl) boyImgEl.src = p.photo;
     } else {
       boyEl.classList.remove('has-photo');
@@ -14734,14 +16946,529 @@ function renderFinalHero() {
     }
   }
 
-  // Always show the dog — it's part of the hero composition regardless of
-  // what the user answered in the survey.
-  const dogEl = document.getElementById('finalDog');
-  if (dogEl) {
-    const img = petEntry.photo || 'assets/shared/dog.png';
-    dogEl.style.backgroundImage = `url("${img}")`;
-    dogEl.hidden = false;
+  // Bottom sheet — render survey data
+  renderSheetContent(p);
+
+  // Voices page (cards + active description)
+  renderFinalVoices();
+
+  // Reset to page 0 every time the screen reopens
+  setFinalPage(0);
+}
+
+// ---- Inner-voices page (final screen, page 1) ----
+const FINAL_VOICES = {
+  london: [
+    { id: 'eros',       name: 'Eros',
+      desc: 'Early 20s, always leaning closer. Wants you to jump before you’re ready, to lose your shoes in someone else’s flat. Will cosign every reckless thing your hands want to do.' },
+    { id: 'valium',     name: 'Valium',
+      desc: 'Late 30s, a low voice. Tells you to breathe when the room gets too loud, to put the phone face down. Reminds you that nothing tonight has to be decided right now.' },
+    { id: 'romeo',      name: 'Romeo',
+      desc: 'Mid-20s, a worn wool coat and a steel watch. Believes in handwritten letters and waiting in the rain because you said you would. Wants the slow version of everything.' },
+    { id: 'professore', name: 'Professore',
+      desc: 'In his 60s, a jacket that’s seen things. Asks the question you didn’t want and waits, patient, while you look for the answer. Doesn’t mind silence. Will not flinch.' },
+  ],
+  '1984': [
+    { id: 'the-rebel',    name: 'The Rebel',
+      desc: 'Wants the diary, the rebellion, the line crossed. Sees a Party slogan and itches to spit. Would rather be shot than quiet. Whispers: they cannot get inside you.' },
+    { id: 'the-loyalist', name: 'The Loyalist',
+      desc: 'Knows the cost. Reminds you what they take when they take you. Counts the people you’d be leaving behind every time you reach for trouble. Begs you not to.' },
+    { id: 'the-fear',     name: 'The Fear',
+      desc: 'Counts every footstep. Watches every door. Hears the telescreen breathe and assumes the worst — usually correctly. Tells you to walk slower, smile less, say nothing.' },
+    { id: 'the-lover',    name: 'The Lover',
+      desc: 'Aches for closeness. Sees Julia in every fragment of the world. Wants to memorise the shape of her hands before the room grows cold again. Refuses to let go.' },
+  ],
+};
+
+let _activeVoiceIdx = 0;
+
+function getFinalVoiceList() {
+  const pack = (typeof activePack === 'string' && FINAL_VOICES[activePack])
+                ? activePack : 'london';
+  return FINAL_VOICES[pack] || [];
+}
+
+// The currently-rendered voice set + the folder its portraits live in.
+// Either the player's voices (self mode) or a date's voices (date mode).
+let _currentVoiceList  = [];
+let _currentVoicesPath = '';
+
+function renderFinalVoices(opts) {
+  const row = document.getElementById('finalVoicesRow');
+  if (!row) return;
+
+  // Resolve list + portrait folder path from opts, or fall back to
+  // the player's own voices.
+  if (opts && opts.list) {
+    _currentVoiceList  = opts.list;
+    _currentVoicesPath = opts.path || '';
+  } else {
+    _currentVoiceList  = getFinalVoiceList();
+    _currentVoicesPath = `characters/you/voices/${activePack || 'london'}`;
   }
+
+  // Reset state — start with all four equal, none "selected" yet.
+  row.classList.remove('has-active');
+  row.innerHTML = '';
+  _activeVoiceIdx = -1;
+
+  _currentVoiceList.forEach((v, i) => {
+    const fig = document.createElement('div');
+    fig.className = 'voice-figure';
+    fig.dataset.idx = String(i);
+    fig.dataset.id  = v.id;
+    fig.style.backgroundImage =
+      `url("${_currentVoicesPath}/${v.id}/portrait.png")`;
+    // Speech bubble that pops over this figure's head when the
+    // ambient voice-talk cycle picks her (date mode only).
+    const bubble = document.createElement('div');
+    bubble.className = 'voice-bubble';
+    fig.appendChild(bubble);
+    // No per-figure name label — name + description appear in the
+    // central caption when the figure is tapped.
+    fig.addEventListener('click', () => setActiveVoice(i));
+    row.appendChild(fig);
+  });
+
+  // Reset caption to empty / hidden.
+  const cap = document.getElementById('finalVoiceCaption');
+  if (cap) cap.classList.remove('show');
+  const capName = document.getElementById('finalVoiceCaptionName');
+  const capDesc = document.getElementById('finalVoiceCaptionDesc');
+  if (capName) capName.textContent = '';
+  if (capDesc) capDesc.textContent = '';
+}
+
+function setActiveVoice(idx) {
+  const list = _currentVoiceList;
+  if (!list.length) return;
+  _activeVoiceIdx = ((idx % list.length) + list.length) % list.length;
+  const row = document.getElementById('finalVoicesRow');
+  if (row) row.classList.add('has-active');
+  // The player picked a voice — mute the ambient talk cycle.
+  if (typeof stopVoiceTalk === 'function') stopVoiceTalk();
+  document.querySelectorAll('#finalVoicesRow .voice-figure').forEach((f, i) => {
+    f.classList.toggle('active', i === _activeVoiceIdx);
+  });
+  // Populate the caption with the active voice's name + description.
+  const v = list[_activeVoiceIdx];
+  const capName = document.getElementById('finalVoiceCaptionName');
+  const capDesc = document.getElementById('finalVoiceCaptionDesc');
+  const cap     = document.getElementById('finalVoiceCaption');
+  if (capName) capName.textContent = v.name;
+  if (capDesc) capDesc.textContent = v.desc || '';
+  if (cap)     cap.classList.add('show');
+}
+
+// ---- Page navigation (Character ⇆ Voices) ----
+function setFinalPage(idx) {
+  const screen = document.getElementById('finalScreen');
+  if (!screen) return;
+  const clamped = Math.max(0, Math.min(1, idx));
+  screen.dataset.page = String(clamped);
+
+  const isDate = screen.dataset.mode === 'date';
+  const date   = isDate ? DATE_PROFILES[screen.dataset.dateId] : null;
+
+  // Title swap. In date mode page 0 = name, page 1 = "Iris's Voices".
+  const titleEl = document.getElementById('finalTitle');
+  if (titleEl) {
+    if (isDate && date) {
+      titleEl.textContent = clamped === 0 ? date.name : `${date.name}'s Voices`;
+    } else {
+      titleEl.textContent = clamped === 0 ? 'My Character' : 'My Voices';
+    }
+  }
+  // Subtitle swap
+  const subEl = document.getElementById('finalCaptionSub');
+  if (subEl) {
+    if (isDate && date) {
+      // Date mode keeps the same subtitle on both pages: sign · city.
+      const bits = [
+        date.sign ? `${date.sign.icon} ${date.sign.name}` : '',
+        date.city || '',
+      ].filter(Boolean);
+      subEl.textContent = clamped === 1 ? 'Tap a voice to read' : bits.join(' · ');
+    } else if (clamped === 1) {
+      subEl.textContent = 'Tap a voice to read';
+    } else {
+      // Restore the character subtitle (Name · Sign · Location)
+      const p = introProfile || {};
+      const z = zodiacFromDob(p.dob);
+      subEl.textContent = [
+        (p.name || '').trim(),
+        z ? `${z.icon} ${z.name}` : '',
+        (p.location || '').trim(),
+      ].filter(Boolean).join(' · ');
+    }
+  }
+  // Dot indicators
+  document.querySelectorAll('#finalPageDots .page-dot').forEach((d, i) => {
+    d.classList.toggle('active', i === clamped);
+  });
+  // Voices page in date mode → keep the figures chatting until the
+  // player taps one. Any other state silences them.
+  if (clamped === 1 && isDate) {
+    if (typeof startVoiceTalk === 'function') startVoiceTalk();
+  } else {
+    if (typeof stopVoiceTalk === 'function')  stopVoiceTalk();
+  }
+  // Sheet content stays on My Character on both pages — it doesn't
+  // swap when navigating to/from the voices view.
+}
+
+// ---------------------------------------------------------------
+// Ambient voice-talk cycle (date mode, voices page).
+// ---------------------------------------------------------------
+// Picks a random voice with `lines`, fills her bubble with one of
+// those lines for ~3.2s, hides it, waits ~1.6s, repeats. Stops the
+// moment the player taps a voice or leaves the page.
+let _voiceTalkTimer = null;
+let _voiceTalkLastId = null;
+
+function startVoiceTalk() {
+  stopVoiceTalk();
+  // Kick off after a short delay so the page transition settles.
+  _voiceTalkTimer = setTimeout(_voiceTalkTick, 1100);
+}
+
+function stopVoiceTalk() {
+  clearTimeout(_voiceTalkTimer);
+  _voiceTalkTimer = null;
+  document.querySelectorAll('#finalVoicesRow .voice-bubble').forEach(b => {
+    b.classList.remove('show');
+  });
+}
+
+function _voiceTalkTick() {
+  // Re-check conditions on every tick — if anything changed (page,
+  // mode, active voice) the cycle quietly halts.
+  const screen = document.getElementById('finalScreen');
+  if (!screen) return;
+  if (screen.dataset.mode !== 'date')   return;
+  if (screen.dataset.page !== '1')      return;
+  const row = document.getElementById('finalVoicesRow');
+  if (!row || row.classList.contains('has-active')) return;
+  const date = DATE_PROFILES[screen.dataset.dateId];
+  if (!date) return;
+
+  // Pick a voice (different from last time so it ping-pongs across
+  // the row instead of repeating the same character).
+  const candidates = date.voices.filter(v => v.lines && v.lines.length
+                                              && v.id !== _voiceTalkLastId);
+  const pool = candidates.length ? candidates : date.voices.filter(v => v.lines && v.lines.length);
+  if (!pool.length) return;
+  const voice = pool[Math.floor(Math.random() * pool.length)];
+  const line  = voice.lines[Math.floor(Math.random() * voice.lines.length)];
+  _voiceTalkLastId = voice.id;
+
+  // Hide whatever's currently shown, then surface this one.
+  document.querySelectorAll('#finalVoicesRow .voice-bubble').forEach(b => {
+    b.classList.remove('show');
+  });
+  const fig = row.querySelector(`.voice-figure[data-id="${voice.id}"]`);
+  if (!fig) return;
+  const bubble = fig.querySelector('.voice-bubble');
+  if (!bubble) return;
+  // Tiny HTML escape for the line text so apostrophes etc. survive.
+  const esc = (s) => String(s == null ? '' : s)
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+  bubble.innerHTML =
+    '<span class="voice-bubble-name">' + esc(voice.name) + '</span>' +
+    '<span class="voice-bubble-text">' + esc(line) + '</span>';
+  bubble.classList.add('show');
+
+  // Hide after a beat, then schedule the next one.
+  setTimeout(() => bubble.classList.remove('show'), 3200);
+  _voiceTalkTimer = setTimeout(_voiceTalkTick, 4800);
+}
+
+(function initFinalPaging() {
+  const next = document.getElementById('finalPageNext');
+  const prev = document.getElementById('finalPagePrev');
+  if (next) next.addEventListener('click', () => setFinalPage(1));
+  if (prev) prev.addEventListener('click', () => setFinalPage(0));
+
+  // Dots are clickable too.
+  document.querySelectorAll('#finalPageDots .page-dot').forEach((d) => {
+    d.style.pointerEvents = 'auto';
+    d.style.cursor = 'pointer';
+    d.addEventListener('click', () => setFinalPage(parseInt(d.dataset.pageIdx, 10) || 0));
+  });
+
+  // Horizontal swipe on the pages viewport.
+  const pages = document.getElementById('finalPages');
+  if (!pages) return;
+  let startX = null, startY = null, dx = 0, dy = 0, captured = false;
+  const onDown = (e) => {
+    const t = (e.touches && e.touches[0]) || e;
+    startX = t.clientX; startY = t.clientY;
+    dx = 0; dy = 0; captured = false;
+  };
+  const onMove = (e) => {
+    if (startX === null) return;
+    const t = (e.touches && e.touches[0]) || e;
+    dx = t.clientX - startX;
+    dy = t.clientY - startY;
+    // Only commit to a horizontal gesture once X clearly dominates.
+    if (!captured && Math.abs(dx) > 14 && Math.abs(dx) > Math.abs(dy)) {
+      captured = true;
+    }
+  };
+  const onUp = () => {
+    if (startX === null) return;
+    const screen = document.getElementById('finalScreen');
+    const cur    = parseInt(screen.dataset.page, 10) || 0;
+    if (captured) {
+      if (dx < -50 && cur < 1) setFinalPage(cur + 1);
+      else if (dx > 50 && cur > 0) setFinalPage(cur - 1);
+    }
+    startX = startY = null; dx = dy = 0; captured = false;
+  };
+  pages.addEventListener('pointerdown', onDown);
+  pages.addEventListener('pointermove', onMove);
+  pages.addEventListener('pointerup',   onUp);
+  pages.addEventListener('pointercancel', onUp);
+  pages.addEventListener('touchstart',  onDown, { passive: true });
+  pages.addEventListener('touchmove',   onMove, { passive: true });
+  pages.addEventListener('touchend',    onUp);
+})();
+
+// Tropical zodiac sign from a "YYYY-MM-DD" birthday string.
+function zodiacFromDob(dobStr) {
+  if (!dobStr) return null;
+  const parts = String(dobStr).split('-');
+  const m = parseInt(parts[1], 10);
+  const d = parseInt(parts[2], 10);
+  if (!m || !d) return null;
+  const ZODIAC = [
+    { name: 'Capricorn',   icon: '♑', mEnd: 1,  dEnd: 19 },
+    { name: 'Aquarius',    icon: '♒', mEnd: 2,  dEnd: 18 },
+    { name: 'Pisces',      icon: '♓', mEnd: 3,  dEnd: 20 },
+    { name: 'Aries',       icon: '♈', mEnd: 4,  dEnd: 19 },
+    { name: 'Taurus',      icon: '♉', mEnd: 5,  dEnd: 20 },
+    { name: 'Gemini',      icon: '♊', mEnd: 6,  dEnd: 20 },
+    { name: 'Cancer',      icon: '♋', mEnd: 7,  dEnd: 22 },
+    { name: 'Leo',         icon: '♌', mEnd: 8,  dEnd: 22 },
+    { name: 'Virgo',       icon: '♍', mEnd: 9,  dEnd: 22 },
+    { name: 'Libra',       icon: '♎', mEnd: 10, dEnd: 22 },
+    { name: 'Scorpio',     icon: '♏', mEnd: 11, dEnd: 21 },
+    { name: 'Sagittarius', icon: '♐', mEnd: 12, dEnd: 21 },
+    { name: 'Capricorn',   icon: '♑', mEnd: 12, dEnd: 31 },
+  ];
+  for (const s of ZODIAC) {
+    if (m < s.mEnd) return s;
+    if (m === s.mEnd && d <= s.dEnd) return s;
+  }
+  return ZODIAC[0];
+}
+
+// ---- Sheet content — warm prose intro with inline highlights ----
+// A few tag-specific quirks for extra colour. If a tag isn't in the
+// table the prose just says it plainly.
+const TAG_QUIRKS = {
+  music: {
+    'Metal':       'expect headbanging in traffic',
+    'Rock':        'sings in the shower, definitely',
+    'Pop':         'knows every chorus by heart',
+    'Hip-hop':     'lowkey freestyles in the kitchen',
+    'R&B':         'evening-coffee energy',
+    'Electronic':  'plays DJ at every gathering',
+    'Jazz':        'lights a candle, opens a book',
+    'Classical':   'wakes up to Mozart somehow',
+    'Country':     'has at least one pair of boots',
+    'Indie':       'hangs around tiny record shops',
+    'Folk':        'a guitar is never far away',
+    'K-pop':       'choreography muscle memory engaged',
+  },
+  cuisine: {
+    'Turkish':     'plan your evening around kebab',
+    'Italian':     'pasta nights are non-negotiable',
+    'Japanese':    'judges your chopstick form silently',
+    'Mexican':     'has strong taco opinions',
+    'Indian':      'asks for "extra spicy" with confidence',
+    'Thai':        'curry knower',
+    'French':      'wine pairing comes naturally',
+    'Mediterranean': 'olive oil enthusiast',
+    'Korean':      'BBQ table magnet',
+    'Chinese':     'dumpling fluent',
+    'American':    'unironically loves a good burger',
+    'Vietnamese':  'pho is a love language',
+  },
+  fear: {
+    'Heights':     'hugs the wall in elevators',
+    'Spiders':     'gives corners a wide berth',
+    'The dark':    'has a strategy for night-time bathroom trips',
+    'Public speaking': 'vanishes near microphones',
+    'Failure':     'overthinks every typo',
+    'Loneliness':  'panics if a text takes 4 minutes',
+    'Snakes':      'skips half of nature documentaries',
+    'Flying':      'double-checks the seatbelt',
+    'Deep water':  'avoids the deep end',
+    'Death':       'won’t talk about it but thinks about it',
+  },
+  hobby: {
+    'Travel':      'gets lost in maps for hours',
+    'Reading':     'shelves are full, ordering more',
+    'Cooking':     'kitchen is a lab',
+    'Gaming':      'sharpest after midnight',
+    'Photography': 'always hunting good light',
+    'Music':       'something is always playing in their head',
+    'Sports':      'will yell at the screen for 90 minutes',
+    'Writing':     'keeps a pen on them',
+    'Hiking':      'has the weekend route ready',
+    'Gardening':   'every plant has a name',
+    'Yoga':        'morning spine check, every day',
+    'Art':         'follows openings religiously',
+  },
+  film: {
+    'Comedy':      'laughs at the bad jokes too',
+    'Horror':      'watches between fingers',
+    'Drama':       'keeps tissues in reach',
+    'Action':      'here for the explosions',
+    'Sci-fi':      'has a soft spot for dystopias',
+    'Romance':     'will totally cry at the ending',
+    'Documentary': 'finds peace in real things',
+    'Thriller':    'lives for the twist',
+    'Animation':   'unashamed Pixar fan',
+    'Fantasy':     'maps the elf-and-dragon worlds',
+  },
+  work: {
+    'Creative':       'wakes up with three new ideas',
+    'Engineering':    'turns problems into equations',
+    'Office':         'knows the coffee machine’s schedule',
+    'Healthcare':     'checks pulses at birthday parties',
+    'Education':      'turns dinner into a lesson',
+    'Sales':          'every sentence sounds appealing',
+    'Hospitality':    'reads every room as a host',
+    'Service':        'spots the small details first',
+    'Self-employed':  'their own boss and their own HR',
+    'Student':        'living one exam from the next',
+    'Other':          'in a category of their own',
+  },
+};
+
+function renderSheetContent(p) {
+  const body = document.getElementById('finalSheetBody');
+  if (!body) return;
+  const survey = (p && p.survey) || {};
+
+  const esc = (s) => String(s == null ? '' : s)
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+  const hl  = (s) => '<span class="hl">' + esc(s) + '</span>';
+  const hls = (arr) => (arr || []).map(hl);
+  const joinAnd = (parts) => {
+    if (!parts.length) return '';
+    if (parts.length === 1) return parts[0];
+    if (parts.length === 2) return parts[0] + ' and ' + parts[1];
+    return parts.slice(0, -1).join(', ') + ', and ' + parts[parts.length - 1];
+  };
+  const quirkFor = (cat, arr) => {
+    if (!arr || !arr.length) return '';
+    const t = TAG_QUIRKS[cat] || {};
+    for (const tag of arr) {
+      if (t[tag]) return t[tag];
+    }
+    return '';
+  };
+
+  const paragraphs = [];
+
+  // ---- Paragraph 1: opener + tastes (music + film + cuisine) ----
+  const name = (p.name || 'You').trim();
+  // Date profiles pass a pre-resolved sign object via _zodiac, since
+  // they don't carry a DOB. Fall back to deriving it from DOB.
+  const z    = (p && p._zodiac) || zodiacFromDob(p.dob);
+  const loc  = (p.location || '').trim();
+  const p1   = [];
+  let opener = `<strong>${esc(name)}</strong>`;
+  if (z)   opener += `, a ${esc(z.name)} soul`;
+  if (loc) opener += `, calling ${hl(loc)} home`;
+  p1.push(opener + '.');
+  if (Array.isArray(survey.music) && survey.music.length) {
+    let s = `On the speakers it’s ${joinAnd(hls(survey.music))}`;
+    const q = quirkFor('music', survey.music);
+    if (q) s += ` — ${q}`;
+    p1.push(s + '.');
+  }
+  if (Array.isArray(survey.cuisine) && survey.cuisine.length) {
+    let s = `Loves ${joinAnd(hls(survey.cuisine))} on the plate`;
+    const q = quirkFor('cuisine', survey.cuisine);
+    if (q) s += ` — ${q}`;
+    p1.push(s + '.');
+  }
+  if (Array.isArray(survey.film) && survey.film.length) {
+    let s = `For movie night, push ${joinAnd(hls(survey.film))}`;
+    const q = quirkFor('film', survey.film);
+    if (q) s += ` (${q})`;
+    p1.push(s + '.');
+  }
+  if (p1.length) paragraphs.push(p1.join(' '));
+
+  // ---- Paragraph 2: inner life (work + hobby + fear + circle + untold + pets) ----
+  const p2 = [];
+  const wkBits = [];
+  if (Array.isArray(survey.work) && survey.work.length) {
+    let s = `works in ${joinAnd(hls(survey.work))}`;
+    const q = quirkFor('work', survey.work);
+    if (q) s += ` — ${q}`;
+    wkBits.push(s);
+  }
+  if (Array.isArray(survey.hobby) && survey.hobby.length) {
+    let s = `unwinds with ${joinAnd(hls(survey.hobby))}`;
+    const q = quirkFor('hobby', survey.hobby);
+    if (q) s += ` (${q})`;
+    wkBits.push(s);
+  }
+  if (wkBits.length) p2.push(capitalise(wkBits.join('; ')) + '.');
+
+  if (Array.isArray(survey.fear) && survey.fear.length) {
+    let s = `Heart races at ${joinAnd(hls(survey.fear))}`;
+    const q = quirkFor('fear', survey.fear);
+    if (q) s += ` — ${q}`;
+    p2.push(s + '.');
+  }
+  if (Array.isArray(survey.secretKeeper) && survey.secretKeeper.length) {
+    p2.push(`Phone-a-friend list: ${joinAnd(hls(survey.secretKeeper))} get the late-night call.`);
+  }
+
+  const untold = (typeof survey.untold === 'string')
+    ? survey.untold
+    : (survey.untold && survey.untold.text) || '';
+  if (untold && untold.trim()) {
+    p2.push(`Off the record: <em>${esc(untold.trim())}</em>.`);
+  }
+
+  const pets = Array.isArray(survey.pet) ? survey.pet : [];
+  if (pets.length) {
+    const named = pets.map(pt => {
+      const n = (pt.name || '').trim() ||
+                (pt.kind ? pt.kind[0].toUpperCase() + pt.kind.slice(1) : '');
+      return n ? hl(n) : null;
+    }).filter(Boolean);
+    if (named.length) {
+      p2.push(`Shares the place with ${joinAnd(named)} — ` +
+        (pets.length > 1 ? 'a small zoo, basically.' : 'never alone.'));
+    }
+  }
+  if (p2.length) paragraphs.push(p2.join(' '));
+
+  // (Memories section intentionally removed — was a photo strip.)
+
+  body.innerHTML =
+    '<div class="sheet-prose">' +
+      paragraphs.map(s => (
+        s.startsWith('<div') ? s : '<p>' + s + '</p>'
+      )).join('') +
+    '</div>';
+}
+
+function capitalise(str) {
+  if (!str) return str;
+  return str.replace(/^([^a-zA-Z<]*)([a-zA-Z])/,
+    (m, prefix, ch) => prefix + ch.toUpperCase());
 }
 
 // Add-self wiring — real photo picker. "Open Camera" tries
@@ -14876,16 +17603,229 @@ function renderFinalHero() {
   document.getElementById('selfContinueBtn').addEventListener('click', confirmSelfPhoto);
 })();
 
-// Final → cast gallery (your-cast). The gallery's Continue button
-// then sends the player into the date picker.
+// Final → world list. The voices ("Your Cast") view is now folded
+// into the final screen as the second swipeable page, so we skip
+// the standalone gallery in the first-run flow.
 document.getElementById('finalContinue').addEventListener('click', () => {
-  showGallery('voices');
+  const screen = document.getElementById('finalScreen');
+  // Date-mode "Continue" → leave the date view and reopen the
+  // profile sheet on top of the world list.
+  if (screen && screen.dataset.mode === 'date') {
+    if (typeof stopVoiceTalk === 'function') stopVoiceTalk();
+    screen.dataset.mode = 'self';
+    delete screen.dataset.dateId;
+    if (typeof showWorldList === 'function') showWorldList();
+    setTimeout(() => {
+      if (typeof openProfileSheet === 'function') openProfileSheet();
+    }, 60);
+    return;
+  }
+  // Self-mode "Continue" → off into the actual game.
+  if (typeof showWorldList === 'function') showWorldList();
+  else showDate();
 });
 
+// ---- Date-mode close button (X on the top-left of the caption) ----
+{
+  const closeBtn = document.getElementById('finalClose');
+  if (closeBtn) {
+    closeBtn.addEventListener('click', () => {
+      const screen = document.getElementById('finalScreen');
+      if (!screen) return;
+      if (typeof stopVoiceTalk === 'function') stopVoiceTalk();
+      screen.dataset.mode = 'self';
+      delete screen.dataset.dateId;
+      // Reset CTA pill text in case the player goes to their own
+      // final view next.
+      const ctaEl = document.getElementById('finalContinue');
+      if (ctaEl) ctaEl.textContent = 'Continue';
+      if (typeof showWorldList === 'function') showWorldList();
+      setTimeout(() => {
+        if (typeof openProfileSheet === 'function') openProfileSheet();
+      }, 60);
+    });
+  }
+}
+
+// ---- Progress-ring tooltip (date mode) ----
+{
+  const progressBtn = document.getElementById('finalStatProgress');
+  const tipEl       = document.getElementById('finalStatTooltip');
+  if (progressBtn && tipEl) {
+    let tipTimer = null;
+    progressBtn.addEventListener('click', () => {
+      const screen = document.getElementById('finalScreen');
+      if (!screen || screen.dataset.mode !== 'date') return;
+      const date = DATE_PROFILES[screen.dataset.dateId];
+      if (!date) return;
+      tipEl.textContent = (date.stats && date.stats.progressLabel) || '';
+      tipEl.classList.add('show');
+      clearTimeout(tipTimer);
+      tipTimer = setTimeout(() => tipEl.classList.remove('show'), 2400);
+    });
+  }
+}
+
+// ---- Dog bark bubble (date mode) ----
+{
+  const dogEl    = document.getElementById('finalDog');
+  const bubbleEl = document.getElementById('finalDogBubble');
+  if (dogEl && bubbleEl) {
+    let bubbleTimer = null;
+    dogEl.addEventListener('click', () => {
+      const screen = document.getElementById('finalScreen');
+      if (!screen || screen.dataset.mode !== 'date') return;
+      const date  = DATE_PROFILES[screen.dataset.dateId];
+      const barks = (date && date.barks) || ['Woof!'];
+      const bark  = barks[Math.floor(Math.random() * barks.length)];
+      bubbleEl.textContent = bark;
+      bubbleEl.classList.add('show');
+      clearTimeout(bubbleTimer);
+      bubbleTimer = setTimeout(() => {
+        bubbleEl.classList.remove('show');
+      }, 1500);
+    });
+  }
+}
+
 // Final → "Edit your character" opens the full cast gallery (me + pet + voices)
-document.getElementById('finalEdit').addEventListener('click', () => {
-  showGallery('full');
-});
+// (Edit-your-character button was removed from the final screen.
+//  Players now read their full survey data in the bottom sheet.)
+
+// Voices page → buttons act on the CURRENTLY ACTIVE voice.
+// "Change Character" swaps that voice's actor (re-cast / regenerate).
+// "Edit"             tweaks that voice's name / description.
+// (Both flows are placeholders for now — they hand off to a function
+// that knows which voice id was selected.)
+function getActiveVoice() {
+  if (_activeVoiceIdx < 0) return null;
+  const list = getFinalVoiceList();
+  return list[_activeVoiceIdx] || null;
+}
+
+function changeActiveVoice() {
+  const v = getActiveVoice();
+  if (!v) return;
+  // TODO: open a flow that lets the player pick a different actor
+  // for this voice slot (or regenerate the portrait). For now, log.
+  console.log('[voices] change requested for', v.id);
+  if (typeof onVoiceChangeRequested === 'function') onVoiceChangeRequested(v);
+}
+
+function editActiveVoice() {
+  const v = getActiveVoice();
+  if (!v) return;
+  // TODO: open a flow that lets the player edit this voice's name
+  // and description. For now, log.
+  console.log('[voices] edit requested for', v.id);
+  if (typeof onVoiceEditRequested === 'function') onVoiceEditRequested(v);
+}
+
+{
+  const changeBtn = document.getElementById('vcChange');
+  if (changeBtn) changeBtn.addEventListener('click', changeActiveVoice);
+  const editBtn   = document.getElementById('vcEdit');
+  if (editBtn)   editBtn.addEventListener('click', editActiveVoice);
+  // Page 0 — "Change Outfit" chip on the character page.
+  const outfitBtn = document.getElementById('finalOutfit');
+  if (outfitBtn) {
+    outfitBtn.addEventListener('click', () => {
+      // TODO: open an outfit picker / regenerate the portrait with
+      // a different outfit prompt.
+      console.log('[final] change outfit requested');
+      if (typeof onOutfitChangeRequested === 'function') onOutfitChangeRequested();
+    });
+  }
+}
+
+// ---- iOS-style drag handler for the final-screen bottom sheet ----
+(function initFinalSheetDrag() {
+  const sheet  = document.getElementById('finalSheet');
+  const handle = document.getElementById('finalSheetHandle');
+  if (!sheet || !handle) return;
+
+  let dragging = false, startY = 0, startH = 0;
+
+  const getY = (e) => (e.touches && e.touches[0]) ? e.touches[0].clientY : e.clientY;
+
+  const onDown = (e) => {
+    dragging = true;
+    startY   = getY(e);
+    startH   = sheet.offsetHeight;
+    sheet.classList.add('dragging');
+    if (handle.setPointerCapture && e.pointerId != null) {
+      try { handle.setPointerCapture(e.pointerId); } catch (_) {}
+    }
+    e.preventDefault();
+  };
+  const onMove = (e) => {
+    if (!dragging) return;
+    const dy   = getY(e) - startY;
+    const newH = startH - dy;
+    const vh   = window.innerHeight;
+    const clamped = Math.max(vh * 0.10, Math.min(vh * 0.95, newH));
+    sheet.style.height = clamped + 'px';
+  };
+  const onUp = () => {
+    if (!dragging) return;
+    dragging = false;
+    sheet.classList.remove('dragging');
+    // Snap to nearest position
+    const h  = sheet.offsetHeight;
+    const vh = window.innerHeight;
+    let snap;
+    if (h < vh * 0.25)      snap = 'collapsed';
+    else if (h > vh * 0.65) snap = 'expanded';
+    else                    snap = 'half';
+    sheet.dataset.snap   = snap;
+    sheet.style.height   = '';   // let CSS take over via [data-snap]
+  };
+
+  handle.addEventListener('pointerdown',   onDown);
+  window.addEventListener('pointermove',   onMove);
+  window.addEventListener('pointerup',     onUp);
+  window.addEventListener('pointercancel', onUp);
+  // Touch fallback for older mobile Safari
+  handle.addEventListener('touchstart', onDown, { passive: false });
+  window.addEventListener('touchmove',  onMove, { passive: false });
+  window.addEventListener('touchend',   onUp);
+
+  // ---- Scroll-to-expand on the body (Apple Maps style) ----
+  // Scrolling inside the body grows the sheet first; once expanded
+  // the body's own scroll takes over. Pulling down at scrollTop=0
+  // collapses it back.
+  const body = document.getElementById('finalSheetBody');
+  if (body) {
+    body.addEventListener('wheel', (e) => {
+      const snap = sheet.dataset.snap || 'half';
+      if (snap !== 'expanded' && e.deltaY > 0) {
+        e.preventDefault();
+        sheet.dataset.snap = 'expanded';
+      } else if (snap === 'expanded' && body.scrollTop <= 0 && e.deltaY < -2) {
+        e.preventDefault();
+        sheet.dataset.snap = 'half';
+      }
+    }, { passive: false });
+
+    let touchStartY = 0;
+    body.addEventListener('touchstart', (e) => {
+      touchStartY = e.touches[0].clientY;
+    }, { passive: true });
+    body.addEventListener('touchmove', (e) => {
+      const dy = touchStartY - e.touches[0].clientY;
+      const snap = sheet.dataset.snap || 'half';
+      if (snap !== 'expanded' && dy > 24) {
+        // upward swipe → expand
+        sheet.dataset.snap = 'expanded';
+        touchStartY = e.touches[0].clientY;
+      } else if (snap === 'expanded' && body.scrollTop <= 0 && dy < -24) {
+        // downward swipe at top → collapse
+        sheet.dataset.snap = 'half';
+        touchStartY = e.touches[0].clientY;
+      }
+    }, { passive: true });
+  }
+})();
 
 // ============================================================
 // Character gallery — horizontal card carousel; tap edit icon →
@@ -15218,29 +18158,10 @@ document.getElementById('formContinue').addEventListener('click', () => {
 });
 
 // Survey wiring
-const surveyPhotoTile = document.getElementById('surveyPhotoTile');
-const surveyPhotoInput = document.getElementById('surveyPhoto');
-surveyPhotoInput.addEventListener('change', async (e) => {
-  const f = e.target.files && e.target.files[0];
-  if (!f) return;
-  const url = await readFileAsDataURL(f);
-  applyPhotoTile(surveyPhotoTile, url);
-});
+// (Q9 pet picker is now multi-row; its file inputs are wired inside
+// makePetRow() in the renderer, no global handlers needed here.)
 
-// Memory photo (question 10) — line-button style
-const memoryPhotoTile  = document.getElementById('memoryPhotoTile');
-const memoryPhotoInput = document.getElementById('memoryPhoto');
-const memoryPhotoLabel = document.getElementById('memoryPhotoLabel');
-memoryPhotoInput.addEventListener('change', async (e) => {
-  const f = e.target.files && e.target.files[0];
-  if (!f) return;
-  const url = await readFileAsDataURL(f);
-  memoryPhotoTile.classList.add('has-image');
-  memoryPhotoTile.dataset.photo = url;
-  // Show the filename (truncated) so the user can tell what they picked
-  const name = (f.name || 'Photo').replace(/\.[^.]+$/, '');
-  memoryPhotoLabel.textContent = name.length > 28 ? name.slice(0, 27) + '…' : name;
-});
+// (Q10 memory rows handle their own file inputs inside makeMemoryRow.)
 
 // Instagram button — toggles "connected" state (no real auth yet)
 document.getElementById('surveyInstagram').addEventListener('click', (e) => {
@@ -15255,24 +18176,6 @@ document.getElementById('surveyInstagram').addEventListener('click', (e) => {
     setTimeout(() => { label.nodeValue = ' Connected'; }, 900);
     setTimeout(() => { label.nodeValue = original; }, 3000);
   }
-});
-
-// Pet picker
-document.querySelectorAll('#petPicker .pet-option').forEach(btn => {
-  btn.addEventListener('click', () => {
-    const choice = btn.dataset.pet;
-    currentPetChoice = choice;
-    document.querySelectorAll('#petPicker .pet-option').forEach(b =>
-      b.classList.toggle('active', b === btn)
-    );
-    const details = document.getElementById('petDetails');
-    if (choice === 'cat' || choice === 'dog') {
-      details.hidden = false;
-      setTimeout(() => document.getElementById('petName').focus(), 100);
-    } else {
-      details.hidden = true;
-    }
-  });
 });
 
 // Skip Questions (top-right) — skip ALL remaining questions at once
