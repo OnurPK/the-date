@@ -6240,6 +6240,34 @@
     background: #e0e0e0;
     color: #666;
   }
+  /* Coin-unlock button. Same pink chrome as the Start CTA but split
+     into two halves: label on the left, price + coin sprite on the
+     right. Used by venues that declare an `unlockPrice`. */
+  .poi-btn.unlock {
+    background: linear-gradient(135deg, #ff7eb9 0%, #ff5f98 100%);
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 13px 20px;
+    box-shadow: 0 8px 22px rgba(255,95,152,0.32);
+  }
+  .poi-btn.unlock:active { transform: scale(0.98); }
+  .poi-btn.unlock .unlock-label {
+    font-size: 15px; font-weight: 800;
+    letter-spacing: 0.04em;
+  }
+  .poi-btn.unlock .unlock-price {
+    display: inline-flex; align-items: center;
+    gap: 6px;
+    font-size: 15px; font-weight: 800;
+    letter-spacing: 0.02em;
+  }
+  .poi-btn.unlock .unlock-price .coin-mini {
+    width: 18px; height: 18px;
+    background: url("assets/ui/coin.png") center/contain no-repeat;
+  }
 
   /* Requirement line shown above the Locked CTA */
   .poi-requirement {
@@ -12274,7 +12302,9 @@ const VENUES = {
     cover: 'worlds/london/locations/thepub/cover.jpg',
     desc: 'Heavy wooden tables, old football chants, pints spilling cheap.',
     startable: false,
-    requirement: 'Age restriction 18+',
+    /* Coin unlock — replaces the "Locked" CTA with a pink
+       "Unlock Location · 14 🪙" pill in the POI modal. */
+    unlockPrice: 14,
     pack: 'london',
   },
   coffeeshop: {
@@ -12392,11 +12422,13 @@ const CITIES_STORE = [
   { id: 'tokyo',    name: 'Tokyo',    locations: 20, price: 32, image: 'store/covers/cities/tokyo.jpg',    purchased: false },
 ];
 const THEMES_STORE = [
+  { id: 'friends',   name: 'Friends',        locations: 14, price: 28, image: 'store/covers/themes/friends.jpg'   },
+  { id: 'office',    name: 'The Office',     locations: 12, price: 26, image: 'store/covers/themes/office.jpg'    },
+  { id: 'simpsons',  name: 'The Simpsons',   locations: 12, price: 30, image: 'store/covers/themes/simpsons.jpg'  },
+  { id: 'wildwest',  name: 'Wild West',      locations: 10, price: 22, image: 'store/covers/themes/wildwest.jpg'  },
   { id: 'halloween', name: 'Halloween',      locations:  8, price: 15, image: 'store/covers/themes/halloween.jpg' },
-  { id: 'simpsons',  name: 'The Simpsons',   locations: 12, price: 30, image: 'store/covers/themes/simpsons.jpg' },
-  { id: 'wildwest',  name: 'Wild West',      locations: 10, price: 22, image: 'store/covers/themes/wildwest.jpg' },
-  { id: 'worldcup',  name: 'World Cup 2026', locations: 12, price: 26, image: 'store/covers/themes/worldcup.jpg' },
-  { id: 'xmas',      name: 'Christmas',      locations: 14, price: 28, image: 'store/covers/themes/xmas.jpg' },
+  { id: 'worldcup',  name: 'World Cup 2026', locations: 12, price: 26, image: 'store/covers/themes/worldcup.jpg'  },
+  { id: 'xmas',      name: 'Christmas',      locations: 14, price: 28, image: 'store/covers/themes/xmas.jpg'      },
 ];
 // Special-guest catalog, fictional / real characters offered as
 // limited-edition dates. Same card UI as Cities/Themes but with the
@@ -15775,17 +15807,39 @@ function openPOI(id) {
   flowEl.poiDesc.textContent  = v.desc || '';
 
   // Requirement row, only visible on locked venues that declare one
+  // (and don't have a coin-unlock CTA, since that pill carries its
+  // own messaging).
   const reqRow  = document.getElementById('poiRequirement');
   const reqText = document.getElementById('poiReqText');
-  if (!v.startable && v.requirement && reqRow && reqText) {
+  const showsUnlock = !v.startable && typeof v.unlockPrice === 'number';
+  if (!v.startable && v.requirement && !showsUnlock && reqRow && reqText) {
     reqText.textContent = v.requirement;
     reqRow.hidden = false;
   } else if (reqRow) {
     reqRow.hidden = true;
   }
 
-  flowEl.poiStart.disabled    = !v.startable;
-  flowEl.poiStart.textContent = v.startable ? 'Go to Here' : 'Locked';
+  // Render the action button. Three states:
+  //   • Startable        → solid pink "Go to Here"
+  //   • Unlockable       → pink split pill: "Unlock Location" + price
+  //   • Otherwise locked → grey "Locked" disabled button
+  const btn = flowEl.poiStart;
+  btn.classList.remove('start', 'unlock');
+  if (v.startable) {
+    btn.classList.add('start');
+    btn.disabled = false;
+    btn.textContent = 'Go to Here';
+  } else if (showsUnlock) {
+    btn.classList.add('unlock');
+    btn.disabled = false;
+    btn.innerHTML =
+      `<span class="unlock-label">Unlock Location</span>` +
+      `<span class="unlock-price">${v.unlockPrice}` +
+      `<span class="coin-mini" aria-hidden="true"></span></span>`;
+  } else {
+    btn.disabled = true;
+    btn.textContent = 'Locked';
+  }
   flowEl.poiModal.classList.add('open');
   flowEl.poiBackdrop.classList.add('open');
 }
@@ -15797,7 +15851,23 @@ function closePOI() {
 
 async function startDateHere() {
   const v = VENUES[currentVenue];
-  if (!v || !v.startable) return;
+  if (!v) return;
+  // Coin-unlock branch: pay the price, mark startable, then re-open
+  // the same POI so the player sees the new "Go to Here" CTA.
+  if (!v.startable && typeof v.unlockPrice === 'number') {
+    if (typeof playerCoins === 'number' && playerCoins < v.unlockPrice) {
+      alert(`Not enough coins. You need ${v.unlockPrice}, you have ${playerCoins}.`);
+      return;
+    }
+    if (!confirm(`Unlock ${v.title} for ${v.unlockPrice} coins?`)) return;
+    if (typeof playerCoins === 'number') playerCoins -= v.unlockPrice;
+    v.startable = true;
+    delete v.unlockPrice;
+    if (typeof refreshCoinDisplay === 'function') refreshCoinDisplay();
+    openPOI(currentVenue);
+    return;
+  }
+  if (!v.startable) return;
   closePOI();
   // Free the welcome ambient video's buffer, it's hidden during
   // gameplay but iOS Safari keeps the decoded frames alive until we
