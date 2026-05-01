@@ -3,13 +3,13 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-<title>The Date</title>
+<title>roles.ai</title>
 
 <!-- PWA / iOS web-app metadata -->
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="The Date">
+<meta name="apple-mobile-web-app-title" content="roles.ai">
 <meta name="theme-color" content="#0a0a0f">
 <meta name="color-scheme" content="dark">
 <meta name="format-detection" content="telephone=no">
@@ -250,6 +250,7 @@
      path is reachable via the in-game UI. -->
 <div class="actions">
   <a class="act-btn primary" id="btnEditor" href="editor.html" target="_blank" rel="noopener">✎ Open Editor</a>
+  <button class="act-btn" id="btnDashboard" type="button">⊙ London Dashboard</button>
 </div>
 
 <script>
@@ -258,6 +259,18 @@
   const sizeLabel  = document.getElementById('sizeLabel');
   const pills      = document.querySelectorAll('.size-pill');
   // "Open Editor" is a real <a> link — no JS handler needed.
+  // "London Dashboard" sends a postMessage into the iframe so the
+  // game jumps straight to the end-of-episode recap (skips the
+  // closing video). Lets us iterate on the dashboard without
+  // playing through the script.
+  const btnDashboard = document.getElementById('btnDashboard');
+  if (btnDashboard) {
+    btnDashboard.addEventListener('click', () => {
+      try {
+        frame.contentWindow.postMessage({ type: 'open-dashboard', pack: 'london' }, '*');
+      } catch (e) { console.warn('[dash]', e); }
+    });
+  }
 
   let phoneW = 390;
   let phoneH = 844;

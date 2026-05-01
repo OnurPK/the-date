@@ -9,13 +9,13 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
 <meta http-equiv="Pragma" content="no-cache" />
 <meta http-equiv="Expires" content="0" />
-<title>The Date</title>
+<title>roles.ai</title>
 
 <!-- PWA / iOS web-app metadata -->
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="The Date">
+<meta name="apple-mobile-web-app-title" content="roles.ai">
 <meta name="theme-color" content="#0a0a0f">
 <meta name="color-scheme" content="dark">
 <meta name="format-detection" content="telephone=no">
@@ -34,7 +34,7 @@
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500;1,600&family=IBM+Plex+Mono:ital,wght@0,300;0,400;0,500;1,400&family=Courier+Prime:ital,wght@0,400;0,700;1,400;1,700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500;1,600&family=Lora:ital,wght@0,400;0,500;0,600;1,400;1,500&family=IBM+Plex+Mono:ital,wght@0,300;0,400;0,500;1,400&family=Courier+Prime:ital,wght@0,400;0,700;1,400;1,700&display=swap" rel="stylesheet">
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 
@@ -1234,6 +1234,16 @@
     font-weight: 500 !important;
     letter-spacing: 0.008em !important;
     text-shadow: 0 2px 14px rgba(0,0,0,0.65) !important;
+  }
+  /* London narrative font — switches the cursive italic Cormorant for
+     a cleaner, modern serif (Lora) without italic. Easier to read on
+     the painted street backgrounds and feels less like handwriting. */
+  body[data-pack="london"] #dialogBox.narrative .text,
+  body[data-pack="london"] #objectDialog.narrative .od-text {
+    font-family: "Lora", "Source Serif Pro", Georgia, serif !important;
+    font-style: normal !important;
+    font-weight: 500 !important;
+    letter-spacing: 0.005em !important;
   }
   #dialogBox.narrative .speaker,
   #objectDialog.narrative .od-speaker { display: none !important; }
@@ -5841,6 +5851,7 @@
     border-color: rgba(255,255,255,0.35);
   }
 
+
   /* ---------- Path editor (dev tool, ?edit=paths) ----------
      A click-to-place waypoint editor that overlays the live map.
      Clicking the map drops a numbered marker; thin lines connect
@@ -7013,6 +7024,243 @@
   .ms-share:hover  { background: rgba(255,255,255,0.12); border-color: rgba(255,255,255,0.34); }
   .ms-share:active { transform: scale(0.98); }
   .ms-share svg { width: 16px; height: 16px; }
+  /* Three-button row: small icon-only Share + Invite + Continue. */
+  .ms-actions {
+    display: flex;
+    gap: 10px;
+    width: 100%;
+    align-items: stretch;
+  }
+  .ms-share-flex { flex: 1 1 0; min-width: 0; }
+  /* Icon-only Share — square pill, same height as the text pills. */
+  .ms-iconbtn {
+    flex: 0 0 auto;
+    width: 50px;
+    padding: 0;
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.22);
+    border-radius: 14px;
+    color: #fff;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    -webkit-backdrop-filter: blur(10px);
+    backdrop-filter: blur(10px);
+    transition: transform 0.15s, background 0.2s, border-color 0.2s;
+  }
+  .ms-iconbtn:hover  { background: rgba(255,255,255,0.12); border-color: rgba(255,255,255,0.34); }
+  .ms-iconbtn:active { transform: scale(0.96); }
+  .ms-iconbtn svg    { width: 18px; height: 18px; }
+
+  /* ---------- Invite carousel overlay ----------
+     Centered on screen (not a bottom sheet). Five POI-style white
+     cards in a horizontal scroll-snap track. One card sits centered
+     in the viewport with a sliver of the next peeking in; each swipe
+     snaps to the next card. The card content mirrors the map POI
+     modal so the player recognises the venue they're about to share. */
+  #inviteOverlay {
+    position: fixed; inset: 0;
+    z-index: 740;
+    display: none;
+    align-items: center;
+    justify-content: center;
+  }
+  #inviteOverlay.open { display: flex; }
+  .iv-backdrop {
+    position: absolute; inset: 0;
+    background: rgba(0,0,0,0.72);
+    -webkit-backdrop-filter: blur(8px);
+    backdrop-filter: blur(8px);
+    opacity: 0;
+    transition: opacity 0.28s ease;
+  }
+  #inviteOverlay.open .iv-backdrop { opacity: 1; }
+  .iv-stage {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    /* Anchor the carousel a touch below center so the heading above
+       can grow without crowding the card. */
+    align-items: flex-start;
+    justify-content: center;
+    padding-top: calc(28vh - 100px);
+    transform: translateY(20px);
+    opacity: 0;
+    transition: transform 0.28s cubic-bezier(0.2,0.85,0.27,1),
+                opacity 0.24s ease;
+  }
+  #inviteOverlay.open .iv-stage {
+    transform: translateY(0);
+    opacity: 1;
+  }
+  .iv-close {
+    position: absolute;
+    top: max(20px, env(safe-area-inset-top));
+    right: 20px;
+    z-index: 4;
+    width: 36px; height: 36px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.10);
+    border: 1px solid rgba(255,255,255,0.20);
+    color: #fff;
+    font-size: 16px;
+    cursor: pointer;
+    -webkit-backdrop-filter: blur(10px);
+    backdrop-filter: blur(10px);
+  }
+  .iv-close:active { transform: scale(0.94); }
+  /* The track: horizontal scroll-snap. Padding-inline equals
+     half-of-(viewport - card-width) so each card sits centered when
+     snapped, with the next card peeking in on the right. */
+  .iv-track {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    gap: 14px;
+    padding: 0 max(14px, calc((100vw - 78vw) / 2));
+    overflow-x: auto;
+    overflow-y: hidden;
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    align-items: center;
+  }
+  .iv-track::-webkit-scrollbar { display: none; }
+  .iv-card {
+    flex: 0 0 78vw;
+    max-width: 360px;
+    scroll-snap-align: center;
+    /* +5% on the previous pass so the marketing pitch + CTA breathe. */
+    height: min(58vh, 440px);
+    background: #fff;
+    border-radius: 22px;
+    overflow: hidden;
+    display: flex; flex-direction: column;
+    box-shadow: 0 24px 60px rgba(0,0,0,0.55);
+    color: #111;
+    /* Passive (off-center) cards fade further back to ~35% so the
+       active card reads as the only "live" choice. */
+    opacity: 0.35;
+    transition: opacity 0.25s ease;
+  }
+  .iv-card.is-active { opacity: 1; }
+  .iv-card-cover {
+    position: relative;
+    width: 100%;
+    height: 52%;
+    flex: 0 0 auto;
+    background-size: cover;
+    background-position: center;
+    background-color: #eee;
+  }
+  .iv-card-cover::after {
+    content: '';
+    position: absolute;
+    left: 0; right: 0;
+    top: 50%; bottom: -1px;
+    background: linear-gradient(180deg,
+      rgba(255,255,255,0) 0%,
+      rgba(255,255,255,0.40) 50%,
+      rgba(255,255,255,0.92) 90%,
+      rgba(255,255,255,1) 100%);
+    pointer-events: none;
+  }
+  .iv-card-body {
+    flex: 1 1 auto;
+    padding: 12px 18px 16px;
+    display: flex; flex-direction: column;
+    gap: 6px;
+    min-height: 0;
+  }
+  .iv-card-title {
+    font-size: 20px; font-weight: 800;
+    letter-spacing: -0.02em;
+    line-height: 1.12;
+    color: #111;
+    margin: 0;
+  }
+  /* Episode type — plain text under the title (Romance, Double
+     Date, Bonding, Adventure, …). No chip background, just the
+     same accent colour as the original POI "kind" line. */
+  .iv-card-type {
+    display: inline-block;
+    align-self: flex-start;
+    font-size: 10.5px; letter-spacing: 0.22em;
+    text-transform: uppercase; font-weight: 800;
+    color: #c2185b;
+    margin-top: 2px;
+  }
+  .iv-card-desc {
+    font-size: 13px; line-height: 1.45;
+    color: #333;
+    margin: 0;
+    /* Cap to 4 lines so the longer marketing pitches fit without
+       pushing the CTA out of the (still slightly limited) card. */
+    display: -webkit-box;
+    -webkit-line-clamp: 4;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .iv-card-cta {
+    margin-top: auto;
+    width: 100%;
+    padding: 11px 0;
+    background: linear-gradient(135deg, #ff7eb9, #ff5f98);
+    border: 0;
+    color: #fff;
+    border-radius: 999px;
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    cursor: pointer;
+    box-shadow: 0 8px 22px rgba(255,95,152,0.35);
+    transition: transform 0.15s, box-shadow 0.2s;
+  }
+  .iv-card-cta:hover  { box-shadow: 0 12px 28px rgba(255,95,152,0.45); }
+  .iv-card-cta:active { transform: scale(0.97); }
+
+  /* Bold call-to-action above the carousel. Sits in the upper third
+     of the screen so it never grazes the top edge of the card. */
+  .iv-heading {
+    position: absolute;
+    top: calc(14vh + 20px);
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 3;
+    text-align: center;
+    color: #fff;
+    font-size: 24px;
+    font-weight: 800;
+    letter-spacing: -0.01em;
+    line-height: 1.25;
+    width: 84%;
+    max-width: 460px;
+    padding: 0 16px;
+    text-shadow: 0 2px 14px rgba(0,0,0,0.6);
+  }
+  /* Page indicator dots below the carousel */
+  .iv-dots {
+    position: absolute;
+    bottom: max(24px, env(safe-area-inset-bottom));
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 6px;
+    z-index: 3;
+  }
+  .iv-dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.30);
+    transition: background 0.15s, transform 0.15s;
+  }
+  .iv-dot.active {
+    background: rgba(255,255,255,0.95);
+    transform: scale(1.3);
+  }
 
   /* The wrap is tap-able to open the zoom view */
   .ms-album-wrap { cursor: pointer; }
@@ -10149,7 +10397,7 @@
 
   <div class="logo-wrap">
     <img class="logo-img" src="assets/ui/logo.png" alt="The Date" draggable="false">
-    <div class="logo-sub">Know her, know yourself</div>
+    <div class="logo-sub">New friends, best friends.</div>
   </div>
 
   <button class="intro-cta" id="introStart">Start</button>
@@ -10345,12 +10593,12 @@
             <div class="cs-divider"></div>
             <div class="cs-text">
               <div class="cs-num" id="finalStatCompleted">11</div>
-              <div class="cs-sub">dates completed</div>
+              <div class="cs-sub">episodes completed</div>
             </div>
             <div class="cs-divider"></div>
             <div class="cs-text">
               <div class="cs-num" id="finalStatAvailable">7/16</div>
-              <div class="cs-sub">date<br>available</div>
+              <div class="cs-sub">episodes<br>available</div>
             </div>
           </div>
           <!-- Tooltip surfaced when the player taps the progress ring. -->
@@ -11101,7 +11349,7 @@
       </div>
     </div>
 
-    <button class="ed-continue" id="edContinue" type="button">Generate my Song</button>
+    <button class="ed-continue" id="edContinue" type="button">Generate my Reel</button>
   </div>
 </div>
 
@@ -11162,20 +11410,37 @@
         Replay
       </button>
     </div>
-    <button class="ms-share" id="msShare" type="button">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
-           stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-        <circle cx="18" cy="5" r="3"/>
-        <circle cx="6"  cy="12" r="3"/>
-        <circle cx="18" cy="19" r="3"/>
-        <line x1="8.6" y1="13.5" x2="15.4" y2="17.5"/>
-        <line x1="15.4" y1="6.5" x2="8.6" y2="10.5"/>
-      </svg>
-      Share Moment
-    </button>
+    <div class="ms-actions">
+      <button class="ms-iconbtn" id="msShare" type="button" aria-label="Share">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+             stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <circle cx="18" cy="5" r="3"/>
+          <circle cx="6"  cy="12" r="3"/>
+          <circle cx="18" cy="19" r="3"/>
+          <line x1="8.6" y1="13.5" x2="15.4" y2="17.5"/>
+          <line x1="15.4" y1="6.5" x2="8.6" y2="10.5"/>
+        </svg>
+      </button>
+      <button class="ms-share ms-share-flex" id="msInvite"   type="button">Invite</button>
+      <button class="ms-share ms-share-flex" id="msContinue" type="button">Continue</button>
+    </div>
   </div>
 
   <audio id="musicAudio" src="worlds/london/locations/herplace/music/music.mp3" preload="auto"></audio>
+</div>
+
+<!-- Invite carousel — centered overlay over the music scene. Five
+     POI-style white cards swipe horizontally; each swipe snaps to
+     the next card, the same venues the player can pick from on the
+     map. The flow shares the EPISODE, not a friend. -->
+<div id="inviteOverlay" aria-hidden="true">
+  <div class="iv-backdrop" id="ivBackdrop"></div>
+  <button class="iv-close" id="ivClose" type="button" aria-label="Close">&times;</button>
+  <div class="iv-heading">Invite your friends to have an adventure with you</div>
+  <div class="iv-stage">
+    <div class="iv-track" id="ivTrack"></div>
+  </div>
+  <div class="iv-dots" id="ivDots" aria-hidden="true"></div>
 </div>
 
 <!-- Album art zoom, tap the small album on the music scene to open -->
@@ -11227,8 +11492,8 @@
     <div class="ps-spacer" aria-hidden="true"></div>
     <div class="ps-sheet">
       <div class="ps-tabs">
-        <button class="ps-tab active" data-tab="dates" type="button">My Dates</button>
-        <button class="ps-tab" data-tab="castings" type="button">Castings</button>
+        <button class="ps-tab active" data-tab="dates" type="button">My Friends</button>
+        <button class="ps-tab" data-tab="castings" type="button">My Roles</button>
       </div>
       <div class="ps-pane ps-pane-dates active" id="psPaneDates"></div>
       <div class="ps-pane ps-pane-castings" id="psPaneCastings"></div>
@@ -13874,7 +14139,7 @@ document.addEventListener('DOMContentLoaded', () => {
     shareBtn.addEventListener('click', async () => {
       const payload = {
         title: 'Yellow Window',
-        text:  "I just made a memory on The Date. 🎸 Yellow Window, our song.",
+        text:  "I just made a memory on roles.ai 🎸 Yellow Window, our song.",
         url:   (typeof location !== 'undefined') ? location.href : ''
       };
       try {
@@ -13887,6 +14152,146 @@ document.addEventListener('DOMContentLoaded', () => {
       } catch (e) { /* ignore */ }
     });
   }
+
+  // ----- Invite carousel -----
+  // Five episode cards (London map POIs). Each entry carries an
+  // override `desc` tailored to the invite context (under 16 words)
+  // and an episode `type`. The CTA below adapts to the type:
+  //   Romance     → "Date Me"
+  //   Double Date → "Invite a Couple"
+  //   anything else → "Invite a Friend"
+  const INVITE_VENUES = [
+    { id: 'myplace',    type: 'Romance',
+      desc: "Tonight you're hosting. Soft lamp, the playlist you've been saving, the dog already on her side of the couch. Make your place the one she keeps coming back to." },
+    { id: 'coffeeshop', type: 'Bonding',
+      desc: "Wood floors, tiny tables, the slow third refill. Two hours of the catch-up you've been owing each other. No phones, no rush, just the room." },
+    { id: 'thepub',     type: 'Double Date',
+      desc: "Two couples, one corner booth, pints that keep arriving. Old chants, sticky tables, the kind of night that gets retold for years. Bring a pair." },
+    { id: 'londoneye',  type: 'Adventure',
+      desc: "Thirty minutes in a glass pod above London. The whole city in one slow rotation, just the two of you, and a view you'll never share again exactly." },
+    { id: 'bigben',     type: 'Adventure',
+      desc: "A walk along the Thames at dusk. Bridges glowing, clock tower at your back, the city quieter than you've ever heard it. Bring someone you can be quiet with." },
+  ];
+  const INVITE_CTA = {
+    'Romance':     'Date Me',
+    'Double Date': 'Invite a Couple',
+  };
+  function renderInviteCards() {
+    const track = document.getElementById('ivTrack');
+    const dots  = document.getElementById('ivDots');
+    if (!track) return;
+    track.innerHTML = '';
+    if (dots) dots.innerHTML = '';
+    INVITE_VENUES.forEach((entry, i) => {
+      const v = (typeof VENUES === 'object' && VENUES[entry.id]) || null;
+      const card = document.createElement('div');
+      card.className = 'iv-card' + (i === 0 ? ' is-active' : '');
+      card.dataset.idx = String(i);
+      const cover = v ? (v.cover || '') : '';
+      const title = v ? (v.title || entry.id) : entry.id;
+      const desc  = entry.desc || (v && v.desc) || '';
+      const type  = entry.type || 'Episode';
+      const cta   = INVITE_CTA[type] || 'Invite a Friend';
+      card.innerHTML = `
+        <div class="iv-card-cover" style="background-image:url('${cover}')"></div>
+        <div class="iv-card-body">
+          <h3 class="iv-card-title">${title}</h3>
+          <span class="iv-card-type">${type}</span>
+          <p class="iv-card-desc">${desc}</p>
+          <button class="iv-card-cta" type="button">${cta}</button>
+        </div>
+      `;
+      track.appendChild(card);
+      if (dots) {
+        const d = document.createElement('span');
+        d.className = 'iv-dot' + (i === 0 ? ' active' : '');
+        dots.appendChild(d);
+      }
+    });
+  }
+  // Track which card is centered as the user scrolls so the dots
+  // below stay in sync.
+  let _ivScrollRaf = 0;
+  function syncInviteDots() {
+    const track = document.getElementById('ivTrack');
+    const dots  = document.getElementById('ivDots');
+    if (!track || !dots) return;
+    const cards = track.querySelectorAll('.iv-card');
+    if (!cards.length) return;
+    const trackCenter = track.scrollLeft + track.clientWidth / 2;
+    let nearest = 0;
+    let nearestDist = Infinity;
+    cards.forEach((c, i) => {
+      const cardCenter = c.offsetLeft + c.offsetWidth / 2;
+      const d = Math.abs(cardCenter - trackCenter);
+      if (d < nearestDist) { nearestDist = d; nearest = i; }
+    });
+    dots.querySelectorAll('.iv-dot').forEach((d, i) => {
+      d.classList.toggle('active', i === nearest);
+    });
+    // Brighten the centered card; dim the rest to 60%.
+    cards.forEach((c, i) => {
+      c.classList.toggle('is-active', i === nearest);
+    });
+  }
+  function openInviteOverlay() {
+    const ov = document.getElementById('inviteOverlay');
+    if (!ov) return;
+    renderInviteCards();
+    ov.classList.add('open');
+    ov.setAttribute('aria-hidden', 'false');
+    requestAnimationFrame(() => {
+      const tr = document.getElementById('ivTrack');
+      if (tr) {
+        tr.scrollLeft = 0;
+        // Re-bind scroll sync for this open. Listener is idempotent.
+        if (!tr._ivBound) {
+          tr.addEventListener('scroll', () => {
+            if (_ivScrollRaf) cancelAnimationFrame(_ivScrollRaf);
+            _ivScrollRaf = requestAnimationFrame(syncInviteDots);
+          });
+          tr._ivBound = true;
+        }
+        syncInviteDots();
+      }
+    });
+  }
+  function closeInviteOverlay() {
+    const ov = document.getElementById('inviteOverlay');
+    if (!ov) return;
+    ov.classList.remove('open');
+    ov.setAttribute('aria-hidden', 'true');
+  }
+  const inviteBtn = document.getElementById('msInvite');
+  if (inviteBtn) inviteBtn.addEventListener('click', openInviteOverlay);
+
+  // Continue: leave the music scene and drop the player back at the
+  // world list (the "what's next" screen). Pauses audio, closes the
+  // overlay, and removes any in-endscene flag the dashboard left on.
+  const contBtn = document.getElementById('msContinue');
+  if (contBtn) contBtn.addEventListener('click', () => {
+    try {
+      const audio = document.getElementById('musicAudio');
+      const video = document.getElementById('musicVideo');
+      if (audio) audio.pause();
+      if (video) video.pause();
+    } catch (_) {}
+    const scene = document.getElementById('musicScene');
+    if (scene) {
+      scene.classList.remove('open', 'finished');
+      scene.setAttribute('aria-hidden', 'true');
+    }
+    el.body.classList.remove('in-endscene');
+    if (typeof showWorldList === 'function') showWorldList();
+  });
+  const ivClose   = document.getElementById('ivClose');
+  const ivBackdrop = document.getElementById('ivBackdrop');
+  if (ivClose)    ivClose   .addEventListener('click', closeInviteOverlay);
+  if (ivBackdrop) ivBackdrop.addEventListener('click', closeInviteOverlay);
+  document.addEventListener('keydown', (ev) => {
+    const ov = document.getElementById('inviteOverlay');
+    if (ev.key === 'Escape' && ov && ov.classList.contains('open')) closeInviteOverlay();
+  });
 
   // Play / pause toggle
   const ppBtn = document.getElementById('msPlayPause');
@@ -14597,6 +15002,46 @@ function prev() {
 }
 
 el.dialogBox.addEventListener('click', next);
+
+// Tap-anywhere-to-advance: clicks on the empty stage (characters,
+// backdrop, vignette) also advance the dialog the same way the
+// cutscene/narrative-scene layers do. We bail when the click landed
+// on something that has its own meaning — buttons, dialog box,
+// modals, menus, multi-select choices — so this only kicks in
+// during regular full-body / inner-voice / intro screens.
+document.body.addEventListener('click', (ev) => {
+  const t = ev.target;
+  // Click on something that already handles its own taps?
+  if (t.closest('#dialogBox')) return;
+  if (t.closest('#narrativeSceneLayer')) return;
+  if (t.closest('#cutsceneLayer')) return;
+  if (t.closest('#objectFocus')) return;
+  // Click on an interactive control?
+  if (t.closest('button, input, select, textarea, label, a, [role="button"]')) return;
+  // Click on a menu / sheet / overlay screen?
+  if (t.closest(
+    '.full-sheet, .outfit-picker, .action-sheet, .path-editor, ' +
+    '#poiModal, #castingModal, #friendPicker, #cinematicIntro, ' +
+    '#profileSheet, #messagesSheet, #cameraModal, #albumZoom, ' +
+    '#musicScene, #endScene, #endDashboard, #videoOverlay, ' +
+    '#mapScreen, #dateScreen, #finalScreen, #galleryScreen, ' +
+    '#addSelfScreen, #surveyScreen, #loadingScreen, #introScreen, ' +
+    '.voice-swap-stage'
+  )) return;
+  // Multi-select / choice mode active?
+  if (el.body.classList.contains('choosing')) return;
+  if (el.body.classList.contains('exploring')) return;
+  if (el.body.classList.contains('pickingAction')) return;
+  // Skip if we're not actually inside the live dialog (any flow-*
+  // class means we're on a non-game screen).
+  for (const f of ['flow-intro','flow-form','flow-loading','flow-survey',
+                    'flow-gallery','flow-addself','flow-final',
+                    'flow-worlds','flow-date','flow-map']) {
+    if (el.body.classList.contains(f)) return;
+  }
+  next();
+});
+
 document.getElementById('btnNext').addEventListener('click', (e)=>{ e.stopPropagation(); next(); });
 document.getElementById('btnPrev').addEventListener('click', (e)=>{ e.stopPropagation(); prev(); });
 document.getElementById('btnRestart').addEventListener('click', () => {
@@ -18953,30 +19398,16 @@ async function fetchRandomFromProxy() {
   return b64 ? 'data:image/png;base64,' + b64 : null;
 }
 
+// Fixed default portrait for AI-off / demo mode. Used instead of
+// pulling a random previously-generated portrait, so demo testing
+// always lands on the same canonical "you" character.
+const DEMO_DEFAULT_PORTRAIT = 'characters/you/base.png';
+
 function startCachedPortraitFlow(fallbackDataUrl) {
   _genFallback    = fallbackDataUrl || null;
-  _genResultPhoto = null;
-  _genState       = 'pending';
+  _genResultPhoto = DEMO_DEFAULT_PORTRAIT;
+  _genState       = 'done';
   updateGenStatusUI();
-  setTimeout(async () => {
-    try {
-      // Worker /random returns either the user's own portraits or
-      // the shared demo/ pool as a server-side fallback. We do NOT
-      // fall back to the local IndexedDB cache anymore, those old
-      // entries can be from earlier (broken) prompt versions.
-      const dataUrl = await fetchRandomFromProxy().catch(() => null);
-      if (dataUrl) {
-        _genResultPhoto = dataUrl;
-        _genState       = 'done';
-      } else {
-        _genState = 'error';     // nothing in user's folder + no demo pool → use original photo
-      }
-    } catch (e) {
-      console.warn('[cache] random failed', e);
-      _genState = 'error';
-    }
-    updateGenStatusUI();
-  }, 700);
 }
 
 // Apply whatever portrait we have to the profile, generated if it
@@ -21240,6 +21671,27 @@ window.addEventListener('message', (e) => {
     resetRelationshipScore();
     idx = 0;
     renderLine();
+  } else if (data.type === 'open-dashboard') {
+    // Dev shortcut from the index.html chrome: jump straight to the
+    // end-of-episode recap dashboard (skip the closing video) so we
+    // can iterate on the dashboard UI without playing through.
+    //
+    // Also stub the script so the dashboard's "Generate my Song"
+    // button has somewhere to advance to (a single (Music) line).
+    // closeEndScene does `idx++; renderLine()` — landing on the
+    // music directive triggers startMusicScene().
+    const wantPack = data.pack || 'london';
+    try { activePack = wantPack; } catch (_) {}
+    el.body.dataset.pack = wantPack;
+    lines = [{ type: 'music' }];
+    idx   = -1;
+    const scene = document.getElementById('endScene');
+    if (scene) {
+      scene.classList.add('open');
+      scene.classList.remove('awaiting-continue', 'fade-out');
+      try { populateDashboard(); } catch (e) { console.warn('[dash]', e); }
+      requestAnimationFrame(() => scene.classList.add('dashboard'));
+    }
   } else if (data.type === 'jumpEnd') {
     // Jump straight to the ending sequence: end-scene video → dashboard →
     // music (dashboard's Continue advances through the script to the music

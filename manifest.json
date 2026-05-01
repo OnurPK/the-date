@@ -1,6 +1,6 @@
 {
-  "name": "The Date",
-  "short_name": "The Date",
+  "name": "roles.ai",
+  "short_name": "roles.ai",
   "description": "A visual novel dating experience.",
   "start_url": "/dialog.html",
   "scope": "/",
