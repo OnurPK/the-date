@@ -1,6 +1,6 @@
 Narrative: You stand on the street below her building. A yellow window glows high above you. (cutscene01.jpg)
 Narrative: Coat collar up, you cross the quiet pavement and climb the three worn steps to her door. (cutscene02.jpg)
-Narrative: You knock — three short raps. Then you wait.
+Narrative: You knock, three short raps. Then you wait.
 Professore: Count to three. If nothing, knock again. Not before.
 Valium: Breathe. You've done this a hundred times.
 Narrative: The latch turns. The door opens a hand's width. Warm light spills onto the landing. (cutscene03.jpg)
@@ -25,7 +25,7 @@ Giulietta: He's here. He's really here.
 Alfa: Keep your face steady. Don't smile too wide.
 Girl: There. Much better.
 Scheggia: Ask him a good question. Something that bypasses small talk.
-Girl: So tell me — what have you actually been up to?
+Girl: So tell me, what have you actually been up to?
 (Choice:3)
 Eros: Lean in. Tell her something you've never told anyone.
 Valium: Keep it light. A small truth, not a confession.
@@ -46,30 +46,76 @@ Scheggia: Don't celebrate yet. Just smile.
 Girl: Cheers, by the way.
 Boy: Cheers. To Tuesday nights. (+5)
 Giulietta: That was our moment. Hold onto it.
+Narrative: A phone buzzes face-up on the coffee table. The screen lights, ringtone cutting through the calm.
+Girl: Sorry, give me a sec.
+(Scene:phone.jpg)
+Narrative: She picks up. Half-turns away.
+Eros: Who's calling at this hour?
+Valium: Don't lean in. Give her space.
+Professore: Tone tells you everything. Listen to her tone.
+(Choice:2)
+Romeo: Listen to the conversation
+Valium: Look away. Give her privacy.
+(IfChoice:0)
+(Scene:phone-listen.jpg)
+Narrative: You don't pretend. You just listen.
+Girl: **Tess**! Yeah no, yeah, I'm fine. Yeah, just... y'know. (+5)
+Eros: **Tess**. Make a note of that.
+Girl: I'll tell you everything tomorrow. He's here right now.
+Scheggia: Wait, he's quiet. He's listening. I can feel his eyes on the side of my face.
+Trilli: Don't look at him. Don't smile. Don't break the spell.
+Girl: Yeah, you're the first one I'd call. Always.
+Professore: That voice is reserved. **Tess** is the keeper of her real things. (+5)
+Narrative: She hangs up, sets the phone face-down. A little caught.
+Girl: Sorry. Where were we?
+Romeo: **Tess**. We learned a name. (+10)
+(EndIf)
+(IfChoice:1)
+Narrative: You let your eyes drift to the wine glass, the rug, anything else.
+Girl: ...mm. ...mm. ...okay, yeah. ...later, yeah.
+Romeo: Some respect for her privacy is its own kind of intimacy. (+3)
+Eros: But who is it. Could've been anyone.
+Giulietta: He's looking away. He's giving me space. That's something.
+Alfa: Keep your voice down. Make it short.
+Girl: I have to go. Talk later.
+Narrative: She hangs up. The screen blanks before you can read it. "Unknown."
+Girl: Sorry. Where were we?
+Eros: Wonder who that was.
+Professore: We respected the moment. That counts for something. (+4)
+(EndIf)
+(Scene:narrativescene01.jpg)
+Girl: Where were we... oh, Tuesday. The cinema.
+Boy: Yeah, Tuesday.
+Romeo: Pick up where you left off. Don't make the call into a thing.
+Girl: I haven't been on a proper cinema date in ages.
+Eros: Make her laugh. It's that kind of moment.
+Boy: Sticky floor. Bad popcorn. Fluorescent toilets.
+Girl: Sounds perfect.
+Giulietta: He came right back to me. He didn't drift.
 Narrative: The couch dip holds you both. Her laugh fades slowly, like a song ending. She tilts her head and just looks at you. And keeps looking.
 Girl: Well... now what?
 (Choice:4)
-Eros: Close the gap. Kiss her — don't overthink it.
+Eros: Close the gap. Kiss her, don't overthink it.
 Valium: Stay where you are. Let her take the next breath.
 Professore: Crack a joke. Undercut the tension.
 Write: Write your own move…
-Narrative: The impulse arrives, clean and whole — {{input}}.
+Narrative: The impulse arrives, clean and whole, {{input}}.
 Scheggia: Wait. He's about to do something.
 Giulietta: Oh. Oh. I can feel him deciding.
 Trilli: Chaos energy incoming. I'm here for it.
-Alfa: Read her face. Shoulders tight, eyes soft — she's open to it.
+Alfa: Read her face. Shoulders tight, eyes soft, she's open to it.
 Eros: Go. The silence was waiting for exactly this.
 Valium: Careful. Count to three before you move.
 Romeo: If you do this, do it like you mean it.
 Professore: Hold on. This is a high-variance play. Let me check the odds.
-Professore: A coin. Fair and square. Heads — we commit. Tails — we retreat.
+Professore: A coin. Fair and square. Heads, we commit. Tails, we retreat.
 (Video:coinflip.mp4)
 Professore: Heads. That settles it.
 Eros: Move. Now.
 (Scene:hugscene.jpg)
 Narrative: You close the gap before your mind can stop you.
 Boy: Come here.
-Girl: Oh—
+Girl: Oh, 
 Narrative: Her arms fold around your shoulders. She laughs into your collar.
 Giulietta: Did we just... did we just do the whole thing?
 Scheggia: Don't ruin it by overthinking. Hug him back.
@@ -78,7 +124,7 @@ Alfa: Composure. Hold the composure.
 Romeo: Remember this exact second. (+10)
 Valium: Warm. Real. Stay here.
 Eros: I told you. I always tell you.
-Professore: For the record — the coin didn't decide. You did. (+3)
+Professore: For the record, the coin didn't decide. You did. (+3)
 Girl: You're such a mess.
 Boy: Yeah.
 Girl: Don't stop being one. (+6)
@@ -89,7 +135,7 @@ Girl: Don't stop being one. (+6)
 (Object:coffee image=coffeemachine.jpeg)
 Narrative: The red espresso machine hums on the counter. A dried coffee ring sits next to the mug.
 Valium: Maybe grab a cup. Something warm will steady your hands. (+4)
-Professore: Careful — the cord is touching the wet floor.
+Professore: Careful, the cord is touching the wet floor.
 Eros: Make one for her too. Small gestures. (+6)
 
 (Object:dog character=dog)
@@ -101,7 +147,7 @@ Boy: Easy, buddy... easy, easy.
 Dog: ...hrrrr.
 
 (Object:poster)
-Narrative: "Good Things Take Time" — a neon pink heart poster.
+Narrative: "Good Things Take Time", a neon pink heart poster.
 Valium: Good things take time. Don't rush.
 
 (Object:lavalamp)
@@ -117,9 +163,9 @@ Valium: Don't get lost in old frames. Just look, then move on.
 
 (Action)
 Eros: Check the magnets
-Narrative: Seven magnets. Three from cities you've visited, four from places you never went. (+5)
-Eros: Pick one up. Tiny things carry meaning.
-Professore: Don't rearrange them. She has her own order.
+Narrative: Seven magnets. **Tokyo**, **Paris**, **Barcelona**, and four from places she never went. (+5)
+Eros: **Barcelona**. I knew it. She had to have been there.
+Professore: Tokyo magnet looks worn. Probably her favourite city of the three.
 
 (Action)
 Valium: Look inside
@@ -127,12 +173,19 @@ Narrative: Soft light. A pitcher of water, half a lemon, and a takeout pizza box
 Valium: Real life lives here. No performance. (+3)
 Romeo: Pour her a glass of water. Small kindness.
 
+(Action)
+Romeo: Check the calendar
+Narrative: A circle around March 14, her birthday. Two plane tickets pinned beside it. **Lisbon**, next month. (+12)
+Romeo: Born under **Pisces**. Water and dreams. Fits her, doesn't it.
+Professore: **Portugal**. File that away, she's headed there next month.
+
 (Object:vinyl image=vinyl.jpg)
 (Action)
 Eros: Press play
 Narrative: A record is already on the deck. You lift the needle and let it drop. (+6)
-Narrative: Warm crackle. Then the song begins — it's one of her favourites. (+8)
-Eros: Perfect moment for a dance. Reach out your hand.
+Narrative: Warm crackle. Then the song begins, slow guitar, brushed drums. **Indie folk**. (+8)
+Eros: **Indie folk**. I should've guessed. And there's a stack of **soft jazz** records on the shelf.
+Professore: That's two pieces of her. File them.
 
 (Action)
 Professore: Look at the records beside it

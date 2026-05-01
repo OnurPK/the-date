@@ -1,5 +1,5 @@
 Narrative: Oceania, evening. The bells strike thirteen. You slip into the prole quarter with your collar up. (prolequarter01.jpg)
-Narrative: Up ahead through the fog, a single warm halo — a stall, a lone vendor, his hands moving over the goods. (vendor-distant.jpg)
+Narrative: Up ahead through the fog, a single warm halo, a stall, a lone vendor, his hands moving over the goods. (vendor-distant.jpg)
 The-Fear: Don't slow down. Walk like a man with somewhere to be.
 The-Lover: But she'll be in that room in an hour. You can't go empty-handed.
 Narrative: You reach the table. The old man looks up; his eyes know more than his face shows. (vendor-closeup.jpg)
@@ -14,7 +14,7 @@ The-Rebel: The glass paperweight. A piece of the old world, kept on purpose.
 The-Lover: The dried flowers. They weren't grown for the Party.
 The-Loyalist: The brass coin. Plain, heavy, traceable to nothing.
 
-Narrative: Your hand finds the GLASS PAPERWEIGHT — coral frozen inside, as if a piece of an unknown sea had agreed to wait. (streetvendor.jpg)
+Narrative: Your hand finds the GLASS PAPERWEIGHT, coral frozen inside, as if a piece of an unknown sea had agreed to wait. (streetvendor.jpg)
 Streetseller: Good eye. Eight cents. And you didn't get it from me.
 Boy: I never saw you.
 Streetseller: Small mercy. Now go.
@@ -32,16 +32,16 @@ Narrative: Charrington pulls his coat closer and disappears into the alley behin
 Narrative: Seventeen narrow steps. Each creak louder than the last. The parcel from the vendor pressed against your ribs. (stairs.jpg)
 The-Lover: She'll be there. She'll be there. She'll be there.
 
-Narrative: At the top, the door eases open from the inside. She's already there — coat off, hair down, the lamp behind her warming the edges of her face. (julia.jpg)
+Narrative: At the top, the door eases open from the inside. She's already there, coat off, hair down, the lamp behind her warming the edges of her face. (julia.jpg)
 Girl: Hey. You made it.
 Boy: I came as fast as I could.
 Girl: Patrol on Victory Square again?
 Boy: Always.
-Narrative: She has unwrapped a small feast on the table — real coffee, sugar, chocolate in silver foil. (coffee-share.jpg)
+Narrative: She has unwrapped a small feast on the table, real coffee, sugar, chocolate in silver foil. (coffee-share.jpg)
 Girl: Sit. Let me make it properly.
 The-Lover: Watch her work. Don't speak yet. Just watch.
 The-Practical-Survivor: He's tired. Three minutes and the shoulders drop.
-Girl: I need a minute with the kettle. Make yourself at home — there isn't much, but it's all here.
+Girl: I need a minute with the kettle. Make yourself at home, there isn't much, but it's all here.
 The-Rebel: Look around. Every object in this room is a small crime against the Party.
 The-Fear: Look around. Every object in this room is something they could find.
 (Explore:30)
@@ -50,7 +50,7 @@ Girl: There. As properly as Oceania allows.
 (Scene:room-above.jpg)
 The-Intimate-Self: He's here. He's really here.
 The-Mask: Keep your face plain. The door doesn't lock.
-Girl: So — tell me. What have you actually been writing?
+Girl: So, tell me. What have you actually been writing?
 
 (Choice:3)
 The-Rebel: Tell her about the diary under the floorboard.
@@ -92,7 +92,7 @@ The-Fear: Stay where you are. Listen first.
 The-Loyalist: Crack a joke. Defuse this before it crystallises.
 Write: Write your own move…
 
-Narrative: The thought arrives, clean and whole — {{input}}.
+Narrative: The thought arrives, clean and whole, {{input}}.
 The-Mask: Wait. He's about to do something.
 The-Intimate-Self: Oh. Oh. He's deciding.
 The-Rebel-Body: Chaos energy in Oceania. About time.
@@ -100,20 +100,20 @@ The-Practical-Survivor: Read her face. Shoulders soft, eyes open. She's ready.
 The-Rebel: Move. The silence was made for this.
 The-Fear: Count to three. Make sure no one's on the stairs.
 The-Lover: If you do this, do it like you mean it.
-The-Loyalist: For the record — high-risk. But the ledger has more than one column.
+The-Loyalist: For the record, high-risk. But the ledger has more than one column.
 
 (Scene:embrace.jpg)
 Narrative: You cross the small distance before your mind can argue.
 Boy: Come here.
-Girl: Oh—
-Narrative: Her arms fold around your shoulders. Behind her on the table, the paperweight catches the lamp — a small frozen sun.
+Girl: Oh, 
+Narrative: Her arms fold around your shoulders. Behind her on the table, the paperweight catches the lamp, a small frozen sun.
 The-Intimate-Self: Did we just... did we just do it?
 The-Rebel-Body: Don't ruin it by thinking. Be a body for ten seconds.
 The-Mask: Composure. Hold it. The door still doesn't lock.
 The-Lover: Remember this exact second. (+10)
 The-Fear: Warm. Real. Stay here. Stay here.
 The-Rebel: I told you. Some moments the Party has not won.
-The-Loyalist: For the record — the choice was made. By you.
+The-Loyalist: For the record, the choice was made. By you.
 
 Girl: You're such a mess, Winston.
 Boy: Yeah.
@@ -126,7 +126,7 @@ Girl: Don't stop being one. Not in this room. Not while we have it. (+6)
 (Object:paperweight image=paperweight.jpg)
 Narrative: The glass paperweight on the table. The same one you carried up the seventeen stairs an hour ago, pressed against your ribs.
 The-Lover: You could have died bringing this here. (+4)
-The-Fear: You almost did. The patrol on Victory Square — you were lucky.
+The-Fear: You almost did. The patrol on Victory Square, you were lucky.
 The-Rebel: But you did it. And the coral is still inside. (+6)
 
 (Object:gramophone image=gramophone.jpg)
@@ -153,7 +153,7 @@ The-Loyalist: That rhyme is a crime you haven't been formally told about yet. (+
 (Object:diary image=diary.jpg)
 (Action)
 The-Rebel: Read the page
-Narrative: "DOWN WITH BIG BROTHER" — written down the page in increasingly nervous slants. Whoever wrote this was you, or could have been. (+10)
+Narrative: "DOWN WITH BIG BROTHER", written down the page in increasingly nervous slants. Whoever wrote this was you, or could have been. (+10)
 The-Rebel: Add a line. Make this room yours.
 
 (Action)
