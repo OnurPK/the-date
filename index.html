@@ -238,7 +238,9 @@
   <div class="stage" id="stage">
     <div class="phone">
       <div class="screen">
-        <iframe id="gameFrame" src="dialog.html" title="Oda — Visual Novel"></iframe>
+        <!-- src is set in JS below so we can forward the wrapper's
+             URL params (?dev=keys, ?edit=paths, etc.) into the iframe. -->
+        <iframe id="gameFrame" title="Oda — Visual Novel"></iframe>
       </div>
     </div>
   </div>
@@ -264,6 +266,17 @@
   const frame      = document.getElementById('gameFrame');
   const sizeLabel  = document.getElementById('sizeLabel');
   const pills      = document.querySelectorAll('.size-pill');
+
+  // Forward the wrapper's URL params into the iframe so flags like
+  // ?dev=keys and ?edit=paths reach the game. We strip ?embed=1
+  // because that flag belongs to the wrapper itself.
+  (function forwardQueryToIframe() {
+    const search = window.location.search || '';
+    const cleaned = search
+      .replace(/[?&]embed=1\b/, '')   // wrapper-only flag
+      .replace(/^&/, '?');            // tidy up leading char
+    frame.src = 'dialog.html' + (cleaned || '');
+  })();
   // "Open Editor" is a real <a> link — no JS handler needed.
   // "London Dashboard" sends a postMessage into the iframe so the
   // game jumps straight to the end-of-episode recap (skips the

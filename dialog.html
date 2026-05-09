@@ -5865,7 +5865,10 @@
     position: fixed;
     top: max(18px, env(safe-area-inset-top));
     right: 18px;
-    z-index: 360;
+    /* Above intro screen (410), profile sheet (740), casting modal
+       (750) so the dev panel is always reachable. Camera modal
+       (9999) is the only thing above this. */
+    z-index: 850;
     width: 280px;
     display: none;
   }
