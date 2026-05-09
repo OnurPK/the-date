@@ -251,7 +251,13 @@
 <div class="actions">
   <a class="act-btn primary" id="btnEditor" href="editor.html" target="_blank" rel="noopener">✎ Open Editor</a>
   <button class="act-btn" id="btnDashboard" type="button">⊙ London Dashboard</button>
+  <button class="act-btn" id="btnScreenshot" type="button">📷 Screenshot</button>
 </div>
+
+<!-- html2canvas — used by the Screenshot button to rasterize the
+     iframe's DOM into a PNG. Same-origin so contentDocument access
+     is allowed. ~50KB gzipped, deferred so it doesn't block boot. -->
+<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js" defer></script>
 
 <script>
   const stage      = document.getElementById('stage');
@@ -269,6 +275,63 @@
       try {
         frame.contentWindow.postMessage({ type: 'open-dashboard', pack: 'london' }, '*');
       } catch (e) { console.warn('[dash]', e); }
+    });
+  }
+
+  // ----- Screenshot — rasterize the iframe's current frame to PNG.
+  // Captures only the iframe content (not the phone bezel). Saves
+  // with a timestamp so multiple shots don't overwrite each other.
+  const btnScreenshot = document.getElementById('btnScreenshot');
+  if (btnScreenshot) {
+    btnScreenshot.addEventListener('click', async () => {
+      if (typeof html2canvas !== 'function') {
+        alert('Screenshot lib still loading, try again in a sec.');
+        return;
+      }
+      const doc = frame.contentDocument;
+      const win = frame.contentWindow;
+      if (!doc || !doc.body) { alert('Iframe not ready.'); return; }
+      const original = btnScreenshot.textContent;
+      btnScreenshot.disabled = true;
+      btnScreenshot.textContent = 'Capturing…';
+      try {
+        const canvas = await html2canvas(doc.body, {
+          // Devicepixel ratio for crisp shots on retina screens.
+          scale: window.devicePixelRatio || 2,
+          // The iframe is the same origin, so we can let html2canvas
+          // pull asset bytes directly — gives correct rendering of
+          // <img> + background-image elements.
+          useCORS: true,
+          allowTaint: true,
+          // Match the iframe's actual viewport so off-screen layers
+          // don't get clipped or repositioned.
+          width:  win.innerWidth,
+          height: win.innerHeight,
+          windowWidth:  win.innerWidth,
+          windowHeight: win.innerHeight,
+          backgroundColor: '#000',
+        });
+        canvas.toBlob((blob) => {
+          if (!blob) { alert('Screenshot failed.'); return; }
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          const stamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
+          a.href = url;
+          a.download = `roles-ai-${stamp}.png`;
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          setTimeout(() => URL.revokeObjectURL(url), 1000);
+          btnScreenshot.textContent = 'Saved ✓';
+          setTimeout(() => { btnScreenshot.textContent = original; }, 1100);
+        }, 'image/png');
+      } catch (e) {
+        console.warn('[screenshot]', e);
+        alert('Screenshot failed: ' + (e.message || e));
+        btnScreenshot.textContent = original;
+      } finally {
+        btnScreenshot.disabled = false;
+      }
     });
   }
 

@@ -299,6 +299,13 @@
     aspect-ratio: var(--girl-aspect);
     transform: translateX(-50%) translateX(14px);
   }
+  /* Joy — same stage slot as Girl, but with her own appearance image.
+     Hidden by default (opacity 0); becomes visible when activated. */
+  .char.joy {
+    background-image: url("characters/joy/appearances/london.png");
+    aspect-ratio: var(--girl-aspect);
+    transform: translateX(-50%) translateX(14px);
+  }
   /* Dog is a real-world speaker too, shown solo, no pan, no inner mask. */
   .char.dog {
     background-image: url("assets/shared/dog.png");
@@ -5852,6 +5859,74 @@
   }
 
 
+  /* Dev settings panel (?dev=keys URL flag). Tiny floating card with
+     mode toggles. Gift AI toggle is the first inhabitant. */
+  .dev-settings {
+    position: fixed;
+    top: max(18px, env(safe-area-inset-top));
+    right: 18px;
+    z-index: 360;
+    width: 280px;
+    display: none;
+  }
+  body.dev-settings-on .dev-settings { display: block; }
+  .ds-card {
+    background: rgba(15,12,22,0.96);
+    border: 1px solid rgba(255,255,255,0.18);
+    border-radius: 10px;
+    padding: 10px 12px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.6);
+    color: #fff;
+    font-family: inherit;
+    font-size: 12px;
+  }
+  .ds-row + .ds-row { margin-top: 10px; padding-top: 10px; border-top: 1px solid rgba(255,255,255,0.08); }
+  .ds-head {
+    display: flex; align-items: center; justify-content: space-between;
+    font-weight: 800;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    font-size: 11px;
+    color: rgba(255,255,255,0.7);
+  }
+  .ds-close {
+    background: transparent; border: 0; color: rgba(255,255,255,0.6);
+    font-size: 17px; cursor: pointer; padding: 0 4px;
+  }
+  .ds-close:hover { color: #fff; }
+  .ds-toggle {
+    display: flex; align-items: center; gap: 10px; cursor: pointer;
+    user-select: none;
+  }
+  .ds-toggle input { display: none; }
+  .ds-toggle-track {
+    width: 36px; height: 20px;
+    background: rgba(255,255,255,0.14);
+    border: 1px solid rgba(255,255,255,0.22);
+    border-radius: 999px;
+    position: relative;
+    transition: background 0.15s, border-color 0.15s;
+    flex-shrink: 0;
+  }
+  .ds-toggle-thumb {
+    position: absolute;
+    top: 1px; left: 1px;
+    width: 16px; height: 16px;
+    background: #fff;
+    border-radius: 50%;
+    transition: transform 0.18s;
+  }
+  .ds-toggle input:checked + .ds-toggle-track { background: #ff7eb9; border-color: #ff5f98; }
+  .ds-toggle input:checked + .ds-toggle-track .ds-toggle-thumb { transform: translateX(16px); }
+  .ds-toggle-label { font-size: 12px; color: rgba(255,255,255,0.85); }
+  .ds-toggle-label b { color: #fff; font-weight: 800; letter-spacing: 0.06em; }
+  .ds-hint {
+    margin: 6px 0 0;
+    font-size: 11px;
+    color: rgba(255,255,255,0.5);
+    line-height: 1.45;
+  }
+
   /* ---------- Path editor (dev tool, ?edit=paths) ----------
      A click-to-place waypoint editor that overlays the live map.
      Clicking the map drops a numbered marker; thin lines connect
@@ -11122,6 +11197,65 @@
 <input type="file" id="outfitFileInput"   accept="image/*" hidden />
 <input type="file" id="outfitCameraInput" accept="image/*" capture="environment" hidden />
 
+<!-- Dev settings panel — surfaces only when ?dev=keys is in the URL.
+     Currently a single AI-mode toggle for the gift pipeline.
+     API keys themselves live in the Worker env-vars; this panel
+     just decides whether the frontend takes the live path or the
+     instant demo stub. -->
+<div id="devSettings" class="dev-settings" aria-hidden="true">
+  <div class="ds-card">
+    <div class="ds-row ds-head">
+      <span>Dev settings</span>
+      <button class="ds-close" id="dsClose" type="button" aria-label="Close">&times;</button>
+    </div>
+    <div class="ds-row">
+      <label class="ds-toggle">
+        <input type="checkbox" id="dsGiftAiToggle" />
+        <span class="ds-toggle-track"><span class="ds-toggle-thumb"></span></span>
+        <span class="ds-toggle-label">Gift AI: <b id="dsGiftAiLabel">DEMO</b></span>
+      </label>
+      <p class="ds-hint">
+        ON = real GPT-4o vision + ComfyUI Cloud render via Worker.
+        OFF = instant mock so the script flow is testable without burning quota.
+      </p>
+    </div>
+  </div>
+</div>
+
+<!-- Gift picker — same iOS-style sheet, but for the
+     "what did you bring her?" beat. Triggered by the (Gift) script
+     directive, NOT by a chip; the engine opens it and waits. -->
+<div id="giftSheet" class="action-sheet" aria-hidden="true">
+  <div class="as-backdrop" id="giftBackdrop"></div>
+  <div class="as-wrap">
+    <div class="as-card">
+      <div class="as-title" id="giftTitle">Pick a gift photo</div>
+      <button class="as-option" id="giftCameraBtn" type="button">
+        <svg class="as-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+             stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+          <circle cx="12" cy="13" r="4"/>
+        </svg>
+        Open Camera
+      </button>
+      <button class="as-option" id="giftUploadBtn" type="button">
+        <svg class="as-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+             stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <rect x="3" y="3" width="18" height="18" rx="2"/>
+          <circle cx="8.5" cy="8.5" r="1.5"/>
+          <path d="M21 15l-5-5L5 21"/>
+        </svg>
+        Upload Photo
+      </button>
+    </div>
+    <!-- No Cancel — the script can't continue without a gift, so
+         we don't offer an escape. The chooser stays up until the
+         player commits. -->
+  </div>
+</div>
+<input type="file" id="giftFileInput"   accept="image/*" hidden />
+<input type="file" id="giftCameraInput" accept="image/*" capture="environment" hidden />
+
 <div id="backdrop"></div>
 <div id="cutsceneLayer"></div>
 <div id="narrativeSceneLayer"></div>
@@ -11135,6 +11269,9 @@
   <div class="char girl" id="girl"></div>
   <div class="char boy" id="boy"></div>
   <div class="char dog" id="dog"></div>
+  <!-- Joy: street-scene companion (older studio friend), London-only.
+       Same stage slot as Girl, swapped in when she's the active speaker. -->
+  <div class="char joy" id="joy"></div>
   <div class="voice eros"       id="eros"></div>
   <div class="voice valium"     id="valium"></div>
   <div class="voice romeo"      id="romeo"></div>
@@ -11707,7 +11844,21 @@
 // ============================================================
 // DATA
 // ============================================================
-const SAMPLE = `Narrative: You stand on the street below her building. A yellow window glows high above you. (cutscene01.jpg)
+const SAMPLE = `Narrative: A cool evening. You walk the long way to her place, hands in your coat pockets, the box tucked under one arm. (joy-street01.jpg)
+Narrative: Footsteps catch up beside you. A familiar voice you haven't heard in a while.
+Joy: Hey, stranger. Look at you, all dressed up.
+Boy: Joy! I didn't see you.
+Joy: You never do. You look excited. Where are you off to?
+Boy: I'm seeing someone tonight. Someone important.
+Joy: Oh, finally! Tell me about her... actually no. Show me. What did you bring her?
+(Gift)
+Joy: Let me see.
+(GiftReveal)
+Joy: Mm. That's lovely, actually. She'll like it.
+Boy: You think?
+Joy: I do. The good ones notice the small things. Now go, don't keep her waiting.
+Narrative: She squeezes your shoulder once, then she's gone. The street is yours again. (joy-street02.jpg)
+Narrative: You stand on the street below her building. A yellow window glows high above you. (cutscene01.jpg)
 Narrative: Coat collar up, you cross the quiet pavement and climb the three worn steps to her door. (cutscene02.jpg)
 Narrative: You knock, three short raps. Then you wait.
 Professore: Count to three. If nothing, knock again. Not before.
@@ -12454,6 +12605,8 @@ const VALID = new Set([
   'the-rebel-body','the-practical-survivor','the-mask','the-intimate-self',
   // 1984 NPC roles (cast from the player's friend list)
   'charrington','streetseller',
+  // London street companion (older studio friend, no inner voices)
+  'joy',
   // text-input option
   'write'
 ]);
@@ -12487,9 +12640,10 @@ function voicePortraitPath(speaker) {
   return `characters/${owner}/voices/${pack}/${speaker}/portrait.png`;
 }
 
-const REAL  = new Set(['boy','girl','dog','charrington','streetseller']);
+const REAL  = new Set(['boy','girl','dog','charrington','streetseller','joy']);
 const LABELS = {
   boy: 'Boy', girl: 'Girl', dog: 'Dog',
+  joy: 'Joy',
   // London voices
   eros: 'Eros', valium: 'Valium',
   romeo: 'Romeo', professore: 'Professore',
@@ -12660,6 +12814,8 @@ const el = {
     boy:  document.getElementById('boy'),
     girl: document.getElementById('girl'),
     dog:  document.getElementById('dog'),
+    // Joy — street-scene companion in London. No inner voices.
+    joy:  document.getElementById('joy'),
     // London voices
     eros: document.getElementById('eros'),
     valium: document.getElementById('valium'),
@@ -13076,6 +13232,27 @@ function parseScript(text) {
       continue;
     }
 
+    // Special: (Gift), opens a file picker. The chosen image becomes
+    // the player's gift to Iris. In live mode the engine kicks off
+    // GPT-4o vision (recognition) + ComfyUI (clean white-bg render)
+    // in parallel so the dialog can keep flowing while the image
+    // generates. In demo mode it just stamps a mock gift.
+    if (/^\(\s*Gift\s*\)$/i.test(s)) {
+      const ev = { type: 'gift' };
+      if (currentAction) currentAction.lines.push(ev);
+      else currentArr.push(ev);
+      continue;
+    }
+    // Special: (GiftReveal), the moment the script wants to show the
+    // generated image. If the ComfyUI result is ready we paint it as
+    // a Scene; otherwise we wait briefly with a soft loader.
+    if (/^\(\s*GiftReveal\s*\)$/i.test(s)) {
+      const ev = { type: 'giftreveal' };
+      if (currentAction) currentAction.lines.push(ev);
+      else currentArr.push(ev);
+      continue;
+    }
+
     // Special: (EndScene), 15s cinematic end video (endscene.mp4) with
     // timed inner-voice + narrative overlay, then a recap dashboard.
     if (/^\(\s*EndScene\s*\)$/i.test(s)) {
@@ -13162,6 +13339,12 @@ function applyStage(speaker) {
     el.chars.girl.classList.add('active');
     el.body.setAttribute('data-pan', 'girl');
     lastRealSpeaker = 'girl';
+  } else if (speaker === 'joy') {
+    // Joy occupies the girl-slot during the street scene, but since
+    // she's a different character we toggle her own .char.joy element.
+    if (el.chars.joy) el.chars.joy.classList.add('active');
+    el.body.setAttribute('data-pan', 'girl');
+    lastRealSpeaker = 'joy';
   } else if (speaker === 'dog') {
     // Dog: solo on stage, no pan (dog doesn't bend space around it)
     el.chars.dog.classList.add('active');
@@ -13254,6 +13437,20 @@ function renderLine() {
   // End-of-game music scene
   if (line.type === 'music') {
     startMusicScene();
+    return;
+  }
+
+  // Gift picker — opens a file picker, kicks off GPT vision +
+  // (later) ComfyUI generation in the background, advances when
+  // the player commits. State is stored on window.giftState.
+  if (line.type === 'gift') {
+    startGiftPicker();
+    return;
+  }
+  // Gift reveal — paint the generated image as a Scene. If the
+  // image isn't ready yet, fall back to a soft loader and wait.
+  if (line.type === 'giftreveal') {
+    revealGift();
     return;
   }
 
@@ -17434,6 +17631,47 @@ function stopLondonAmbient() {
 })();
 
 // ============================================================
+// Dev settings panel — surfaces only when ?dev=keys is in the URL.
+// Tiny floating card with mode toggles. Currently houses the Gift
+// AI on/off switch (LIVE = real Worker calls, DEMO = instant mock).
+// ============================================================
+(function setupDevSettings() {
+  const url = new URL(window.location.href);
+  const enabled = url.searchParams.get('dev') === 'keys' ||
+                  /[?&#]dev=keys/.test(window.location.href);
+  if (!enabled) return;
+  document.body.classList.add('dev-settings-on');
+
+  // Restore the persisted Gift AI mode (default: 'off').
+  try {
+    const saved = localStorage.getItem('roles-ai.gift-ai-mode');
+    if (saved === 'live' || saved === 'off') window.GIFT_AI_MODE = saved;
+  } catch (_) {}
+
+  const toggle = document.getElementById('dsGiftAiToggle');
+  const label  = document.getElementById('dsGiftAiLabel');
+  const close  = document.getElementById('dsClose');
+
+  function syncLabel() {
+    const live = window.GIFT_AI_MODE === 'live';
+    if (toggle) toggle.checked = live;
+    if (label)  label.textContent = live ? 'LIVE' : 'DEMO';
+  }
+  syncLabel();
+
+  if (toggle) toggle.addEventListener('change', () => {
+    window.GIFT_AI_MODE = toggle.checked ? 'live' : 'off';
+    try { localStorage.setItem('roles-ai.gift-ai-mode', window.GIFT_AI_MODE); }
+    catch (_) {}
+    syncLabel();
+  });
+
+  if (close) close.addEventListener('click', () => {
+    document.body.classList.remove('dev-settings-on');
+  });
+})();
+
+// ============================================================
 // Path editor — dev tool (?edit=paths) for drawing avatar routes
 // directly on top of the live map. Click to drop waypoints, undo,
 // switch destination, export the resulting LONDON_AVATAR_PATHS
@@ -21232,6 +21470,269 @@ function pickFirstProductLikeImg(html) {
       btn.disabled = false;
     }
   }
+}
+
+// ============================================================
+// GIFT MODULE — script directive (Gift) opens a file picker, runs
+// the AI roundtrip in the background, and stores the result on
+// window.giftState so later script lines (and the (GiftReveal)
+// directive) can read it.
+//
+// State shape:
+//   window.giftState = {
+//     file,            File handle from the picker
+//     objectUrl,       blob: URL for inline rendering
+//     name,            short description from GPT-4o vision
+//     portable,        bool — true if it fits the "two-handed gift" bar
+//     rejection,       string — sarcastic rejection line (only if !portable)
+//     cleanedUrl,      ComfyUI-rendered white-bg image (filled async)
+//     status,          'idle' | 'recognizing' | 'rejected' | 'generating' | 'ready' | 'error'
+//   }
+//
+// Modes:
+//   window.GIFT_AI_MODE = 'off'  → mock everything, instant accept
+//   window.GIFT_AI_MODE = 'live' → real GPT vision + ComfyUI calls
+// Default 'off' so the engine flow is testable without burning quota
+// or waiting on a real generation while we iterate on the script.
+// ============================================================
+if (typeof window.GIFT_AI_MODE === 'undefined') window.GIFT_AI_MODE = 'off';
+window.giftState = window.giftState || null;
+
+function _resetGiftSheet() {
+  const t = document.getElementById('giftTitle');
+  if (t) t.textContent = 'Pick a gift photo';
+}
+
+function startGiftPicker(rejectionLine) {
+  const sheet = document.getElementById('giftSheet');
+  if (!sheet) return;
+  // If we're re-opening after a sarcastic rejection, surface it
+  // in the sheet header so the player knows why they're here again.
+  const t = document.getElementById('giftTitle');
+  if (t) t.textContent = rejectionLine || 'Pick a gift photo';
+  sheet.classList.add('open');
+  sheet.setAttribute('aria-hidden', 'false');
+}
+
+function _closeGiftPicker() {
+  const sheet = document.getElementById('giftSheet');
+  if (!sheet) return;
+  sheet.classList.remove('open');
+  sheet.setAttribute('aria-hidden', 'true');
+}
+
+// GPT-4o vision recognition. Returns { name, portable, rejection }.
+// Demo mode: instant mock for UX testing. Live mode: POST file to
+// the Worker's /gift-vision endpoint which forwards to OpenAI.
+async function _giftVisionCall(file) {
+  if (window.GIFT_AI_MODE !== 'live') {
+    await new Promise(r => setTimeout(r, 400));
+    return {
+      name:      'a small wrapped box',
+      portable:  true,
+      rejection: null,
+    };
+  }
+  if (!AI_PORTRAIT_PROXY) throw new Error('AI proxy not configured');
+  const form = new FormData();
+  form.append('image', file, file.name || 'gift.jpg');
+  const r = await fetch(AI_PORTRAIT_PROXY.replace(/\/+$/, '') + '/gift-vision', {
+    method:  'POST',
+    headers: { 'X-User-Id': getUserId() },
+    body:    form,
+  });
+  if (!r.ok) {
+    const txt = await r.text().catch(() => '');
+    throw new Error('gift-vision ' + r.status + ': ' + txt.slice(0, 200));
+  }
+  const d = await r.json();
+  return {
+    name:      d.name || 'a small wrapped box',
+    portable:  !!d.portable,
+    rejection: d.rejection_reason || null,
+  };
+}
+
+// ComfyUI Cloud render. Returns the white-bg URL on success, or null
+// on failure (revealGift falls back to the original photo). Demo mode:
+// 1.2s artificial delay then null. Live mode: POST file to the
+// Worker's /gift-render endpoint, which uploads + runs the workflow.
+async function _giftCleanedImageCall(file, name) {
+  if (window.GIFT_AI_MODE !== 'live') {
+    await new Promise(r => setTimeout(r, 1200));
+    return null;
+  }
+  if (!AI_PORTRAIT_PROXY) return null;
+  const form = new FormData();
+  form.append('image', file, file.name || 'gift.jpg');
+  try {
+    const r = await fetch(AI_PORTRAIT_PROXY.replace(/\/+$/, '') + '/gift-render', {
+      method:  'POST',
+      headers: { 'X-User-Id': getUserId() },
+      body:    form,
+    });
+    if (!r.ok) {
+      const txt = await r.text().catch(() => '');
+      console.warn('[gift-render] ' + r.status + ': ' + txt.slice(0, 200));
+      return null;
+    }
+    const d = await r.json();
+    // Prefer the WhiteBG variant for the dialog scene reveal. The
+    // transparent PNG is also returned for future use (e.g., dropping
+    // the gift into a static cutscene).
+    if (window.giftState) {
+      window.giftState.transparentUrl = d.transparentUrl || null;
+    }
+    return d.whiteBgUrl || null;
+  } catch (e) {
+    console.warn('[gift-render] threw', e);
+    return null;
+  }
+}
+
+async function _runGiftRoundtrip(file) {
+  // Tear down any prior state's blob URL.
+  if (window.giftState && window.giftState.objectUrl) {
+    try { URL.revokeObjectURL(window.giftState.objectUrl); } catch (_) {}
+  }
+  const objectUrl = URL.createObjectURL(file);
+  window.giftState = {
+    file, objectUrl,
+    name: null, portable: null, rejection: null,
+    cleanedUrl: null,
+    status: 'recognizing',
+  };
+
+  // Step 1: vision (fast). Result decides whether we accept or
+  // bounce the player back to the picker with a sarcastic line.
+  let recog;
+  try {
+    recog = await _giftVisionCall(file);
+  } catch (e) {
+    console.warn('[gift] vision failed', e);
+    window.giftState.status = 'error';
+    // Soft fallback: accept it with a generic name.
+    recog = { name: 'a thoughtful little something', portable: true, rejection: null };
+  }
+  window.giftState.name      = recog.name;
+  window.giftState.portable  = !!recog.portable;
+  window.giftState.rejection = recog.rejection || null;
+
+  if (!recog.portable) {
+    window.giftState.status = 'rejected';
+    return { rejected: true, line: recog.rejection || 'Mate, that\'s not a gift, that\'s a moving job.' };
+  }
+
+  // Step 2: ComfyUI generation (slow). Kick it off WITHOUT awaiting
+  // — the engine keeps advancing through filler beats. revealGift()
+  // is the only place that needs to wait.
+  window.giftState.status = 'generating';
+  _giftCleanedImageCall(file, recog.name)
+    .then(url => {
+      window.giftState.cleanedUrl = url || null;
+      window.giftState.status     = 'ready';
+    })
+    .catch(e => {
+      console.warn('[gift] render failed', e);
+      window.giftState.status = 'error';
+    });
+
+  return { rejected: false };
+}
+
+// Called by the (Gift) directive. Opens picker, waits for choice,
+// runs roundtrip, advances dialog (or loops on rejection).
+function startGiftPicker_engine() {
+  startGiftPicker();
+}
+
+// Wire the gift sheet handlers (camera / upload / file change).
+{
+  const sheet     = document.getElementById('giftSheet');
+  const camBtn    = document.getElementById('giftCameraBtn');
+  const upBtn     = document.getElementById('giftUploadBtn');
+  const camIn     = document.getElementById('giftCameraInput');
+  const fileIn    = document.getElementById('giftFileInput');
+  const backdrop  = document.getElementById('giftBackdrop');
+
+  if (camBtn) camBtn.addEventListener('click', () => {
+    setTimeout(() => camIn && camIn.click(), 80);
+  });
+  if (upBtn)  upBtn .addEventListener('click', () => {
+    setTimeout(() => fileIn && fileIn.click(), 80);
+  });
+  // Backdrop click is a no-op (player must commit a file).
+
+  async function onGiftFile(ev) {
+    const file = ev.target.files && ev.target.files[0];
+    ev.target.value = '';
+    if (!file || !file.type.startsWith('image/')) return;
+
+    _closeGiftPicker();
+    const result = await _runGiftRoundtrip(file);
+    if (result.rejected) {
+      // Bounce the player back with the rejection line as the sheet
+      // title so it reads as Joy roasting them. They pick again.
+      setTimeout(() => startGiftPicker(result.line), 160);
+      return;
+    }
+    // Advance the dialog one line — engine paused on (Gift), so the
+    // next renderLine() will paint the line after it.
+    if (typeof idx === 'number') {
+      idx++;
+      if (typeof renderLine === 'function') renderLine();
+    }
+  }
+  if (camIn)  camIn .addEventListener('change', onGiftFile);
+  if (fileIn) fileIn.addEventListener('change', onGiftFile);
+}
+
+// Called by the (GiftReveal) directive. Paints the cleanedUrl as a
+// scene image; if generation is still cooking, waits a moment with
+// a soft loader. Falls back to the original photo if no clean image
+// arrives within the timeout.
+function revealGift() {
+  const state = window.giftState;
+  if (!state) {
+    // Nothing to reveal — just advance.
+    idx++;
+    renderLine();
+    return;
+  }
+  const paintScene = (url) => {
+    // Reuse the existing (Scene:) machinery: synthesise a scene
+    // event and walk the engine through it.
+    if (typeof showNarrativeScene === 'function') {
+      showNarrativeScene(url);
+    } else {
+      // Generic fallback — just stamp the existing scene layer.
+      const layer = document.getElementById('narrativeSceneLayer');
+      if (layer) layer.style.backgroundImage = `url("${url}")`;
+    }
+    idx++;
+    renderLine();
+  };
+
+  if (state.status === 'ready' && state.cleanedUrl) {
+    paintScene(state.cleanedUrl);
+    return;
+  }
+  // Still cooking. Wait up to 8 seconds, then fall back to the raw
+  // photo so the script always continues.
+  const started = performance.now();
+  const tick = () => {
+    if (state.status === 'ready' && state.cleanedUrl) {
+      paintScene(state.cleanedUrl);
+      return;
+    }
+    if (performance.now() - started > 8000) {
+      // Fallback: use the original photo. Better than blocking forever.
+      paintScene(state.objectUrl);
+      return;
+    }
+    setTimeout(tick, 250);
+  };
+  tick();
 }
 
 // ---- iOS-style drag handler for the final-screen bottom sheet ----

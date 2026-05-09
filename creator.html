@@ -1,0 +1,1357 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>roles.ai · creator</title>
+
+<link rel="icon" type="image/png" href="assets/ui/app-icon.png">
+<link rel="stylesheet" href="https://esm.sh/reactflow@11.11.4/dist/style.css">
+<style>
+  /* ============================================================
+     roles.ai · creator (v0.1 skeleton)
+     Single-file React + React Flow app loaded from a CDN. No
+     build step. Persists to localStorage; no backend yet.
+  ============================================================ */
+  *, *::before, *::after { box-sizing: border-box; }
+  html, body, #root {
+    width: 100%; height: 100%;
+    margin: 0; padding: 0;
+    overflow: hidden;
+    font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', Roboto, sans-serif;
+    color: #e8e6f0;
+    background:
+      radial-gradient(ellipse at 20% 0%, rgba(255,126,185,0.05), transparent 45%),
+      radial-gradient(ellipse at 80% 100%, rgba(155,127,255,0.05), transparent 45%),
+      #0a0a0f;
+  }
+  button, input, select, textarea { font: inherit; color: inherit; }
+
+  .creator-root {
+    display: grid;
+    grid-template-rows: 48px 1fr;
+    height: 100vh;
+  }
+
+  /* ----- Top bar ----- */
+  .creator-topbar {
+    display: flex; align-items: center; gap: 16px;
+    padding: 0 18px;
+    background: rgba(255,255,255,0.02);
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+    flex-shrink: 0;
+  }
+  .creator-logo {
+    font-weight: 800;
+    font-size: 14px;
+    letter-spacing: 0.04em;
+    color: #fff;
+  }
+  .creator-logo .accent { color: #ff7eb9; }
+  .creator-breadcrumb {
+    flex: 1;
+    color: rgba(255,255,255,0.55);
+    font-size: 12.5px;
+    letter-spacing: 0.02em;
+  }
+  .creator-breadcrumb b { color: #fff; font-weight: 600; }
+  .creator-actions { display: flex; gap: 8px; }
+  .creator-actions button {
+    appearance: none;
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.12);
+    color: #fff;
+    border-radius: 8px;
+    padding: 6px 12px;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    cursor: pointer;
+    transition: background 0.15s, border-color 0.15s, transform 0.1s;
+  }
+  .creator-actions button:hover  { background: rgba(255,255,255,0.10); }
+  .creator-actions button:active { transform: scale(0.97); }
+  .creator-actions button.primary {
+    background: linear-gradient(135deg, #ff7eb9, #ff5f98);
+    border-color: transparent;
+  }
+  .creator-actions .save-status {
+    color: #7cf0d2;
+    font-size: 11px;
+    align-self: center;
+    opacity: 0;
+    transition: opacity 0.2s;
+  }
+  .creator-actions .save-status.show { opacity: 1; }
+
+  /* ----- 3-pane main ----- */
+  .creator-main {
+    display: grid;
+    grid-template-columns: 280px 1fr 380px;
+    min-height: 0;
+  }
+  /* Left sidebar: world/location/episode tree + cast/voices/assets tabs */
+  .creator-sidebar {
+    background: rgba(255,255,255,0.02);
+    border-right: 1px solid rgba(255,255,255,0.06);
+    overflow-y: auto;
+    display: flex; flex-direction: column;
+  }
+  .sidebar-tabs {
+    display: flex;
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+    flex-shrink: 0;
+  }
+  .sidebar-tab {
+    flex: 1;
+    background: transparent;
+    border: 0;
+    color: rgba(255,255,255,0.55);
+    padding: 10px 0;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: color 0.15s;
+  }
+  .sidebar-tab.active { color: #fff; box-shadow: inset 0 -2px 0 #ff7eb9; }
+  .sidebar-tab:hover { color: rgba(255,255,255,0.85); }
+  .sidebar-body { flex: 1; overflow-y: auto; padding: 8px 0; }
+  .tree-section {
+    padding: 4px 0;
+  }
+  .tree-row {
+    display: flex; align-items: center;
+    gap: 6px;
+    padding: 6px 14px;
+    cursor: pointer;
+    font-size: 13px;
+    user-select: none;
+    transition: background 0.1s;
+    border-radius: 0;
+    color: rgba(255,255,255,0.85);
+  }
+  .tree-row:hover { background: rgba(255,255,255,0.05); }
+  .tree-row.selected { background: rgba(255,126,185,0.14); color: #fff; }
+  .tree-row .twirl {
+    width: 12px;
+    text-align: center;
+    color: rgba(255,255,255,0.45);
+    font-size: 9px;
+    flex-shrink: 0;
+  }
+  .tree-row .name {
+    flex: 1; min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .tree-row .meta {
+    font-size: 10.5px;
+    color: rgba(255,255,255,0.4);
+  }
+  .tree-row.world > .name { font-weight: 700; letter-spacing: 0.03em; }
+  .tree-row.location { padding-left: 28px; }
+  .tree-row.episode  { padding-left: 44px; font-size: 12.5px; color: rgba(255,255,255,0.7); }
+  .tree-row.episode.selected { color: #ff7eb9; font-weight: 700; }
+  .tree-add {
+    margin: 4px 14px 4px 28px;
+    background: transparent;
+    border: 1px dashed rgba(255,255,255,0.18);
+    color: rgba(255,255,255,0.55);
+    border-radius: 6px;
+    padding: 6px;
+    font-size: 11px;
+    cursor: pointer;
+    width: calc(100% - 28px - 14px);
+  }
+  .tree-add:hover { border-color: rgba(255,255,255,0.35); color: #fff; }
+
+  /* Cast / Voices / Assets panels */
+  .panel-list { padding: 4px 14px 14px; }
+  .panel-list h4 {
+    margin: 12px 0 6px;
+    font-size: 10px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.45);
+    font-weight: 700;
+  }
+  .panel-card {
+    display: flex; align-items: center; gap: 10px;
+    padding: 6px 8px;
+    border-radius: 8px;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.06);
+    margin-bottom: 6px;
+    cursor: grab;
+    transition: background 0.1s;
+  }
+  .panel-card:hover { background: rgba(255,255,255,0.08); }
+  .panel-card .thumb {
+    width: 32px; height: 32px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.08) center/cover no-repeat;
+    flex-shrink: 0;
+  }
+  .panel-card .text { flex: 1; min-width: 0; }
+  .panel-card .ttl  { font-size: 12.5px; font-weight: 600; color: #fff; }
+  .panel-card .sub  { font-size: 10.5px; color: rgba(255,255,255,0.5); margin-top: 1px; }
+
+  /* ----- Canvas (React Flow) ----- */
+  .creator-canvas {
+    position: relative;
+    background: #0d0a14;
+    overflow: hidden;
+    min-width: 0;
+  }
+  .canvas-empty {
+    position: absolute; inset: 0;
+    display: flex; align-items: center; justify-content: center;
+    flex-direction: column;
+    color: rgba(255,255,255,0.4);
+    text-align: center;
+    pointer-events: none;
+    padding: 32px;
+  }
+  .canvas-empty svg { width: 48px; height: 48px; margin-bottom: 14px; opacity: 0.5; }
+  .canvas-empty h3 { margin: 0 0 6px; font-size: 16px; font-weight: 700; color: rgba(255,255,255,0.6); }
+  .canvas-empty p { margin: 0; font-size: 13px; line-height: 1.5; max-width: 360px; }
+  .canvas-toolbar {
+    position: absolute; top: 14px; left: 14px;
+    display: flex; gap: 6px;
+    z-index: 10;
+    background: rgba(20,16,28,0.92);
+    border: 1px solid rgba(255,255,255,0.10);
+    border-radius: 10px;
+    padding: 5px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+  }
+  .canvas-toolbar button {
+    appearance: none;
+    background: transparent;
+    border: 0;
+    color: rgba(255,255,255,0.85);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    padding: 6px 10px;
+    border-radius: 6px;
+    cursor: pointer;
+  }
+  .canvas-toolbar button:hover  { background: rgba(255,255,255,0.08); }
+  .canvas-toolbar button.danger { color: #ff97a9; }
+  .canvas-toolbar .sep {
+    width: 1px;
+    background: rgba(255,255,255,0.10);
+    margin: 4px 2px;
+  }
+
+  /* React Flow tweaks */
+  .react-flow__background { background-color: #0d0a14; }
+  .react-flow__controls { background: rgba(20,16,28,0.92); border: 1px solid rgba(255,255,255,0.10); border-radius: 8px; }
+  .react-flow__controls-button { background: transparent; border: 0; color: #fff; }
+  .react-flow__controls-button:hover { background: rgba(255,255,255,0.08); }
+  .react-flow__controls-button svg { fill: currentColor; }
+  .react-flow__minimap { background: rgba(20,16,28,0.92); border-radius: 8px; }
+  .react-flow__edge-path { stroke: rgba(255,255,255,0.4); stroke-width: 2; }
+  .react-flow__edge.selected .react-flow__edge-path { stroke: #ff7eb9; }
+  .react-flow__handle {
+    width: 10px; height: 10px;
+    background: #ff7eb9;
+    border: 2px solid #0d0a14;
+  }
+
+  /* Custom node bodies */
+  .rai-node {
+    min-width: 220px;
+    max-width: 280px;
+    background: #15101c;
+    border: 1px solid rgba(255,255,255,0.10);
+    border-radius: 12px;
+    overflow: hidden;
+    color: #fff;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.5);
+  }
+  .rai-node.selected { border-color: #ff7eb9; box-shadow: 0 0 0 2px rgba(255,126,185,0.4), 0 6px 20px rgba(0,0,0,0.5); }
+  .rai-node-header {
+    display: flex; align-items: center;
+    gap: 6px;
+    padding: 8px 12px;
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 0.20em;
+    text-transform: uppercase;
+    color: #fff;
+    background: rgba(255,255,255,0.04);
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+  }
+  .rai-node.beat       .rai-node-header { background: linear-gradient(135deg, rgba(255,126,185,0.16), rgba(255,95,152,0.08)); color: #ffd1e6; }
+  .rai-node.choice     .rai-node-header { background: linear-gradient(135deg, rgba(155,127,255,0.16), rgba(111,90,210,0.08)); color: #d4cbff; }
+  .rai-node.cutscene   .rai-node-header { background: linear-gradient(135deg, rgba(111,227,200,0.14), rgba(70,180,160,0.06)); color: #b2ebd9; }
+  .rai-node.explore    .rai-node-header { background: linear-gradient(135deg, rgba(255,206,120,0.14), rgba(220,170,80,0.06)); color: #ffd580; }
+  .rai-node.music      .rai-node-header { background: linear-gradient(135deg, rgba(220,80,180,0.16), rgba(155,40,120,0.06)); color: #f5b3d8; }
+  .rai-node.end        .rai-node-header { background: rgba(255,255,255,0.05); color: rgba(255,255,255,0.6); }
+  .rai-node-title {
+    padding: 10px 12px 4px;
+    font-size: 13px;
+    font-weight: 700;
+    color: #fff;
+  }
+  .rai-node-body {
+    padding: 4px 12px 10px;
+    font-size: 12px;
+    color: rgba(255,255,255,0.7);
+    line-height: 1.45;
+  }
+  .rai-node-line {
+    display: flex;
+    gap: 6px;
+    padding: 2px 0;
+  }
+  .rai-node-line .speaker {
+    color: #ff7eb9;
+    font-weight: 700;
+    flex-shrink: 0;
+    text-transform: capitalize;
+  }
+  .rai-node-line .text { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .rai-node-more { color: rgba(255,255,255,0.4); font-style: italic; padding: 2px 0; }
+  .rai-node-choice-opt {
+    padding: 6px 8px;
+    margin: 4px 0;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.10);
+    border-radius: 6px;
+    font-size: 11.5px;
+    color: rgba(255,255,255,0.85);
+    position: relative;
+  }
+  .rai-node-cover {
+    height: 90px;
+    background: rgba(255,255,255,0.05) center/cover no-repeat;
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+  }
+
+  /* ----- Right pane: Inspector + Preview ----- */
+  .creator-right {
+    background: rgba(255,255,255,0.02);
+    border-left: 1px solid rgba(255,255,255,0.06);
+    display: grid;
+    grid-template-rows: 1fr 1fr;
+    min-height: 0;
+  }
+  .right-pane {
+    display: flex; flex-direction: column;
+    min-height: 0;
+  }
+  .right-pane + .right-pane { border-top: 1px solid rgba(255,255,255,0.06); }
+  .right-pane-title {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 10px 14px;
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 0.20em;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.55);
+    background: rgba(255,255,255,0.02);
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+    flex-shrink: 0;
+  }
+  .right-pane-title .pill {
+    background: rgba(255,126,185,0.14);
+    color: #ff7eb9;
+    padding: 2px 8px;
+    border-radius: 999px;
+    font-size: 9.5px;
+    letter-spacing: 0.12em;
+  }
+  .right-pane-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 12px 14px;
+    min-height: 0;
+  }
+  .inspector-empty {
+    color: rgba(255,255,255,0.45);
+    font-size: 12.5px;
+    padding: 6px 0;
+  }
+  .inspector-field {
+    display: flex; flex-direction: column;
+    gap: 4px;
+    margin-bottom: 12px;
+  }
+  .inspector-field label {
+    font-size: 10px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.45);
+    font-weight: 700;
+  }
+  .inspector-field input,
+  .inspector-field textarea,
+  .inspector-field select {
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 6px;
+    padding: 7px 9px;
+    color: #fff;
+    font-size: 12.5px;
+    font-family: inherit;
+    transition: border-color 0.15s, background 0.15s;
+  }
+  .inspector-field input:focus,
+  .inspector-field textarea:focus,
+  .inspector-field select:focus {
+    outline: none;
+    border-color: #ff7eb9;
+    background: rgba(255,255,255,0.08);
+  }
+  .inspector-field textarea { resize: vertical; min-height: 60px; }
+  .inspector-sub {
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 8px;
+    padding: 8px 10px;
+    margin-bottom: 8px;
+  }
+  .inspector-sub-head {
+    display: flex; align-items: center; justify-content: space-between;
+    font-size: 10.5px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.55);
+    margin-bottom: 6px;
+    font-weight: 700;
+  }
+  .inspector-sub-head button {
+    appearance: none;
+    background: transparent;
+    border: 0;
+    color: #ff97a9;
+    font-size: 13px;
+    cursor: pointer;
+    padding: 0;
+  }
+  .inspector-add-btn {
+    width: 100%;
+    background: transparent;
+    border: 1px dashed rgba(255,255,255,0.18);
+    color: rgba(255,255,255,0.7);
+    border-radius: 6px;
+    padding: 7px;
+    font-size: 11px;
+    cursor: pointer;
+    margin-top: 4px;
+  }
+  .inspector-add-btn:hover { border-color: rgba(255,255,255,0.35); color: #fff; }
+
+  /* Preview */
+  .preview-frame {
+    width: 100%; height: 100%;
+    border: 0;
+    background: #000;
+  }
+  .preview-controls {
+    display: flex; gap: 6px;
+  }
+  .preview-controls button {
+    appearance: none;
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.10);
+    color: #fff;
+    border-radius: 6px;
+    padding: 4px 8px;
+    font-size: 10.5px;
+    font-weight: 700;
+    cursor: pointer;
+    letter-spacing: 0.06em;
+  }
+  .preview-controls button:hover { background: rgba(255,255,255,0.10); }
+</style>
+
+<script type="importmap">
+{
+  "imports": {
+    "react":             "https://esm.sh/react@18.3.1",
+    "react/":            "https://esm.sh/react@18.3.1/",
+    "react-dom":         "https://esm.sh/react-dom@18.3.1?deps=react@18.3.1",
+    "react-dom/":        "https://esm.sh/react-dom@18.3.1&deps=react@18.3.1/",
+    "react-dom/client":  "https://esm.sh/react-dom@18.3.1/client?deps=react@18.3.1",
+    "reactflow":         "https://esm.sh/reactflow@11.11.4?deps=react@18.3.1,react-dom@18.3.1",
+    "htm/react":         "https://esm.sh/htm@3.1.1/react?deps=react@18.3.1"
+  }
+}
+</script>
+</head>
+<body>
+<div id="root"></div>
+
+<script type="module">
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import { createRoot } from 'react-dom/client';
+import ReactFlow, {
+  ReactFlowProvider,
+  Background,
+  Controls,
+  MiniMap,
+  applyNodeChanges,
+  applyEdgeChanges,
+  addEdge,
+  Handle,
+  Position,
+  useReactFlow,
+} from 'reactflow';
+import { html } from 'htm/react';
+
+/* ============================================================
+   DEFAULT DATA
+   Pre-populated from the live game so the editor opens onto
+   something meaningful. Two worlds, their locations, a starter
+   episode each (just one beat node + an end node — full graphs
+   are imported once we wire the migration script).
+============================================================ */
+const DEFAULT_DATA = {
+  worlds: {
+    london: {
+      id: 'london',
+      name: 'London',
+      mapImage: 'worlds/london/map.jpg',
+    },
+    '1984': {
+      id: '1984',
+      name: '1984',
+      mapImage: 'worlds/1984/map.jpg',
+    },
+  },
+  locations: {
+    bigben:        { id: 'bigben',       worldId: 'london', title: 'Big Ben',         kind: 'Walk · Dusk',       cover: 'worlds/london/locations/bigben/cover.jpg' },
+    londoneye:     { id: 'londoneye',    worldId: 'london', title: 'London Eye',      kind: 'Heights · Romantic', cover: 'worlds/london/locations/londoneye/cover.jpg' },
+    thepub:        { id: 'thepub',       worldId: 'london', title: 'The Pub',         kind: 'Night · Loud',      cover: 'worlds/london/locations/thepub/cover.jpg' },
+    coffeeshop:    { id: 'coffeeshop',   worldId: 'london', title: 'Coffee Shop',     kind: 'Daytime · Warm',    cover: 'worlds/london/locations/coffeeshop/cover.jpg' },
+    myplace:       { id: 'myplace',      worldId: 'london', title: 'My Place',        kind: 'Home · Calm',       cover: 'worlds/london/locations/myplace/cover.jpg' },
+    herplace:      { id: 'herplace',     worldId: 'london', title: 'Her Place',       kind: 'Close · Risky',     cover: 'worlds/london/locations/herplace/cover.jpg' },
+    boattrip:      { id: 'boattrip',     worldId: 'london', title: 'Boat Trip',       kind: 'Water · Quiet',     cover: 'worlds/london/locations/boattrip/cover.jpg' },
+    safehouse:     { id: 'safehouse',    worldId: '1984',  title: 'Safe House',      kind: 'Close · Forbidden', cover: 'worlds/1984/locations/safehouse/cover.jpg' },
+    'golden-country': { id: 'golden-country', worldId: '1984', title: 'The Golden Country', kind: 'Nature · Escape', cover: 'worlds/1984/locations/golden-country/cover.jpg' },
+  },
+  episodes: {
+    'the-knock': {
+      id: 'the-knock',
+      locationId: 'herplace',
+      title: 'The Knock',
+      cast: { boy: 'you', girl: 'iris' },
+      graph: {
+        nodes: [
+          {
+            id: 'start',
+            type: 'beat',
+            position: { x: 60, y: 80 },
+            data: {
+              title: 'Outside the door',
+              lines: [
+                { speaker: 'narrative', text: "You stand on the street below her building." },
+                { speaker: 'narrative', text: "Yellow window glows high above." },
+              ],
+            },
+          },
+          {
+            id: 'door',
+            type: 'beat',
+            position: { x: 380, y: 80 },
+            data: {
+              title: 'She opens',
+              lines: [
+                { speaker: 'girl', text: "Hey. You made it. Come on in." },
+                { speaker: 'boy',  text: "I'm here." },
+              ],
+            },
+          },
+          {
+            id: 'first-choice',
+            type: 'choice',
+            position: { x: 700, y: 60 },
+            data: {
+              prompt: "First move",
+              options: [
+                { id: 'opt1', label: 'Take her hand. Look her in the eyes.' },
+                { id: 'opt2', label: 'Slow down. Take a breath.' },
+                { id: 'opt3', label: 'Apologize, change the subject.' },
+              ],
+            },
+          },
+          {
+            id: 'end',
+            type: 'end',
+            position: { x: 1040, y: 80 },
+            data: { title: 'End' },
+          },
+        ],
+        edges: [
+          { id: 'e1', source: 'start', target: 'door' },
+          { id: 'e2', source: 'door',  target: 'first-choice' },
+        ],
+      },
+    },
+    'the-room': {
+      id: 'the-room',
+      locationId: 'safehouse',
+      title: 'The Room Above',
+      cast: { boy: 'you', girl: 'iris', charrington: 'liam', streetseller: 'matt' },
+      graph: {
+        nodes: [
+          {
+            id: 'street',
+            type: 'beat',
+            position: { x: 60, y: 80 },
+            data: {
+              title: 'Prole Quarter',
+              lines: [
+                { speaker: 'narrative', text: "Oceania, evening. The bells strike thirteen." },
+              ],
+            },
+          },
+          {
+            id: 'end',
+            type: 'end',
+            position: { x: 380, y: 80 },
+            data: { title: 'End' },
+          },
+        ],
+        edges: [
+          { id: 'e1', source: 'street', target: 'end' },
+        ],
+      },
+    },
+  },
+  characters: {
+    you:      { id: 'you',     name: 'You',     bio: 'The player.',          avatar: 'characters/you/base.png' },
+    iris:     { id: 'iris',    name: 'Iris',    bio: 'Pisces, 22, London.',  avatar: 'characters/iris/profile/london.jpg' },
+    liam:     { id: 'liam',    name: 'Liam',    bio: 'Mr. Charrington.',     avatar: '' },
+    matt:     { id: 'matt',    name: 'Matt',    bio: 'Street seller.',       avatar: '' },
+    sienna:   { id: 'sienna',  name: 'Sienna',  bio: 'Aries, 27, Lisbon.',   avatar: 'characters/sienna/profile/london.jpg' },
+    emma:     { id: 'emma',    name: 'Emma',    bio: 'Cancer, 24, Madrid.',  avatar: 'characters/emma/profile/london.jpg' },
+  },
+  voices: {
+    eros:       { id: 'eros',       name: 'Eros',       characterId: 'you',  worldId: 'london', desc: 'Wants you to jump before you\'re ready.' },
+    valium:     { id: 'valium',     name: 'Valium',     characterId: 'you',  worldId: 'london', desc: 'Tells you to breathe.' },
+    romeo:      { id: 'romeo',      name: 'Romeo',      characterId: 'you',  worldId: 'london', desc: 'Believes in slow love.' },
+    professore: { id: 'professore', name: 'Professore', characterId: 'you',  worldId: 'london', desc: 'Asks the question you didn\'t want.' },
+    scheggia:   { id: 'scheggia',   name: 'Scheggia',   characterId: 'iris', worldId: 'london', desc: 'Reads the room.' },
+    giulietta:  { id: 'giulietta',  name: 'Giulietta',  characterId: 'iris', worldId: 'london', desc: 'Believes love is a gravitational pull.' },
+    trilli:     { id: 'trilli',     name: 'Trilli',     characterId: 'iris', worldId: 'london', desc: 'Glass-bright. Refuses to be dimmed.' },
+    alfa:       { id: 'alfa',       name: 'Alfa',       characterId: 'iris', worldId: 'london', desc: 'Composure. Holds the composure.' },
+  },
+  assets: [],   // will fill once asset upload is wired
+};
+
+/* ============================================================
+   DATA LAYER
+   v0.1 stores everything in localStorage. Wire to Cloudflare
+   D1 + R2 in v0.2.
+============================================================ */
+const STORAGE_KEY = 'roles-ai-creator/v0.1';
+function loadData() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      // Shallow merge defaults so new keys get filled if storage is older.
+      return { ...DEFAULT_DATA, ...parsed };
+    }
+  } catch (e) { console.warn('[creator] load failed', e); }
+  return JSON.parse(JSON.stringify(DEFAULT_DATA));
+}
+function saveData(d) {
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(d)); }
+  catch (e) { console.warn('[creator] save failed', e); }
+}
+function newId(prefix) {
+  return prefix + '-' + Math.random().toString(36).slice(2, 8);
+}
+
+/* ============================================================
+   CUSTOM REACT FLOW NODES
+   Each node type is a small visual card. Inspector on the right
+   handles all editing — these just render a preview.
+============================================================ */
+function BeatNode({ data, selected }) {
+  const lines = (data.lines || []);
+  return html`
+    <div className=${'rai-node beat' + (selected ? ' selected' : '')}>
+      <${Handle} type="target" position=${Position.Left} />
+      <div className="rai-node-header"><span>Beat</span></div>
+      <div className="rai-node-title">${data.title || 'Untitled'}</div>
+      <div className="rai-node-body">
+        ${lines.slice(0, 3).map((l, i) => html`
+          <div className="rai-node-line" key=${i}>
+            <span className="speaker">${l.speaker}:</span>
+            <span className="text">${l.text}</span>
+          </div>
+        `)}
+        ${lines.length > 3 ? html`<div className="rai-node-more">+${lines.length - 3} more</div>` : null}
+        ${lines.length === 0 ? html`<div className="rai-node-more">No lines yet</div>` : null}
+      </div>
+      <${Handle} type="source" position=${Position.Right} />
+    </div>
+  `;
+}
+
+function ChoiceNode({ data, selected, id }) {
+  const opts = data.options || [];
+  return html`
+    <div className=${'rai-node choice' + (selected ? ' selected' : '')}>
+      <${Handle} type="target" position=${Position.Left} />
+      <div className="rai-node-header"><span>Choice (${opts.length})</span></div>
+      <div className="rai-node-title">${data.prompt || 'Pick one'}</div>
+      <div className="rai-node-body">
+        ${opts.map((o, i) => html`
+          <div className="rai-node-choice-opt" key=${o.id}>
+            ${i + 1}. ${o.label}
+            <${Handle} type="source" position=${Position.Right} id=${o.id} style=${{ top: 'auto', bottom: 'auto', right: -5 }} />
+          </div>
+        `)}
+        ${opts.length === 0 ? html`<div className="rai-node-more">No options yet</div>` : null}
+      </div>
+    </div>
+  `;
+}
+
+function CutsceneNode({ data, selected }) {
+  return html`
+    <div className=${'rai-node cutscene' + (selected ? ' selected' : '')}>
+      <${Handle} type="target" position=${Position.Left} />
+      <div className="rai-node-header"><span>Cutscene</span></div>
+      ${data.image ? html`<div className="rai-node-cover" style=${{ backgroundImage: `url(${data.image})` }}></div>` : null}
+      <div className="rai-node-title">${data.title || 'Cutscene'}</div>
+      <div className="rai-node-body">${data.caption || (data.image ? data.image : 'No image set')}</div>
+      <${Handle} type="source" position=${Position.Right} />
+    </div>
+  `;
+}
+
+function ExploreNode({ data, selected }) {
+  const objs = data.objects || [];
+  return html`
+    <div className=${'rai-node explore' + (selected ? ' selected' : '')}>
+      <${Handle} type="target" position=${Position.Left} />
+      <div className="rai-node-header"><span>Explore</span></div>
+      <div className="rai-node-title">${data.title || 'Look around'}</div>
+      <div className="rai-node-body">
+        ${data.duration != null ? html`<div className="rai-node-line"><span className="speaker">Time:</span><span className="text">${data.duration}s</span></div>` : null}
+        ${objs.length > 0 ? html`<div className="rai-node-line"><span className="speaker">Objects:</span><span className="text">${objs.map(o => o.id).join(', ')}</span></div>` : null}
+        ${objs.length === 0 ? html`<div className="rai-node-more">No objects yet</div>` : null}
+      </div>
+      <${Handle} type="source" position=${Position.Right} />
+    </div>
+  `;
+}
+
+function MusicNode({ data, selected }) {
+  return html`
+    <div className=${'rai-node music' + (selected ? ' selected' : '')}>
+      <${Handle} type="target" position=${Position.Left} />
+      <div className="rai-node-header"><span>Music · End</span></div>
+      <div className="rai-node-title">${data.title || 'Generate Reel'}</div>
+      <div className="rai-node-body">${data.note || 'Plays the closing music + dashboard.'}</div>
+    </div>
+  `;
+}
+
+function EndNode({ data, selected }) {
+  return html`
+    <div className=${'rai-node end' + (selected ? ' selected' : '')}>
+      <${Handle} type="target" position=${Position.Left} />
+      <div className="rai-node-header"><span>End</span></div>
+      <div className="rai-node-title">${data.title || 'Episode end'}</div>
+      <div className="rai-node-body">Reel + dashboard.</div>
+    </div>
+  `;
+}
+
+const NODE_TYPES = {
+  beat:     BeatNode,
+  choice:   ChoiceNode,
+  cutscene: CutsceneNode,
+  explore:  ExploreNode,
+  music:    MusicNode,
+  end:      EndNode,
+};
+
+/* ============================================================
+   SIDEBAR
+   World/Location/Episode tree + Cast/Voices/Assets tabs.
+============================================================ */
+function Sidebar({ data, selectedEpisode, onSelectEpisode, onCreateEpisode, onCreateLocation, onCreateWorld }) {
+  const [tab, setTab] = useState('world');
+  const [expanded, setExpanded] = useState({});
+
+  const toggle = (key) => setExpanded(e => ({ ...e, [key]: !e[key] }));
+
+  const worldList = Object.values(data.worlds);
+
+  return html`
+    <div className="sidebar-tabs">
+      <button className=${'sidebar-tab' + (tab === 'world' ? ' active' : '')} onClick=${() => setTab('world')}>World</button>
+      <button className=${'sidebar-tab' + (tab === 'cast'  ? ' active' : '')} onClick=${() => setTab('cast')}>Cast</button>
+      <button className=${'sidebar-tab' + (tab === 'voice' ? ' active' : '')} onClick=${() => setTab('voice')}>Voices</button>
+      <button className=${'sidebar-tab' + (tab === 'asset' ? ' active' : '')} onClick=${() => setTab('asset')}>Assets</button>
+    </div>
+    <div className="sidebar-body">
+      ${tab === 'world' && html`
+        <div className="tree-section">
+          ${worldList.map(w => {
+            const wExpanded = expanded[w.id] !== false;
+            const locations = Object.values(data.locations).filter(l => l.worldId === w.id);
+            return html`
+              <div key=${w.id}>
+                <div className=${'tree-row world'} onClick=${() => toggle(w.id)}>
+                  <span className="twirl">${wExpanded ? '▾' : '▸'}</span>
+                  <span className="name">${w.name}</span>
+                  <span className="meta">${locations.length}</span>
+                </div>
+                ${wExpanded && locations.map(loc => {
+                  const lExpanded = expanded[loc.id] !== false;
+                  const eps = Object.values(data.episodes).filter(e => e.locationId === loc.id);
+                  return html`
+                    <div key=${loc.id}>
+                      <div className=${'tree-row location'} onClick=${() => toggle(loc.id)}>
+                        <span className="twirl">${lExpanded ? '▾' : '▸'}</span>
+                        <span className="name">${loc.title}</span>
+                        <span className="meta">${eps.length}</span>
+                      </div>
+                      ${lExpanded && eps.map(ep => html`
+                        <div key=${ep.id}
+                             className=${'tree-row episode' + (ep.id === selectedEpisode ? ' selected' : '')}
+                             onClick=${() => onSelectEpisode(ep.id)}>
+                          <span className="twirl"></span>
+                          <span className="name">${ep.title}</span>
+                        </div>
+                      `)}
+                      ${lExpanded && html`
+                        <button className="tree-add" onClick=${() => onCreateEpisode(loc.id)}>+ New episode</button>
+                      `}
+                    </div>
+                  `;
+                })}
+                ${wExpanded && html`<button className="tree-add" style=${{ marginLeft: 14 }} onClick=${() => onCreateLocation(w.id)}>+ New location</button>`}
+              </div>
+            `;
+          })}
+          <button className="tree-add" style=${{ margin: '12px 14px' }} onClick=${onCreateWorld}>+ New world</button>
+        </div>
+      `}
+      ${tab === 'cast' && html`
+        <div className="panel-list">
+          <h4>Characters</h4>
+          ${Object.values(data.characters).map(c => html`
+            <div className="panel-card" key=${c.id}>
+              <div className="thumb" style=${{ backgroundImage: c.avatar ? `url(${c.avatar})` : 'none' }}></div>
+              <div className="text">
+                <div className="ttl">${c.name}</div>
+                <div className="sub">${c.bio || c.id}</div>
+              </div>
+            </div>
+          `)}
+          <button className="tree-add" style=${{ marginLeft: 0, width: '100%' }}>+ New character</button>
+        </div>
+      `}
+      ${tab === 'voice' && html`
+        <div className="panel-list">
+          <h4>Voices</h4>
+          ${Object.values(data.voices).map(v => html`
+            <div className="panel-card" key=${v.id}>
+              <div className="thumb"></div>
+              <div className="text">
+                <div className="ttl">${v.name}</div>
+                <div className="sub">${(data.characters[v.characterId] || {}).name || v.characterId} · ${v.worldId}</div>
+              </div>
+            </div>
+          `)}
+          <button className="tree-add" style=${{ marginLeft: 0, width: '100%' }}>+ New voice</button>
+        </div>
+      `}
+      ${tab === 'asset' && html`
+        <div className="panel-list">
+          <h4>Assets</h4>
+          <div style=${{ color: 'rgba(255,255,255,0.4)', fontSize: 12, padding: '6px 0' }}>
+            Asset upload (R2) wires in v0.2. For now, paste a URL into a node's image field.
+          </div>
+        </div>
+      `}
+    </div>
+  `;
+}
+
+/* ============================================================
+   INSPECTOR
+   Right-pane editor for the currently selected node.
+============================================================ */
+function Inspector({ episode, node, onUpdate, onDelete }) {
+  if (!episode) {
+    return html`<div className="inspector-empty">Pick an episode in the sidebar to start editing.</div>`;
+  }
+  if (!node) {
+    return html`<div className="inspector-empty">Click a node on the canvas to edit.</div>`;
+  }
+  const update = (key, value) => onUpdate(node.id, { ...node.data, [key]: value });
+
+  if (node.type === 'beat') {
+    const lines = node.data.lines || [];
+    const setLines = (newLines) => update('lines', newLines);
+    return html`
+      <div className="inspector-field">
+        <label>Title</label>
+        <input value=${node.data.title || ''}
+               onChange=${e => update('title', e.target.value)} />
+      </div>
+      <div className="inspector-field">
+        <label>Lines</label>
+        ${lines.map((l, i) => html`
+          <div className="inspector-sub" key=${i}>
+            <div className="inspector-sub-head">
+              <span>Line ${i + 1}</span>
+              <button onClick=${() => setLines(lines.filter((_, j) => j !== i))}>×</button>
+            </div>
+            <div className="inspector-field" style=${{ marginBottom: 6 }}>
+              <label>Speaker</label>
+              <select value=${l.speaker} onChange=${e => setLines(lines.map((x, j) => j === i ? { ...x, speaker: e.target.value } : x))}>
+                <option value="narrative">narrative</option>
+                <option value="boy">boy</option>
+                <option value="girl">girl</option>
+                <option value="dog">dog</option>
+                <option value="eros">eros</option>
+                <option value="valium">valium</option>
+                <option value="romeo">romeo</option>
+                <option value="professore">professore</option>
+                <option value="scheggia">scheggia</option>
+                <option value="giulietta">giulietta</option>
+                <option value="trilli">trilli</option>
+                <option value="alfa">alfa</option>
+              </select>
+            </div>
+            <div className="inspector-field" style=${{ marginBottom: 0 }}>
+              <label>Text</label>
+              <textarea value=${l.text} onChange=${e => setLines(lines.map((x, j) => j === i ? { ...x, text: e.target.value } : x))}></textarea>
+            </div>
+          </div>
+        `)}
+        <button className="inspector-add-btn" onClick=${() => setLines([...lines, { speaker: 'narrative', text: '' }])}>+ Add line</button>
+      </div>
+      <button className="inspector-add-btn" onClick=${() => onDelete(node.id)} style=${{ borderColor: 'rgba(255,90,120,0.3)', color: '#ff97a9' }}>Delete node</button>
+    `;
+  }
+
+  if (node.type === 'choice') {
+    const opts = node.data.options || [];
+    const setOpts = (newOpts) => update('options', newOpts);
+    return html`
+      <div className="inspector-field">
+        <label>Prompt</label>
+        <input value=${node.data.prompt || ''}
+               onChange=${e => update('prompt', e.target.value)} />
+      </div>
+      <div className="inspector-field">
+        <label>Options</label>
+        ${opts.map((o, i) => html`
+          <div className="inspector-sub" key=${o.id}>
+            <div className="inspector-sub-head">
+              <span>Option ${i + 1}</span>
+              <button onClick=${() => setOpts(opts.filter((_, j) => j !== i))}>×</button>
+            </div>
+            <div className="inspector-field" style=${{ marginBottom: 0 }}>
+              <label>Label</label>
+              <textarea value=${o.label} onChange=${e => setOpts(opts.map((x, j) => j === i ? { ...x, label: e.target.value } : x))}></textarea>
+            </div>
+          </div>
+        `)}
+        <button className="inspector-add-btn" onClick=${() => setOpts([...opts, { id: newId('opt'), label: '' }])}>+ Add option</button>
+      </div>
+      <button className="inspector-add-btn" onClick=${() => onDelete(node.id)} style=${{ borderColor: 'rgba(255,90,120,0.3)', color: '#ff97a9' }}>Delete node</button>
+    `;
+  }
+
+  if (node.type === 'cutscene') {
+    return html`
+      <div className="inspector-field">
+        <label>Title</label>
+        <input value=${node.data.title || ''} onChange=${e => update('title', e.target.value)} />
+      </div>
+      <div className="inspector-field">
+        <label>Image URL</label>
+        <input value=${node.data.image || ''} onChange=${e => update('image', e.target.value)} placeholder="worlds/london/locations/.../cutscene01.jpg" />
+      </div>
+      <div className="inspector-field">
+        <label>Caption</label>
+        <textarea value=${node.data.caption || ''} onChange=${e => update('caption', e.target.value)}></textarea>
+      </div>
+      <button className="inspector-add-btn" onClick=${() => onDelete(node.id)} style=${{ borderColor: 'rgba(255,90,120,0.3)', color: '#ff97a9' }}>Delete node</button>
+    `;
+  }
+
+  if (node.type === 'explore') {
+    return html`
+      <div className="inspector-field">
+        <label>Title</label>
+        <input value=${node.data.title || ''} onChange=${e => update('title', e.target.value)} />
+      </div>
+      <div className="inspector-field">
+        <label>Duration (seconds)</label>
+        <input type="number" value=${node.data.duration || 30} onChange=${e => update('duration', parseInt(e.target.value, 10) || 0)} />
+      </div>
+      <div className="inspector-field">
+        <label>Object IDs (comma-separated)</label>
+        <input value=${(node.data.objects || []).map(o => o.id).join(', ')}
+               onChange=${e => update('objects', e.target.value.split(',').map(s => ({ id: s.trim() })).filter(o => o.id))} />
+      </div>
+      <button className="inspector-add-btn" onClick=${() => onDelete(node.id)} style=${{ borderColor: 'rgba(255,90,120,0.3)', color: '#ff97a9' }}>Delete node</button>
+    `;
+  }
+
+  if (node.type === 'music' || node.type === 'end') {
+    return html`
+      <div className="inspector-field">
+        <label>Title</label>
+        <input value=${node.data.title || ''} onChange=${e => update('title', e.target.value)} />
+      </div>
+      <button className="inspector-add-btn" onClick=${() => onDelete(node.id)} style=${{ borderColor: 'rgba(255,90,120,0.3)', color: '#ff97a9' }}>Delete node</button>
+    `;
+  }
+
+  return html`<div className="inspector-empty">Editor for "${node.type}" not implemented yet.</div>`;
+}
+
+/* ============================================================
+   CANVAS
+   The React Flow graph for the currently-selected episode.
+============================================================ */
+function Canvas({ episode, onGraphChange, onSelectNode }) {
+  const [nodes, setNodes] = useState([]);
+  const [edges, setEdges] = useState([]);
+
+  // Sync from props when episode changes
+  useEffect(() => {
+    if (episode && episode.graph) {
+      setNodes(episode.graph.nodes || []);
+      setEdges(episode.graph.edges || []);
+    } else {
+      setNodes([]);
+      setEdges([]);
+    }
+  }, [episode && episode.id]);
+
+  const onNodesChange = useCallback((changes) => {
+    setNodes((nds) => {
+      const next = applyNodeChanges(changes, nds);
+      onGraphChange({ nodes: next, edges });
+      return next;
+    });
+  }, [edges, onGraphChange]);
+
+  const onEdgesChange = useCallback((changes) => {
+    setEdges((eds) => {
+      const next = applyEdgeChanges(changes, eds);
+      onGraphChange({ nodes, edges: next });
+      return next;
+    });
+  }, [nodes, onGraphChange]);
+
+  const onConnect = useCallback((connection) => {
+    setEdges((eds) => {
+      const next = addEdge({ ...connection, id: newId('edge') }, eds);
+      onGraphChange({ nodes, edges: next });
+      return next;
+    });
+  }, [nodes, onGraphChange]);
+
+  const onSelectionChange = useCallback(({ nodes: sel }) => {
+    onSelectNode(sel && sel[0] ? sel[0].id : null);
+  }, [onSelectNode]);
+
+  if (!episode) {
+    return html`
+      <div className="canvas-empty">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+          <circle cx="6"  cy="6"  r="3"/>
+          <circle cx="18" cy="6"  r="3"/>
+          <circle cx="6"  cy="18" r="3"/>
+          <circle cx="18" cy="18" r="3"/>
+          <path d="M9 6h6M6 9v6M18 9v6M9 18h6"/>
+        </svg>
+        <h3>No episode selected</h3>
+        <p>Pick an episode from the sidebar, or create a new one. Each episode is a free-form node graph: dialog beats, choices, cutscenes, explore sections, music endings.</p>
+      </div>
+    `;
+  }
+
+  return html`
+    <${ReactFlow}
+      nodes=${nodes}
+      edges=${edges}
+      onNodesChange=${onNodesChange}
+      onEdgesChange=${onEdgesChange}
+      onConnect=${onConnect}
+      onSelectionChange=${onSelectionChange}
+      nodeTypes=${NODE_TYPES}
+      fitView
+      proOptions=${{ hideAttribution: true }}
+    >
+      <${Background} variant="dots" gap=${24} size=${1} color="rgba(255,255,255,0.06)" />
+      <${Controls} />
+      <${MiniMap} nodeColor=${() => '#ff7eb9'} maskColor="rgba(0,0,0,0.6)" />
+    </${ReactFlow}>
+  `;
+}
+
+/* ============================================================
+   APP ROOT
+============================================================ */
+function App() {
+  const [data, setData] = useState(loadData);
+  const [selectedEpisode, setSelectedEpisode] = useState(null);
+  const [selectedNodeId, setSelectedNodeId] = useState(null);
+  const [savedFlash, setSavedFlash] = useState(false);
+
+  // Persist on every change.
+  useEffect(() => {
+    saveData(data);
+    setSavedFlash(true);
+    const t = setTimeout(() => setSavedFlash(false), 600);
+    return () => clearTimeout(t);
+  }, [data]);
+
+  const episode = selectedEpisode ? data.episodes[selectedEpisode] : null;
+  const selectedNode = (episode && episode.graph && selectedNodeId)
+    ? (episode.graph.nodes || []).find(n => n.id === selectedNodeId)
+    : null;
+
+  const onGraphChange = useCallback((graph) => {
+    if (!selectedEpisode) return;
+    setData(d => ({
+      ...d,
+      episodes: {
+        ...d.episodes,
+        [selectedEpisode]: { ...d.episodes[selectedEpisode], graph }
+      }
+    }));
+  }, [selectedEpisode]);
+
+  const onUpdateNode = useCallback((nodeId, dataPatch) => {
+    if (!selectedEpisode) return;
+    setData(d => {
+      const ep = d.episodes[selectedEpisode];
+      const newNodes = (ep.graph.nodes || []).map(n =>
+        n.id === nodeId ? { ...n, data: dataPatch } : n
+      );
+      return {
+        ...d,
+        episodes: {
+          ...d.episodes,
+          [selectedEpisode]: { ...ep, graph: { ...ep.graph, nodes: newNodes } }
+        }
+      };
+    });
+  }, [selectedEpisode]);
+
+  const onDeleteNode = useCallback((nodeId) => {
+    if (!selectedEpisode) return;
+    setData(d => {
+      const ep = d.episodes[selectedEpisode];
+      const newNodes = (ep.graph.nodes || []).filter(n => n.id !== nodeId);
+      const newEdges = (ep.graph.edges || []).filter(e => e.source !== nodeId && e.target !== nodeId);
+      return {
+        ...d,
+        episodes: {
+          ...d.episodes,
+          [selectedEpisode]: { ...ep, graph: { nodes: newNodes, edges: newEdges } }
+        }
+      };
+    });
+    setSelectedNodeId(null);
+  }, [selectedEpisode]);
+
+  const onAddNode = useCallback((type) => {
+    if (!selectedEpisode) return;
+    const newNode = {
+      id: newId(type),
+      type,
+      position: { x: 200 + Math.random() * 200, y: 200 + Math.random() * 100 },
+      data: type === 'beat'     ? { title: 'New beat', lines: [{ speaker: 'narrative', text: '' }] }
+          : type === 'choice'   ? { prompt: 'Pick one', options: [{ id: newId('opt'), label: '' }] }
+          : type === 'cutscene' ? { title: 'Cutscene', image: '', caption: '' }
+          : type === 'explore'  ? { title: 'Look around', duration: 30, objects: [] }
+          : type === 'music'    ? { title: 'Generate Reel' }
+          : type === 'end'      ? { title: 'End' }
+          : {},
+    };
+    setData(d => {
+      const ep = d.episodes[selectedEpisode];
+      const newNodes = [...(ep.graph.nodes || []), newNode];
+      return {
+        ...d,
+        episodes: {
+          ...d.episodes,
+          [selectedEpisode]: { ...ep, graph: { ...ep.graph, nodes: newNodes } }
+        }
+      };
+    });
+  }, [selectedEpisode]);
+
+  const onCreateEpisode = useCallback((locationId) => {
+    const title = prompt('Episode title?');
+    if (!title) return;
+    const id = newId('ep');
+    setData(d => ({
+      ...d,
+      episodes: {
+        ...d.episodes,
+        [id]: {
+          id,
+          locationId,
+          title,
+          cast: {},
+          graph: {
+            nodes: [{
+              id: 'start',
+              type: 'beat',
+              position: { x: 100, y: 100 },
+              data: { title: 'Opening', lines: [] },
+            }],
+            edges: [],
+          },
+        }
+      }
+    }));
+    setSelectedEpisode(id);
+  }, []);
+
+  const onCreateLocation = useCallback((worldId) => {
+    const title = prompt('Location title?');
+    if (!title) return;
+    const id = newId('loc');
+    setData(d => ({
+      ...d,
+      locations: {
+        ...d.locations,
+        [id]: { id, worldId, title, kind: '', cover: '' }
+      }
+    }));
+  }, []);
+
+  const onCreateWorld = useCallback(() => {
+    const name = prompt('World name?');
+    if (!name) return;
+    const id = name.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+    setData(d => ({
+      ...d,
+      worlds: { ...d.worlds, [id]: { id, name, mapImage: '' } }
+    }));
+  }, []);
+
+  const exportEpisodeJSON = () => {
+    if (!episode) { alert('Select an episode first.'); return; }
+    const blob = new Blob([JSON.stringify(episode, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${episode.id}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const resetAll = () => {
+    if (!confirm('Reset to default data? This wipes your local changes.')) return;
+    localStorage.removeItem(STORAGE_KEY);
+    setData(loadData());
+    setSelectedEpisode(null);
+    setSelectedNodeId(null);
+  };
+
+  // Breadcrumb string
+  const crumb = useMemo(() => {
+    if (!episode) return 'Pick an episode';
+    const loc = data.locations[episode.locationId];
+    const wld = loc ? data.worlds[loc.worldId] : null;
+    return html`<b>${wld ? wld.name : '?'}</b> &nbsp;›&nbsp; ${loc ? loc.title : '?'} &nbsp;›&nbsp; <b>${episode.title}</b>`;
+  }, [episode, data]);
+
+  return html`
+    <div className="creator-root">
+      <header className="creator-topbar">
+        <span className="creator-logo">
+          <span className="accent">●</span> roles<span className="accent">.ai</span> · creator
+        </span>
+        <div className="creator-breadcrumb">${crumb}</div>
+        <div className="creator-actions">
+          <span className=${'save-status' + (savedFlash ? ' show' : '')}>Saved</span>
+          <button onClick=${exportEpisodeJSON} disabled=${!episode}>Export JSON</button>
+          <button onClick=${resetAll}>Reset</button>
+        </div>
+      </header>
+      <div className="creator-main">
+        <aside className="creator-sidebar">
+          <${Sidebar}
+            data=${data}
+            selectedEpisode=${selectedEpisode}
+            onSelectEpisode=${(id) => { setSelectedEpisode(id); setSelectedNodeId(null); }}
+            onCreateEpisode=${onCreateEpisode}
+            onCreateLocation=${onCreateLocation}
+            onCreateWorld=${onCreateWorld} />
+        </aside>
+        <section className="creator-canvas">
+          ${episode ? html`
+            <div className="canvas-toolbar">
+              <button onClick=${() => onAddNode('beat')}>+ Beat</button>
+              <button onClick=${() => onAddNode('choice')}>+ Choice</button>
+              <button onClick=${() => onAddNode('cutscene')}>+ Cutscene</button>
+              <button onClick=${() => onAddNode('explore')}>+ Explore</button>
+              <div className="sep"></div>
+              <button onClick=${() => onAddNode('music')}>+ Music</button>
+              <button onClick=${() => onAddNode('end')}>+ End</button>
+            </div>
+          ` : null}
+          <${ReactFlowProvider}>
+            <${Canvas}
+              episode=${episode}
+              onGraphChange=${onGraphChange}
+              onSelectNode=${setSelectedNodeId} />
+          </${ReactFlowProvider}>
+        </section>
+        <aside className="creator-right">
+          <div className="right-pane">
+            <div className="right-pane-title">
+              <span>Inspector</span>
+              ${selectedNode ? html`<span className="pill">${selectedNode.type}</span>` : null}
+            </div>
+            <div className="right-pane-body">
+              <${Inspector}
+                episode=${episode}
+                node=${selectedNode}
+                onUpdate=${onUpdateNode}
+                onDelete=${onDeleteNode} />
+            </div>
+          </div>
+          <div className="right-pane">
+            <div className="right-pane-title">
+              <span>Live Preview</span>
+              <div className="preview-controls">
+                <button onClick=${() => {
+                  const f = document.querySelector('.preview-frame');
+                  if (f) f.src = f.src;
+                }}>Reload</button>
+              </div>
+            </div>
+            <iframe className="preview-frame" src="dialog.html?noredirect=1" title="Live preview"></iframe>
+          </div>
+        </aside>
+      </div>
+    </div>
+  `;
+}
+
+createRoot(document.getElementById('root')).render(html`<${App} />`);
+</script>
+</body>
+</html>

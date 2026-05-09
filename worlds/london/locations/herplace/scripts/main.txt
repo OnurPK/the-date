@@ -1,3 +1,17 @@
+Narrative: A cool evening. You walk the long way to her place, hands in your coat pockets, the box tucked under one arm. (joy-street01.jpg)
+Narrative: Footsteps catch up beside you. A familiar voice you haven't heard in a while.
+Joy: Hey, stranger. Look at you, all dressed up.
+Boy: Joy! I didn't see you.
+Joy: You never do. You look excited. Where are you off to?
+Boy: I'm seeing someone tonight. Someone important.
+Joy: Oh, finally! Tell me about her... actually no. Show me. What did you bring her?
+(Gift)
+Joy: Let me see.
+(GiftReveal)
+Joy: Mm. That's lovely, actually. She'll like it.
+Boy: You think?
+Joy: I do. The good ones notice the small things. Now go, don't keep her waiting.
+Narrative: She squeezes your shoulder once, then she's gone. The street is yours again. (joy-street02.jpg)
 Narrative: You stand on the street below her building. A yellow window glows high above you. (cutscene01.jpg)
 Narrative: Coat collar up, you cross the quiet pavement and climb the three worn steps to her door. (cutscene02.jpg)
 Narrative: You knock, three short raps. Then you wait.
