@@ -1,0 +1,5 @@
+{
+  "_comment": "Serve config — disables the default cleanUrls behaviour (which strips .html and drops the query string in the redirect). Without this, dialog.html?dev=keys → /dialog and the param is lost, breaking the dev-settings panel + any other ?flag=... routing.",
+  "cleanUrls": false,
+  "trailingSlash": false
+}
