@@ -26,36 +26,54 @@
 // ---- Remembering sock ----
 [bg:cutscene=joy-street01.jpg] [fx:none] [tr:softCrossfade]
 [ui:narrative]
+Narrative: Mike walks through London at dusk, dressed too carefully.
 [ui:inner-small]
 Eros: Cream blazer. Black shirt. We look expensive.
+Valium: We look like a waiter at a gallery opening.
 Romeo: The evening asks for effort.
+Valium: The evening also asked for clean socks.
 [ui:narrative]
+Narrative: Mike feels his toe catch inside his shoe.
 [ui:inner-small]
 Eros: No.
+Valium: Yes.
 [ui:narrative] [bg:cutscene=tornsocks.jpg]
-Narrative: The sock had a hole.
+Narrative: He remembers standing by the door, ten minutes ago.
+Narrative: One sock had a small hole near the toe.
 [bg:cutscene=joy-street01.jpg] [ui:inner-small]
 Eros: Are you insane?
+Valium: It's a sock, not a moral collapse.
 Eros: You saw it and still left?
+Valium: We were late.
 Romeo: Perhaps imperfection makes the evening human.
+Eros: No. It makes the toe public.
 Professore: The choice was made. Now walk with dignity.
+Valium: Dignity currently has ventilation.
 
 // ---- Dog issue ----
 [bg:cutscene=joy-street01.jpg] [fx:none] [tr:softCrossfade]
 [ui:narrative]
+Narrative: Mike turns the corner, still checking his pace.
 [ui:inner-small]
 Eros: There is also the dog issue.
+Valium: Of course there is.
 Romeo: A creature in her home. A gatekeeper.
+Valium: It is a dog, not Cerberus.
 Eros: We don't know the breed.
+Valium: Correct. Could be anything from slipper to horse.
 Romeo: Dogs can sense fear.
+Valium: Dogs can smell ham.
 Eros: The last one bit us.
 [bg:cutscene=dogchase.jpg] [ui:narrative]
-Narrative: Childhood flashes back.
-Narrative: A tiny dog gains on him.
+Narrative: A childhood memory flashes: Mike running across a garden.
+Narrative: A furious little dog gains on him with heroic confidence.
 [bg:cutscene=joy-street01.jpg] [ui:inner-small]
 Valium: One dog. Years ago.
+Eros: Two teeth marks on my backside say otherwise.
 Romeo: The wound was not only physical.
+Valium: It was extremely physical.
 Professore: You are not meeting the dog. You are meeting Iris.
+Eros: Tell that to the dog.
 Valium: Preferably from another room.
 
 
@@ -70,6 +88,7 @@ Boy: Too much?
 Joy: No. Just very present.
 Boy: Present is survivable.
 Joy: Depends what it's presenting.
+Narrative: Joy notices the object in Mike's hand.
 Joy: Is that for her?
 Boy: Technically.
 Joy: That's never a confident word.
@@ -77,7 +96,9 @@ Boy: It's thoughtful.
 Joy: Thoughtful can go very wrong.
 [ui:inner-small]
 Eros: She hates it.
+Valium: She has not identified it yet.
 Romeo: A gift should be a small weather system.
+Valium: Please stop giving objects climate.
 
 // ---- Gift sequence ----
 //
@@ -113,24 +134,29 @@ Joy: Now go. Don't keep her waiting.
 
 // ---- Inner voices while waiting at the door ----
 [bg:cutscene=joy-street01.jpg]
+Narrative: She squeezes your shoulder once, then she's gone. The street is yours again.
 [bg:cutscene=cutscene01.jpg] [tr:softCrossfade] [ui:narrative]
-Narrative: Mike reaches her door.
+Narrative: Mike stands outside Iris's flat.
 [ui:inner-small]
 Eros: Sock. Dog. Gift. This is a three-front war.
+Valium: The date hasn't started and we're already outnumbered.
 Romeo: The door is the threshold.
+Valium: The door is a door.
 Professore: Knock once. Breathe once. Enter once.
 [ui:narrative]
 Narrative: Mike knocks.
 [ui:cast-large]
 Boy: Normal knock. Good.
 [ui:narrative]
-Narrative: A bark answers.
+Narrative: A bark sounds inside.
 Dog: GRRRRR... woof woof!
 [ui:inner-small]
 Professore: Easy, buddy... easy, easy.
 [ui:inner-small]
 Eros: That was not a small bark.
+Valium: You cannot determine breed from punctuation.
 Romeo: The guardian announces the house.
+Valium: The guardian needs a chew toy.
 [ui:narrative]
 Narrative: The door opens.
 
@@ -144,7 +170,7 @@ Girl: Mostly?
 Boy: I had one philosophical wrong turn.
 Girl: London does that.
 [ui:narrative]
-Narrative: Iris scans him, amused.
+Narrative: Iris looks at him, amused.
 Girl: You dressed up.
 Boy: A survivable amount?
 Girl: The blazer has opinions.
@@ -152,31 +178,42 @@ Boy: I told it to stay quiet.
 Girl: It didn't listen.
 [ui:inner-small]
 Trilli: He dressed like the date has shareholders.
+Scheggia: That beard has a five-year plan.
 Giulietta: The beard is nervous. I like it.
+Alfa: He made effort. Let him have that.
 Trilli: The blazer is trying harder than he is.
+Scheggia: The blazer has already planned brunch.
 [ui:inner-small]
 Eros: She noticed the blazer.
+Valium: Everyone noticed the blazer. It's cream and emotional.
+Romeo: She sees the effort.
 Professore: Do not defend the effort.
 
 // ---- Shoes Off ----
 [bg:none] [ui:cast-large]
 Girl: Shoes off, if you don't mind.
 [ui:narrative]
-Narrative: Mike freezes.
+Narrative: Mike freezes for half a second.
 [ui:inner-small]
 Eros: The sock.
+Valium: The prophecy.
+Romeo: Truth reaches the floor.
 Professore: Remove the shoes. Do not negotiate.
 [ui:cast-large]
 Boy: Of course. Shoes. Yes.
 [ui:narrative]
-Narrative: The torn sock appears.
+Narrative: Mike removes his shoes carefully.
+Narrative: The torn sock is visible for one quiet second.
 [ui:cast-large]
 Girl: Bold sock.
 Boy: It opened up emotionally.
 [ui:inner-small]
 Trilli: His sock has a plot twist.
+Scheggia: He dressed like a gallery owner and came with toe ventilation.
 Giulietta: No, wait. That's painfully sweet.
+Alfa: He didn't hide it. Good.
 Trilli: The blazer is formal. The sock is feral.
+Scheggia: This man is two decisions fighting.
 [ui:cast-large]
 Girl: Happens.
 Boy: To socks?
@@ -186,14 +223,15 @@ Girl: Good. Saves time.
 
 // ---- Dog Payoff ----
 [bg:none] [ui:cast-large]
-Narrative: A dog trots in.
+Narrative: A dog trots in from the hallway.
 Girl: That's Pickle.
 Boy: Pickle.
 Girl: He'll inspect you and move on.
 [bg:cutscene=dogsniff.jpg] [ui:inner-small]
 Eros: We are being assessed by a mop.
+Valium: Small. Thank God.
 Romeo: Offer dignity to the creature.
-Narrative: Pickle sniffs, then leaves.
+Narrative: Pickle sniffs Mike's foot, then walks away.
 Valium: We have been dismissed.
 [ui:cast-small]
 Boy: I think he found me acceptable.
@@ -203,15 +241,17 @@ Girl: The bag had confidence.
 
 // ---- Gives gift ----
 [bg:none] [ui:narrative]
-Narrative: Mike remembers the gift.
+Narrative: Mike remembers the gift in his hand.
 [ui:inner-small]
 Eros: Now. Before it gets heavier.
+Valium: It cannot get heavier. Only morally.
+Romeo: Offer it without defence.
 Professore: Joy was right. Let it arrive first.
 [ui:cast-large]
 Boy: I brought you something.
 Girl: I noticed you carrying a mystery.
 Boy: That's one of its features.
-Narrative: Mike gives it to her.
+Narrative: Mike gives her the object.
 Girl: Oh.
 Boy: That's the second oh today.
 Girl: It has presence.
@@ -219,13 +259,14 @@ Boy: Too much presence?
 Girl: No. Just very sure of itself.
 [ui:inner-small]
 Eros: Is that good?
+Valium: Nobody knows. Even the object seems unsure.
 [ui:cast-large]
 Girl: Thank you.
 Boy: I can explain it.
 Girl: I know.
 Boy: Right.
 Girl: Don't yet.
-Narrative: Mike shuts up, barely.
+Narrative: Mike closes his mouth with effort.
 [ui:inner-small]
 Valium: Excellent. Character development.
 
@@ -237,10 +278,12 @@ Boy: Can I help?
 Girl: You can stand there and not panic.
 Boy: Strong assignment.
 Girl: Advanced, but possible.
-Narrative: Iris goes to the kitchen.
+Narrative: Iris disappears into the kitchen.
 [ui:inner-small]
 Valium: Good. We are alone with furniture.
+Eros: Gather intelligence.
 Romeo: Learn the room gently.
+Professore: Observe. Do not become a detective with a pulse.
 Professore: Notice what repeats. Do not perform expertise.
 
 // ---- Explore the room ----
@@ -252,10 +295,12 @@ Boy: Yeah, I'd like that.
 
 // ---- Couch scene (two-person illustration with bubbles) ----
 [bg:scene=narrativescene01.jpg] [tr:softCrossfade] [ui:bubble]
-Narrative: Iris sits. Mike follows.
+Narrative: Iris sits first. Mike follows, carefully normal.
 [ui:inner-small]
 Giulietta: He's here. He's really here.
+Alfa: Keep your face steady. Don't smile too wide.
 Trilli: Too late. The face has opinions.
+Scheggia: Watch him. He collects details when nervous.
 [ui:bubble]
 Girl: There. Much better.
 Boy: The couch?
@@ -264,7 +309,9 @@ Boy: I was doing my best doorway.
 Girl: It showed.
 [ui:inner-small]
 Eros: Good. Banter. We have banter.
+Valium: We have survived furniture.
 Romeo: She moved us further inside her world.
+Valium: She moved us to a couch. Calm down.
 [ui:bubble]
 Girl: So.
 Boy: So.
@@ -274,7 +321,9 @@ Girl: You have a very investigative face.
 Boy: That's just panic with cheekbones.
 [ui:inner-small]
 Trilli: Panic with cheekbones is not bad.
+Scheggia: The beard is doing half the cheekbone work.
 Alfa: He admitted it. Good.
+Giulietta: Let him keep the joke. He's safer inside jokes.
 [ui:bubble]
 Girl: What did you conclude?
 Boy: Dangerous question.
@@ -294,6 +343,7 @@ Boy: Dangerous question.
   Girl: Lazy answer. Charming, but lazy.
   [ui:inner-small]
   Eros: Charming counts.
+  Valium: Lazy also counts.
   Professore: She noticed both.
 (EndIf)
 
@@ -305,7 +355,9 @@ Boy: Dangerous question.
   Girl: I hate that I know what you mean.
   [ui:inner-small]
   Valium: Excellent. Confusion shared.
+  Eros: We flirted with a table and survived.
   Romeo: Objects sometimes speak for people.
+  Valium: Please don't escalate the table.
 (EndIf)
 
 (IfChoice:2)
@@ -316,6 +368,7 @@ Boy: Dangerous question.
   Girl: Gently obvious.
   [ui:inner-small]
   Professore: Good. The truth did not break the room.
+  Eros: Gently obvious is basically handsome.
   Valium: It is basically a police report with manners.
 (EndIf)
 
@@ -331,7 +384,9 @@ Girl: Which one?
 Boy: The one with the broken blue sign.
 [ui:inner-small]
 Trilli: Ohhh, the cinema.
+Giulietta: He remembers. He actually remembers.
 Scheggia: Careful. Memories make people look better than they were.
+Alfa: Let the memory in. Don't hand it the keys.
 [ui:bubble]
 Girl: I can't believe that's still standing.
 Boy: Barely. Same sign. Same tragic carpet.
@@ -345,7 +400,9 @@ Girl: You had excellent guilty posture.
 
 [ui:inner-small]
 Giulietta: Say it. Say Tuesday.
+Trilli: Tuesday cinema. Tuesday cinema.
 Scheggia: Don't make plans because a memory behaved.
+Alfa: Make the plan. Keep it light.
 [ui:bubble]
 Girl: We should go.
 Boy: To the cinema?
@@ -354,6 +411,8 @@ Boy: That's a very specific dream.
 Girl: I'm a very specific woman. (+8)
 [ui:inner-small]
 Valium: Breathe. This one lands.
+Eros: Tuesday exists. We have a sequel.
+Romeo: A future has entered quietly.
 Professore: Accept without grabbing it.
 
 // ---- Choice 3: accept the invite ----
@@ -392,17 +451,20 @@ Girl: Cheers, by the way.
 Boy: Cheers. To Tuesday nights.
 [ui:inner-small]
 Giulietta: That was our moment. Hold onto it.
+Scheggia: Don't hold too tight. You'll bruise it.
 Alfa: Good. He came closer without moving.
 
 // ---- Phone call ----
 [ui:narrative]
-Narrative: A phone buzzes.
+Narrative: A phone buzzes face-up on the coffee table.
 [ui:bubble]
 Girl: Sorry, give me a sec.
 [bg:scene=phone.jpg] [tr:softCrossfade] [ui:narrative]
-Narrative: She half-turns away.
+Narrative: She picks up and half-turns away.
 [ui:inner-small]
 Eros: Who's calling at this hour?
+Valium: Don't lean in. Give her space.
+Romeo: Trust is also what you don't take.
 Professore: Tone tells you more than words.
 
 
@@ -415,46 +477,53 @@ Professore: Tone tells you more than words.
 
 (IfChoice:0)
   [bg:scene=phone-listen.jpg] [tr:softCrossfade] [ui:narrative]
-  Narrative: Mike's eyes drift.
+  Narrative: Mike's eyes drift before he can stop them.
   [ui:bubble]
   Girl: Tess. Yeah, I'm fine.
   [ui:inner-small]
   Eros: Tess. Name acquired.
+  Valium: Please don't say acquired.
   Professore: A name is not a trophy.
   [ui:bubble]
   Girl: No, he's here now.
   [ui:inner-small]
   Scheggia: He's quiet. Too quiet.
+  Trilli: Don't look at him. You'll smile.
   Alfa: Finish the call. Don't let the room split.
   [ui:bubble]
   Girl: I'll tell you tomorrow. Promise.
   [ui:narrative]
-  Narrative: She hangs up.
+  Narrative: She hangs up and sets the phone face-down.
   [ui:bubble]
   Girl: Sorry. Where were we?
   [ui:inner-small]
   Romeo: Tess. We learned a name. (+10)
+  Valium: We also learned we are nosy.
 (EndIf)
 
 (IfChoice:1)
   [ui:narrative]
-  Narrative: Mike looks away.
+  Narrative: Mike looks away, letting his eyes settle on the rug.
   [ui:bubble]
   Girl: Mm. Yeah. No, I'm fine.
   [ui:inner-small]
   Romeo: Some respect is quiet enough to miss.
+  Eros: But who is it?
   Valium: A person. Revolutionary.
   [ui:bubble]
   Girl: I'll call you tomorrow. Yeah.
   [ui:inner-small]
   Giulietta: He's looking away.
+  Trilli: That's sweet.
   Scheggia: Or trained.
+  Alfa: Either way, useful.
   [ui:narrative]
-  Narrative: She hangs up.
+  Narrative: She hangs up. The screen is already dark.
   [ui:bubble]
   Girl: Sorry. Where were we?
   [ui:inner-small]
   Professore: We respected the moment. That counts. (+4)
+  Eros: It counts less than knowing.
   Valium: Not everything is a leaderboard.
 (EndIf)
 
@@ -469,7 +538,9 @@ Boy: I was saving the broken armrests.
 Girl: Don't spoil me all at once.
 [ui:inner-small]
 Trilli: He came back to us.
+Giulietta: He didn't make the call bigger than the room.
 Scheggia: Good. I hate when men chase locked doors.
+Alfa: The night continues. Let it.
 [ui:bubble]
 Girl: I haven't been on a proper cinema date in ages.
 Boy: What's proper?
@@ -480,6 +551,8 @@ Boy: Noble. Feudal.
 Girl: Romantic, if marketed correctly.
 [ui:inner-small]
 Eros: Say you'll take the bad seat.
+Valium: That is not a legal contract.
+Romeo: Offer it anyway.
 Professore: Generosity is small before it is grand.
 [ui:bubble]
 Boy: I'll take the bad seat.
@@ -490,10 +563,12 @@ Boy: That's devastating.
 Girl: No. It's useful.
 
 [ui:narrative]
-Narrative: Her laugh fades.
+Narrative: Her laugh fades slowly. The room doesn't rush to fill itself.
 [ui:inner-small]
 Giulietta: There it is. The quiet part.
+Trilli: Say something. No, don't. Wait.
 Scheggia: If he ruins this with a joke, I leave the body.
+Alfa: Let him feel the gap.
 [ui:bubble]
 Girl: You're quieter now.
 Boy: I was trying not to perform the next sentence.
@@ -501,9 +576,11 @@ Girl: That's new.
 Boy: For both of us.
 [ui:inner-small]
 Eros: Move closer.
+Valium: Stay alive.
+Romeo: Ask with your whole face.
 Professore: Do not steal the moment. Enter it.
 [ui:narrative]
-Narrative: She keeps looking.
+Narrative: She tilts her head and just looks at him. And keeps looking.
 [ui:bubble]
 Girl: Well...
 Girl: Now what?
@@ -516,14 +593,20 @@ Girl: Now what?
   Professore: Crack a joke. Undercut the tension.
   Write: Write your own move…
 [ui:narrative]
-Narrative: The impulse arrives, {{input}}.
+Narrative: The impulse arrives, clean and whole, {{input}}.
 
 // ---- Inner-voice deliberation ----
 [ui:inner-small]
 Scheggia: Wait. He's about to do something.
+Giulietta: Oh. Oh. I can feel him deciding.
+Trilli: Chaos energy incoming. I'm here for it.
+Alfa: Read her face. Shoulders tight, eyes soft.
 Eros: Go. The silence was waiting for exactly this.
+Valium: Careful. Count to three before you move.
 Romeo: If you do this, do it like you mean it.
+Professore: Hold on. This is a high-variance play.
 Eros: This is not a spreadsheet.
+Valium: It absolutely feels like a spreadsheet.
 Professore: A coin. Fair and square.
 Professore: Heads, we commit. Tails, we retreat.
 
@@ -532,21 +615,25 @@ Professore: Heads, we commit. Tails, we retreat.
 
 [ui:inner-small]
 Professore: Heads.
+Eros: Move. Now.
 Valium: Slowly. Please discover dignity.
+Romeo: Go as yourself. Not as a performance.
 
 // ---- The hug ----
 [bg:scene=hugscene.jpg] [tr:softCrossfade] [ui:narrative]
-Narrative: Mike closes the gap.
+Narrative: Mike closes the gap before his mind can stop him.
 [ui:bubble]
 Boy: Come here.
 Girl: Oh.
 [ui:narrative]
-Narrative: Iris stiffens.
+Narrative: Iris stiffens for half a second.
 [ui:inner-small]
 Scheggia: Wait. What is he doing?
+Trilli: Is this a kiss? Is this a fall? What is this?
 Giulietta: No. It's softer than that.
+Alfa: Hold. Don't pull away yet.
 [ui:narrative]
-Narrative: Mike only holds her.
+Narrative: Mike doesn't kiss her. He just holds her.
 [ui:bubble]
 Boy: Sorry. I don't know why I did that.
 Girl: I do.
@@ -554,9 +641,11 @@ Boy: You do?
 Girl: You ran out of clever.
 [ui:inner-small]
 Valium: Fair.
+Eros: Painful, but fair.
+Romeo: She understood the gesture before he did.
 Professore: Good. The body spoke plainly.
 [ui:narrative]
-Narrative: Her arms find him.
+Narrative: Her arms find their way around his shoulders.
 [ui:bubble]
 Girl: You're shaking a bit.
 Boy: That's probably the blazer.
@@ -567,7 +656,9 @@ Boy: For all of us.
 
 [ui:inner-small]
 Giulietta: She stayed.
+Trilli: She stayed and she smiled. We are alive.
 Scheggia: Don't celebrate. Don't scare it.
+Alfa: He gave us awkward honesty. We can work with that.
 [ui:bubble]
 Girl: Look at me.
 Boy: Dangerous request.
@@ -580,9 +671,11 @@ Boy: I was trying to be normal.
 Girl: Terrible idea.
 Boy: I'm learning.
 [ui:narrative]
-Narrative: Iris shifts closer.
+Narrative: Iris shifts closer, still inside the hug.
 [ui:inner-small]
 Eros: Oh.
+Valium: Ah. The situation has evolved.
+Romeo: She is answering.
 Professore: Do not rush the answer.
 [ui:bubble]
 Girl: You can stop apologising now.
@@ -592,22 +685,27 @@ Boy: That's accurate.
 Girl: Don't.
 Boy: Okay.
 [ui:narrative]
-Narrative: She touches his cheek.
+Narrative: She touches his cheek with the back of her fingers.
 [ui:bubble]
 Girl: You're such a mess.
 Boy: Yeah.
 Girl: Don't stop being one.
 [ui:inner-small]
 Trilli: That was our line. That was the line.
+Scheggia: Fine. That was good.
 Giulietta: Kiss him now. Please.
+Alfa: Yes. Now.
 
 [ui:narrative]
-Narrative: She closes the gap.
+Narrative: This time, she closes the gap.
 [ui:inner-small]
 Eros: Finally.
+Valium: Quiet.
+Romeo: Remember this exact second. (+10)
 Professore: For the record, the coin didn't decide. He did. (+3)
 [ui:narrative]
-Narrative: Warmer. Slower.
+Narrative: The first kiss is less dramatic than Mike imagined.
+Narrative: Warmer, slower, and much harder to escape.
 [ui:bubble]
 Girl: Still shaking?
 Boy: Less.
@@ -619,8 +717,10 @@ Girl: Also good.
 [bg:none]
 (EndScene)
 0.5 Narrative: They don't rush.
-2.5 Narrative: They talk past midnight.
-12.0 Narrative: The night carries them.
+2.5 Narrative: They talk until the glasses are empty and the room forgets the time.
+5.5 Narrative: The old cinema becomes a story. Portugal becomes a promise not to ask too much.
+8.5 Narrative: At some point, nobody has to decide anything anymore.
+12.0 Narrative: The night simply carries them there.
 (/EndScene)
 (Music)
 
@@ -630,7 +730,7 @@ Girl: Also good.
 // =============================================================
 
 (Object:coffee video=coffeemachine.mp4)
-Narrative: The espresso machine hums.
+Narrative: The red espresso machine hums on the counter. A dried coffee ring sits next to the mug.
 Valium: Maybe grab a cup. Something warm will steady your hands. (+4)
 Professore: Careful, the cord is touching the wet floor.
 Eros: Make one for her too. Small gestures. (+6)
@@ -645,7 +745,7 @@ Dog: ...hrrrr.
 
 (Object:poster video=poster.mp4)
 Romeo: Read the poster.
-Narrative: The poster says Good Things Take Time. (+5)
+Narrative: A poster says Good Things Take Time. (+5)
 Romeo: A sentence placed where she can remember it.
 Eros: Is that for us?
 Valium: We arrived six minutes ago. Calm down.
@@ -655,7 +755,7 @@ Professore: The room is not flirting. But it may be telling the truth.
 
 (Object:lavalamp video=lamp.mp4)
 Valium: Look at the lamp. It asks nothing.
-Narrative: The lava lamp pulses. (+3)
+Narrative: The lava lamp pulses slowly in purple light. (+3)
 Valium: Finally. A relaxed object.
 Eros: It is sensual.
 Valium: It is wax in a tube.
@@ -671,7 +771,7 @@ Romeo: Check the calendar
 
 (IfChoice:0)
 Romeo: Look at the photo on the fridge
-Narrative: Iris laughs beside another woman by the sea. (+6)
+Narrative: A faded photo shows Iris laughing beside another woman by the sea. (+6)
 Romeo: There. A version of her before tonight.
 Valium: People existed before us. Shocking development.
 Eros: Best friend?
@@ -682,7 +782,7 @@ Professore: Do not steal meaning from a photograph. Ask gently later.
 
 (IfChoice:1)
 Eros: Check the magnets
-Narrative: Tokyo, Paris, and Barcelona magnets. (+7)
+Narrative: Magnets from Tokyo, Paris, and Barcelona cover the door. (+7)
 Eros: She travels. Good. We can become mysterious in airports.
 Valium: You get stressed at boarding groups.
 Romeo: She carries cities home with her.
@@ -692,7 +792,7 @@ Professore: Remember the places. Ask for the story, not the itinerary.
 
 (IfChoice:2 video=fridge.mp4 noloop)
 Valium: Look inside
-Narrative: Sauces, dumplings, noodles, leftovers. (+7)
+Narrative: The fridge is full of Asian sauces, dumplings, noodles, and leftovers. (+7)
 Eros: She likes Asian food. We like Asian food.
 Valium: Everyone likes dumplings. Don't build a personality from this.
 Romeo: Food is memory with steam.
@@ -702,7 +802,7 @@ Professore: This is useful only if it becomes a real question.
 
 (IfChoice:3)
 Eros: Check the calendar.
-Narrative: May 9 says birthday. (+8)
+Narrative: May 9 is circled with birthday written beside it. (+8)
 Eros: Birthday soon. Critical intelligence.
 Valium: Please don't call a birthday intelligence.
 Romeo: May 9. Taurus. Earth beneath the water.
@@ -717,7 +817,7 @@ Professore: Look at the records beside it
 Valium: Don't mess with anything
 
 (IfChoice:0 video=vinyl.mp4 hideMusicNotes)
-Narrative: Indie folk fills the room. (+8)
+Narrative: Mike lowers the needle. A soft indie folk song fills the room. (+8)
 Romeo: Brushed drums. Slow guitar. She keeps tenderness nearby.
 Valium: Or this was already on the turntable.
 Eros: Remember the band. Use it later.
@@ -727,7 +827,7 @@ Professore: Let the song teach you the tempo of the room.
 
 (IfChoice:1)
 Romeo: Browse the records.
-Narrative: Tender records. One furious. (+6)
+Narrative: Most records are tender. One looks furious. (+6)
 Eros: Ah. The red flag record.
 Valium: Everyone deserves one furious album.
 Romeo: Even gentle people keep thunder somewhere.
@@ -736,13 +836,13 @@ Professore: Ask about the angry one later. Carefully.
 (EndIf)
 
 (IfChoice:2)
-Narrative: Mike doesn't touch anything. (+5)
+Narrative: Mike keeps his hands to himself. (+5)
 Romeo: Restraint is a form of respect.
 Eros: Coward.
 (EndIf)
 
 (Object:table video=coffeetable.mp4)
-Narrative: Coffee, books, a leaning plant.
+Narrative: Half a coffee, two books, a small plant. The plant is leaning.
 Valium: That's called not tidying before guests.
 Eros: She didn't overprepare. Good sign.
 Valium: Or she has a normal relationship with tables.
