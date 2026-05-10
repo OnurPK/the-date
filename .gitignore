@@ -7,8 +7,10 @@ node_modules
 _legacy/
 _backup/
 _debug_frames/
-# Local config (proxy URL for the AI portrait API). Never commit.
+# Local config — keys + worker code stay private. JSON preset
+# registries (fx/tr) are frontend-public, whitelist them back in.
 _config/
+!_config/*.json
 *.action-backup
 *.backup
 *.backup-music
