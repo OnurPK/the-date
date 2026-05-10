@@ -160,15 +160,163 @@
   .pill:hover { background: rgba(255,255,255,0.08); color: #fff; border-color: var(--line-2); }
   .pill.boy         { color: #a8d3ff; border-color: rgba(168,211,255,0.32); }
   .pill.girl        { color: #ffc7e1; border-color: rgba(255,199,225,0.32); }
+  .pill.joy         { color: #f0c89e; border-color: rgba(240,200,158,0.4); }
   .pill.dog         { color: #e4b988; border-color: rgba(228,185,136,0.32); }
   .pill.eros        { color: #ff708a; border-color: rgba(255,112,138,0.32); }
   .pill.valium      { color: #b6a2ff; border-color: rgba(182,162,255,0.32); }
   .pill.romeo       { color: #ff9cc2; border-color: rgba(255,156,194,0.32); }
   .pill.professore  { color: #ffda93; border-color: rgba(255,218,147,0.32); }
+  .pill.trilli      { color: #ffd86f; border-color: rgba(255,216,111,0.32); }
+  .pill.alfa        { color: #ffc1a3; border-color: rgba(255,193,163,0.32); }
+  .pill.scheggia    { color: #ffaeb6; border-color: rgba(255,174,182,0.32); }
+  .pill.giulietta   { color: #d6b8ff; border-color: rgba(214,184,255,0.32); }
   .pill.narrative   { color: rgba(255,255,255,0.8); font-style: italic; }
   .pill.directive   { color: var(--mint); border-color: rgba(111,227,200,0.4); }
   .pill.directive-obj { color: #ffd09f; border-color: rgba(255,208,159,0.4); }
   .pill.directive-scene { color: #b6a2ff; border-color: rgba(182,162,255,0.45); }
+  .pill.ui          { color: #c5d2ff; border-color: rgba(197,210,255,0.4); }
+  .pill.bg          { color: #b9e9d6; border-color: rgba(185,233,214,0.4); }
+  .pill.ai          { color: #d6c0ff; border-color: rgba(214,192,255,0.4); }
+  .pill.snippet {
+    background: linear-gradient(135deg, rgba(155,127,255,0.18), rgba(255,126,185,0.18));
+    color: #fff;
+    border-color: rgba(155,127,255,0.5);
+  }
+  .pill.snippet:hover {
+    background: linear-gradient(135deg, rgba(155,127,255,0.32), rgba(255,126,185,0.32));
+  }
+
+  /* Toolbar groupings — small label + thin divider between blocks. */
+  .pill-group-label {
+    font-size: 9px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    padding: 5px 4px;
+    align-self: center;
+    user-select: none;
+  }
+  .pill-divider {
+    width: 1px;
+    background: var(--line-2);
+    height: 18px;
+    align-self: center;
+    margin: 0 4px;
+  }
+
+  /* ---------- Floating bracket-directive panel ---------- */
+  /* A draggable vertical sidebar listing every [bg|ui|fx|tr] preset,
+     stacked alt-alta. Pulled out of the top toolbar so the toolbar
+     stays focused on speakers + structural directives. */
+  #bracketPanel {
+    position: fixed;
+    /* Default home — top-right, just below the app header. JS may
+       restore a saved position from localStorage. */
+    top: 96px;
+    right: 24px;
+    z-index: 50;
+    width: 168px;
+    background: var(--bg-2);
+    border: 1px solid var(--line-2);
+    border-radius: 10px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.45);
+    display: flex;
+    flex-direction: column;
+    max-height: calc(100vh - 120px);
+    overflow: hidden;
+    user-select: none;
+    font-family: "JetBrains Mono", ui-monospace, monospace;
+  }
+  #bracketPanel.dragging { opacity: 0.92; box-shadow: 0 14px 40px rgba(0,0,0,0.6); }
+  #bracketPanel.collapsed .bp-body { display: none; }
+  #bracketPanel.collapsed { width: 168px; }
+
+  .bp-head {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 8px;
+    background: var(--bg-3);
+    border-bottom: 1px solid var(--line);
+    cursor: grab;
+    touch-action: none; /* prevent scroll on touch drag */
+  }
+  #bracketPanel.dragging .bp-head { cursor: grabbing; }
+  .bp-grip {
+    color: var(--text-dim);
+    font-size: 11px;
+    letter-spacing: -2px;
+    padding-right: 2px;
+  }
+  .bp-title {
+    flex: 1;
+    font-size: 10.5px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--text);
+  }
+  .bp-toggle {
+    background: transparent;
+    color: var(--text-dim);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    width: 22px; height: 22px;
+    font-size: 13px;
+    line-height: 1;
+    cursor: pointer;
+    padding: 0;
+  }
+  .bp-toggle:hover { color: #fff; border-color: var(--line-2); }
+  #bracketPanel.collapsed .bp-toggle { /* show '+' when collapsed */ }
+  #bracketPanel.collapsed .bp-toggle::before { content: '+'; }
+  #bracketPanel.collapsed .bp-toggle { font-size: 0; }
+  #bracketPanel.collapsed .bp-toggle::before { font-size: 14px; }
+
+  .bp-body {
+    overflow-y: auto;
+    padding: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .bp-section {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+  }
+  .bp-section-label {
+    font-size: 9px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    padding: 2px 2px 4px;
+  }
+  .bp-pill {
+    display: block;
+    width: 100%;
+    text-align: left;
+    background: rgba(255,255,255,0.02);
+    color: var(--text);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 5px 8px;
+    font: inherit;
+    font-size: 11px;
+    cursor: pointer;
+    transition: background 0.12s, border-color 0.12s, color 0.12s;
+  }
+  .bp-pill:hover {
+    background: rgba(255,255,255,0.06);
+    color: #fff;
+  }
+  .bp-pill.bg  { color: #b9e9d6; border-color: rgba(185,233,214,0.32); }
+  .bp-pill.ui  { color: #c5d2ff; border-color: rgba(197,210,255,0.32); }
+  .bp-pill.fx  { color: #ffd6a5; border-color: rgba(255,214,165,0.32); }
+  .bp-pill.tr  { color: #ffb3d9; border-color: rgba(255,179,217,0.32); }
+  .bp-pill.bg:hover { background: rgba(185,233,214,0.10); }
+  .bp-pill.ui:hover { background: rgba(197,210,255,0.10); }
+  .bp-pill.fx:hover { background: rgba(255,214,165,0.10); }
+  .bp-pill.tr:hover { background: rgba(255,179,217,0.10); }
 
   .editor-textarea-wrap {
     position: relative;
@@ -176,10 +324,113 @@
     overflow: hidden;
     display: flex;
   }
+  /* Per-line gutter — line numbers on the left + a hover-revealed
+     play button on each row. Click play → preview iframe jumps to
+     that line. Scroll-syncs with the textarea via JS. */
+  .line-gutter {
+    flex: 0 0 56px;
+    background: var(--bg-2);
+    color: var(--text-dim);
+    font-family: "JetBrains Mono", ui-monospace, monospace;
+    /* Match the textarea exactly so each row aligns with its text. */
+    font-size: 13.5px;
+    line-height: 1.7;
+    padding: 18px 0 18px 0;
+    border-right: 1px solid var(--line);
+    overflow: hidden;
+    user-select: none;
+    position: relative;
+  }
+  .line-gutter-row {
+    /* No explicit height — let line-height drive natural row height.
+       This ensures the row is EXACTLY the same pixel height as one
+       textarea line, with no sub-pixel drift accumulating across 30+
+       rows (which was making clicks off by a row). Inherits the
+       gutter's font-size + line-height. */
+    position: relative;
+    padding: 0 28px 0 10px;
+    color: var(--text-dim);
+    cursor: default;
+    white-space: nowrap;
+    overflow: hidden;
+  }
+  .line-gutter-row:hover { color: #fff; }
+  .line-gutter-row .ln-num {
+    display: inline-block;
+    width: 28px;
+    text-align: right;
+    /* Same font-size as the textarea text so baselines line up
+       exactly across the gutter / textarea split. */
+    font-size: 13.5px;
+    color: inherit;
+    vertical-align: baseline;
+  }
+  .line-gutter-row .ln-play {
+    position: absolute;
+    right: 4px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 18px; height: 18px;
+    border-radius: 50%;
+    border: none;
+    background: rgba(155,127,255,0.0);
+    color: var(--purple);
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    opacity: 0;
+    transition: opacity 0.15s, background 0.15s;
+  }
+  .line-gutter-row:hover .ln-play { opacity: 1; }
+  .line-gutter-row .ln-play:hover { background: rgba(155,127,255,0.22); }
+  .line-gutter-row .ln-play svg { width: 10px; height: 10px; fill: currentColor; }
+  /* Skip line numbers on blank/comment/non-dialog lines (only dialog
+     lines get a play target — see renderLineGutter). */
+  .line-gutter-row.blank   { color: var(--text-dim); opacity: 0.35; }
+  .line-gutter-row.blank .ln-play { display: none; }
+  .line-gutter-row.comment { color: var(--mint); opacity: 0.55; font-style: italic; }
+  .line-gutter-row.comment .ln-play { display: none; }
+  .line-gutter-row.non-dialog .ln-play { display: none; }
+
+  /* Thin vertical guide lines for indented (Choice option / IfChoice
+     body) rows. Each .ln-guide is positioned absolutely inside the
+     gutter row at progressively further-right offsets matching the
+     2-space-per-depth indent the auto-format applies in the textarea. */
+  .line-gutter-row .ln-guide {
+    position: absolute;
+    top: 0; bottom: 0;
+    width: 1px;
+    background: rgba(155,127,255,0.32);
+    pointer-events: none;
+  }
+  .line-gutter-row .ln-guide[data-d="1"] { right: 14px; }
+  .line-gutter-row .ln-guide[data-d="2"] { right: 8px; }
+  .line-gutter-row .ln-guide[data-d="3"] { right: 2px; }
+  .line-gutter-row:hover .ln-guide { background: rgba(155,127,255,0.6); }
+
+  /* Hover highlight that spans the whole row across both gutter and
+     textarea. Positioned by JS based on the hovered gutter row. */
+  .line-highlight {
+    position: absolute;
+    left: 0; right: 0;
+    background: rgba(255,255,255,0.05);
+    pointer-events: none;
+    opacity: 0;
+    z-index: 1;
+    transition: opacity 0.12s, top 0.06s;
+  }
+
   #scriptArea {
     flex: 1;
-    background: var(--bg);
-    color: var(--text);
+    background: transparent; /* show syntax highlight layer underneath */
+    /* Text itself is invisible — the colored overlay (#syntaxHighlight)
+       paints the visible characters in perfect register behind. The
+       caret + selection still render normally because caret-color +
+       selection background are independent of `color`. */
+    color: transparent;
+    -webkit-text-fill-color: transparent;
     font-family: "JetBrains Mono", ui-monospace, monospace;
     font-size: 13.5px;
     line-height: 1.7;
@@ -189,8 +440,47 @@
     resize: none;
     tab-size: 2;
     caret-color: var(--pink);
+    position: relative;
+    z-index: 2;
   }
-  #scriptArea:focus { background: #0d0c14; }
+  #scriptArea::selection { background: rgba(155,127,255,0.35); color: transparent; -webkit-text-fill-color: transparent; }
+  /* No focus background — the syntax-highlight overlay sits behind the
+     textarea and provides the visible color. Tinting the textarea on
+     focus would perdelendi the overlay and grey-out the colored tokens. */
+  #scriptArea:focus { background: transparent; }
+
+  /* Syntax highlight overlay — same font/size/padding/line-height as
+     the textarea so each character lands at the same pixel. The
+     textarea text is transparent; this layer paints the colors. */
+  #syntaxHighlight {
+    position: absolute;
+    /* Overlay sits to the right of the 56px line gutter and stretches
+       to the right edge of the wrap; vertical extent = full wrap. */
+    top: 0; bottom: 0; left: 56px; right: 0;
+    margin: 0;
+    padding: 18px 22px;
+    font-family: "JetBrains Mono", ui-monospace, monospace;
+    font-size: 13.5px;
+    line-height: 1.7;
+    tab-size: 2;
+    color: var(--text);
+    background: var(--bg);
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    overflow: hidden;
+    pointer-events: none;
+    z-index: 0;
+  }
+  #syntaxHighlight .tok-comment    { color: var(--text-dim); font-style: italic; }
+  #syntaxHighlight .tok-bracket    { color: var(--mint); }
+  #syntaxHighlight .tok-branch     { color: var(--pink); font-weight: 600; }
+  #syntaxHighlight .tok-explore    { color: var(--purple); font-weight: 600; }
+  #syntaxHighlight .tok-object     { color: #ffd09f; font-weight: 600; }
+  #syntaxHighlight .tok-scene      { color: #b6a2ff; }
+  #syntaxHighlight .tok-gift       { color: #d6c0ff; font-weight: 600; }
+  #syntaxHighlight .tok-points     { color: #7fffa8; font-weight: 700; }
+  #syntaxHighlight .tok-cutscue    { color: rgba(255,200,140,0.7); font-style: italic; }
+  #syntaxHighlight .tok-speaker    { color: rgba(232,230,240,0.85); }
 
   .editor-footer {
     display: flex; align-items: center; gap: 16px;
@@ -499,32 +789,78 @@
   <!-- Editor -->
   <section class="editor-pane">
     <div class="toolbar" id="toolbar">
-      <span class="pill boy"        data-insert="speaker:boy">Boy:</span>
-      <span class="pill girl"       data-insert="speaker:girl">Girl:</span>
-      <span class="pill dog"        data-insert="speaker:dog">Dog:</span>
-      <span class="pill eros"       data-insert="speaker:eros">Eros:</span>
-      <span class="pill valium"     data-insert="speaker:valium">Valium:</span>
-      <span class="pill romeo"      data-insert="speaker:romeo">Romeo:</span>
-      <span class="pill professore" data-insert="speaker:professore">Professore:</span>
-      <span class="pill narrative"  data-insert="speaker:narrative">Narrative:</span>
-      <span style="flex:1"></span>
-      <span class="pill directive"       data-insert="explore">(Explore:30)</span>
-      <span class="pill directive"       data-insert="choice">(Choice:2)</span>
-      <span class="pill directive-obj"   data-insert="object-image">(Object: image)</span>
-      <span class="pill directive-obj"   data-insert="object-character">(Object: character)</span>
-      <span class="pill directive-obj"   data-insert="action">(Action)</span>
+      <span class="pill-group-label">Cast</span>
+      <span class="pill boy"        data-insert="speaker:boy">Mike</span>
+      <span class="pill girl"       data-insert="speaker:girl">Iris</span>
+      <span class="pill joy"        data-insert="speaker:joy">Joy</span>
+      <span class="pill dog"        data-insert="speaker:dog">Dog</span>
+      <span class="pill narrative"  data-insert="speaker:narrative">Narrative</span>
+
+      <span class="pill-divider"></span>
+      <span class="pill-group-label">Mike's voices</span>
+      <span class="pill eros"       data-insert="speaker:eros">Eros</span>
+      <span class="pill valium"     data-insert="speaker:valium">Valium</span>
+      <span class="pill romeo"      data-insert="speaker:romeo">Romeo</span>
+      <span class="pill professore" data-insert="speaker:professore">Professore</span>
+
+      <span class="pill-divider"></span>
+      <span class="pill-group-label">Iris's voices</span>
+      <span class="pill trilli"    data-insert="speaker:trilli">Trilli</span>
+      <span class="pill alfa"      data-insert="speaker:alfa">Alfa</span>
+      <span class="pill scheggia"  data-insert="speaker:scheggia">Scheggia</span>
+      <span class="pill giulietta" data-insert="speaker:giulietta">Giulietta</span>
+
+      <span class="pill-divider"></span>
+      <span class="pill-group-label">Choice / Branch</span>
+      <span class="pill directive" data-insert="choice-2">(Choice:2)</span>
+      <span class="pill directive" data-insert="choice-3">(Choice:3)</span>
+      <span class="pill directive" data-insert="choice-write">(Choice:4 + Write)</span>
+      <span class="pill directive" data-insert="ifchoice">(IfChoice / EndIf)</span>
+
+      <span class="pill-divider"></span>
+      <span class="pill-group-label">Explore &amp; Objects</span>
+      <span class="pill directive"     data-insert="explore">(Explore:30)</span>
+      <span class="pill directive-obj" data-insert="object-image">(Object: image)</span>
+      <span class="pill directive-obj" data-insert="object-video">(Object: video)</span>
+      <span class="pill directive-obj" data-insert="object-character">(Object: character)</span>
+      <span class="pill directive-obj" data-insert="action">(Action)</span>
+
+      <span class="pill-divider"></span>
+      <span class="pill-group-label">AI</span>
+      <span class="pill ai" data-insert="ai-block">(AI:id) … (EndAI)</span>
+      <span class="pill ai" data-insert="gift-pick">(GiftPick)</span>
+      <span class="pill ai" data-insert="gift-scene">(GiftScene)</span>
+      <span class="pill ai" data-insert="gift-closing">(GiftClosing)</span>
+      <span class="pill ai" data-insert="gift-reveal">(GiftReveal)</span>
+
+      <span class="pill-divider"></span>
+      <span class="pill-group-label">Misc</span>
       <span class="pill directive-scene" data-insert="scene">(Scene:…)</span>
       <span class="pill directive-scene" data-insert="scene-none">(Scene:none)</span>
       <span class="pill directive"       data-insert="cutscene">(cutscene01.png)</span>
-      <span class="pill directive"       data-insert="cutscene-none">(none)</span>
       <span class="pill directive"       data-insert="points">(+5)</span>
+      <span class="pill directive"       data-insert="music">(Music)</span>
+      <span class="pill directive"       data-insert="endscene">(EndScene)</span>
+      <span class="pill snippet"         data-insert="endscene-reel">(EndScene) reel</span>
+
+      <span class="pill-divider"></span>
+      <span class="pill-group-label">Snippets</span>
+      <span class="pill snippet" data-insert="snip:joy-bumps">Joy bumps in</span>
+      <span class="pill snippet" data-insert="snip:choice-write">Choice + Write</span>
+      <span class="pill snippet" data-insert="snip:inner-arg">Inner argument</span>
+      <span class="pill snippet" data-insert="snip:scene-start">New scene</span>
+      <span class="pill snippet" data-insert="snip:object-choice">Object + Choice</span>
+      <span class="pill snippet" data-insert="snip:gift-flow">Full gift flow</span>
     </div>
     <div class="editor-textarea-wrap">
+      <div class="line-gutter" id="lineGutter"></div>
+      <pre id="syntaxHighlight" aria-hidden="true"></pre>
       <textarea id="scriptArea" spellcheck="false" placeholder="Start writing the scenario…"></textarea>
     </div>
     <div class="editor-footer">
       <span>⌘/Ctrl + S to save</span>
       <span class="sep"></span>
+      <button class="hbtn" id="indentBtn" title="Auto-indent Choice / IfChoice blocks" style="padding:3px 9px;font-size:11px;">↹ Indent</button>
       <span id="charCount">0 lines</span>
       <span class="saved-flash" id="savedFlash">✓ Saved</span>
     </div>
@@ -600,6 +936,52 @@
     </div>
   </section>
 </main>
+
+<!-- Floating bracket-directive panel — drag the header to move,
+     click − to collapse. Position + collapsed state persisted to
+     localStorage. Wired up by setupBracketPanel() at end of <script>. -->
+<aside id="bracketPanel" aria-label="Bracket directives">
+  <div class="bp-head" title="Drag to move">
+    <span class="bp-grip" aria-hidden="true">⋮⋮</span>
+    <span class="bp-title">Brackets</span>
+    <button class="bp-toggle" type="button" aria-label="Collapse / expand">−</button>
+  </div>
+  <div class="bp-body">
+    <div class="bp-section">
+      <div class="bp-section-label">bg</div>
+      <button class="bp-pill bg" type="button" data-insert="bg:cutscene">[bg:cutscene=…]</button>
+      <button class="bp-pill bg" type="button" data-insert="bg:scene">[bg:scene=…]</button>
+      <button class="bp-pill bg" type="button" data-insert="bg:explore">[bg:explore]</button>
+      <button class="bp-pill bg" type="button" data-insert="bg:none">[bg:none]</button>
+    </div>
+    <div class="bp-section">
+      <div class="bp-section-label">ui</div>
+      <button class="bp-pill ui" type="button" data-insert="ui:cast-large">[ui:cast-large]</button>
+      <button class="bp-pill ui" type="button" data-insert="ui:cast-small">[ui:cast-small]</button>
+      <button class="bp-pill ui" type="button" data-insert="ui:inner-large">[ui:inner-large]</button>
+      <button class="bp-pill ui" type="button" data-insert="ui:inner-small">[ui:inner-small]</button>
+      <button class="bp-pill ui" type="button" data-insert="ui:narrative">[ui:narrative]</button>
+      <button class="bp-pill ui" type="button" data-insert="ui:bubble">[ui:bubble]</button>
+      <button class="bp-pill ui" type="button" data-insert="ui:multi">[ui:multi]</button>
+    </div>
+    <div class="bp-section">
+      <div class="bp-section-label">fx</div>
+      <button class="bp-pill fx" type="button" data-insert="fx:none">[fx:none]</button>
+      <button class="bp-pill fx" type="button" data-insert="fx:fx1">[fx:fx1] dust+blur</button>
+      <button class="bp-pill fx" type="button" data-insert="fx:fx2">[fx:fx2] red layer</button>
+      <button class="bp-pill fx" type="button" data-insert="fx:moonlight">[fx:moonlight]</button>
+      <button class="bp-pill fx" type="button" data-insert="fx:warmlight">[fx:warmlight]</button>
+    </div>
+    <div class="bp-section">
+      <div class="bp-section-label">tr</div>
+      <button class="bp-pill tr" type="button" data-insert="tr:none">[tr:none]</button>
+      <button class="bp-pill tr" type="button" data-insert="tr:fadeUp">[tr:fadeUp]</button>
+      <button class="bp-pill tr" type="button" data-insert="tr:softCrossfade">[tr:softCrossfade]</button>
+      <button class="bp-pill tr" type="button" data-insert="tr:charSwap">[tr:charSwap]</button>
+      <button class="bp-pill tr" type="button" data-insert="tr:innerVoiceLoop">[tr:innerVoiceLoop]</button>
+    </div>
+  </div>
+</aside>
 
 <!-- Modal for rename/new/delete -->
 <div class="modal-backdrop" id="modalBackdrop">
@@ -816,6 +1198,12 @@ function loadCurrent() {
 function updateCharCount() {
   const lines = scriptArea.value.split('\n').filter(l => l.trim()).length;
   charCount.textContent = lines + ' lines';
+  // Refresh the per-line gutter + syntax highlight overlay alongside
+  // the char count so they stay in sync as the user types or pastes
+  // a snippet (covers programmatic value changes too — scenario load,
+  // auto-indent, toolbar snippet insertion).
+  if (typeof renderLineGutter      === 'function') renderLineGutter();
+  if (typeof renderSyntaxHighlight === 'function') renderSyntaxHighlight();
 }
 
 function flashSaved() {
@@ -827,6 +1215,10 @@ function flashSaved() {
 // Save / load
 // ============================================================
 function saveCurrent() {
+  // Auto-indent before save so the on-disk text always reflects the
+  // structural indent — the engine's parseScript trims each line so
+  // the leading spaces are cosmetic only.
+  if (typeof autoIndentScript === 'function') autoIndentScript();
   scenarios[currentName] = scriptArea.value;
   saveScenarios(scenarios);
   flashSaved();
@@ -857,6 +1249,15 @@ scriptArea.addEventListener('input', () => {
 });
 
 $('saveScript').addEventListener('click', saveCurrent);
+
+// ↹ Indent button — auto-format the script's Choice / IfChoice indentation.
+const indentBtnEl = document.getElementById('indentBtn');
+if (indentBtnEl) {
+  indentBtnEl.addEventListener('click', () => {
+    autoIndentScript();
+    flashSaved(); // brief visual confirmation reusing the save flash
+  });
+}
 
 // ============================================================
 // Scenario actions: new / duplicate / rename / delete
@@ -1008,43 +1409,197 @@ $('importFile').addEventListener('change', async (e) => {
 // Toolbar pills — insert text at cursor
 // ============================================================
 const INSERT_TEMPLATES = {
+  // Cast speakers
   'speaker:boy':        'Boy: ',
   'speaker:girl':       'Girl: ',
+  'speaker:joy':        'Joy: ',
   'speaker:dog':        'Dog: ',
+  'speaker:narrative':  'Narrative: ',
+  // Mike's voices
   'speaker:eros':       'Eros: ',
   'speaker:valium':     'Valium: ',
   'speaker:romeo':      'Romeo: ',
   'speaker:professore': 'Professore: ',
-  'speaker:narrative':  'Narrative: ',
+  // Iris's voices
+  'speaker:trilli':     'Trilli: ',
+  'speaker:alfa':       'Alfa: ',
+  'speaker:scheggia':   'Scheggia: ',
+  'speaker:giulietta':  'Giulietta: ',
+
+  // UI bracket directives
+  'ui:cast-large':      '[ui:cast-large]\n',
+  'ui:cast-small':      '[ui:cast-small]\n',
+  'ui:inner-large':     '[ui:inner-large]\n',
+  'ui:inner-small':     '[ui:inner-small]\n',
+  'ui:narrative':       '[ui:narrative]\n',
+  'ui:bubble':          '[ui:bubble]\n',
+  'ui:multi':           '[ui:multi]\n',
+
+  // Background bracket directives
+  'bg:cutscene':        '[bg:cutscene=joy-street01.jpg]\n',
+  'bg:scene':           '[bg:scene=narrativescene01.jpg]\n',
+  'bg:explore':         '[bg:explore]\n',
+  'bg:none':            '[bg:none]\n',
+
+  // FX bracket directives (presets defined in _config/fx-presets.json)
+  'fx:none':            '[fx:none]\n',
+  'fx:fx1':             '[fx:fx1]\n',
+  'fx:fx2':             '[fx:fx2]\n',
+  'fx:moonlight':       '[fx:moonlight]\n',
+  'fx:warmlight':       '[fx:warmlight]\n',
+
+  // Transition bracket directives (presets in _config/tr-presets.json)
+  'tr:none':            '[tr:none]\n',
+  'tr:fadeUp':          '[tr:fadeUp]\n',
+  'tr:softCrossfade':   '[tr:softCrossfade]\n',
+  'tr:charSwap':        '[tr:charSwap]\n',
+  'tr:innerVoiceLoop':  '[tr:innerVoiceLoop]\n',
+
+  // Choice variants
+  'choice-2':           '(Choice:2)\nRomeo: \nValium: \n',
+  'choice-3':           '(Choice:3)\nRomeo: \nValium: \nProfessore: \n',
+  'choice-write':       '(Choice:4)\nEros: \nValium: \nProfessore: \nWrite: Write your own move…\n',
+  'ifchoice':           '(IfChoice:0)\n\n(EndIf)\n',
   'explore':            '(Explore:30)\n',
-  'choice':             '(Choice:2)\nRomeo: \nEros: \n',
+
+  // AI gift directives
+  'gift-pick':          '(GiftPick)\n',
+  'gift-scene':         '(GiftScene)\n',
+  'gift-closing':       '(GiftClosing)\n',
+  'gift-reveal':        '(GiftReveal)\n',
+
+  // Generic AI dialog block — placeholder lines stay; if AI returns
+  // for `myid`, those lines splice in instead at render time.
+  'ai-block':           '(AI:myid)\nMike: placeholder line\n(EndAI)\n',
+
+  // Object blocks
   'object-image':       '(Object:myobject image=file.png)\nNarrative: \n',
+  'object-video':       '(Object:myobject video=file.mp4)\nNarrative: \n',
   'object-character':   '(Object:mycharacter character=dog)\nDog: \nValium: \n',
   'action':             '(Action)\nRomeo: \n',
+
+  // Misc legacy
   'scene':              '(Scene:narrativescene01.png)\n',
   'scene-none':         '(Scene:none)\n',
   'cutscene':           ' (cutscene01.png)',
   'cutscene-none':      ' (none)',
   'points':             ' (+5)',
+  'music':              '(Music)\n',
+  'endscene':           '(EndScene)\n',
+
+  // EndScene with a script-supplied timed subtitle reel.
+  'endscene-reel':
+    '(EndScene)\n' +
+    '0.4 Narrative: The TV stops mattering.\n' +
+    '2.6 Valium: Slow. Just breathe.\n' +
+    '4.4 Eros: I knew it.\n' +
+    '6.2 Romeo: Stay in this exact second.\n' +
+    '8.0 Professore: Statistically, we survived.\n' +
+    '11.0 Narrative: Two humans, one couch, a quiet good mess.\n' +
+    '(/EndScene)\n',
+
+  // Multi-line snippets — common scene patterns
+  'snip:joy-bumps':
+    'Narrative: Footsteps catch up beside you. (joy-street01.jpg)\n' +
+    '[ui:cast-large]\n' +
+    'Joy: Hey, stranger.\n' +
+    'Boy: Joy! I didn\'t see you.\n' +
+    'Joy: You never do.\n',
+
+  'snip:choice-write':
+    '[ui:multi]\n' +
+    '(Choice:4)\n' +
+    'Eros: \n' +
+    'Valium: \n' +
+    'Professore: \n' +
+    'Write: Write your own move…\n',
+
+  'snip:inner-arg':
+    '[ui:inner-large]\n' +
+    'Eros: \n' +
+    'Valium: \n' +
+    'Romeo: \n' +
+    'Professore: \n',
+
+  'snip:scene-start':
+    '[bg:cutscene=foo.jpg] [tr:softCrossfade] [ui:narrative]\n' +
+    'Narrative: \n' +
+    '[ui:cast-large]\n',
+
+  'snip:object-choice':
+    '(Object:vinyl image=vinyl.jpg)\n' +
+    '(Choice:2)\n' +
+    'Eros: Press play\n' +
+    'Valium: Just look\n' +
+    '(IfChoice:0 video=vinyl.mp4)\n' +
+    'Narrative: A record is already on the deck.\n' +
+    'Eros: Indie folk. I should have guessed.\n' +
+    '(EndIf)\n' +
+    '(IfChoice:1)\n' +
+    'Narrative: You take a step back.\n' +
+    'Valium: Some things you appreciate without touching.\n' +
+    '(EndIf)\n',
+
+  'snip:gift-flow':
+    'Joy: Show me. What did you bring her?\n' +
+    '(GiftPick)\n' +
+    'Joy: Let me see what you\'ve got.\n' +
+    '(GiftScene)\n' +
+    '(GiftClosing)\n' +
+    '(GiftReveal)\n' +
+    '[ui:cast-large]\n' +
+    'Joy: Now go.\n',
 };
+
+// Insert a template at the cursor with smart spacing/newlines:
+//   single-line:  if char to the LEFT is a non-space, prepend ' ';
+//                 if mid-line, drop the template's trailing '\n' so we
+//                 don't split the user's line.
+//   multi-line:   ensure the snippet starts on a fresh line (a leading
+//                 '\n' is added when needed) — multi-line snippets are
+//                 always meant as their own block.
+// In both cases we never auto-jump the caret to the next line just
+// because a directive ends in '\n' — the caret lands right after the
+// inserted text, where the user expects.
+function insertTemplateAtCursor(rawTxt) {
+  let txt = rawTxt;
+  if (!txt) return;
+  const ta = scriptArea;
+  const start = ta.selectionStart, end = ta.selectionEnd;
+  const before = ta.value.slice(0, start);
+  const after  = ta.value.slice(end);
+  const leftChar  = before.length ? before[before.length - 1] : '';
+  const rightChar = after.length  ? after[0] : '';
+  const isMultiLine = txt.includes('\n') && !txt.match(/^[^\n]*\n$/);
+
+  if (isMultiLine) {
+    const needLeadingNl = !(leftChar === '' || leftChar === '\n');
+    if (needLeadingNl) txt = '\n' + txt;
+  } else {
+    // Single-line directive: ALWAYS strip the template's trailing
+    // newline. The caret should land right after the inserted token
+    // so the user can keep typing inline; if they want a new line
+    // they can hit Enter manually. Without this strip, inserting at
+    // end-of-line would push the caret onto the next (empty) line.
+    txt = txt.replace(/\n$/, '');
+    // Pad with a space if the cursor sits flush against text.
+    if (leftChar && leftChar !== ' ' && leftChar !== '\n' && leftChar !== '\t') {
+      txt = ' ' + txt;
+    }
+  }
+
+  ta.value = before + txt + after;
+  const caret = (before + txt).length;
+  ta.focus();
+  ta.setSelectionRange(caret, caret);
+  updateCharCount();
+  clearTimeout(scriptArea._imgTimer);
+  scriptArea._imgTimer = setTimeout(refreshImageList, 200);
+}
 
 document.querySelectorAll('.toolbar .pill').forEach(p => {
   p.addEventListener('click', () => {
-    const key = p.dataset.insert;
-    const txt = INSERT_TEMPLATES[key] || '';
-    const ta = scriptArea;
-    const start = ta.selectionStart, end = ta.selectionEnd;
-    const before = ta.value.slice(0, start);
-    const after  = ta.value.slice(end);
-    const needLinePrefix = !(txt.startsWith(' ') || before === '' || before.endsWith('\n'));
-    const insert = (needLinePrefix ? '\n' : '') + txt;
-    ta.value = before + insert + after;
-    const caret = (before + insert).length;
-    ta.focus();
-    ta.setSelectionRange(caret, caret);
-    updateCharCount();
-    clearTimeout(scriptArea._imgTimer);
-    scriptArea._imgTimer = setTimeout(refreshImageList, 200);
+    insertTemplateAtCursor(INSERT_TEMPLATES[p.dataset.insert]);
   });
 });
 
@@ -1146,12 +1701,412 @@ $('imageUpload').addEventListener('change', (e) => {
 // ============================================================
 // Live preview — postMessage the current script into the iframe
 // ============================================================
-function pushToPreview(type) {
+function pushToPreview(type, extra) {
   if (!previewFrame.contentWindow) return;
-  previewFrame.contentWindow.postMessage({
+  const msg = Object.assign({
     type: type || 'loadScript',
     script: scriptArea.value
-  }, '*');
+  }, extra || {});
+  previewFrame.contentWindow.postMessage(msg, '*');
+}
+
+// ============================================================
+// Per-line gutter — line numbers + hover play button. Click play
+// → preview jumps to that line. Counts only "real" lines (skips
+// blanks + // comments) to compute the engine event index.
+// ============================================================
+const lineGutter = document.getElementById('lineGutter');
+
+// "Speaker: text" pattern for dialog rows.
+const DIALOG_LINE_RE = /^[A-Za-z][A-Za-z0-9_-]*\s*:\s*\S/;
+
+// Mirror of dialog.html's parseScript event-counting rules — needed
+// so the play button on row N maps to the EXACT event index in the
+// engine's main array. Without this, things like (Choice:N) (which
+// consumes N+1 raw lines but produces 1 event) drift the count.
+//
+// Returns a per-textarea-line annotation: { kind, eventIdx?, depth }
+//   kind: 'blank' | 'comment' | 'main-dialog' | 'main-directive'
+//       | 'choice-header' | 'choice-option' | 'object-header'
+//       | 'action-header' | 'object-line' | 'gift-directive'
+//   eventIdx: present only when this row corresponds to a main-array
+//             event the engine can jump to (depth === 0)
+function buildLineMap(text) {
+  const lines = text.split('\n');
+  const map = new Array(lines.length);
+  let mainEventIdx = 0;
+  let objectDepth = 0;    // 0 = main flow, 1 = inside (Object:...) section
+  let indentDepth = 0;    // visual indent: increases inside Choice options + IfChoice blocks
+  let skipChoice = 0;     // remaining (Choice:N) option lines to consume
+  let inAiBlock = 0;      // depth of nested (AI:id) blocks — placeholder lines get no eventIdx
+  for (let i = 0; i < lines.length; i++) {
+    const t = lines[i].trim();
+    if (!t)                            { map[i] = { kind: 'blank',   depth: indentDepth }; continue; }
+    if (t.indexOf('//') === 0)         { map[i] = { kind: 'comment', depth: indentDepth }; continue; }
+
+    // (AI:id) — opens an AI-replaceable block. The header itself IS
+    // a main event (the engine emits one ai-block event), but the
+    // placeholder lines that follow are embedded inside it, NOT in
+    // the main array — so they must NOT consume mainEventIdx slots.
+    if (/^\(\s*AI\s*:/i.test(t)) {
+      map[i] = { kind: 'main-directive', depth: indentDepth, eventIdx: mainEventIdx };
+      mainEventIdx++;
+      indentDepth++;
+      inAiBlock++;
+      continue;
+    }
+    if (/^\(\s*EndAI\s*\)/i.test(t)) {
+      indentDepth = Math.max(0, indentDepth - 1);
+      inAiBlock = Math.max(0, inAiBlock - 1);
+      map[i] = { kind: 'main-directive', depth: indentDepth };
+      // No eventIdx — (EndAI) is not a separate engine event.
+      continue;
+    }
+
+    // Choice OPTION lines — sit one level deeper than the Choice header.
+    if (skipChoice > 0) {
+      map[i] = { kind: 'choice-option', depth: indentDepth + 1 };
+      skipChoice--;
+      continue;
+    }
+    if (/^\(\s*Object\s*:/i.test(t)) {
+      objectDepth = 1;
+      map[i] = { kind: 'object-header', depth: indentDepth };
+      continue;
+    }
+    if (/^\(\s*Action\b/i.test(t) && objectDepth === 1) {
+      map[i] = { kind: 'action-header', depth: indentDepth };
+      continue;
+    }
+    // (EndIf) closes an IfChoice block — outdent BEFORE recording so
+    // the EndIf line itself sits at the parent depth.
+    if (/^\(\s*EndIf\s*\)/i.test(t)) {
+      indentDepth = Math.max(0, indentDepth - 1);
+      map[i] = { kind: 'main-directive', depth: indentDepth, eventIdx: mainEventIdx };
+      mainEventIdx++;
+      continue;
+    }
+    // (IfChoice:N) — header at current depth, content inside indented.
+    if (/^\(\s*IfChoice\s*:/i.test(t) && objectDepth === 0) {
+      map[i] = { kind: 'main-directive', depth: indentDepth, eventIdx: mainEventIdx };
+      mainEventIdx++;
+      indentDepth++;
+      continue;
+    }
+    // Choice header — consumes next N lines as options at depth+1.
+    const cm = t.match(/^\(\s*Choice\s*:\s*(\d+)\s*\)/i);
+    if (cm && objectDepth === 0) {
+      const n = Math.min(4, Math.max(1, parseInt(cm[1], 10)));
+      skipChoice = n;
+      map[i] = { kind: 'choice-header', depth: indentDepth, eventIdx: mainEventIdx };
+      mainEventIdx++;
+      continue;
+    }
+    // Inside an Object section.
+    if (objectDepth === 1) {
+      map[i] = { kind: 'object-line', depth: indentDepth };
+      continue;
+    }
+    // Default: a main-array event — UNLESS we're inside an (AI:id)
+    // block. AI placeholder lines live in the ai-block event's
+    // embedded array, so they shouldn't claim a main-array slot.
+    const isDialog = DIALOG_LINE_RE.test(t);
+    if (inAiBlock > 0) {
+      map[i] = {
+        kind: isDialog ? 'main-dialog' : 'main-directive',
+        depth: indentDepth,
+        // No eventIdx — engine will splice these in via the parent
+        // ai-block when the player reaches it.
+      };
+    } else {
+      map[i] = {
+        kind: isDialog ? 'main-dialog' : 'main-directive',
+        depth: indentDepth,
+        eventIdx: mainEventIdx,
+      };
+      mainEventIdx++;
+    }
+  }
+  return map;
+}
+
+function renderLineGutter() {
+  if (!lineGutter) return;
+  const text = scriptArea.value;
+  const lines = text.split('\n');
+  const lineMap = buildLineMap(text);
+  let html = '';
+  for (let i = 0; i < lines.length; i++) {
+    const info = lineMap[i] || { kind: 'blank' };
+    let cls = 'line-gutter-row';
+    let label = String(i + 1);
+    let dataIdx = '';
+    let canPlay = false;
+    switch (info.kind) {
+      case 'blank':
+        cls += ' blank'; label = '·'; break;
+      case 'comment':
+        cls += ' comment'; break;
+      case 'main-dialog':
+        dataIdx = ' data-event-idx="' + info.eventIdx + '"';
+        canPlay = true;
+        break;
+      case 'choice-header':
+        // Choice headers ARE playable — jumping here drops the user
+        // straight into the choice picker, super useful for testing
+        // branches without scrolling through preceding scene.
+        if (typeof info.eventIdx === 'number') {
+          dataIdx = ' data-event-idx="' + info.eventIdx + '"';
+          canPlay = true;
+        } else {
+          cls += ' non-dialog';
+        }
+        break;
+      case 'main-directive':
+        // (IfChoice:N) / (EndIf) / state-update directives are also
+        // jump-targets — same idea, lets you preview a specific branch.
+        if (typeof info.eventIdx === 'number') {
+          dataIdx = ' data-event-idx="' + info.eventIdx + '"';
+          canPlay = true;
+        } else {
+          cls += ' non-dialog';
+        }
+        break;
+      case 'choice-option':
+        // Options live inside the prior choice event — clicking play
+        // here would open the parent choice, but it's clearer to just
+        // hide play. The number stays so the row is anchored visually.
+        cls += ' non-dialog';
+        break;
+      case 'object-header':
+      case 'action-header':
+      case 'object-line':
+      default:
+        // Non-dialog rows: no play, but still numbered.
+        cls += ' non-dialog';
+        break;
+    }
+    const depth = (info && info.depth) || 0;
+    const dataDepth = depth > 0 ? ' data-depth="' + depth + '"' : '';
+    let guide = '';
+    for (let d = 1; d <= depth; d++) {
+      guide += '<span class="ln-guide" data-d="' + d + '"></span>';
+    }
+    html +=
+      '<div class="' + cls + '"' + dataIdx + dataDepth + '>' +
+        '<span class="ln-num">' + label + '</span>' +
+        guide +
+        (canPlay ?
+          '<button class="ln-play" type="button" aria-label="Play from this line">' +
+            '<svg viewBox="0 0 24 24" aria-hidden="true">' +
+              '<polygon points="6 4 22 12 6 20"/>' +
+            '</svg>' +
+          '</button>'
+        : '') +
+      '</div>';
+  }
+  lineGutter.innerHTML = html;
+}
+
+// ============================================================
+// Auto-indent — applies 2 spaces per depth level to each line,
+// based on buildLineMap's depth tracking. Triggered by the
+// "↹ Indent" footer button and also on save (Cmd/Ctrl+S).
+// ============================================================
+function autoIndentScript() {
+  const text = scriptArea.value;
+  const lines = text.split('\n');
+  const lineMap = buildLineMap(text);
+  const indented = lines.map((line, i) => {
+    const info = lineMap[i];
+    const depth = (info && info.depth) || 0;
+    const trimmed = line.replace(/^\s+/, '');
+    if (!trimmed) return '';
+    return '  '.repeat(depth) + trimmed;
+  }).join('\n');
+  if (indented === text) return; // no-op, preserve cursor
+  // Preserve cursor position relative to line + column-from-content-start.
+  const sel = scriptArea.selectionStart;
+  let lineNo = 0, col = 0, n = 0;
+  for (let i = 0; i < text.length && n < sel; i++, n++) {
+    if (text[i] === '\n') { lineNo++; col = 0; }
+    else col++;
+  }
+  // Strip leading whitespace from old col so we land at the same content position.
+  const oldLine = lines[lineNo] || '';
+  const oldLeading = (oldLine.match(/^\s*/) || [''])[0].length;
+  const contentCol = Math.max(0, col - oldLeading);
+  scriptArea.value = indented;
+  // Recompute new caret position.
+  const newLines = indented.split('\n');
+  let newPos = 0;
+  for (let i = 0; i < lineNo && i < newLines.length; i++) {
+    newPos += newLines[i].length + 1;
+  }
+  const newLine = newLines[lineNo] || '';
+  const newLeading = (newLine.match(/^\s*/) || [''])[0].length;
+  newPos += Math.min(newLine.length, newLeading + contentCol);
+  scriptArea.selectionStart = scriptArea.selectionEnd = newPos;
+  updateCharCount();
+}
+
+// ============================================================
+// Syntax highlight overlay — paints the colored tokens that sit
+// directly behind the (transparent) textarea. Re-runs on every
+// input + stays scroll-synced with the textarea so each character
+// lands at the same pixel as the textarea's invisible glyph.
+// ============================================================
+const syntaxHighlightEl = document.getElementById('syntaxHighlight');
+
+function escapeHtml(s) {
+  return s
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
+}
+
+// Highlight one already-escaped line. Order matters: comments first
+// (whole-line wins), then bracket directives + branching + explore,
+// then speaker prefix as a subtle accent.
+function highlightLine(escaped) {
+  // Whole-line comments. We checked the raw text starts with '//' so
+  // the entire line gets the comment color.
+  if (/^\s*\/\//.test(escaped)) {
+    return '<span class="tok-comment">' + escaped + '</span>';
+  }
+  let out = escaped;
+  // Bracket directives:  [bg:...]  [fx:...]  [tr:...]  [ui:...]
+  out = out.replace(
+    /\[(?:bg|fx|tr|ui)\b[^\]]*\]/g,
+    (m) => '<span class="tok-bracket">' + m + '</span>'
+  );
+  // Branching directives:  (Choice:N)  (IfChoice:N)  (EndIf)
+  out = out.replace(
+    /\((?:Choice|IfChoice|EndIf)\b[^)]*\)/g,
+    (m) => '<span class="tok-branch">' + m + '</span>'
+  );
+  // Explore directive:  (Explore:N)
+  out = out.replace(
+    /\(Explore\b[^)]*\)/g,
+    (m) => '<span class="tok-explore">' + m + '</span>'
+  );
+  // Object / Action interaction directives — (Object:id ...) and the
+  // legacy (Action ...) header. Coloured in warm orange so each Object
+  // section is visually scannable.
+  out = out.replace(
+    /\((?:Object|Action)\b[^)]*\)/g,
+    (m) => '<span class="tok-object">' + m + '</span>'
+  );
+  // Scene / Video / Music / EndScene structural directives, plus the
+  // (/EndScene) closer for the script-level reel block.
+  out = out.replace(
+    /\(\/?(?:Scene|Video|Music|EndScene)\b[^)]*\)/g,
+    (m) => '<span class="tok-scene">' + m + '</span>'
+  );
+  // Inside an (EndScene) block: a leading float on the line is the
+  // subtitle timestamp ("0.4 Narrative: …"). Colorize the time only.
+  out = out.replace(
+    /^(\d+(?:\.\d+)?)(?=\s+[A-Za-z])/,
+    (m) => '<span class="tok-points">' + m + '</span>'
+  );
+  // AI directives: (Gift…), and the generic (AI:id) / (EndAI) block.
+  out = out.replace(
+    /\((?:Gift|GiftPick|GiftScene|GiftClosing|GiftReveal|AI|EndAI)\b[^)]*\)/g,
+    (m) => '<span class="tok-gift">' + m + '</span>'
+  );
+  // Inline relationship-points suffix:  (+8)  → bright mint, bold, so
+  // each "this line earns score" beat pops while you're scanning.
+  out = out.replace(
+    /\(\+\d+\)/g,
+    (m) => '<span class="tok-points">' + m + '</span>'
+  );
+  // Inline cutscene-trigger suffix: (cutscene01.jpg), (foo.png) — image
+  // file at end of line that swaps the cutscene background. Soft warm
+  // tint so it reads as "asset reference" not "directive".
+  out = out.replace(
+    /\([a-zA-Z0-9_.\-]+\.(?:png|jpe?g|jpg)\)/gi,
+    (m) => '<span class="tok-cutscue">' + m + '</span>'
+  );
+  // Speaker prefix at line start:  Mike:   Romeo:   Narrative:
+  // Skipped if the line already opens with '(' or '[' (directive).
+  out = out.replace(
+    /^(\s*)([A-Za-z][A-Za-z0-9_-]*)(\s*:)/,
+    (full, lead, name, sep) =>
+      lead + '<span class="tok-speaker">' + name + sep + '</span>'
+  );
+  return out;
+}
+
+function renderSyntaxHighlight() {
+  if (!syntaxHighlightEl) return;
+  const text = scriptArea.value;
+  const lines = text.split('\n');
+  const html = lines.map((ln) => highlightLine(escapeHtml(ln))).join('\n');
+  // Trailing newline preserves the same scrollHeight as the textarea
+  // when the user's text ends in \n (otherwise the overlay collapses
+  // by one line and scroll-sync drifts at the very bottom).
+  syntaxHighlightEl.innerHTML = html + '\n';
+}
+
+// Keep highlight in lockstep with textarea content + scroll.
+if (syntaxHighlightEl) {
+  scriptArea.addEventListener('input', renderSyntaxHighlight);
+  scriptArea.addEventListener('scroll', () => {
+    syntaxHighlightEl.scrollTop  = scriptArea.scrollTop;
+    syntaxHighlightEl.scrollLeft = scriptArea.scrollLeft;
+  });
+  // Initial paint after scenarios load.
+  setTimeout(renderSyntaxHighlight, 0);
+}
+
+// Hover highlight strip — spans full editor width at the hovered row.
+let _lineHighlight = null;
+function ensureLineHighlight() {
+  if (_lineHighlight) return _lineHighlight;
+  const wrap = document.querySelector('.editor-textarea-wrap');
+  if (!wrap) return null;
+  _lineHighlight = document.createElement('div');
+  _lineHighlight.className = 'line-highlight';
+  wrap.appendChild(_lineHighlight);
+  return _lineHighlight;
+}
+
+if (lineGutter) {
+  // Click delegation for play buttons.
+  lineGutter.addEventListener('click', (e) => {
+    const btn = e.target.closest('.ln-play');
+    if (!btn) return;
+    const row = btn.closest('.line-gutter-row');
+    if (!row) return;
+    const evIdx = parseInt(row.dataset.eventIdx, 10);
+    if (isNaN(evIdx)) return;
+    pushToPreview('loadScript', { startIdx: evIdx });
+  });
+
+  // Move the highlight strip with the hovered row (full row hover,
+  // even past the gutter into the textarea visually).
+  lineGutter.addEventListener('mousemove', (e) => {
+    const row = e.target.closest('.line-gutter-row');
+    const strip = ensureLineHighlight();
+    if (!strip) return;
+    if (!row || row.classList.contains('blank')) {
+      strip.style.opacity = '0';
+      return;
+    }
+    const wrapRect = lineGutter.parentElement.getBoundingClientRect();
+    const rect = row.getBoundingClientRect();
+    strip.style.top = (rect.top - wrapRect.top) + 'px';
+    strip.style.height = rect.height + 'px';
+    strip.style.opacity = '1';
+  });
+  lineGutter.addEventListener('mouseleave', () => {
+    if (_lineHighlight) _lineHighlight.style.opacity = '0';
+  });
+
+  // Keep the gutter scrolled with the textarea.
+  scriptArea.addEventListener('scroll', () => {
+    lineGutter.scrollTop = scriptArea.scrollTop;
+  });
 }
 $('playPreview').addEventListener('click', () => pushToPreview('loadScript'));
 $('gotoDate').addEventListener('click', () => {
@@ -1173,6 +2128,80 @@ $('reloadPreview').addEventListener('click', () => {
 previewFrame.addEventListener('load', () => {
   setTimeout(() => pushToPreview('loadScript'), 200);
 });
+
+// ============================================================
+// Floating bracket-directive panel — draggable, vertical, sectioned
+// ============================================================
+(function setupBracketPanel() {
+  const panel = document.getElementById('bracketPanel');
+  if (!panel) return;
+  const head = panel.querySelector('.bp-head');
+  const body = panel.querySelector('.bp-body');
+  const toggle = panel.querySelector('.bp-toggle');
+
+  // Restore saved position + collapsed state.
+  const SAVE_KEY = 'roles_bracketPanel_v1';
+  const saved = (() => {
+    try { return JSON.parse(localStorage.getItem(SAVE_KEY) || '{}'); }
+    catch (_) { return {}; }
+  })();
+  if (typeof saved.left === 'number') panel.style.left = saved.left + 'px';
+  if (typeof saved.top  === 'number') panel.style.top  = saved.top  + 'px';
+  if (saved.collapsed) panel.classList.add('collapsed');
+
+  function persist(extra) {
+    try {
+      const data = Object.assign({
+        left: parseInt(panel.style.left, 10),
+        top:  parseInt(panel.style.top, 10),
+        collapsed: panel.classList.contains('collapsed'),
+      }, extra || {});
+      localStorage.setItem(SAVE_KEY, JSON.stringify(data));
+    } catch (_) {}
+  }
+
+  // Drag from the header bar. We use pointer events so it works on
+  // mouse + trackpad + touch with a single handler.
+  let dragging = false, offX = 0, offY = 0;
+  head.addEventListener('pointerdown', (e) => {
+    // Don't drag when the user clicks the collapse toggle.
+    if (e.target.closest('.bp-toggle')) return;
+    dragging = true;
+    const r = panel.getBoundingClientRect();
+    offX = e.clientX - r.left;
+    offY = e.clientY - r.top;
+    head.setPointerCapture(e.pointerId);
+    panel.classList.add('dragging');
+  });
+  head.addEventListener('pointermove', (e) => {
+    if (!dragging) return;
+    const x = Math.max(4, Math.min(window.innerWidth  - panel.offsetWidth  - 4, e.clientX - offX));
+    const y = Math.max(4, Math.min(window.innerHeight - panel.offsetHeight - 4, e.clientY - offY));
+    panel.style.left = x + 'px';
+    panel.style.top  = y + 'px';
+    panel.style.right = 'auto';
+  });
+  head.addEventListener('pointerup', (e) => {
+    if (!dragging) return;
+    dragging = false;
+    head.releasePointerCapture(e.pointerId);
+    panel.classList.remove('dragging');
+    persist();
+  });
+
+  // Collapse / expand
+  toggle.addEventListener('click', () => {
+    panel.classList.toggle('collapsed');
+    persist();
+  });
+
+  // Reuse the same insert-template pipeline as the toolbar pills.
+  panel.querySelectorAll('.bp-pill').forEach(p => {
+    p.addEventListener('click', () => {
+      insertTemplateAtCursor(INSERT_TEMPLATES[p.dataset.insert]);
+    });
+  });
+})();
 
 // ============================================================
 // Init

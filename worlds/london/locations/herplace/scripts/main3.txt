@@ -1,0 +1,388 @@
+// =============================================================
+// London / Her Place — main scenario (v2 architecture)
+//
+// Each section declares its visual stack with bracket directives:
+//   [bg:cutscene=foo.jpg]     full-bleed image background
+//   [bg:scene=foo.jpg]        two-person scene illustration (for bubbles)
+//   [bg:explore]              interactive scene with hotspots
+//   [bg:none]                 clear background
+//   [fx:fx1] / [fx:none]      named effect package from _config/fx-presets.json
+//   [tr:fadeUp] / [tr:none]   named transition package from _config/tr-presets.json
+//   [ui:cast-large]           default lead/NPC dialog box
+//   [ui:inner-large]          full-body inner voice
+//   [ui:cast-small]           bottom-left avatar (compact)
+//   [ui:inner-small]          inner voice in scene mode
+//   [ui:narrative]            off-screen narrator strip
+//   [ui:bubble]               speech bubble (auto with bg:scene)
+//   [ui:multi]                multi-select panel
+//   [ui:write]                write-your-own input
+//
+// Beats inherit the previous stack. Only changes need to be written.
+// Legacy directives — (Choice:N), (Object:...), (GiftPick), (EndScene),
+// (Music), (Explore:N), (Scene:...) — still work and are mixed below
+// where the engine's specialized handlers are needed.
+// =============================================================
+
+// ---- Joy on the street ----
+[bg:cutscene=joy-street01.jpg] [fx:none] [tr:softCrossfade]
+[ui:narrative]
+Narrative: A cool evening. You walk the long way to her place, hands in your coat pockets, the box tucked under one arm.
+Narrative: Footsteps catch up beside you. A familiar voice you haven't heard in a while.
+[ui:cast-large]
+Joy: Hey, stranger. Look at you, all dressed up.
+Boy: Joy! I didn't see you.
+Joy: You never do. You look excited. Where are you off to?
+Boy: I'm seeing someone tonight. Someone important.
+Joy: Oh, finally. Tell me about her. Actually no, show me.
+
+// ---- Gift sequence ----
+//
+// (GiftScene) and (GiftClosing) accept per-section UI overrides. AI
+// returns content; the SCRIPT decides which UI mode each section uses.
+// Recognized section keys (with defaults):
+//   narrative=narrative   (the engine-side narrative beat)
+//   boy_inner_pre=inner-large
+//   joy_react=cast-large
+//   boy_react=multi       (the player choice panel)
+//   boy_inner_mid=inner-large
+//   professor=inner-large
+//   filler=inner-large    (closing fillers while ComfyUI cooks)
+//
+// Want mini avatars instead of full-body for the chorus? Override:
+//   (GiftScene boy_inner_pre=inner-small boy_inner_mid=inner-small)
+//
+// Below uses defaults. Tweak inline to taste.
+[ui:multi]
+[bg:cutscene=joy-street01.jpg] [ui:multi]
+(GiftPick)
+[ui:cast-large]
+Joy: Let me see what you've brought.
+Joy: You always did pick out odd little things.
+
+(GiftScene boy_inner_pre=inner-small joy_react=cast-large boy_inner_mid=inner-small)
+(GiftClosing professor=inner-small filler=inner-small)
+
+(GiftReveal)
+[ui:cast-large]
+Joy: Now go. Don't keep her waiting.
+
+// ---- Joy leaves, walk to door ----
+[bg:cutscene=cutscene04.jpg] [tr:softCrossfade] [ui:narrative]
+Narrative: She squeezes your shoulder once, then she's gone. The street is yours again.
+[bg:cutscene=cutscene01.jpg]
+Narrative: You stand on the street below her building. A yellow window glows high above you.
+[bg:cutscene=cutscene02.jpg]
+Narrative: Coat collar up, you cross the quiet pavement and climb the three worn steps to her door.
+Narrative: You knock, three short raps. Then you wait.
+
+// ---- Inner voices while waiting at the door ----
+[ui:inner-large] [tr:fadeUp]
+Professore: Count to three. If nothing, knock again. Not before.
+Valium: Breathe. You've done this a hundred times.
+
+// ---- Door opens ----
+[bg:cutscene=cutscene03.jpg] [tr:softCrossfade] [ui:narrative]
+Narrative: The latch turns. The door opens a hand's width. Warm light spills onto the landing.
+[ui:cast-small]
+Girl: Hey. You made it. Come on in.
+Boy: I'm here.
+
+// ---- Inside her place — POV ----
+[bg:none] [ui:narrative]
+Narrative: You step inside. The smell of coffee and something baking. Her home swallows you whole.
+Narrative: The room is full of soft light. She stands by the coffee table, a steaming mug in her hand.
+[ui:cast-large]
+Girl: You finally made it. Where were you?
+Boy: S-sorry, the traffic was a bit...
+
+// ---- Choice 1: how to greet ----
+[ui:multi]
+(Choice:3)
+Romeo: Take her hand. Look her in the eyes and say "I missed you."
+Valium: Slow down. Take a breath, step back a little.
+Professore: Apologize, change the subject. The weather is always a safe bet.
+[ui:cast-large]
+Girl: Want me to make some coffee?
+Boy: Yeah... yeah, that would be great.
+Girl: One sec, I'll grab something from the kitchen. Be right back.
+
+// ---- Explore the room ----
+[bg:explore]
+(Explore:30)
+[bg:none] [ui:cast-large]
+Girl: Sorry, didn't take long. You know what, let's grab wine and move to the couch.
+Boy: Yeah, I'd like that.
+
+// ---- Couch scene (two-person illustration with bubbles) ----
+[bg:scene=narrativescene01.jpg] [tr:softCrossfade] [ui:bubble]
+[ui:inner-small]
+Giulietta: He's here. He's really here.
+Alfa: Keep your face steady. Don't smile too wide.
+[ui:bubble]
+Girl: There. Much better.
+[ui:inner-small]
+Scheggia: Ask him a good question. Something that bypasses small talk.
+[ui:bubble]
+Girl: So tell me, what have you actually been up to?
+
+// ---- Choice 2: how to open up ----
+[ui:multi]
+(Choice:3)
+Eros: Lean in. Tell her something you've never told anyone.
+Valium: Keep it light. A small truth, not a confession.
+Professore: Deflect politely. Ask her about her week instead.
+
+[ui:bubble]
+Boy: I walked past the old cinema on the way. The one we used to sneak into.
+[ui:inner-small]
+Trilli: Ohhh, the cinema. That place has our name on a seat.
+Giulietta: He remembers. He actually remembers.
+[ui:bubble]
+Girl: You remember that? I can't believe it's still standing.
+Boy: It is. Same broken sign and everything.
+[ui:inner-small]
+Alfa: He's building toward something. Make it easy for him.
+[ui:bubble]
+Girl: We should go. Some Tuesday night, just us. (+8)
+[ui:inner-small]
+Valium: Breathe. This one lands.
+
+// ---- Choice 3: accept the invite ----
+[ui:multi]
+(Choice:2)
+Romeo: Touch her hand. Say yes with your eyes.
+Professore: Don't overplay it. A nod is enough.
+[ui:bubble]
+Boy: Tuesday it is.
+[ui:inner-small]
+Scheggia: Don't celebrate yet. Just smile.
+[ui:bubble]
+Girl: Cheers, by the way.
+Boy: Cheers. To Tuesday nights. (+5)
+[ui:inner-small]
+Giulietta: That was our moment. Hold onto it.
+[ui:narrative]
+Narrative: A phone buzzes face-up on the coffee table. The screen lights, ringtone cutting through the calm.
+[ui:bubble]
+Girl: Sorry, give me a sec.
+
+// ---- Phone call ----
+[bg:scene=phone.jpg] [tr:softCrossfade] [ui:narrative]
+Narrative: She picks up. Half-turns away.
+[ui:inner-small]
+Eros: Who's calling at this hour?
+Valium: Don't lean in. Give her space.
+Professore: Tone tells you everything. Listen to her tone.
+
+// ---- Choice 4: listen or look away ----
+[ui:multi]
+(Choice:2)
+Romeo: Listen to the conversation
+Valium: Look away. Give her privacy.
+
+(IfChoice:0)
+[bg:scene=phone-listen.jpg] [tr:softCrossfade] [ui:narrative]
+Narrative: You don't pretend. You just listen.
+[ui:bubble]
+Girl: **Tess**! Yeah no, yeah, I'm fine. Yeah, just... y'know. (+5)
+[ui:inner-small]
+Eros: **Tess**. Make a note of that.
+[ui:bubble]
+Girl: I'll tell you everything tomorrow. He's here right now.
+[ui:inner-small]
+Scheggia: Wait, he's quiet. He's listening. I can feel his eyes on the side of my face.
+Trilli: Don't look at him. Don't smile. Don't break the spell.
+[ui:bubble]
+Girl: Yeah, you're the first one I'd call. Always.
+[ui:inner-small]
+Professore: That voice is reserved. **Tess** is the keeper of her real things. (+5)
+[ui:narrative]
+Narrative: She hangs up, sets the phone face-down. A little caught.
+[ui:bubble]
+Girl: Sorry. Where were we?
+[ui:inner-small]
+Romeo: **Tess**. We learned a name. (+10)
+(EndIf)
+
+(IfChoice:1)
+[ui:narrative]
+Narrative: You let your eyes drift to the wine glass, the rug, anything else.
+[ui:bubble]
+Girl: ...mm. ...mm. ...okay, yeah. ...later, yeah.
+[ui:inner-small]
+Romeo: Some respect for her privacy is its own kind of intimacy. (+3)
+Eros: But who is it. Could've been anyone.
+Giulietta: He's looking away. He's giving me space. That's something.
+Alfa: Keep your voice down. Make it short.
+[ui:bubble]
+Girl: I have to go. Talk later.
+[ui:narrative]
+Narrative: She hangs up. The screen blanks before you can read it. "Unknown."
+[ui:bubble]
+Girl: Sorry. Where were we?
+[ui:inner-small]
+Eros: Wonder who that was.
+Professore: We respected the moment. That counts for something. (+4)
+(EndIf)
+
+// ---- Back on the couch ----
+[bg:scene=narrativescene01.jpg] [tr:softCrossfade] [ui:bubble]
+Girl: Where were we... oh, Tuesday. The cinema.
+Boy: Yeah, Tuesday.
+[ui:inner-small]
+Romeo: Pick up where you left off. Don't make the call into a thing.
+[ui:bubble]
+Girl: I haven't been on a proper cinema date in ages.
+[ui:inner-small]
+Eros: Make her laugh. It's that kind of moment.
+[ui:bubble]
+Boy: Sticky floor. Bad popcorn. Fluorescent toilets.
+Girl: Sounds perfect.
+[ui:inner-small]
+Giulietta: He came right back to me. He didn't drift.
+[ui:narrative]
+Narrative: The couch dip holds you both. Her laugh fades slowly, like a song ending. She tilts her head and just looks at you. And keeps looking.
+[ui:bubble]
+Girl: Well... now what?
+
+// ---- Choice 5: the moment ----
+[ui:multi]
+(Choice:4)
+Eros: Close the gap. Kiss her, don't overthink it.
+Valium: Stay where you are. Let her take the next breath.
+Professore: Crack a joke. Undercut the tension.
+Write: Write your own move…
+[ui:narrative]
+Narrative: The impulse arrives, clean and whole, {{input}}.
+
+// ---- Inner-voice deliberation ----
+[ui:inner-small]
+Scheggia: Wait. He's about to do something.
+Giulietta: Oh. Oh. I can feel him deciding.
+Trilli: Chaos energy incoming. I'm here for it.
+Alfa: Read her face. Shoulders tight, eyes soft, she's open to it.
+Eros: Go. The silence was waiting for exactly this.
+Valium: Careful. Count to three before you move.
+Romeo: If you do this, do it like you mean it.
+Professore: Hold on. This is a high-variance play. Let me check the odds.
+Professore: A coin. Fair and square. Heads, we commit. Tails, we retreat.
+
+// ---- Coin flip cinematic ----
+(Video:coinflip.mp4)
+[ui:inner-small]
+Professore: Heads. That settles it.
+Eros: Move. Now.
+
+// ---- The hug ----
+[bg:scene=hugscene.jpg] [tr:softCrossfade] [ui:narrative]
+Narrative: You close the gap before your mind can stop you.
+[ui:bubble]
+Boy: Come here.
+Girl: Oh,
+[ui:narrative]
+Narrative: Her arms fold around your shoulders. She laughs into your collar.
+[ui:inner-small]
+Giulietta: Did we just... did we just do the whole thing?
+Scheggia: Don't ruin it by overthinking. Hug him back.
+Trilli: This is the cutest disaster I have ever witnessed.
+Alfa: Composure. Hold the composure.
+Romeo: Remember this exact second. (+10)
+Valium: Warm. Real. Stay here.
+Eros: I told you. I always tell you.
+Professore: For the record, the coin didn't decide. You did. (+3)
+[ui:bubble]
+Girl: You're such a mess.
+Boy: Yeah.
+Girl: Don't stop being one. (+6)
+
+// ---- End of dialogue ----
+[bg:none]
+(EndScene)
+(Music)
+
+// =============================================================
+// EXPLORE OBJECTS — interactive hotspots inside the room.
+// Defined here, opened by the (Explore:30) directive above.
+// =============================================================
+
+(Object:coffee video=coffeemachine.mp4)
+Narrative: The red espresso machine hums on the counter. A dried coffee ring sits next to the mug.
+Valium: Maybe grab a cup. Something warm will steady your hands. (+4)
+Professore: Careful, the cord is touching the wet floor.
+Eros: Make one for her too. Small gestures. (+6)
+
+(Object:dog character=dog)
+Dog: GRRRRR... woof woof!
+Valium: Stay calm. Back off slowly, don't break eye contact.
+Romeo: Kneel down, offer your hand. Dogs respect courage.
+Professore: Statistically, the chance of attack is low. But not zero.
+Boy: Easy, buddy... easy, easy.
+Dog: ...hrrrr.
+
+(Object:poster video=poster.mp4)
+Narrative: "Good Things Take Time", a neon pink heart poster.
+Valium: Good things take time. Don't rush.
+
+(Object:lavalamp video=lamp.mp4)
+Narrative: In the purple liquid, blobs slowly rise and fall.
+Eros: Bring that rhythm to the conversation. Slow, warm, steady.
+
+(Object:fridge image=fridge.jpg)
+(Choice:4)
+Romeo: Look at the photo on the fridge
+Eros: Check the magnets
+Valium: Look inside
+Romeo: Check the calendar
+
+(IfChoice:0)
+  Narrative: Two faded photos held by magnets. A smile frozen in a summer you almost forgot. (+7)
+  Romeo: That moment is still in you somewhere.
+  Valium: Don't get lost in old frames. Just look, then move on.
+(EndIf)
+
+(IfChoice:1)
+  Narrative: Seven magnets. **Tokyo**, **Paris**, **Barcelona**, and four from places she never went. (+5)
+  Eros: **Barcelona**. I knew it. She had to have been there.
+  Professore: Tokyo magnet looks worn. Probably her favourite city of the three.
+(EndIf)
+
+(IfChoice:2 video=fridge.mp4 noloop)
+  Narrative: Soft light. A pitcher of water, half a lemon, and a takeout pizza box from last night. (+10)
+  Valium: Real life lives here. No performance. (+3)
+  Romeo: Pour her a glass of water. Small kindness.
+(EndIf)
+
+(IfChoice:3)
+  Narrative: A circle around March 14, her birthday. Two plane tickets pinned beside it. **Lisbon**, next month. (+12)
+  Romeo: Born under **Pisces**. Water and dreams. Fits her, doesn't it.
+  Professore: **Portugal**. File that away, she's headed there next month.
+(EndIf)
+
+(Object:vinyl image=vinyl.png)
+(Choice:3)
+Eros: Press play
+Professore: Look at the records beside it
+Valium: Don't mess with anything
+
+(IfChoice:0 video=vinyl.mp4 hideMusicNotes)
+  Narrative: A record is already on the deck. You lift the needle and let it drop. (+6)
+  Narrative: Warm crackle. Then the song begins, slow guitar, brushed drums. **Indie folk**. (+8)
+  Eros: **Indie folk**. I should've guessed. And there's a stack of **soft jazz** records on the shelf.
+  Professore: That's two pieces of her. File them.
+(EndIf)
+
+(IfChoice:1)
+  Narrative: Twenty sleeves lined up on the shelf. Miles Davis, Stevie Nicks, Radiohead, a bit of everything. (+7)
+  Professore: Her taste spans decades. You can read a person from their shelves. (+3)
+  Romeo: Pull out one she'd love. Ask her to play it later.
+(EndIf)
+
+(IfChoice:2)
+  Narrative: You take a step back. The player hums, the room feels intact.
+  Valium: Some things you appreciate without needing to interact. (+2)
+  Professore: Smart call. Not every object needs your hands on it.
+(EndIf)
+
+(Object:table video=coffeetable.mp4)
+Narrative: Half a coffee, two books, a small plant. The plant is leaning.
+Professore: Don't spill water on the book. I repeat: don't.

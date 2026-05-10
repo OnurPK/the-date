@@ -130,44 +130,61 @@ The-Fear: You almost did. The patrol on Victory Square, you were lucky.
 The-Rebel: But you did it. And the coral is still inside. (+6)
 
 (Object:gramophone image=gramophone.jpg)
-(Action)
+(Choice:2)
 The-Rebel: Press play
-Narrative: A warm crackle. Then dance music of a bygone age comes through the brass horn. Julia's eyes close. (+8)
-The-Rebel: Songs the Party never wrote. Proof.
-
-(Action)
 The-Fear: Don't touch it
-Narrative: You leave the needle hovering. The room stays in its own quiet. (+2)
-The-Fear: Music draws ears. Some music draws Thinkpol.
+
+(IfChoice:0)
+  Narrative: A warm crackle. Then dance music of a bygone age comes through the brass horn. Julia's eyes close. (+8)
+  The-Rebel: Songs the Party never wrote. Proof.
+(EndIf)
+
+(IfChoice:1)
+  Narrative: You leave the needle hovering. The room stays in its own quiet. (+2)
+  The-Fear: Music draws ears. Some music draws Thinkpol.
+(EndIf)
 
 (Object:engraving image=engraving.jpg)
-(Action)
+(Choice:2)
 The-Lover: Read the rhyme aloud
-Narrative: "Oranges and lemons, say the bells of St Clement's…"
-Girl: "You owe me five farthings, say the bells of St Martin's." She knows the next line. (+7)
-
-(Action)
 The-Loyalist: Don't sing it
-The-Loyalist: That rhyme is a crime you haven't been formally told about yet. (+3)
+
+(IfChoice:0)
+  Narrative: "Oranges and lemons, say the bells of St Clement's…"
+  Girl: "You owe me five farthings, say the bells of St Martin's." She knows the next line. (+7)
+(EndIf)
+
+(IfChoice:1)
+  The-Loyalist: That rhyme is a crime you haven't been formally told about yet. (+3)
+(EndIf)
 
 (Object:diary image=diary.jpg)
-(Action)
+(Choice:2)
 The-Rebel: Read the page
-Narrative: "DOWN WITH BIG BROTHER", written down the page in increasingly nervous slants. Whoever wrote this was you, or could have been. (+10)
-The-Rebel: Add a line. Make this room yours.
-
-(Action)
 The-Fear: Close it
-Narrative: You ease the floorboard back into place. Three fibres of dust resettle.
-The-Fear: Some things are stronger when you don't touch them. (+3)
+
+(IfChoice:0)
+  Narrative: "DOWN WITH BIG BROTHER", written down the page in increasingly nervous slants. Whoever wrote this was you, or could have been. (+10)
+  The-Rebel: Add a line. Make this room yours.
+(EndIf)
+
+(IfChoice:1)
+  Narrative: You ease the floorboard back into place. Three fibres of dust resettle.
+  The-Fear: Some things are stronger when you don't touch them. (+3)
+(EndIf)
 
 (Object:photograph image=photograph.jpg)
-(Action)
+(Choice:2)
 The-Lover: Pick it up
-Narrative: Julia sees you holding the small silver frame. "She looks like my mother. Or what I imagined her looking like. I never had a photograph." (+8)
-The-Lover: Tell her she has one now.
-
-(Action)
 The-Practical-Survivor: Read the back
-Narrative: Faded blue ink: "For our Margaret. May 1923. We were the lucky ones." (+5)
-The-Practical-Survivor: Whoever Margaret was, she stays Margaret. The room keeps its dead.
+
+(IfChoice:0)
+  Narrative: Julia sees you holding the small silver frame. "She looks like my mother. Or what I imagined her looking like. I never had a photograph." (+8)
+  The-Lover: Tell her she has one now.
+(EndIf)
+
+(IfChoice:1)
+  Narrative: Faded blue ink: "For our Margaret. May 1923. We were the lucky ones." (+5)
+  The-Practical-Survivor: Whoever Margaret was, she stays Margaret. The room keeps its dead.
+(EndIf)
+

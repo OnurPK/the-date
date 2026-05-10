@@ -34,7 +34,7 @@
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500;1,600&family=Lora:ital,wght@0,400;0,500;0,600;1,400;1,500&family=IBM+Plex+Mono:ital,wght@0,300;0,400;0,500;1,400&family=Courier+Prime:ital,wght@0,400;0,700;1,400;1,700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500;1,600&family=Lora:ital,wght@0,400;0,500;0,600;1,400;1,500&family=IBM+Plex+Mono:ital,wght@0,300;0,400;0,500;1,400&family=Courier+Prime:ital,wght@0,400;0,700;1,400;1,700&family=Caveat:wght@500;600;700&display=swap" rel="stylesheet">
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 
@@ -148,6 +148,20 @@
   body.narrativeScene #stage               { display: none; }
   body.narrativeScene #dialogBox           { transform: translateY(160%); opacity: 0; pointer-events: none; }
   body.narrativeScene #cutsceneLayer       { opacity: 0; }
+
+  /* Gift reveal: keep the product photo whole (no crop), centered on a
+     soft neutral backdrop so it reads like a held-up object, not a
+     full-bleed cinematic. Overrides cover→contain on the same layer. */
+  body.gift-scene #narrativeSceneLayer {
+    background-size: contain;
+    background-color: #14141a;
+  }
+  body.gift-scene #narrativeSceneLayer::after {
+    content: "";
+    position: absolute; inset: 0;
+    background: radial-gradient(ellipse at center, transparent 45%, rgba(0,0,0,0.55) 100%);
+    pointer-events: none;
+  }
 
   /* Speech bubbles, dark, translucent, positioned closer to the heads. */
   .scene-bubble {
@@ -273,7 +287,11 @@
     bottom: -36vh;      /* head lands at ~6vh from the top */
     height: 130vh;      /* 1.3× scale; width follows aspect-ratio */
     width: auto;
-    background-size: 100% 100%;
+    /* `contain` preserves the PNG's natural aspect ratio. The element
+       width is auto + aspect-ratio (per .char.{name}); if the PNG
+       happens to differ from the declared aspect-ratio, contain
+       letterboxes instead of stretching — no width compression. */
+    background-size: contain;
     background-position: bottom center;
     background-repeat: no-repeat;
     opacity: 0;
@@ -291,12 +309,19 @@
   .char.boy {
     background-image: var(--boy-img);
     aspect-ratio: var(--boy-aspect);
+    /* Mike's PNG matches the declared aspect exactly, so the default
+       `contain` ends up filling the full element height — head pinned
+       to the very top of the viewport. Override to render the image
+       at 80% of the element height so the cutscene shows through
+       above his head, mirroring how Joy naturally renders. */
+    background-size: auto 85%;
     /* inactive state: slight offset from center for a soft entry */
     transform: translateX(-50%) translateX(-14px);
   }
   .char.girl {
     background-image: var(--girl-img);
     aspect-ratio: var(--girl-aspect);
+    background-size: auto 85%;     /* same fix as Mike — leaves cutscene room above */
     transform: translateX(-50%) translateX(14px);
   }
   /* Joy — same stage slot as Girl, but with her own appearance image.
@@ -393,6 +418,17 @@
   #dialogBox.narrative  .continue { color: rgba(0,0,0,0.35); }
   body.exploring #dialogBox,
   body.choosing  #dialogBox { transform: translateY(140%); opacity: 0; pointer-events: none; }
+  /* Defensive: any prior ui:inner-small / ui:cast-small / ui:bubble
+     state could otherwise keep #objectDialog pinned open through the
+     explore phase via its own opacity:1 rules. Force-hide it here so
+     forgetting a [ui:none] before (Explore:N) can't leak the last
+     beat onto the room. The :not() guard exempts the explicit
+     in-explore-object overlays which we DO want visible. */
+  body.exploring:not(.inObjectImage):not(.inObjectChar) #objectDialog {
+    transform: translateY(140%) !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
+  }
   /* Character-mode object overrides the above: bring the dialog box back up */
   body.exploring.inObjectChar #dialogBox {
     transform: translateY(0);
@@ -500,17 +536,20 @@
 
   /* ---------- Choice panel (inner voices offering options) ---------- */
   #choicePanel {
+    /* No container chrome at all — just a hit area + scroll wrapper.
+       Each .choice-opt card carries its own dark background; the
+       scene behind shows through the gaps and the page edges.
+       Padding-top reserves space for the FIRST option's head poke
+       (avatar.top: -16px) so it isn't clipped by overflow-y. */
     position: fixed;
-    left: 12px; right: 12px;
-    bottom: 12px;
-    padding: 14px 14px 16px;
-    padding-bottom: max(16px, calc(env(safe-area-inset-bottom) + 10px));
-    background: linear-gradient(180deg,
-      rgba(12,10,20,0.88) 0%, rgba(20,15,35,0.97) 100%);
-    backdrop-filter: blur(18px);
-    -webkit-backdrop-filter: blur(18px);
-    border: 1px solid rgba(255,255,255,0.1);
-    border-radius: 14px;
+    left: 0; right: 0;
+    bottom: 0;
+    padding: 28px 0 max(8px, calc(env(safe-area-inset-bottom) + 4px));
+    background: transparent;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    border: none;
+    border-radius: 0;
     z-index: 105;
     max-height: 70vh;
     overflow-y: auto;
@@ -518,74 +557,230 @@
     opacity: 0;
     pointer-events: none;
     transition: transform 0.45s cubic-bezier(0.2,0.9,0.3,1.1), opacity 0.3s ease;
-    box-shadow: 0 -10px 40px rgba(0,0,0,0.5);
+    box-shadow: none;
   }
   #choicePanel.open {
     transform: translateY(0);
     opacity: 1;
     pointer-events: auto;
   }
-  .choice-intro {
-    font-size: 10px;
-    letter-spacing: 0.28em;
-    text-transform: uppercase;
-    color: rgba(255,255,255,0.55);
-    text-align: center;
-    margin-bottom: 12px;
-    font-weight: 600;
-  }
+  /* Title removed — the inline avatars convey "inner voices" already. */
+  .choice-intro { display: none; }
   .choice-list {
     display: flex;
     flex-direction: column;
     gap: 8px;
+    padding: 0 8px;                 /* small breathing room from screen edges */
   }
   .choice-opt {
+    position: relative;             /* anchors the inline avatar */
     display: flex;
     align-items: center;
     gap: 12px;
-    padding: 10px 14px 10px 10px;
-    background: rgba(255,255,255,0.04);
+    padding: 10px 14px 10px 100px;  /* text starts 100px in (10px tighter to the avatar) */
+    /* Each card carries its own dark backdrop + blur. No outer panel
+       container — cards float on the scene with the room visible
+       between them. */
+    background: linear-gradient(180deg,
+      rgba(12,10,20,0.88) 0%, rgba(20,15,35,0.96) 100%);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
     border: 1px solid rgba(255,255,255,0.1);
     border-left: 3px solid rgba(255,255,255,0.2);
-    border-radius: 10px;
+    border-radius: 14px;
     color: #fff;
     cursor: pointer;
     font-family: inherit;
     text-align: left;
     width: 100%;
+    min-height: 84px;               /* tall enough to host the avatar */
+    box-shadow: 0 6px 18px rgba(0,0,0,0.35);
+    overflow: visible;              /* head pokes above; clip-wrapper handles the body */
     transition: background 0.2s, border-color 0.2s, transform 0.1s;
   }
-  .choice-opt:hover { background: rgba(255,255,255,0.08); }
+  .choice-opt:hover {
+    background: linear-gradient(180deg,
+      rgba(20,17,32,0.92) 0%, rgba(28,22,46,0.98) 100%);
+  }
   .choice-opt:active { transform: scale(0.985); }
+
+  /* Wrapper that clips the avatar so the body can't leak into the
+     next row. Top edge sits 16px ABOVE the card (so the head pokes
+     up); bottom edge sits at the card's bottom. The avatar inside
+     is positioned absolute and sized 1.5×; whatever falls outside
+     this wrapper is clipped cleanly. */
+  .choice-avatar-clip {
+    position: absolute;
+    left: -4px;                     /* avatar shifted 10px left of original (was +6) */
+    top: -16px;                     /* head sticks 16px above the card */
+    bottom: 0;                      /* body cleanly cut at card bottom */
+    width: 96px;                    /* 1.5× of the previous 64 */
+    overflow: hidden;
+    pointer-events: none;
+  }
+  /* Inline avatar — full body shown (no fade). Anchored to the top of
+     the clip wrapper so the head Y is stable across rows. */
+  .choice-avatar {
+    position: absolute;
+    inset: 0 0 auto 0;              /* top:0 left:0 right:0; height set below */
+    height: 132px;                  /* 1.5× of the previous 88 */
+    background-size: auto 180%;
+    background-position: top center;
+    background-repeat: no-repeat;
+    filter: drop-shadow(0 6px 12px rgba(0,0,0,0.5));
+  }
+  /* Per-character portrait sources — same files used by inner-small +
+     focus-character. background-image inherited via class. */
+  .choice-avatar.c-eros       { background-image: url("characters/you/voices/london/eros/portrait.png"); }
+  .choice-avatar.c-valium     { background-image: url("characters/you/voices/london/valium/portrait.png"); }
+  .choice-avatar.c-romeo      { background-image: url("characters/you/voices/london/romeo/portrait.png"); }
+  .choice-avatar.c-professore { background-image: url("characters/you/voices/london/professore/portrait.png"); }
+  .choice-avatar.c-scheggia   { background-image: url("characters/iris/voices/london/scheggia/portrait.png"); }
+  .choice-avatar.c-giulietta  { background-image: url("characters/iris/voices/london/giulietta/portrait.png"); }
+  .choice-avatar.c-trilli     { background-image: url("characters/iris/voices/london/trilli/portrait.png"); }
+  .choice-avatar.c-alfa       { background-image: url("characters/iris/voices/london/alfa/portrait.png"); }
+  .choice-avatar.c-joy        { background-image: url("characters/joy/appearances/london.png"); }
+  .choice-avatar.c-boy        { background-image: var(--boy-img); }
+  .choice-avatar.c-girl       { background-image: var(--girl-img); }
+  /* Narrative + write don't have a character — collapse the slot. */
+  .choice-avatar.c-narrative,
+  .choice-avatar.c-write { display: none; }
+  .choice-opt.narrative,
+  .choice-opt.write { padding-left: 14px; }
 
   .choice-opt.eros       { border-left-color: #ff4d6d; box-shadow: 0 0 24px rgba(255,77,109,0.14); }
   .choice-opt.valium     { border-left-color: #9b7fff; box-shadow: 0 0 24px rgba(155,127,255,0.14); }
   .choice-opt.romeo      { border-left-color: #ff80b0; box-shadow: 0 0 24px rgba(255,128,176,0.14); }
   .choice-opt.professore { border-left-color: #f0c674; box-shadow: 0 0 24px rgba(240,198,116,0.14); }
 
-  /* "Write your own" custom input option, a text field styled like a
-     choice row, with a pink dashed border to read as "you own this line". */
+  /* "Write your own" — light Mike-styled card. The card itself isn't
+     interactive (only the input is), so cursor stays default and
+     hover doesn't change the background. */
   .choice-opt.write {
-    border-left-color: #ff7eb9;
-    border-style: dashed;
-    background: rgba(255,126,185,0.05);
-    padding: 10px 10px 10px 14px;
+    background: linear-gradient(180deg,
+      rgba(252,250,248,0.97) 0%, rgba(243,239,233,0.99) 100%);
+    color: #1a1523;
+    border: 1px solid rgba(0,0,0,0.08);
+    border-left: 1px solid rgba(0,0,0,0.08); /* no pink accent stripe */
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    box-shadow: 0 6px 18px rgba(0,0,0,0.18);
+    padding-left: 115px;             /* text + input nudged left */
+    cursor: default;                  /* card itself isn't a tap target */
   }
-  .choice-opt.write .choice-speaker { color: #ffb6d3; }
+  .choice-opt.write:hover {
+    /* No hover change — Write card isn't clickable as a whole. */
+    background: linear-gradient(180deg,
+      rgba(252,250,248,0.97) 0%, rgba(243,239,233,0.99) 100%);
+  }
+  .choice-opt.write .choice-speaker { color: #c25885; }
   .choice-opt.write .choice-text    { width: 100%; }
+  /* Mike avatar in the Write card — slightly bigger than the
+     standard inner-voice cards. Element grows wider + taller; bg-size
+     is bumped so head + body both render larger. Anchored to the top
+     of the clip wrapper so the head Y is unchanged (no extra poke
+     above the card). */
+  .choice-opt.write .choice-avatar-clip {
+    width: 116px;
+    left: -8px;
+  }
+  .choice-opt.write .choice-avatar {
+    height: 156px;
+    background-size: auto 200%;
+  }
+
+  /* Quick-pick row — centered cluster of overlapping dots (Olympic-
+     ring style) + an arrow on the right. No shadows; clean rings. */
+  .choice-quickpick-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;                        /* arrow sits close to the dot cluster */
+    padding: 6px 0;
+    margin: 4px 0;
+    justify-content: center;
+  }
+  .choice-quickpick-row .quickpick-dot + .quickpick-dot {
+    margin-left: -22px;              /* dots interlock tighter */
+  }
+  .quickpick-dot {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    border: 2px solid rgba(255,255,255,0.55);
+    background-color: #0e0c18;       /* dark fallback if image fails */
+    /* Heavy zoom — only the head + a sliver of shoulders shows. */
+    background-size: auto 480%;
+    background-position: top center;
+    background-repeat: no-repeat;
+    cursor: pointer;
+    padding: 0;
+    transition: transform 0.15s ease, border-color 0.2s, z-index 0.01s;
+    position: relative;
+    z-index: 1;
+  }
+  .quickpick-dot:hover {
+    transform: scale(1.12);
+    border-color: rgba(255,255,255,0.95);
+    z-index: 5;                      /* lift above neighbours so the overlap reverses */
+  }
+  .quickpick-dot:active { transform: scale(0.95); }
+  .quickpick-dot.c-eros       { background-image: url("characters/you/voices/london/eros/portrait.png"); border-color: rgba(255,77,109,0.85); }
+  .quickpick-dot.c-valium     { background-image: url("characters/you/voices/london/valium/portrait.png"); border-color: rgba(155,127,255,0.85); }
+  .quickpick-dot.c-romeo      { background-image: url("characters/you/voices/london/romeo/portrait.png"); border-color: rgba(255,128,176,0.85); }
+  .quickpick-dot.c-professore { background-image: url("characters/you/voices/london/professore/portrait.png"); border-color: rgba(240,198,116,0.85); }
+  .quickpick-dot.c-scheggia   { background-image: url("characters/iris/voices/london/scheggia/portrait.png"); }
+  .quickpick-dot.c-giulietta  { background-image: url("characters/iris/voices/london/giulietta/portrait.png"); }
+  .quickpick-dot.c-trilli     { background-image: url("characters/iris/voices/london/trilli/portrait.png"); }
+  .quickpick-dot.c-alfa       { background-image: url("characters/iris/voices/london/alfa/portrait.png"); }
+
+  .quickpick-arrow {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    border: 2px solid rgba(255,255,255,0.55);
+    background: rgba(14,12,24,0.85); /* dark pill backdrop */
+    color: rgba(255,255,255,0.95);
+    cursor: pointer;
+    padding: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.2s, transform 0.25s ease;
+  }
+  .quickpick-arrow:hover { background: rgba(28,22,46,0.95); }
+
+  /* When a Write option exists, hide the inner-voice cards by default.
+     The quick-pick row stays visible so the player can still tap a
+     dot to instantly use that voice's text. ↑ tap unhides the cards
+     AND removes the quick-pick row — once expanded there's no going
+     back; the player just picks (or types). */
+  #choicePanel.has-write .choice-opt:not(.write) {
+    display: none;
+  }
+  #choicePanel.has-write.write-expanded .choice-opt:not(.write) {
+    display: flex;
+    animation: choiceCardSlideIn 0.3s ease;
+  }
+  #choicePanel.has-write.write-expanded .choice-quickpick-row {
+    display: none;
+  }
+  @keyframes choiceCardSlideIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
   .choice-write-input {
     width: 100%;
     background: transparent;
     border: none;
     outline: none;
-    color: #fff;
+    color: #1a1523;             /* dark text on light card */
     font: inherit;
     font-size: 14px;
     line-height: 1.5;
     padding: 0;
   }
   .choice-write-input::placeholder {
-    color: rgba(255,255,255,0.42);
+    color: rgba(26,21,35,0.42);
     font-style: italic;
   }
   .choice-write-row {
@@ -594,22 +789,10 @@
     gap: 10px;
     width: 100%;
   }
-  .choice-write-submit {
-    flex: 0 0 auto;
-    background: linear-gradient(135deg, #ff7eb9, #ff5f98);
-    color: #fff;
-    border: none;
-    border-radius: 8px;
-    padding: 6px 10px;
-    font-size: 11px;
-    font-weight: 800;
-    letter-spacing: 0.14em;
-    text-transform: uppercase;
-    cursor: pointer;
-    opacity: 0.4;
-    transition: opacity 0.2s;
-  }
-  .choice-write-submit.active { opacity: 1; }
+  /* GO button — visually hidden. Player submits via Enter (desktop) or
+     the keyboard's "Go/Done" key (mobile). Element kept in the DOM for
+     accessibility / fallback but not rendered. */
+  .choice-write-submit { display: none; }
 
   /* ---------- Fullscreen video overlay (skill-check cutscenes) ---------- */
   #videoOverlay {
@@ -758,7 +941,7 @@
     bottom: -36vh;
     height: 130vh;
     width: auto;
-    background-size: 100% 100%;
+    background-size: contain;       /* preserve aspect — no width squish */
     background-position: bottom center;
     background-repeat: no-repeat;
     transform: translateX(-50%) translateY(30px) scale(0.94);
@@ -812,6 +995,19 @@
     line-height: 1.5;
     color: rgba(255,255,255,0.94);
   }
+  /* Light-card variant — Write uses dark text on its light background. */
+  .choice-opt.write .choice-text { color: #1a1523; }
+  /* Inline icon prefix on a choice option (e.g. camera/gallery on the
+     gift-pick step). Stroke uses currentColor so it inherits the text
+     hue per option. */
+  .choice-icon {
+    display: inline-flex;
+    align-items: center;
+    margin-right: 8px;
+    vertical-align: -3px;
+    opacity: 0.9;
+  }
+  .choice-icon svg { display: block; }
 
   body.choosing #playerControls { opacity: 0; pointer-events: none; transform: translateX(80px); }
   body.choosing #lineCounter    { opacity: 0.5; }
@@ -819,7 +1015,16 @@
   /* When picking an action inside an object, float the choice panel on top
      of the object-focus layer */
   body.pickingAction #choicePanel { z-index: 185; }
-  body.pickingAction #objectDialog { opacity: 0; pointer-events: none; transform: translateY(100%); }
+  /* When the action picker is open the per-object subtitle dialog
+     should hide. We combine `inObjectImage.pickingAction` to outweigh
+     the later `body.inObjectImage #objectDialog { opacity: 1 }` rule
+     that would otherwise win on equal specificity. */
+  body.pickingAction #objectDialog,
+  body.inObjectImage.pickingAction #objectDialog {
+    opacity: 0;
+    pointer-events: none;
+    transform: translateY(100%);
+  }
 
   /* ---------- Top controls ---------- */
   #topControls {
@@ -985,15 +1190,25 @@
     transform: translate(-50%, -50%);
     z-index: 10;
     cursor: pointer;
-    pointer-events: auto;
-    width: 56px; height: 56px;
+    /* pointer-events: auto only when explore mode is active. Without
+       this guard the hotspots stay tappable even while #exploreLayer
+       is opacity:0 — the dots are invisible but their hit areas still
+       capture taps, which is how players were "accidentally" opening
+       coffee/fridge through the cutscene image. */
+    pointer-events: none;
+    /* Hit area sized to roughly match the visible dot + halo. */
+    width: 36px; height: 36px;
     display: flex; align-items: center; justify-content: center;
   }
+  body.exploring .hotspot { pointer-events: auto; }
   .hotspot .dot {
     width: 14px; height: 14px;
     border-radius: 50%;
     background: #fff;
-    box-shadow: 0 0 0 2px rgba(255,255,255,0.35),
+    /* Larger halo telegraphs the tap zone so it matches the hit area
+       visually — no more invisible-but-clickable margin. */
+    box-shadow: 0 0 0 3px rgba(255,255,255,0.18),
+                0 0 0 7px rgba(255,255,255,0.08),
                 0 2px 10px rgba(0,0,0,0.5);
     position: relative; z-index: 2;
   }
@@ -1081,6 +1296,34 @@
     opacity: 1;
     transform: scale(1);
   }
+  /* Mirror sizing + ken-burns intro for video covers. The engine
+     toggles `.has-video` to flip which layer is visible (image OR
+     video) — both occupy the same space so swapping mid-action is
+     a single class change. */
+  .focus-video {
+    position: absolute;
+    inset: 0;
+    width: 100%; height: 100%;
+    object-fit: cover;
+    object-position: center;
+    background: #050508;
+    opacity: 0;
+    display: none;
+    transform: scale(1.06);
+    transition: transform 1s cubic-bezier(0.2,0.85,0.25,1.05),
+                opacity 0.6s ease;
+  }
+  body.inObjectImage.has-object-video .focus-video {
+    display: block;
+    opacity: 1;
+    transform: scale(1);
+  }
+  body.inObjectImage.has-object-video .focus-image {
+    /* Hide the image while video is showing — keeps the layer in the
+       DOM so swapping back to image (e.g., on a sibling object) is
+       just a class flip. */
+    opacity: 0;
+  }
   /* Subtle vignette so bottom-left character + dialog pop against the image */
   .focus-vignette {
     position: absolute; inset: 0;
@@ -1112,11 +1355,15 @@
      dialog (body overlaps the box), while the head bleeds above it. */
   .focus-character {
     position: absolute;
-    left: -16px;
+    left: 12px;             /* shifted right (was -16); independent from multi-select avatars */
     bottom: -180px;         /* push the body down into the dialog */
     height: 390px;          /* ~2.3× the old 170 */
     width: auto;
-    background-size: 100% 100%;
+    /* `contain` preserves the PNG's natural aspect ratio. The element's
+       declared `aspect-ratio` (per c-* class) sizes the box; if the
+       PNG happens not to match exactly, `contain` letterboxes instead
+       of stretching — no width compression. */
+    background-size: contain;
     background-position: bottom center;
     background-repeat: no-repeat;
     /* Mask: top 45% solid (head+shoulders+chest), 45–62% fade, below transparent */
@@ -1141,12 +1388,67 @@
   .focus-character.c-eros       { background-image: url("characters/you/voices/london/eros/portrait.png");       aspect-ratio: 439 / 1416; }
   .focus-character.c-valium     { background-image: url("characters/you/voices/london/valium/portrait.png");     aspect-ratio: 442 / 1457; }
   .focus-character.c-romeo      { background-image: url("characters/you/voices/london/romeo/portrait.png");      aspect-ratio: 434 / 1462; }
-  .focus-character.c-professore { background-image: url("characters/you/voices/london/professore/portrait.png"); aspect-ratio: 553 / 1493; }
+  .focus-character.c-professore { background-image: url("characters/you/voices/london/professore/portrait.png"); aspect-ratio: 553 / 1493; left: -3px; /* wider body (holds coffee) — nudge 15px left of the default +12 */ }
   .focus-character.c-scheggia   { background-image: url("characters/iris/voices/london/scheggia/portrait.png");   aspect-ratio: 412 / 1539; }
   .focus-character.c-giulietta  { background-image: url("characters/iris/voices/london/giulietta/portrait.png");  aspect-ratio: 519 / 1559; }
   .focus-character.c-trilli     { background-image: url("characters/iris/voices/london/trilli/portrait.png");     aspect-ratio: 508 / 1566; }
   .focus-character.c-alfa       { background-image: url("characters/iris/voices/london/alfa/portrait.png");       aspect-ratio: 527 / 1572; }
   .focus-character.c-narrative  { display: none; }
+
+  /* Joy — NPC cast portrait, used by ui:cast-small. Aspect ratio
+     should match the actual london.png; tune if the image differs. */
+  .focus-character.c-joy {
+    background-image: url("characters/joy/appearances/london.png");
+    aspect-ratio: 553 / 1493;
+  }
+
+  /* ----- ui:cast-small + ui:inner-small layout -----
+     Both small-avatar UIs share the same DOM nodes (objectDialog +
+     focusCharacter) and the same body-class behavior. Difference is
+     only in WHO speaks: cast-small for joy/boy/girl/NPCs (light card),
+     inner-small for eros/valium/romeo/professore (dark card). The CSS
+     toggling lives here; the speaker class on #objectDialog provides
+     the per-character border-left + (for cast) light background. */
+  body.ui-cast-small #dialogBox,
+  body.ui-inner-small #dialogBox {
+    transform: translateY(160%);
+    opacity: 0;
+    pointer-events: none;
+  }
+  body.ui-cast-small #objectDialog,
+  body.ui-inner-small #objectDialog {
+    transform: translateY(0);
+    opacity: 1;
+  }
+  body.ui-cast-small #focusCharacter.show,
+  body.ui-inner-small #focusCharacter.show {
+    opacity: 1;
+  }
+  /* Hide the full-body stage characters when small avatar is in play
+     — a tall character on stage would compete with it. */
+  body.ui-cast-small .char.boy,
+  body.ui-cast-small .char.girl,
+  body.ui-cast-small .char.joy,
+  body.ui-inner-small .char.boy,
+  body.ui-inner-small .char.girl,
+  body.ui-inner-small .char.joy {
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  /* ----- ui:cast-large + cutscene-active layout -----
+     By default the cutscene layer (z-index 4) sits above #stage
+     (z-index 3), so a stage character placed during cutscene mode is
+     hidden behind the cutscene image. ui:cast-large explicitly wants
+     the lead character visible on top of the cutscene — promote the
+     stage above the cutscene and softly darken the cutscene to give
+     the character separation. */
+  body.ui-cast-large.cutscene-active #stage {
+    z-index: 10;
+  }
+  body.ui-cast-large.cutscene-active #cutsceneLayer {
+    filter: brightness(0.55) saturate(0.85);
+  }
 
   /* Object dialog, subtitle-style. No more avatar; the character body
      anchored at bottom-left now serves that purpose. */
@@ -1188,6 +1490,7 @@
   #objectDialog.boy,
   #objectDialog.girl,
   #objectDialog.dog,
+  #objectDialog.joy,
   #objectDialog.narrative {
     background: linear-gradient(180deg,
       rgba(252,250,248,0.98), rgba(243,239,233,0.99));
@@ -1202,6 +1505,7 @@
   #objectDialog.boy        { border-left-color: #8ec5ff; }
   #objectDialog.girl       { border-left-color: #ffaed6; }
   #objectDialog.dog        { border-left-color: #c49a6c; }
+  #objectDialog.joy        { border-left-color: #e0a06b; }
   #objectDialog.eros       { border-left-color: #ff4d6d; }
   #objectDialog.valium     { border-left-color: #9b7fff; }
   #objectDialog.romeo      { border-left-color: #ff80b0; }
@@ -5873,6 +6177,44 @@
     display: none;
   }
   body.dev-settings-on .dev-settings { display: block; }
+
+  /* Gift reveal loader — small floating chip pinned to the bottom
+     center of the screen while ComfyUI is still rendering. Tells
+     the player something is happening so the silent wait doesn't
+     read as "nothing's coming". */
+  .gift-loader {
+    position: fixed;
+    left: 50%;
+    bottom: max(36px, env(safe-area-inset-bottom));
+    transform: translateX(-50%);
+    z-index: 360;
+    display: none;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 18px;
+    background: rgba(15,12,22,0.92);
+    border: 1px solid rgba(255,255,255,0.18);
+    border-radius: 999px;
+    color: #fff;
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    box-shadow: 0 8px 28px rgba(0,0,0,0.55);
+    -webkit-backdrop-filter: blur(10px);
+    backdrop-filter: blur(10px);
+  }
+  /* No visible loader — the dialog masks the wait with filler beats.
+     The body class still gates click-to-advance so the player can't
+     race ahead of the (GiftReveal) gate, but nothing renders. */
+  body.awaiting-gift .gift-loader { display: none; }
+  .gift-loader .gl-spin {
+    width: 14px; height: 14px;
+    border: 2px solid rgba(255,255,255,0.22);
+    border-top-color: #ff7eb9;
+    border-radius: 50%;
+    animation: glSpin 0.8s linear infinite;
+  }
+  @keyframes glSpin { to { transform: rotate(360deg); } }
   .ds-card {
     background: rgba(15,12,22,0.96);
     border: 1px solid rgba(255,255,255,0.18);
@@ -6777,7 +7119,7 @@
   }
   #musicVideo {
     position: absolute;
-    inset: 0;
+    inset: -100px 0 0 0;          /* shifted up 100px from the top */
     width: 100%; height: 100%;
     object-fit: cover;
     /* Loader state, dim but visible, so the first frame reads through */
@@ -6994,6 +7336,128 @@
   }
 
   /* --- Bottom UI: karaoke + share --- */
+  /* Polaroid stack — sits above the bottom bar (which hosts lyrics).
+     Cards are absolutely positioned inside, scattered horizontally. */
+  #msPolaroids {
+    position: absolute;
+    left: 0; right: 0;
+    bottom: 240px;             /* tuned to clear the lyrics area */
+    height: 200px;
+    pointer-events: none;
+    z-index: 4;
+    opacity: 0;
+    transition: opacity 0.6s ease;
+  }
+  #musicScene.lights-on #msPolaroids { opacity: 1; }
+
+  .ms-polaroid {
+    position: absolute;
+    bottom: 0;
+    background: #f5f0e6;
+    padding: 11px 11px 34px;
+    box-shadow: 0 10px 26px rgba(0,0,0,0.55),
+                0 2px 6px rgba(0,0,0,0.3);
+    border-radius: 3px;
+    /* Width comes from a per-photo `frame-*` class — 6 variants
+       below give the wall-of-snapshots a varied silhouette. */
+    opacity: 0;
+    transform: translateX(-50%) translateY(50px) rotate(0deg) scale(0.85);
+    transition:
+      opacity 0.9s ease,
+      transform 1.4s cubic-bezier(0.25, 1.1, 0.45, 1.1);
+  }
+  .ms-polaroid img {
+    display: block;
+    width: 100%;
+    object-fit: cover;
+    object-position: top center;
+    background: #1a1a1a;
+  }
+  /* Six polaroid frame variants — different widths + photo aspect
+     ratios so two cards on screen never feel like clones. */
+  .ms-polaroid.frame-sq-sm   { width: 132px; }
+  .ms-polaroid.frame-sq-sm   img { aspect-ratio: 1 / 1; }
+
+  .ms-polaroid.frame-sq-md   { width: 158px; }
+  .ms-polaroid.frame-sq-md   img { aspect-ratio: 1 / 1; }
+
+  .ms-polaroid.frame-sq-lg   { width: 184px; }
+  .ms-polaroid.frame-sq-lg   img { aspect-ratio: 1 / 1; }
+
+  .ms-polaroid.frame-port-sm { width: 130px; padding: 10px 10px 30px; }
+  .ms-polaroid.frame-port-sm img { aspect-ratio: 3 / 4; }
+
+  .ms-polaroid.frame-port-lg { width: 156px; padding: 11px 11px 36px; }
+  .ms-polaroid.frame-port-lg img { aspect-ratio: 3 / 4; }
+
+  .ms-polaroid.frame-land    { width: 196px; padding: 10px 10px 28px; }
+  .ms-polaroid.frame-land    img { aspect-ratio: 4 / 3; }
+  /* Handwritten caption on the white strip below the photo. Text is
+     typed in character-by-character via JS — no fade. A faint pen
+     cursor blinks at the end while typing. */
+  .polaroid-caption {
+    position: absolute;
+    left: 0; right: 0;
+    bottom: 6px;
+    text-align: center;
+    font-family: "Caveat", "Marker Felt", cursive;
+    font-weight: 600;
+    font-size: 18px;
+    color: #2c2520;
+    line-height: 1;
+    min-height: 18px;
+    pointer-events: none;
+    /* The text starts empty; typeWritePolaroidCaption() fills it.
+       Empty container is invisible until letters arrive. */
+  }
+  .polaroid-caption.typing::after {
+    content: '·';
+    margin-left: 1px;
+    opacity: 0.45;
+    animation: polaroidCursorBlink 0.6s infinite;
+  }
+  @keyframes polaroidCursorBlink {
+    50% { opacity: 0; }
+  }
+  /* Floating emoji bubble — appears briefly after the caption, drifts
+     up and fades. Positioned above the photo, slightly off-center. */
+  .polaroid-emoji {
+    position: absolute;
+    top: -8px; right: -10px;
+    font-size: 26px;
+    opacity: 0;
+    transform: translateY(8px) scale(0.6);
+    transition: opacity 0.4s ease, transform 0.6s cubic-bezier(0.34,1.56,0.64,1);
+    pointer-events: none;
+    filter: drop-shadow(0 2px 4px rgba(0,0,0,0.4));
+  }
+  .ms-polaroid.show .polaroid-emoji {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    transition-delay: 1.4s;       /* after caption settles */
+  }
+  /* Emoji floats away near the end of the polaroid's hold so the next
+     photo enters with a clean strip. Class added by JS. */
+  .ms-polaroid.emoji-out .polaroid-emoji {
+    opacity: 0;
+    transform: translateY(-30px) scale(0.7);
+    transition: opacity 0.6s ease, transform 1s ease;
+  }
+
+  .ms-polaroid.show {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0) rotate(var(--rot, -4deg)) scale(1);
+  }
+  /* Exit: float up + fade as the next polaroid in this slot is about
+     to take its place. */
+  .ms-polaroid.exit {
+    opacity: 0;
+    transform: translateX(-50%) translateY(-30px) rotate(var(--rot, -4deg)) scale(0.92);
+    transition:
+      opacity 0.9s ease,
+      transform 1.1s cubic-bezier(0.4, 0, 0.6, 1);
+  }
+
   #musicBottomBar {
     position: absolute;
     left: 0; right: 0;
@@ -7639,7 +8103,7 @@
     height: 390px;
     width: auto;
     aspect-ratio: 1 / 3.2;
-    background-size: 100% 100%;
+    background-size: contain;       /* preserve aspect — no width squish */
     background-position: bottom center;
     background-repeat: no-repeat;
     -webkit-mask-image: linear-gradient(to bottom,
@@ -11259,6 +11723,14 @@
 <input type="file" id="giftFileInput"   accept="image/*" hidden />
 <input type="file" id="giftCameraInput" accept="image/*" capture="environment" hidden />
 
+<!-- Gift reveal loader — visible while ComfyUI is still rendering
+     after the (GiftReveal) directive fires. Body class
+     `awaiting-gift` toggles its display. -->
+<div class="gift-loader" id="giftLoader" aria-hidden="true">
+  <span class="gl-spin" aria-hidden="true"></span>
+  <span>She's looking…</span>
+</div>
+
 <div id="backdrop"></div>
 <div id="cutsceneLayer"></div>
 <div id="narrativeSceneLayer"></div>
@@ -11359,9 +11831,15 @@
 <button class="ctrl-btn" id="skipExplore">Skip ›</button>
 <button id="objectCharClose">✕ Geri</button>
 
-<!-- Object image-focus layer (shown for image-type objects like coffee machine) -->
+<!-- Object image-focus layer (shown for image-type objects like coffee
+     machine). Both .focus-image (CSS background) and .focus-video
+     (HTML5 video) live here; the engine swaps which is visible per
+     object/action. Video plays muted + autoplay so iOS allows it
+     without a user gesture. -->
 <div id="objectFocus">
   <div class="focus-image" id="focusImage"></div>
+  <video class="focus-video" id="focusVideo"
+         muted playsinline preload="auto" autoplay></video>
   <div class="focus-vignette"></div>
   <button class="focus-close" id="focusClose">✕ Geri</button>
 </div>
@@ -11564,6 +12042,10 @@
       </svg>
     </button>
   </div>
+
+  <!-- Polaroid stack — drifts in one card at a time over the lyrics
+       area. Populated by spawnMusicPolaroids() when lights-on. -->
+  <div id="msPolaroids" aria-hidden="true"></div>
 
   <!-- Bottom UI: karaoke lines + share button. Replay is nested inside
        the karaoke host, visible only after the song ends. -->
@@ -11853,14 +12335,16 @@ Joy: Hey, stranger. Look at you, all dressed up.
 Boy: Joy! I didn't see you.
 Joy: You never do. You look excited. Where are you off to?
 Boy: I'm seeing someone tonight. Someone important.
-Joy: Oh, finally! Tell me about her... actually no. Show me. What did you bring her?
-(Gift)
-Joy: Let me see.
+Joy: Oh, finally. Tell me about her. Actually no, show me.
+(GiftPick)
+Joy: Let me see what you've brought.
+Joy: You always did pick out odd little things.
+(GiftScene)
+(GiftClosing)
 (GiftReveal)
-Joy: Mm. That's lovely, actually. She'll like it.
-Boy: You think?
-Joy: I do. The good ones notice the small things. Now go, don't keep her waiting.
-Narrative: She squeezes your shoulder once, then she's gone. The street is yours again. (joy-street02.jpg)
+Joy: Now go. Don't keep her waiting.
+(Scene:none)
+Narrative: She squeezes your shoulder once, then she's gone. The street is yours again. (cutscene04.jpg)
 Narrative: You stand on the street below her building. A yellow window glows high above you. (cutscene01.jpg)
 Narrative: Coat collar up, you cross the quiet pavement and climb the three worn steps to her door. (cutscene02.jpg)
 Narrative: You knock, three short raps. Then you wait.
@@ -11995,7 +12479,7 @@ Girl: Don't stop being one. (+6)
 (EndScene)
 (Music)
 
-(Object:coffee image=coffeemachine.jpeg)
+(Object:coffee video=coffeemachine.mp4)
 Narrative: The red espresso machine hums on the counter. A dried coffee ring sits next to the mug.
 Valium: Maybe grab a cup. Something warm will steady your hands. (+4)
 Professore: Careful, the cord is touching the wet floor.
@@ -12009,11 +12493,11 @@ Professore: Statistically, the chance of attack is low. But not zero.
 Boy: Easy, buddy... easy, easy.
 Dog: ...hrrrr.
 
-(Object:poster)
+(Object:poster video=poster.mp4)
 Narrative: "Good Things Take Time", a neon pink heart poster.
 Valium: Good things take time. Don't rush.
 
-(Object:lavalamp)
+(Object:lavalamp video=lamp.mp4)
 Narrative: In the purple liquid, blobs slowly rise and fall.
 Eros: Bring that rhythm to the conversation. Slow, warm, steady.
 
@@ -12030,7 +12514,7 @@ Narrative: Seven magnets. **Tokyo**, **Paris**, **Barcelona**, and four from pla
 Eros: **Barcelona**. I knew it. She had to have been there.
 Professore: Tokyo magnet looks worn. Probably her favourite city of the three.
 
-(Action)
+(Action video=fridge.mp4 noloop)
 Valium: Look inside
 Narrative: Soft light. A pitcher of water, half a lemon, and a takeout pizza box from last night. (+10)
 Valium: Real life lives here. No performance. (+3)
@@ -12042,8 +12526,8 @@ Narrative: A circle around March 14, her birthday. Two plane tickets pinned besi
 Romeo: Born under **Pisces**. Water and dreams. Fits her, doesn't it.
 Professore: **Portugal**. File that away, she's headed there next month.
 
-(Object:vinyl image=vinyl.jpg)
-(Action)
+(Object:vinyl image=vinyl.png)
+(Action video=vinyl.mp4 hideMusicNotes)
 Eros: Press play
 Narrative: A record is already on the deck. You lift the needle and let it drop. (+6)
 Narrative: Warm crackle. Then the song begins, slow guitar, brushed drums. **Indie folk**. (+8)
@@ -12062,7 +12546,7 @@ Narrative: You take a step back. The player hums, the room feels intact.
 Valium: Some things you appreciate without needing to interact. (+2)
 Professore: Smart call. Not every object needs your hands on it.
 
-(Object:table)
+(Object:table video=coffeetable.mp4)
 Narrative: Half a coffee, two books, a small plant. The plant is leaning.
 Professore: Don't spill water on the book. I repeat: don't.`;
 
@@ -12674,6 +13158,7 @@ const LABELS = {
 let cast = {
   charrington:  null,  // { actorId, actorName, location, avatar }
   streetseller: null,
+  joy:          null,  // London support role — see ROLE_DATA.joy
 };
 function npcImagePath(role) {
   const c = cast[role];
@@ -12728,6 +13213,14 @@ const ROLE_DATA = {
     placeholderBody: 'assets/ui/shadow-girl.png',
     pack: 'london',
     pickerKind: 'date',
+  },
+  joy: {
+    label: 'Joy',
+    desc:  "Older friend from the art world. Bumps into you on the street on the way to her place.",
+    body:  'characters/joy/appearances/london.png',
+    forcedActorId: 'sophie',  // any cast pick maps to Sophie (prototype)
+    pack: 'london',
+    pickerKind: 'friend',
   },
 };
 
@@ -12847,6 +13340,7 @@ const el = {
   voicePreview: document.getElementById('voicePreview'),
   objectFocus:    document.getElementById('objectFocus'),
   focusImage:     document.getElementById('focusImage'),
+  focusVideo:     document.getElementById('focusVideo'),
   focusCharacter: document.getElementById('focusCharacter'),
   focusClose:     document.getElementById('focusClose'),
   objectDialog:   document.getElementById('objectDialog'),
@@ -12873,6 +13367,198 @@ let objectType   = null;     // 'image' | 'character' | 'plain'
 // `(cutsceneXX.png)` suffix swap this in; it persists across subsequent
 // dialog lines until another narrative triggers a new one.
 let activeCutscene = null;
+
+// ---- Dialog architecture v2 — state stack + preset registries ----------
+//
+// FX_REGISTRY and TR_REGISTRY hold the named effect / transition
+// packages loaded from _config/{fx,tr}-presets.json. The script refers
+// to packages by name (e.g. [fx:fx1]); the engine dereferences here.
+//
+// currentDialogState is the live stack — the latest values for each
+// layer. State-update events from the script splice into this; dialog
+// beats render with the current values. Inheritance is automatic: a
+// beat that doesn't change `bg` keeps the previous bg.
+let FX_REGISTRY = {};
+let TR_REGISTRY = {};
+const currentDialogState = {
+  bg: null,    // string like "cutscene=foo.jpg" | "explore" | "none" | null
+  fx: 'none',
+  tr: 'none',
+  ui: null,    // null = use speaker-driven default
+};
+
+// Boot fetch — we run this fire-and-forget so the engine doesn't block
+// on the JSON files. Default state still works (everything = no-op
+// until the registries land).
+(function loadDialogPresets() {
+  if (typeof fetch !== 'function') return;
+  fetch('_config/fx-presets.json').then(r => r.ok ? r.json() : {}).then(d => {
+    FX_REGISTRY = d || {};
+    console.log('[dialog-v2] fx presets loaded:', Object.keys(FX_REGISTRY));
+  }).catch(e => console.warn('[dialog-v2] fx-presets.json load failed', e));
+  fetch('_config/tr-presets.json').then(r => r.ok ? r.json() : {}).then(d => {
+    TR_REGISTRY = d || {};
+    console.log('[dialog-v2] tr presets loaded:', Object.keys(TR_REGISTRY));
+  }).catch(e => console.warn('[dialog-v2] tr-presets.json load failed', e));
+})();
+
+// Apply a state-update event to currentDialogState + DOM.
+// Each layer has its own apply* helper that translates the declarative
+// value into actual DOM changes. Keeping them isolated makes it easy
+// to swap implementations later (e.g. replace simple CSS tint with a
+// canvas overlay) without touching the parser.
+function applyDialogState(updates) {
+  if (!updates || typeof updates !== 'object') return;
+  if ('bg' in updates) {
+    currentDialogState.bg = updates.bg;
+    applyBgState(updates.bg);
+  }
+  if ('fx' in updates) {
+    currentDialogState.fx = updates.fx || 'none';
+    applyFxState(currentDialogState.fx);
+  }
+  if ('tr' in updates) {
+    currentDialogState.tr = updates.tr || 'none';
+    // Transitions don't render now — they take effect on the NEXT
+    // beat's render. Stash the name so the next render picks it up.
+    // (No DOM change here.)
+  }
+  if ('ui' in updates) {
+    currentDialogState.ui = updates.ui || null;
+    applyUiState(currentDialogState.ui);
+  }
+}
+
+function applyBgState(bgValue) {
+  // Three forms supported:
+  //   "cutscene=foo.jpg"  → setCutscene
+  //   "scene=foo.jpg"     → setNarrativeScene (two-person illustration)
+  //   "explore"           → enter explore mode (handled elsewhere)
+  //   "none" / "" / null  → clear all
+  //
+  // Crucially: switching FROM scene mode TO cutscene mode (or vice
+  // versa) must explicitly clear the other layer. Otherwise leftover
+  // narrativeScene class lingers on body and the next dialog line
+  // renders in the wrong style. setNarrativeScene already clears
+  // cutscene; we add the reverse here.
+  if (!bgValue || bgValue === 'none') {
+    if (typeof clearCutscene === 'function')      clearCutscene();
+    if (typeof clearNarrativeScene === 'function') clearNarrativeScene();
+    return;
+  }
+  const cutMatch = bgValue.match(/^cutscene\s*=\s*(.+)$/i);
+  if (cutMatch && typeof setCutscene === 'function') {
+    if (typeof clearNarrativeScene === 'function') clearNarrativeScene();
+    setCutscene(cutMatch[1].trim());
+    return;
+  }
+  const sceneMatch = bgValue.match(/^scene\s*=\s*(.+)$/i);
+  if (sceneMatch && typeof setNarrativeScene === 'function') {
+    setNarrativeScene(sceneMatch[1].trim());
+    return;
+  }
+  if (bgValue === 'explore') {
+    // Explore is started by the (Explore:N) directive elsewhere; the
+    // bracket form here is a no-op for now (kept for future use).
+    return;
+  }
+  console.warn('[dialog-v2] unknown bg value:', bgValue);
+}
+
+function applyFxState(fxName) {
+  // Drop any previous fx classes / overlays.
+  if (document.body) {
+    [...document.body.classList].forEach(c => {
+      if (c.indexOf('fx-') === 0) document.body.classList.remove(c);
+    });
+  }
+  const overlay = document.getElementById('fxOverlay');
+  if (overlay) {
+    overlay.style.cssText = '';
+    overlay.innerHTML = '';
+  }
+  if (!fxName || fxName === 'none') return;
+  const preset = FX_REGISTRY[fxName];
+  if (!preset) {
+    console.warn('[dialog-v2] unknown fx preset:', fxName);
+    return;
+  }
+  // Apply CSS treatment (blur / tint / brightness / saturation).
+  if (preset.css) {
+    const layer = ensureFxOverlay();
+    const filters = [];
+    if (preset.css.blur != null)       filters.push(`blur(${preset.css.blur}px)`);
+    if (preset.css.brightness != null) filters.push(`brightness(${preset.css.brightness})`);
+    if (preset.css.saturation != null) filters.push(`saturate(${preset.css.saturation})`);
+    layer.style.filter = filters.join(' ');
+    if (preset.css.tint) {
+      layer.style.background = preset.css.tint;
+    }
+    layer.style.opacity = '1';
+  }
+  // Apply overlay video — single <video> element, looping muted.
+  if (preset.overlay_video && preset.overlay_video.src) {
+    const layer = ensureFxOverlay();
+    let video = layer.querySelector('video.fx-overlay-video');
+    if (!video) {
+      video = document.createElement('video');
+      video.className = 'fx-overlay-video';
+      video.muted = true;
+      video.playsInline = true;
+      video.autoplay = true;
+      video.style.cssText =
+        'position:absolute;inset:0;width:100%;height:100%;' +
+        'object-fit:cover;pointer-events:none;';
+      layer.appendChild(video);
+    }
+    video.loop    = preset.overlay_video.loop !== false;
+    video.style.opacity   = (preset.overlay_video.opacity != null) ? preset.overlay_video.opacity : 1;
+    video.style.mixBlendMode = preset.overlay_video.blend_mode || 'normal';
+    video.src = preset.overlay_video.src;
+    video.play().catch(() => {});
+  }
+  if (document.body) document.body.classList.add('fx-' + fxName);
+}
+
+function ensureFxOverlay() {
+  let layer = document.getElementById('fxOverlay');
+  if (!layer) {
+    layer = document.createElement('div');
+    layer.id = 'fxOverlay';
+    layer.style.cssText =
+      'position:fixed;inset:0;z-index:7;' +
+      'pointer-events:none;opacity:0;' +
+      'transition:opacity 0.4s ease;';
+    document.body.appendChild(layer);
+  }
+  return layer;
+}
+
+function applyUiState(uiName) {
+  // The legacy engine drives most UI from speaker + body.narrativeScene
+  // / cutscene-active classes. The new ui:* directive sets a discrete
+  // 'ui-NAME' body class on top — purely declarative for now, so the
+  // CSS can refine specific looks (e.g. ui-inner-small overlay tweaks)
+  // without breaking legacy scripts.
+  //
+  // Important: ui:bubble does NOT auto-enter scene mode. The proper
+  // pairing is `[bg:scene=foo.jpg] [ui:bubble]`. ui:bubble alone is
+  // a hint to the renderer; bg:scene is what activates the layer.
+  if (!document.body) return;
+  [...document.body.classList].forEach(c => {
+    if (c.indexOf('ui-') === 0) document.body.classList.remove(c);
+  });
+  if (!uiName) return;
+  document.body.classList.add('ui-' + uiName);
+}
+
+function consumePendingTransition() {
+  // Returns + clears the current tr name so the renderer can apply it
+  // ONCE for the next beat. Subsequent beats re-read whatever the
+  // script set most recently (or 'none' if explicitly cleared).
+  const name = currentDialogState.tr || 'none';
+  return name;
+}
 
 // ---- World path resolver ------------------------------------------------
 // Script directives like (cutscene01.jpg), (Scene:hugscene.jpg),
@@ -12960,17 +13646,24 @@ function setNarrativeScene(image) {
   narrativeSceneImage = image;
   const layer = document.getElementById('narrativeSceneLayer');
   if (layer) {
-    const url = resolveWorldAsset(image, 'scenes');
+    // Detect a data URL — that's the gift reveal path. Don't run it
+    // through resolveWorldAsset (which would prefix paths and corrupt
+    // the data URI).
+    const isDataUrl = typeof image === 'string' && image.indexOf('data:') === 0;
+    const url = isDataUrl ? image : resolveWorldAsset(image, 'scenes');
     layer.style.backgroundImage = `url("${url}")`;
   }
   el.body.classList.add('narrativeScene');
   el.body.classList.remove('scene-inner');
+  // Always drop the gift-scene mode here. revealGift re-adds it
+  // afterward when it specifically wants the contain+vignette layout.
+  el.body.classList.remove('gift-scene');
   hideSceneBubbles();
   clearCutscene();
 }
 function clearNarrativeScene() {
   narrativeSceneImage = null;
-  el.body.classList.remove('narrativeScene', 'scene-inner', 'narrating-over-scene');
+  el.body.classList.remove('narrativeScene', 'scene-inner', 'narrating-over-scene', 'gift-scene');
   hideSceneBubbles();
   // Also hide the object-dialog overlay if it was up
   if (!el.body.classList.contains('inObjectImage') &&
@@ -12991,7 +13684,13 @@ function hideSceneBubbles() {
 }
 
 function showSceneBubble(speaker, text) {
-  const isLeft = (speaker === 'girl');   // girl on the left side of the couch
+  // Side mapping for cast bubbles. Iris (girl) + Joy live on the left;
+  // Mike (boy) + dog + everyone else on the right. The writer can
+  // override per-line later via [bubble:left|right] if we ever need
+  // it. Off-stage speakers (e.g. dog barking from behind a door) reuse
+  // the same layer over a cutscene background — no character portrait
+  // is rendered in that case (cutscene + ui:bubble combo).
+  const isLeft = (speaker === 'girl' || speaker === 'joy');
   const side  = document.getElementById(isLeft ? 'sceneBubbleLeft'  : 'sceneBubbleRight');
   const other = document.getElementById(isLeft ? 'sceneBubbleRight' : 'sceneBubbleLeft');
   if (other) other.className = 'scene-bubble';
@@ -13011,7 +13710,13 @@ function handleSceneDialogLine(line) {
   const speaker = line.speaker;
   const text    = renderText(line.text);
 
-  if (speaker === 'boy' || speaker === 'girl') {
+  // Cast members get speech bubbles. boy/girl drive the canonical
+  // couch layout; joy/dog reuse the bubble layer when the writer wants
+  // an off-stage line (Joy calling from the kitchen, dog barking
+  // behind a door). Bubble side: girl/joy on the left, everyone else
+  // on the right.
+  const CAST_BUBBLE = { boy: 1, girl: 1, joy: 1, dog: 1 };
+  if (CAST_BUBBLE[speaker]) {
     el.body.classList.remove('scene-inner');
     showSceneBubble(speaker, text);
     // Hide focus portrait if it was up
@@ -13038,6 +13743,36 @@ function handleSceneDialogLine(line) {
   }
 
   // Still honour (+N) and (cutscene) tags even in scene mode
+  if (line.cutscene === '__clear__') clearCutscene();
+  else if (line.cutscene) setCutscene(line.cutscene);
+  if (line.points) addRelationshipPoints(line.points);
+}
+
+// Compact bottom-left avatar + dialog overlay. Used by both:
+//   ui:cast-small  → cast speakers (joy/boy/girl/dog) — light card
+//   ui:inner-small → inner-voice speakers (eros/valium/romeo/...) — dark card
+// The light vs dark distinction comes from #objectDialog.{speaker}
+// CSS rules, not from this function. Function logic is identical for
+// both: populate object dialog + focus-character portrait, hide stage
+// chars and bubbles, fire any cutscene/points side-effects on the line.
+function handleCastSmallLine(line) {
+  const speaker = line.speaker;
+  const text = renderText(line.text);
+  // Drop any prior stage chars + scene bubbles so the layout is clean.
+  Object.values(el.chars).forEach(c => c.classList.remove('active','exit-left','exit-right'));
+  hideSceneBubbles();
+  // Populate the object dialog with the speaker's class — CSS provides
+  // the light card variant for joy/boy/girl/dog/narrative.
+  el.objectDialog.className = speaker;
+  el.odSpeaker.textContent = labelFor(speaker);
+  el.odText.innerHTML = applyHighlights(text);
+  // Show the bottom-left portrait. focus-character keys off c-{speaker}
+  // for the background image.
+  el.focusCharacter.className = 'focus-character c-' + speaker;
+  void el.focusCharacter.offsetWidth;
+  el.focusCharacter.classList.add('show');
+  // Side-effects (cutscene / points) still fire so the script's other
+  // directives keep working.
   if (line.cutscene === '__clear__') clearCutscene();
   else if (line.cutscene) setCutscene(line.cutscene);
   if (line.points) addRelationshipPoints(line.points);
@@ -13160,22 +13895,93 @@ function parseLine(s) {
 }
 
 // Parse key=value pairs from an (Object:id key=val key=val) header's tail.
-// Returns {image, character}.
+// Returns {image, video, loop, character, hideMusicNotes}. The video
+// attribute trumps image when both are set; loop defaults to true for
+// videos so the cover keeps motion. `noloop` flag (or `loop=false`)
+// disables looping — useful for one-shot reveals like opening a fridge
+// door. `hideMusicNotes` hides the floating-notes effect when this
+// action fires (used by the vinyl press-play swap).
 function parseObjectOpts(tail) {
-  const opts = { image: null, character: null };
+  const opts = {
+    image: null,
+    video: null,
+    loop: true,
+    character: null,
+    hideMusicNotes: false,
+  };
   if (!tail) return opts;
-  // image=... (word chars, dots, dashes, underscores) or quoted
   const imgM  = tail.match(/image\s*=\s*"([^"]+)"|image\s*=\s*([^\s)]+)/i);
   if (imgM)  opts.image = (imgM[1] || imgM[2]).trim();
+  const vidM  = tail.match(/video\s*=\s*"([^"]+)"|video\s*=\s*([^\s)]+)/i);
+  if (vidM)  opts.video = (vidM[1] || vidM[2]).trim();
   const charM = tail.match(/character\s*=\s*([a-zA-Z_][a-zA-Z0-9_]*)/i);
   if (charM) opts.character = charM[1].toLowerCase();
+  // Loop control. Default true for videos; flip false on `noloop` flag
+  // or `loop=false` attr.
+  if (/\bnoloop\b/i.test(tail) || /loop\s*=\s*false/i.test(tail)) {
+    opts.loop = false;
+  }
+  if (/\bhidemusicnotes\b/i.test(tail) || /hide_music_notes\s*=\s*true/i.test(tail)) {
+    opts.hideMusicNotes = true;
+  }
   return opts;
 }
 
+// ----- Dialog architecture v2 directives -----
+// Lines like `[bg:cutscene=joy.jpg] [fx:fx1] [tr:fadeUp] [ui:bubble]`
+// declare or update the visual stack. Each beat inherits the current
+// stack from prior lines; only changes need to be written. The parser
+// emits a single 'state-update' event for the full bracket set on a
+// line. Renderer consumes it via applyDialogState().
+//
+// Returns null if the line isn't a pure bracket-directive line.
+function parseBracketDirectives(s) {
+  // A pure directive line is one or more [k:v] tokens, optionally
+  // separated by whitespace, with nothing else on the line.
+  const tokens = s.match(/\[[a-z][a-z0-9-]*:[^\]]*\]/g);
+  if (!tokens) return null;
+  const reassembled = tokens.join(' ').replace(/\s+/g, ' ').trim();
+  const cleaned = s.replace(/\s+/g, ' ').trim();
+  if (cleaned !== reassembled) return null; // line had non-directive text
+  const updates = {};
+  for (const tok of tokens) {
+    const m = tok.match(/^\[([a-z][a-z0-9-]*):([^\]]*)\]$/);
+    if (!m) continue;
+    const key = m[1];
+    const val = m[2].trim();
+    updates[key] = val;
+  }
+  if (!Object.keys(updates).length) return null;
+  return updates;
+}
+
 function parseScript(text) {
-  const raws = text.split('\n').map(l => l.trim()).filter(Boolean);
+  // Strip `//` comment lines + blank lines. Comments help authors
+  // structure long scripts; the engine ignores them entirely.
+  // Track origin line numbers (1-based, into the original text) so the
+  // editor can ask "render the script at line N" and we know which
+  // parsed event corresponds.
+  const allLines = text.split('\n');
+  const raws = [];
+  const rawOriginLines = [];
+  for (let i = 0; i < allLines.length; i++) {
+    const line = allLines[i].trim();
+    if (!line) continue;
+    if (line.indexOf('//') === 0) continue;
+    raws.push(line);
+    rawOriginLines.push(i + 1); // 1-based for human-friendly line numbers
+  }
   const main = [];
   const objects = {};
+  // Helper that pushes an event onto the right array AND stamps its
+  // origin line. Replaces direct currentArr.push(...) below.
+  const __originAt = (idx) => rawOriginLines[idx];
+  const stampOrigin = (ev, originLine) => {
+    if (ev && typeof ev === 'object' && originLine != null) {
+      ev._originLine = originLine;
+    }
+    return ev;
+  };
   let currentArr = main;    // where subsequent parsed lines are pushed
   let currentObject = null; // non-null while inside an (Object:...) section
   let currentAction = null; // non-null while inside an (Action) block
@@ -13183,14 +13989,30 @@ function parseScript(text) {
   for (let i = 0; i < raws.length; i++) {
     const s = raws[i];
 
+    // Bracket directive line: [bg:...] [fx:...] [tr:...] [ui:...]
+    // Pushes a state-update event into the current stream so the engine
+    // can apply the new visual stack before the next dialog beat.
+    const stateUpdates = parseBracketDirectives(s);
+    if (stateUpdates) {
+      const ev = { type: 'state-update', updates: stateUpdates };
+      if (currentAction) currentAction.lines.push(ev);
+      else currentArr.push(ev);
+      continue;
+    }
+
     // Object section header: (Object:id image=... character=...)
     const objMatch = s.match(/^\(\s*Object\s*:\s*([a-zA-Z0-9_]+)\s*(.*?)\)$/i);
     if (objMatch) {
       const id = objMatch[1].toLowerCase();
       const opts = parseObjectOpts(objMatch[2]);
       objects[id] = {
-        id, image: opts.image, character: opts.character,
-        lines: [], actions: []
+        id,
+        image:     opts.image,
+        video:     opts.video,
+        loop:      opts.loop,
+        character: opts.character,
+        lines: [],
+        actions: []
       };
       currentObject = objects[id];
       currentAction = null;
@@ -13201,8 +14023,24 @@ function parseScript(text) {
     // Action header (only meaningful inside an object section).
     // First subsequent line is the choice PROMPT shown on the picker;
     // lines after that are the scene that plays once the action is picked.
-    if (currentObject && /^\(\s*Action\s*\)$/i.test(s)) {
-      currentAction = { prompt: null, lines: [] };
+    // Optional attrs: (Action video=foo.mp4 noloop hideMusicNotes)
+    //   video=...        → swap the focus visual to a video when picked
+    //   noloop / loop=…  → control video playback
+    //   hideMusicNotes   → kill the floating-notes effect on pick
+    const actionMatch = s.match(/^\(\s*Action\b\s*(.*?)\s*\)$/i);
+    if (currentObject && actionMatch) {
+      const tail = actionMatch[1] || '';
+      const fx = tail ? parseObjectOpts(tail) : { image: null, video: null, loop: true, hideMusicNotes: false };
+      currentAction = {
+        prompt: null,
+        lines: [],
+        effects: {
+          video:          fx.video,
+          image:          fx.image,
+          loop:           fx.loop,
+          hideMusicNotes: fx.hideMusicNotes,
+        },
+      };
       currentObject.actions.push(currentAction);
       continue;
     }
@@ -13246,6 +14084,56 @@ function parseScript(text) {
       else currentArr.push(ev);
       continue;
     }
+    // Special: (GiftPick), shows a single-option choice button. Tapping
+    // the button opens the gift file picker — same pipeline as (Gift)
+    // but lets joy_pre setup lines play BEFORE the picker, with a
+    // visible cue ("Show her what you got") so the player knows it's
+    // their turn to act.
+    if (/^\(\s*GiftPick\s*\)$/i.test(s)) {
+      const ev = { type: 'giftpick' };
+      if (currentAction) currentAction.lines.push(ev);
+      else currentArr.push(ev);
+      continue;
+    }
+    // Special: (GiftScene), expands inline into AI-generated lines from
+    // GPT-4o vision. Once vision returns we splice in joy_pre +
+    // boy_inner_pre + joy_react + boy_react + boy_inner_mid. If vision
+    // hasn't returned yet, we gate clicks and poll briefly.
+    // (GiftScene) optionally takes per-section UI overrides:
+    //   (GiftScene)
+    //   (GiftScene joy_react=cast-large boy_inner_mid=inner-small)
+    //
+    // Recognized section keys map to the AI scene's sub-arrays:
+    //   narrative         → engine-side narrative beat
+    //   boy_inner_pre     → comedic chorus before joy reacts
+    //   joy_react         → joy's gift-specific reaction
+    //   boy_react         → boy's response (multi-choice picker)
+    //   boy_inner_mid     → comedic chorus after the choice
+    //
+    // Anything not overridden falls back to the defaults in
+    // _giftBuildSceneLines / expandGiftScene.
+    const giftSceneMatch = s.match(/^\(\s*GiftScene\b\s*(.*?)\s*\)$/i);
+    if (giftSceneMatch) {
+      const overrides = parseAiUiOverrides(giftSceneMatch[1] || '');
+      const ev = { type: 'giftscene', uiOverrides: overrides };
+      if (currentAction) currentAction.lines.push(ev);
+      else currentArr.push(ev);
+      continue;
+    }
+    // Special: (GiftClosing), the closing professore beat that fires
+    // only once ComfyUI render is ready. While waiting it loops in
+    // brief inner-voice fillers so dialog never freezes.
+    // (GiftClosing) — same per-section override syntax. Recognized keys:
+    //   professor → ui mode for the closing professore line
+    //   filler    → ui mode for inner-voice fillers while ComfyUI cooks
+    const giftClosingMatch = s.match(/^\(\s*GiftClosing\b\s*(.*?)\s*\)$/i);
+    if (giftClosingMatch) {
+      const overrides = parseAiUiOverrides(giftClosingMatch[1] || '');
+      const ev = { type: 'giftclosing', uiOverrides: overrides };
+      if (currentAction) currentAction.lines.push(ev);
+      else currentArr.push(ev);
+      continue;
+    }
     // Special: (GiftReveal), the moment the script wants to show the
     // generated image. If the ComfyUI result is ready we paint it as
     // a Scene; otherwise we wait briefly with a soft loader.
@@ -13258,10 +14146,40 @@ function parseScript(text) {
 
     // Special: (EndScene), 15s cinematic end video (endscene.mp4) with
     // timed inner-voice + narrative overlay, then a recap dashboard.
+    //
+    // Two forms:
+    //   1. Bare directive   `(EndScene)`           — falls back to the
+    //      hardcoded END_SCENE_LINES_LONDON / END_SCENE_LINES_1984 reel.
+    //   2. Block            `(EndScene)` … `(/EndScene)` — script-level
+    //      timed reel. Each interior line: `<seconds> <Speaker>: <text>`
+    //      e.g. `0.4 Narrative: The TV stops mattering.`
+    //      Lines without a leading float are skipped (lets the writer
+    //      drop comments or blank lines for readability).
     if (/^\(\s*EndScene\s*\)$/i.test(s)) {
-      const ev = { type: 'endscene' };
+      const reel = [];
+      // Look-ahead: collect timed lines until matching (/EndScene). If
+      // we don't find a closer, treat as the bare directive form.
+      let j = i + 1;
+      let foundCloser = false;
+      while (j < raws.length) {
+        if (/^\(\s*\/\s*EndScene\s*\)$/i.test(raws[j])) {
+          foundCloser = true;
+          break;
+        }
+        const m = raws[j].match(/^(\d+(?:\.\d+)?)\s+(.+)$/);
+        if (m) {
+          const t = parseFloat(m[1]);
+          const parsed = parseLine(m[2]);
+          reel.push({ t, speaker: parsed.speaker, text: parsed.text });
+        }
+        j++;
+        // Hard cap: don't scan more than 200 lines without a closer.
+        if (j - i > 200) break;
+      }
+      const ev = { type: 'endscene', lines: foundCloser ? reel : null };
       if (currentAction) currentAction.lines.push(ev);
       else currentArr.push(ev);
+      if (foundCloser) i = j; // skip past the (/EndScene) line
       continue;
     }
 
@@ -13279,7 +14197,12 @@ function parseScript(text) {
       continue;
     }
 
-    // Special: (Choice:N), grabs the next N lines as options
+    // Special: (Choice:N), grabs the next N lines as options.
+    // INSIDE an (Object:...) section, Choice doubles as a unified
+    // action declaration — each option becomes one Object action,
+    // and subsequent (IfChoice:K) blocks fill in that action's
+    // scene. This keeps the script syntax identical between
+    // dialog branching and object-action branching.
     const choiceMatch = s.match(/^\(\s*Choice\s*:\s*(\d+)\s*\)$/i);
     if (choiceMatch) {
       const n = Math.min(4, Math.max(1, parseInt(choiceMatch[1], 10)));
@@ -13288,27 +14211,118 @@ function parseScript(text) {
         if (/^\(\s*(Object|Action)\s*[:\)]/i.test(raws[i + j])) break;
         options.push(parseLine(raws[i + j]));
       }
-      const ev = { type: 'choice', options };
-      if (currentAction) currentAction.lines.push(ev);
-      else currentArr.push(ev);
+      if (currentObject && !currentAction) {
+        // Object-context: spawn one synthetic action per option. Their
+        // .lines will be populated by the IfChoice blocks below.
+        options.forEach((opt) => {
+          currentObject.actions.push({
+            prompt: opt,
+            lines: [],
+            effects: { video: null, image: null, loop: true, hideMusicNotes: false },
+          });
+        });
+      } else {
+        // Main-flow / inside-an-action: emit the original 'choice' event.
+        const ev = { type: 'choice', options };
+        if (currentAction) currentAction.lines.push(ev);
+        else currentArr.push(ev);
+      }
       i += options.length;
       continue;
     }
 
     // Branching directives, (IfChoice:N) ... (EndIf). Lines inside
     // the block only render if the last (Choice:N) picked index N.
-    const ifChoiceMatch = s.match(/^\(\s*IfChoice\s*:\s*(\d+)\s*\)$/i);
+    // The header may carry per-action effect attrs (video= image=
+    // loop= noloop hideMusicNotes) — these only matter inside an
+    // (Object:...) section, where they override the picked action's
+    // visual layer (analogous to (Action video=…)). Outside Object
+    // context the attrs are accepted but ignored.
+    const ifChoiceMatch = s.match(/^\(\s*IfChoice\s*:\s*(\d+)\s*([^)]*)\)$/i);
     if (ifChoiceMatch) {
-    const ev = { type: 'ifchoice', value: parseInt(ifChoiceMatch[1], 10) };
-    if (currentAction) currentAction.lines.push(ev);
-    else currentArr.push(ev);
-    continue;
+      const value = parseInt(ifChoiceMatch[1], 10);
+      const attrTail = (ifChoiceMatch[2] || '').trim();
+      if (currentObject && !currentAction) {
+        // Object-context: switch the parser into the matching action's
+        // .lines so subsequent dialog rows attach to that branch.
+        const action = currentObject.actions[value];
+        if (action) {
+          if (attrTail) {
+            const fx = parseObjectOpts(attrTail);
+            action.effects.video          = fx.video          ?? action.effects.video;
+            action.effects.image          = fx.image          ?? action.effects.image;
+            action.effects.loop           = (fx.loop !== undefined) ? fx.loop : action.effects.loop;
+            action.effects.hideMusicNotes = !!fx.hideMusicNotes || action.effects.hideMusicNotes;
+          }
+          currentAction = action;
+          currentArr = currentAction.lines;
+        }
+        continue;
+      }
+      // Main-flow branching — emit ifchoice event as before.
+      const ev = { type: 'ifchoice', value };
+      if (currentAction) currentAction.lines.push(ev);
+      else currentArr.push(ev);
+      continue;
     }
     if (/^\(\s*EndIf\s*\)$/i.test(s)) {
-    const ev = { type: 'endif' };
-    if (currentAction) currentAction.lines.push(ev);
-    else currentArr.push(ev);
-    continue;
+      // Inside an Object's IfChoice block — close the action so
+      // following lines snap back to the object's shared lines.
+      if (currentObject && currentAction && currentObject.actions.includes(currentAction)) {
+        currentAction = null;
+        currentArr = currentObject.lines;
+        continue;
+      }
+      const ev = { type: 'endif' };
+      if (currentAction) currentAction.lines.push(ev);
+      else currentArr.push(ev);
+      continue;
+    }
+
+    // Generic AI-replaceable dialog block. Syntax:
+    //   (AI:my-id [mood=foo tone=bar])
+    //   Mike: hand-written placeholder line
+    //   Eros: another placeholder
+    //   (EndAI)
+    // The lines between are PLACEHOLDER. At render time, if the
+    // worker returned AI-generated lines for `my-id`, those lines
+    // splice in instead. If AI is off, errors, or times out, the
+    // placeholder runs untouched.
+    const aiOpenMatch = s.match(/^\(\s*AI\s*:\s*([a-zA-Z0-9_-]+)\s*([^)]*)\)$/i);
+    if (aiOpenMatch) {
+      const id = aiOpenMatch[1];
+      // Reuse parseAiUiOverrides — it parses k=v pairs the same way.
+      const attrs = (typeof parseAiUiOverrides === 'function')
+        ? parseAiUiOverrides(aiOpenMatch[2] || '')
+        : {};
+      const aiBlock = {
+        type: 'ai-block',
+        id,
+        attrs,
+        placeholder: [],   // events collected until matching (EndAI)
+      };
+      if (currentAction) currentAction.lines.push(aiBlock);
+      else currentArr.push(aiBlock);
+      // Redirect subsequent pushes into the placeholder array. We
+      // remember where we came from so (EndAI) restores it.
+      aiBlock._restoreArr = currentArr;
+      currentArr = aiBlock.placeholder;
+      continue;
+    }
+    if (/^\(\s*EndAI\s*\)$/i.test(s)) {
+      // Walk back from the most recent push target to find the open
+      // ai-block — its _restoreArr points at the parent stream.
+      // We stash a reference on currentArr's owner via a marker on
+      // the ai-block itself; here we just look up the last ai-block
+      // whose .placeholder === currentArr.
+      const owner = (currentAction && currentAction.lines.find(e => e && e.placeholder === currentArr))
+                 || (currentObject && currentObject.lines.find(e => e && e.placeholder === currentArr))
+                 || main.find(e => e && e.placeholder === currentArr);
+      if (owner && owner._restoreArr) {
+        currentArr = owner._restoreArr;
+        delete owner._restoreArr;
+      }
+      continue;
     }
 
     // Regular "Speaker: text" line
@@ -13410,8 +14424,20 @@ function renderLine() {
   const line = lines[idx];
   el.lineCounter.textContent = `${idx + 1} / ${lines.length}`;
 
+  // Dialog architecture v2 — bracket directive event. Updates the
+  // current visual stack (bg/fx/tr/ui) and advances silently. The
+  // applied state persists across subsequent beats until overridden.
+  if (line.type === 'state-update') {
+    applyDialogState(line.updates);
+    idx++;
+    renderLine();
+    return;
+  }
+
   // Explore event
   if (line.type === 'explore') {
+    console.log('[explore] starting, duration', line.duration,
+      'object count:', Object.keys(OBJECTS || {}).length);
     startExplore(line.duration);
     return;
   }
@@ -13450,6 +14476,54 @@ function renderLine() {
     startGiftPicker();
     return;
   }
+  if (line.type === 'giftpick') {
+    runGiftPick();
+    return;
+  }
+  // Gift scene — splice in the AI-generated dialog (joy_pre +
+  // boy_inner_pre + joy_react + boy_react + boy_inner_mid) once vision
+  // has returned. If vision is still in flight, gate clicks and poll.
+  if (line.type === 'giftscene') {
+    expandGiftScene();
+    return;
+  }
+  // Phase 2 of the gift scene: after the immediate narrative beat,
+  // this placeholder polls vision and injects the AI lines.
+  if (line.type === 'gift-scene-rest') {
+    expandGiftSceneRest();
+    return;
+  }
+
+  // Generic AI-replaceable dialog block. Splice in either the cached
+  // AI events (worker returned in time) or the hand-written
+  // placeholder. AI failures fall through silently — the script
+  // never deadlocks waiting for the worker.
+  if (line.type === 'ai-block') {
+    const cache = (window._aiDialogCache = window._aiDialogCache || {});
+    const slot = cache[line.id];
+    let inject = null;
+    if (slot && slot.status === 'ready' && Array.isArray(slot.events) && slot.events.length) {
+      inject = slot.events;
+      console.log('[ai-block]', line.id, '→ AI lines (' + slot.events.length + ')');
+    } else {
+      inject = line.placeholder || [];
+      console.log('[ai-block]', line.id, '→ placeholder',
+                  slot ? '(status=' + slot.status + ')' : '(no request fired)');
+    }
+    lines.splice(idx, 1, ...inject);
+    renderLine();
+    return;
+  }
+  if (line.type === 'gift-fake-choice') {
+    runGiftFakeChoice(line);
+    return;
+  }
+  // Gift closing — fires the professore beat ONCE ComfyUI is ready.
+  // Loops in extra inner-voice fillers while the render is still cooking.
+  if (line.type === 'giftclosing') {
+    runGiftClosing();
+    return;
+  }
   // Gift reveal — paint the generated image as a Scene. If the
   // image isn't ready yet, fall back to a soft loader and wait.
   if (line.type === 'giftreveal') {
@@ -13467,16 +14541,24 @@ function renderLine() {
   // match, fast-forward to the matching (EndIf) so only the chosen
   // path's lines render.
   if (line.type === 'ifchoice') {
-  if (lastChosenIdx === line.value) {
-  idx++; // step into the block
-  } else {
-  // Skip ahead to the matching (EndIf), then past it.
-  idx++;
-  while (idx < script.length && script[idx].type !== 'endif') idx++;
-  idx++; // skip the endif itself
-  }
-  renderLine();
-  return;
+    const matched = (lastChosenIdx === line.value);
+    console.log('[ifchoice] needs=' + line.value,
+                'lastPicked=' + lastChosenIdx,
+                matched ? '→ ENTER' : '→ skip');
+    if (matched) {
+      idx++; // step into the block
+    } else {
+      // Skip ahead to the matching (EndIf), then past it. NOTE: the
+      // engine's main array is `lines`, not `script` — using `script`
+      // here threw ReferenceError silently and left idx parked one
+      // step inside the IfChoice:0 block, so subsequent taps would
+      // render that body regardless of which option the player picked.
+      idx++;
+      while (idx < lines.length && lines[idx].type !== 'endif') idx++;
+      idx++; // skip the endif itself
+    }
+    renderLine();
+    return;
   }
   if (line.type === 'endif') {
   idx++;
@@ -13486,8 +14568,32 @@ function renderLine() {
 
   // While in narrative scene mode, lines render as speech bubbles (boy/girl)
   // or inner-voice overlay (inner voices / narrative).
-  if (line.type === 'line' && el.body.classList.contains('narrativeScene')) {
+  // Also fired when ui:bubble was explicitly set even on cutscene/explore
+  // backgrounds — useful for off-stage speakers (dog barking behind a door,
+  // a voice from off-camera) without forcing the writer into scene mode.
+  const wantsBubble = currentDialogState && currentDialogState.ui === 'bubble';
+  if (line.type === 'line' && (el.body.classList.contains('narrativeScene') || wantsBubble)) {
     handleSceneDialogLine(line);
+    return;
+  }
+
+  // ui:cast-small — small bottom-left avatar + light dialog overlay
+  // for cast/NPC speakers (joy/boy/girl/dog). Reuses scene-inner DOM
+  // nodes (objectDialog + focusCharacter) without entering scene mode.
+  if (line.type === 'line' && el.body.classList.contains('ui-cast-small') &&
+      !INNER.has(line.speaker) && line.speaker !== 'narrative') {
+    handleCastSmallLine(line);
+    return;
+  }
+  // ui:inner-small — same compact layout but for inner-voice speakers
+  // (eros/valium/romeo/professore + Iris-side voices). Default dark
+  // dialog box (no light variant fires because these speakers don't
+  // match the boy/girl/joy/dog/narrative selectors). Lets the script
+  // ask for a small inner-voice overlay outside scene mode — e.g.
+  //   (GiftScene boy_inner_pre=inner-small boy_inner_mid=inner-small)
+  if (line.type === 'line' && el.body.classList.contains('ui-inner-small') &&
+      INNER.has(line.speaker)) {
+    handleCastSmallLine(line);
     return;
   }
 
@@ -13625,7 +14731,7 @@ function startEndScene() {
   hideSceneBubbles();
   el.body.classList.remove(
     'inner','choosing','inObjectImage','inObjectChar',
-    'narrativeScene','scene-inner','narrating-over-scene','cutscene-active'
+    'narrativeScene','scene-inner','narrating-over-scene','cutscene-active','gift-scene'
   );
 
   scene.classList.remove('fade-out', 'dashboard', 'awaiting-continue');
@@ -13652,7 +14758,19 @@ function startEndScene() {
     video.setAttribute('src', packedVideoSrc);
     try { video.load(); } catch (e) {}
   }
-  const lines = activeEndSceneLines();
+  // Prefer the script-supplied reel attached to the (EndScene) event
+  // (block form `(EndScene) … (/EndScene)`). Falls back to the per-pack
+  // hardcoded reel when the script used the bare directive.
+  // The variable is named `reel` (not `lines`) to avoid shadowing the
+  // module-scope `lines` script array — the subtitle interval below
+  // reads `reel` directly.
+  let reel = activeEndSceneLines();
+  try {
+    const ev = (typeof idx === 'number') ? lines[idx] : null;
+    if (ev && Array.isArray(ev.lines) && ev.lines.length) {
+      reel = ev.lines;
+    }
+  } catch (_) {}
 
   // Autoplay video from start. Most browsers allow muted autoplay.
   try { video.currentTime = 0; } catch (e) {}
@@ -13672,12 +14790,12 @@ function startEndScene() {
     if (!t) t = (Date.now() - startedAt) / 1000;
     // Find the latest line whose timestamp has been reached
     let newIdx = -1;
-    for (let i = 0; i < lines.length; i++) {
-      if (t >= lines[i].t) newIdx = i; else break;
+    for (let i = 0; i < reel.length; i++) {
+      if (t >= reel[i].t) newIdx = i; else break;
     }
     if (newIdx !== shownIdx) {
       shownIdx = newIdx;
-      const line = lines[newIdx];
+      const line = reel[newIdx];
       if (line) {
         esSpeak.className = 'es-speaker ' + line.speaker;
         esSpeak.textContent = labelFor(line.speaker).toUpperCase();
@@ -13704,7 +14822,7 @@ function startEndScene() {
 
         // Once the LAST line has landed, reveal the Continue button ~2.5s
         // later so the player has a beat to read it before we offer the exit.
-        if (newIdx === lines.length - 1 &&
+        if (newIdx === reel.length - 1 &&
             !scene.classList.contains('awaiting-continue')) {
           setTimeout(() => {
             if (!scene.classList.contains('dashboard')) {
@@ -14146,6 +15264,7 @@ function startMusicScene() {
         scene.classList.remove('intro-video');
         scene.classList.add('lights-on');
         playSong();
+        spawnMusicPolaroids();
       };
       video.addEventListener('ended', handoff, { once: true });
       if (musicIntroTimer) clearTimeout(musicIntroTimer);
@@ -14183,7 +15302,156 @@ function startMusicScene() {
     scene.classList.add('lights-on');
     video.play().catch(() => {});
     playSong();
+    spawnMusicPolaroids();
   }, assets.introMs);
+}
+
+// Polaroids drift in over the lyrics area — TWO slots (left + right)
+// cycling through a longer photo list. Each slot independently shows
+// one card, holds it for a beat, slides it out, then brings the next
+// photo. Slots are offset so the swaps stagger (left changes mid-way
+// through right's hold and vice versa). Loops through the photo list
+// for as long as the music scene is open; stops cleanly if the player
+// continues out.
+let _msPolaroidTimers = [];
+
+function spawnMusicPolaroids() {
+  const container = document.getElementById('msPolaroids');
+  if (!container) return;
+  // Stop any in-flight loop (replay case).
+  _msPolaroidTimers.forEach(clearTimeout);
+  _msPolaroidTimers = [];
+  container.innerHTML = '';
+
+  // Photo list — each entry carries { src, caption, emoji, frame, rot }.
+  //   frame = one of: sq-sm | sq-md | sq-lg | port-sm | port-lg | land
+  //   rot   = per-card tilt (the slot's left position is shared across
+  //           cards in the same slot, but rotation is per-photo so the
+  //           wall doesn't look like a stamped grid)
+  const photos = [
+    { src: 'characters/iris/appearances/london.png', caption: 'her place',           emoji: '🏠', frame: 'sq-md',   rot: '-7deg' },
+    { src: 'characters/joy/appearances/london.png',  caption: 'ran into Joy',        emoji: '👋', frame: 'port-lg', rot:  '6deg' },
+    { src: 'characters/you/appearances/london.png',  caption: 'all dressed up',      emoji: '✨', frame: 'sq-sm',   rot: '-4deg' },
+    { src: 'characters/iris/appearances/london.png', caption: 'coffee on the couch', emoji: '☕', frame: 'land',    rot:  '3deg' },
+    { src: 'characters/joy/appearances/london.png',  caption: 'good gift, she said', emoji: '🎁', frame: 'port-sm', rot: '-5deg' },
+    { src: 'characters/you/appearances/london.png',  caption: 'the cinema, tuesday', emoji: '🎬', frame: 'sq-lg',   rot:  '7deg' },
+  ];
+  if (!photos.length) return;
+
+  // Slots provide horizontal anchor only — frame size + rotation come
+  // from the photo entry above so each slot rotation can vary per card.
+  const slots = [
+    { left: '28%' },
+    { left: '72%' },
+  ];
+
+  // Slower timing for a calmer, more Polaroid-feeling rhythm.
+  //   slideIn (2.2s) → hold (6.5s) → slideOut (1.2s) → gap (0.6s)
+  //   = 10.5s per slot cycle.
+  const SLIDE_IN     = 2200;
+  const HOLD_MS      = 6500;
+  const SLIDE_OUT    = 1200;
+  const GAP          = 600;
+  const CYCLE_MS     = SLIDE_IN + HOLD_MS + SLIDE_OUT + GAP;
+  // When (relative to slide-in completion) to float the emoji away.
+  // We want it gone before the card itself slides out.
+  const EMOJI_OUT_AT = SLIDE_IN + HOLD_MS - 1400;
+
+  function scheduleSlotPhoto(slotIdx, photoIdx, startDelay) {
+    const t = setTimeout(() => {
+      if (!container.isConnected) return;
+      const slot = slots[slotIdx];
+      const photo = photos[photoIdx % photos.length];
+      const card = document.createElement('div');
+      // frame-* class drives width + photo aspect-ratio; --rot drives
+      // the per-card tilt at rest.
+      card.className = 'ms-polaroid frame-' + (photo.frame || 'sq-md');
+      card.style.left = slot.left;
+      card.style.setProperty('--rot', photo.rot || '-4deg');
+      // Caption renders EMPTY initially — the typewriter fills it in
+      // char by char so it reads as handwriting being applied to the
+      // strip. Stash the target text on the element for the typewriter.
+      card.innerHTML =
+        '<img src="' + photo.src + '" alt="" draggable="false">' +
+        (photo.emoji ? '<div class="polaroid-emoji">' + photo.emoji + '</div>' : '') +
+        (photo.caption ? '<div class="polaroid-caption" data-target="' +
+          photo.caption.replace(/"/g, '&quot;') + '"></div>' : '');
+      container.appendChild(card);
+      void card.offsetWidth;
+      card.classList.add('show');
+
+      // Start typing the caption shortly after the card has settled —
+      // gives the photo a beat before the writing begins.
+      if (photo.caption) {
+        const writeT = setTimeout(() => {
+          typeWritePolaroidCaption(card, photo.caption);
+        }, SLIDE_IN + 400);
+        _msPolaroidTimers.push(writeT);
+      }
+
+      // Float the emoji away near the end of the hold so the card's
+      // exit animation isn't fighting an emoji still settling.
+      if (photo.emoji) {
+        const emojiOutT = setTimeout(() => {
+          card.classList.add('emoji-out');
+        }, EMOJI_OUT_AT);
+        _msPolaroidTimers.push(emojiOutT);
+      }
+
+      // Schedule the card's own exit.
+      const exitT = setTimeout(() => {
+        card.classList.remove('show');
+        card.classList.add('exit');
+        const removeT = setTimeout(() => card.remove(), SLIDE_OUT + 200);
+        _msPolaroidTimers.push(removeT);
+      }, SLIDE_IN + HOLD_MS);
+      _msPolaroidTimers.push(exitT);
+
+      // Queue the NEXT photo for this slot one full cycle later.
+      scheduleSlotPhoto(slotIdx, photoIdx + 2, CYCLE_MS);
+    }, startDelay);
+    _msPolaroidTimers.push(t);
+  }
+
+  // Slot 0 starts at 1.2s; slot 1 starts halfway through the cycle.
+  scheduleSlotPhoto(0, 0, 1200);
+  scheduleSlotPhoto(1, 1, 1200 + CYCLE_MS / 2);
+}
+
+// Stop the polaroid loop — call when leaving the music scene so timers
+// don't keep running in the background.
+function stopMusicPolaroids() {
+  _msPolaroidTimers.forEach(clearTimeout);
+  _msPolaroidTimers = [];
+  const container = document.getElementById('msPolaroids');
+  if (container) container.innerHTML = '';
+}
+
+// Type a caption into the polaroid's bottom strip character by
+// character. Slight per-char jitter so it reads like handwriting
+// rather than mechanical typewriter cadence.
+function typeWritePolaroidCaption(card, text) {
+  const captionEl = card.querySelector('.polaroid-caption');
+  if (!captionEl || !text) return;
+  captionEl.textContent = '';
+  captionEl.classList.add('typing');
+  let i = 0;
+  const tick = () => {
+    if (!card.isConnected) return;
+    if (i >= text.length) {
+      captionEl.classList.remove('typing');
+      return;
+    }
+    captionEl.textContent += text.charAt(i);
+    i++;
+    // 55–95ms per char + a small extra pause after spaces/punctuation
+    // for that human "let me think mid-word" feel.
+    const ch = text.charAt(i - 1);
+    const extra = /[.,!? ]/.test(ch) ? 90 : 0;
+    const t = setTimeout(tick, 55 + Math.random() * 40 + extra);
+    _msPolaroidTimers.push(t);
+  };
+  tick();
 }
 
 function playSong() {
@@ -14513,6 +15781,7 @@ document.addEventListener('DOMContentLoaded', () => {
       scene.classList.remove('open', 'finished');
       scene.setAttribute('aria-hidden', 'true');
     }
+    if (typeof stopMusicPolaroids === 'function') stopMusicPolaroids();
     el.body.classList.remove('in-endscene');
     if (typeof showWorldList === 'function') showWorldList();
   });
@@ -14697,7 +15966,30 @@ function startVideo(src) {
 // ============================================================
 // EXPLORE MODE
 // ============================================================
+// Grace window timestamp — set the moment explore mode is entered so
+// hotspot click handlers can ignore taps that arrive in the same
+// rapid sequence as the panel-dismiss tap.
+let exploreEnteredAt = 0;
+const HOTSPOT_GRACE_MS = 400;
+
 function startExplore(seconds) {
+  exploreEnteredAt = performance.now();
+  // Reset any lingering UI mode (ui:inner-small, ui:cast-small, etc.)
+  // so the previous beat's bottom dialog card can't sit pinned open
+  // through explore. (CSS body.ui-inner-small #objectDialog { opacity:1 }
+  // would otherwise keep the last "Professore: …" overlay visible over
+  // the explore room.)
+  if (typeof applyUiState === 'function') applyUiState(null);
+  if (typeof currentDialogState === 'object' && currentDialogState) {
+    currentDialogState.ui = null;
+  }
+  if (el.objectDialog) {
+    el.objectDialog.className = '';
+    if (el.odSpeaker) el.odSpeaker.textContent = '';
+    if (el.odText)    el.odText.textContent    = '';
+  }
+  if (el.focusCharacter) el.focusCharacter.className = 'focus-character';
+  hideSceneBubbles();
   // Seamless transition: everyone on stage gently exits while the backdrop
   // simultaneously brightens into exploration mode.
   if (lastRealSpeaker === 'girl') {
@@ -14781,6 +16073,62 @@ function hideVoicePreview() {
   el.voicePreview.classList.remove('show');
 }
 
+// Compact quick-pick row that sits between the (hidden) inner-voice
+// cards and the Write card. Each small avatar = direct shortcut to
+// pick that voice's option (skip writing). The trailing arrow toggles
+// the full voice cards on/off.
+function buildWriteQuickPickRow(innerOpts) {
+  const wrap = document.createElement('div');
+  wrap.className = 'choice-quickpick-row';
+  innerOpts.forEach(({ opt, idx }) => {
+    const dot = document.createElement('button');
+    dot.type = 'button';
+    dot.className = `quickpick-dot c-${opt.speaker}`;
+    dot.title = (labelFor(opt.speaker) || opt.speaker) + ': ' + (opt.text || '');
+    dot.addEventListener('click', () => endChoice(idx, opt));
+    wrap.appendChild(dot);
+  });
+  // Arrow toggle — flips the panel between collapsed (default) and
+  // expanded (full voice cards visible above).
+  const arrow = document.createElement('button');
+  arrow.type = 'button';
+  arrow.className = 'quickpick-arrow';
+  arrow.setAttribute('aria-label', 'Show inner voices');
+  arrow.innerHTML = '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"></polyline></svg>';
+  arrow.addEventListener('click', () => {
+    el.choicePanel.classList.toggle('write-expanded');
+  });
+  wrap.appendChild(arrow);
+  return wrap;
+}
+
+// ============================================================
+// DEV SHORTCUT — jump straight to the Write choice for UI iteration.
+// Wired to the "✎ Write Choice" button in index.html via postMessage.
+// Resets minimal state, sets the couch scene background, and fires
+// the 4-option choice (3 inner voices + Write) directly.
+// ============================================================
+window.devShowWriteChoice = function() {
+  try {
+    if (el.body) {
+      el.body.classList.remove(
+        'inner','inObjectImage','inObjectChar','exploring',
+        'pickingAction','choosing','cutscene-active','gift-scene'
+      );
+    }
+    if (typeof clearCutscene === 'function') clearCutscene();
+    if (typeof setNarrativeScene === 'function') setNarrativeScene('narrativescene01.jpg');
+    startChoice([
+      { speaker: 'eros',       text: "Close the gap. Kiss her, don't overthink it." },
+      { speaker: 'valium',     text: 'Stay where you are. Let her take the next breath.' },
+      { speaker: 'professore', text: 'Crack a joke. Undercut the tension.' },
+      { speaker: 'write',      text: 'Write your own move…' },
+    ]);
+  } catch (e) {
+    console.warn('[devShowWriteChoice] failed', e);
+  }
+};
+
 // ============================================================
 // CHOICE MODE (inner voices offer 1–4 options)
 // ============================================================
@@ -14804,19 +16152,46 @@ function startChoice(options) {
   const inScene = el.body.classList.contains('narrativeScene');
 
   el.choiceList.innerHTML = '';
+
+  // Detect whether this Choice has a Write option. If yes, the panel
+  // takes a different shape: inner-voice options collapse into a tiny
+  // quick-pick row above a light Mike-styled Write card. The voice
+  // cards themselves are hidden by default and slide in when the
+  // player taps the up arrow.
+  const writeIdx = options.findIndex(o => o && o.speaker === 'write');
+  const hasWrite = writeIdx !== -1;
+  // Inner-voice options that should appear in the quick-pick row.
+  const innerOpts = options
+    .map((opt, idx) => ({ opt, idx }))
+    .filter(({ opt }) => INNER.has(opt.speaker));
+
+  if (hasWrite) {
+    el.choicePanel.classList.add('has-write');
+    // Default: voice cards hidden until ↑ tapped
+    el.choicePanel.classList.remove('write-expanded');
+  } else {
+    el.choicePanel.classList.remove('has-write', 'write-expanded');
+  }
+
+  // Track the index of the current Write row so the quick-pick row's
+  // listeners can call endChoice with the right options.
   options.forEach((opt, i) => {
     const speaker = opt.speaker;
 
-    // Special "Write: ..." option → render a text input instead of a button
+    // Special "Write: ..." option → light Mike card with input.
     if (speaker === 'write') {
       const row = document.createElement('div');
       row.className = 'choice-opt write';
       row.innerHTML = `
+        <div class="choice-avatar-clip">
+          <div class="choice-avatar c-boy"></div>
+        </div>
         <div class="choice-body">
-          <div class="choice-speaker">YOUR MOVE</div>
+          <div class="choice-speaker">WRITE YOUR MOVE</div>
           <div class="choice-text">
             <div class="choice-write-row">
-              <input class="choice-write-input" type="text" maxlength="80" />
+              <input class="choice-write-input" type="text" maxlength="80"
+                     enterkeyhint="go" autocomplete="off" autocapitalize="sentences" />
               <button class="choice-write-submit" type="button">Go</button>
             </div>
           </div>
@@ -14837,6 +16212,12 @@ function startChoice(options) {
         if (e.key === 'Enter') { e.preventDefault(); trySubmit(); }
       });
       submit.addEventListener('click', trySubmit);
+      // Insert the quick-pick row JUST BEFORE the Write card. It sits
+      // outside any card, between the (collapsed-by-default) voice
+      // cards above and the Write card here.
+      if (innerOpts.length) {
+        el.choiceList.appendChild(buildWriteQuickPickRow(innerOpts));
+      }
       el.choiceList.appendChild(row);
       // Autofocus shortly after the panel opens so the keyboard pops up
       setTimeout(() => input.focus(), 500);
@@ -14847,19 +16228,39 @@ function startChoice(options) {
     btn.type = 'button';
     btn.className = `choice-opt ${speaker}`;
     btn.innerHTML = `
+      <div class="choice-avatar-clip">
+        <div class="choice-avatar c-${speaker}"></div>
+      </div>
       <div class="choice-body">
-        <div class="choice-speaker">${LABELS[speaker] || ''}</div>
+        <div class="choice-speaker"></div>
         <div class="choice-text"></div>
       </div>
     `;
-    btn.querySelector('.choice-text').textContent = opt.text;
-    btn.addEventListener('click', () => endChoice(i, opt));
-    if (!inScene) {
-      btn.addEventListener('mouseenter', () => showVoicePreview(speaker));
-      btn.addEventListener('mouseleave', hideVoicePreview);
-      btn.addEventListener('touchstart', () => showVoicePreview(speaker), { passive: true });
-      btn.addEventListener('touchend',   hideVoicePreview);
+    // Use labelFor() so the player's chosen name (introProfile.name)
+    // surfaces for speaker='boy'. LABELS is the static fallback only.
+    btn.querySelector('.choice-speaker').textContent = labelFor(speaker) || LABELS[speaker] || '';
+    // If the option carries an inline icon, prefix it before the text
+    // (currently used by the gift-pick options to telegraph camera vs
+    // gallery). Text always rendered via textContent so script-supplied
+    // copy can't inject HTML.
+    const textEl = btn.querySelector('.choice-text');
+    if (opt.iconHtml) {
+      const iconSpan = document.createElement('span');
+      iconSpan.className = 'choice-icon';
+      iconSpan.innerHTML = opt.iconHtml;
+      const textSpan = document.createElement('span');
+      textSpan.className = 'choice-text-inner';
+      textSpan.textContent = opt.text;
+      textEl.innerHTML = '';
+      textEl.appendChild(iconSpan);
+      textEl.appendChild(textSpan);
+    } else {
+      textEl.textContent = opt.text;
     }
+    btn.addEventListener('click', () => endChoice(i, opt));
+    // No hover preview — the inline .choice-avatar already shows the
+    // character. Mobile has no hover anyway, so this gives a single
+    // consistent affordance across desktop + mobile.
     el.choiceList.appendChild(btn);
   });
 
@@ -14878,6 +16279,9 @@ function endChoice(chosenIdx, chosenOpt) {
     lastPlayerInput = chosenOpt.typed.replace(/[.,!?;:…]+$/, '').trim();
     }
     lastChosenIdx = chosenIdx;
+    console.log('[choice] picked idx=' + chosenIdx,
+                'speaker=' + (chosenOpt && chosenOpt.speaker),
+                'text=' + (chosenOpt && chosenOpt.text));
     // Inline choice text can carry a side-effect (discovery unlock, FX,
     // …) the same way (Object) actions do.
     if (chosenOpt && chosenOpt.text && typeof triggerActionSideEffects === 'function') {
@@ -14885,6 +16289,54 @@ function endChoice(chosenIdx, chosenOpt) {
   }
   el.choicePanel.classList.remove('open');
   hideVoicePreview();
+
+  // Gift-pick action: opens the live camera overlay (getUserMedia)
+  // for "camera", or the gallery file picker for "upload". Skips the
+  // legacy bottom-sheet picker entirely. We DON'T advance idx — leave
+  // it on (GiftPick) so handleGiftFile's idx++ lands on the next
+  // directive (typically GiftScene). The 'gift-picking' body class
+  // gates tap-to-advance until commit.
+  const giftPickAction = chosenOpt && chosenOpt.giftPickAction;
+  if (giftPickAction) {
+    setTimeout(() => {
+      el.body.classList.remove('choosing');
+      document.body.classList.add('gift-picking');
+      if (giftPickAction === 'camera' && typeof openGiftCamera === 'function') {
+        openGiftCamera();
+      } else {
+        const fileIn = document.getElementById('giftFileInput');
+        if (fileIn) fileIn.click();
+      }
+    }, 380);
+    return;
+  }
+  // Legacy single-button gift-pick — kept for backward compat with
+  // any older script that still uses giftPickButton flag.
+  const isGiftPickButton = !!(chosenOpt && chosenOpt.giftPickButton);
+  if (isGiftPickButton) {
+    setTimeout(() => {
+      el.body.classList.remove('choosing');
+      if (typeof startGiftPicker === 'function') startGiftPicker();
+    }, 380);
+    return;
+  }
+
+  // Fake gift-choice path: the option was a cosmetic Boy line, no real
+  // branching. The pending hook splices the chosen text into the script
+  // at the current idx so the regular advance flow renders it as a Boy
+  // line. We DON'T advance idx — the splice replaced the fake-choice
+  // marker, so re-rendering at idx now hits the new Boy line.
+  const isFakeGift = !!(chosenOpt && chosenOpt.fakeGiftChoice) &&
+                     typeof window._giftPendingFakeChoice === 'function';
+  if (isFakeGift) {
+    window._giftPendingFakeChoice(chosenIdx);
+    setTimeout(() => {
+      el.body.classList.remove('choosing');
+      renderLine();
+    }, 380);
+    return;
+  }
+
   setTimeout(() => {
     el.body.classList.remove('choosing');
     idx++;
@@ -14895,7 +16347,45 @@ function endChoice(chosenIdx, chosenOpt) {
 // ============================================================
 // OBJECT INTERACTIONS (from explore hotspots)
 // ============================================================
+// Switch the object focus layer between image, video, or blank. Called
+// by openObject for the cover visual and by pickObjectAction when an
+// action declares its own visual override (e.g. fridge "Look inside"
+// → fridge.mp4, vinyl "Press play" → vinyl.mp4).
+function setObjectVisual(opts) {
+  opts = opts || {};
+  const v = el.focusVideo;
+  // Always pause + clear the previous video before swapping. iOS
+  // sometimes hangs on the old frame otherwise.
+  if (v) {
+    try { v.pause(); } catch (_) {}
+    v.removeAttribute('src');
+    v.load();
+  }
+  if (opts.video) {
+    if (el.focusImage) el.focusImage.style.backgroundImage = '';
+    if (v) {
+      v.loop = opts.loop !== false;        // default: loop
+      v.src  = resolveWorldAsset(opts.video, 'objects');
+      v.play().catch(() => {});            // muted autoplay
+    }
+    el.body.classList.add('has-object-video');
+  } else if (opts.image) {
+    if (el.focusImage) {
+      el.focusImage.style.display = '';
+      el.focusImage.style.backgroundImage = `url("${resolveWorldAsset(opts.image, 'objects')}")`;
+    }
+    el.body.classList.remove('has-object-video');
+  } else {
+    if (el.focusImage) {
+      el.focusImage.style.display = 'none';
+      el.focusImage.style.backgroundImage = '';
+    }
+    el.body.classList.remove('has-object-video');
+  }
+}
+
 function openObject(id) {
+  console.log('[object] openObject', id, 'OBJECTS has it:', !!OBJECTS[id]);
   const obj = OBJECTS[id];
   if (!obj) return;
   const hasActions = obj.actions && obj.actions.length > 0;
@@ -14912,20 +16402,18 @@ function openObject(id) {
   objectLines  = [];
   objectIdx    = 0;
 
-  // Visual mode
-  if (obj.image) {
-    objectType = 'image';
-    el.focusImage.style.display = '';
-    el.focusImage.style.backgroundImage = `url("${resolveWorldAsset(obj.image, 'objects')}")`;
+  // Visual mode — video trumps image. Both render via the focus layer.
+  if (obj.video || obj.image) {
+    objectType = obj.video ? 'video' : 'image';
+    setObjectVisual({ image: obj.image, video: obj.video, loop: obj.loop !== false });
     el.body.classList.add('inObjectImage');
   } else if (obj.character) {
     objectType = 'character';
     el.body.classList.add('inObjectChar');
   } else {
     objectType = 'plain';
+    setObjectVisual({});
     el.body.classList.add('inObjectImage');
-    el.focusImage.style.backgroundImage = '';
-    el.focusImage.style.display = 'none';
   }
 
   if (hasActions) {
@@ -14940,7 +16428,9 @@ function openObject(id) {
   renderObjectLine();
 }
 
-// Object actions, no hover preview (the cover image is the focal point).
+// Object actions, with inline character avatar (head + chest peeking
+// in from the bottom-left of each option). Mobile-friendly — no hover
+// preview needed because the avatar is always visible.
 function showObjectActionPicker(actions) {
   el.choiceList.innerHTML = '';
   actions.forEach((action, i) => {
@@ -14950,11 +16440,15 @@ function showObjectActionPicker(actions) {
     btn.type = 'button';
     btn.className = `choice-opt ${speaker}`;
     btn.innerHTML = `
+      <div class="choice-avatar-clip">
+        <div class="choice-avatar c-${speaker}"></div>
+      </div>
       <div class="choice-body">
-        <div class="choice-speaker">${LABELS[speaker] || ''}</div>
+        <div class="choice-speaker"></div>
         <div class="choice-text"></div>
       </div>
     `;
+    btn.querySelector('.choice-speaker').textContent = labelFor(speaker) || LABELS[speaker] || '';
     btn.querySelector('.choice-text').textContent = prompt.text;
     btn.addEventListener('click', () => pickObjectAction(i));
     el.choiceList.appendChild(btn);
@@ -14970,6 +16464,21 @@ function pickObjectAction(i) {
   el.choicePanel.classList.remove('open');
   hideVoicePreview();
   el.body.classList.remove('pickingAction');
+  // Declarative effects from the action header (e.g. video swap,
+  // hide-music-notes). Applied first so the visual snaps in before
+  // the dialog text begins.
+  if (action.effects) {
+    if (action.effects.hideMusicNotes && typeof stopMusicNotes === 'function') {
+      stopMusicNotes();
+    }
+    if (action.effects.video || action.effects.image) {
+      setObjectVisual({
+        video: action.effects.video,
+        image: action.effects.image,
+        loop:  action.effects.loop !== false,
+      });
+    }
+  }
   // Side-effects per action, music notes burst, calendar unlocks,
   // etc. Detected by the action's prompt text so the script can
   // declare them inline without extra syntax.
@@ -14989,9 +16498,23 @@ function pickObjectAction(i) {
    if (!promptText) return;
    const text = String(promptText).toLowerCase();
 
-   // "Press play" on a music object → notes animation + music taste reveal.
+   // "Press play" on a music object → music taste reveal.
+   //
+   // The floating-notes effect was the original visual flourish; we
+   // now defer to whatever the script's (Action ...) declares. If the
+   // action specifies `video=vinyl.mp4`, that video plays. If neither
+   // a video nor `hideMusicNotes` is set, we fall back to the legacy
+   // notes burst — keeps any older script that relied on it working.
    if (text.includes('press play')) {
-   spawnMusicNotes();
+   const obj = OBJECTS[objectActive];
+   const action = obj && obj.actions && obj.actions.find(a =>
+     a && a.prompt && /press play/i.test(a.prompt.text || ''));
+   const eff = action && action.effects;
+   const hasDeclaredVisual = !!(eff && (eff.video || eff.image));
+   const hideNotes = !!(eff && eff.hideMusicNotes);
+   if (!hasDeclaredVisual && !hideNotes) {
+     spawnMusicNotes();
+   }
    if (typeof unlockIrisBio === 'function') {
    unlockIrisBio('music', 'indie folk');
    unlockIrisBio('music', 'soft jazz');
@@ -15142,6 +16665,7 @@ function advanceObjectLine() {
 }
 
 function closeObject() {
+  console.log('[object] closeObject — clearing overlay');
   objectActive = null;
   objectLines  = [];
   objectIdx    = 0;
@@ -15149,18 +16673,36 @@ function closeObject() {
   // active, clean up when leaving the object scene.
   if (typeof stopMusicNotes === 'function') stopMusicNotes();
 
+  // Wipe the overlay's lingering content + speaker class so the LAST
+  // line of the previous object can't bleed back in (CSS slides the
+  // card down via transition, but the text stays in DOM until
+  // overwritten — flickering when a new object opens, or visibly
+  // hanging if the slide-out is interrupted by another body class
+  // that re-pins #objectDialog open).
+  if (el.objectDialog) el.objectDialog.className = '';
+  if (el.odSpeaker)    el.odSpeaker.textContent = '';
+  if (el.odText)       el.odText.textContent    = '';
+
   if (objectType === 'character') {
     // Fade the character off stage
     Object.values(el.chars).forEach(c => c.classList.remove('active','exit-left','exit-right'));
     el.aura.className = 'voice-aura';
     el.body.classList.remove('inner');
   }
-  if (objectType === 'image' || objectType === 'plain') {
-    el.focusImage.style.display = '';
-    el.focusImage.style.backgroundImage = '';
+  if (objectType === 'image' || objectType === 'plain' || objectType === 'video') {
+    if (el.focusImage) {
+      el.focusImage.style.display = '';
+      el.focusImage.style.backgroundImage = '';
+    }
+    // Stop + unload the video to free memory and silence iOS audio.
+    if (el.focusVideo) {
+      try { el.focusVideo.pause(); } catch (_) {}
+      el.focusVideo.removeAttribute('src');
+      el.focusVideo.load();
+    }
     el.focusCharacter.className = 'focus-character';
   }
-  el.body.classList.remove('inObjectImage', 'inObjectChar', 'pickingAction');
+  el.body.classList.remove('inObjectImage', 'inObjectChar', 'pickingAction', 'has-object-video');
   el.choicePanel.classList.remove('open');
   hideVoicePreview();
   objectType = null;
@@ -15168,10 +16710,16 @@ function closeObject() {
   // to resume here. It keeps ticking down in the background.
 }
 
-// Wire the hotspots and tap-to-advance for object dialogs
+// Wire the hotspots and tap-to-advance for object dialogs.
+// Grace window: ignore hotspot clicks that fire within 400ms of
+// explore mode being entered. Without it, a rapid tap that took the
+// player from a Choice panel into Explore could spill onto whichever
+// hotspot happens to sit under the tap location (often coffee, which
+// is near the panel's earlier position) and pop the wrong object.
 document.querySelectorAll('.hotspot').forEach(h => {
   h.addEventListener('click', (e) => {
     e.stopPropagation();
+    if (performance.now() - exploreEnteredAt < HOTSPOT_GRACE_MS) return;
     openObject(h.dataset.id);
   });
 });
@@ -15191,6 +16739,10 @@ el.objectDialog.addEventListener('click', () => {
 
 // Click anywhere on the narrative scene image → advance
 document.getElementById('narrativeSceneLayer').addEventListener('click', () => {
+  // Same gate as the body-level handler — picker open means clicks
+  // here are not "advance dialog", they're aimed at the sheet.
+  if (el.body.classList.contains('gift-picking')) return;
+  if (el.body.classList.contains('awaiting-gift')) return;
   if (el.body.classList.contains('narrativeScene')) next();
 });
 el.objectFocus.addEventListener('click', (e) => {
@@ -15215,6 +16767,14 @@ function next() {
   if (el.body.classList.contains('inObjectChar')) { advanceObjectLine(); return; }
   if (el.body.classList.contains('exploring')) return;
   if (el.body.classList.contains('choosing'))  return;
+  // Hard gate during gift pickup: any tap-driven advance must NOT walk
+  // past the (GiftPick) marker until onGiftFile has done its single
+  // commit-advance. Without this gate the file-input click can bubble
+  // through and skip the entire scene injection.
+  if (el.body.classList.contains('gift-picking')) return;
+  // Same gate while the GiftScene is mid-injection (state polling for
+  // the scene to land). A stray tap here would jump past the scene.
+  if (el.body.classList.contains('awaiting-gift')) return;
   if (!lines.length) return;
   if (typeTimer && lines[idx] && lines[idx].type === 'line') {
     clearInterval(typeTimer); typeTimer = null;
@@ -15264,6 +16824,9 @@ document.body.addEventListener('click', (ev) => {
   if (el.body.classList.contains('choosing')) return;
   if (el.body.classList.contains('exploring')) return;
   if (el.body.classList.contains('pickingAction')) return;
+  // Gift reveal is waiting on ComfyUI — don't let the player skip
+  // past the beat or they'll never see the generated image.
+  if (el.body.classList.contains('awaiting-gift')) return;
   // Skip if we're not actually inside the live dialog (any flow-*
   // class means we're on a non-game screen).
   for (const f of ['flow-intro','flow-form','flow-loading','flow-survey',
@@ -15271,6 +16834,9 @@ document.body.addEventListener('click', (ev) => {
                     'flow-worlds','flow-date','flow-map']) {
     if (el.body.classList.contains(f)) return;
   }
+  // Gift picker is open — the tap was probably meant for the sheet
+  // (or accidental). Don't sneak past the (Gift) directive.
+  if (el.body.classList.contains('gift-picking')) return;
   next();
 });
 
@@ -15298,6 +16864,19 @@ function loadScript(text) {
   lines = parsed.main;
   OBJECTS = parsed.objects;
   idx = 0;
+  // Trace what objects ended up in OBJECTS — if explore breaks, this
+  // shows whether the parser actually picked up the (Object:...) sections.
+  const objSummary = Object.entries(OBJECTS || {}).map(([id, o]) => ({
+    id, image: o.image, video: o.video, character: o.character,
+    actions: (o.actions || []).length, lines: (o.lines || []).length,
+  }));
+  console.log('[script-load] main lines:', lines.length, 'objects:', objSummary);
+  // Eager prefetch every (AI:id) block so AI dialog is ready by the
+  // time the engine reaches that line. Failures fall through to the
+  // hand-written placeholder, never blocking the script flow.
+  if (typeof prefetchAiBlocks === 'function') {
+    prefetchAiBlocks(lines, OBJECTS);
+  }
 }
 
 // Keyboard
@@ -19337,6 +20916,8 @@ function buildSelfPortraitPrompt() {
 const AI_PORTRAIT_PROXY =
   (typeof window !== 'undefined' && window.AI_PORTRAIT_PROXY) ||
   'https://thedate-portrait.onur-377.workers.dev';
+// Expose for in-console debugging (manual gift-render-poll calls etc.).
+if (typeof window !== 'undefined') window.AI_PORTRAIT_PROXY = AI_PORTRAIT_PROXY;
 
 // Cache of style-reference Files so we don't re-fetch on each call.
 let _styleRefFilesCache = null;
@@ -21476,6 +23057,133 @@ function pickFirstProductLikeImg(html) {
 }
 
 // ============================================================
+// AI DIALOG BLOCKS — generic placeholder→AI swap for any dialog
+// section the writer marks with (AI:id ...) ... (EndAI). Eager
+// prefetch on script load: we walk the parsed events, find every
+// ai-block, fire a worker request per id (max 3 concurrent), and
+// cache the response. At render time the engine splices either the
+// cached AI lines or the hand-written placeholder. Failures (worker
+// off, timeout, bad JSON) silently fall through to placeholder so
+// the dialog never deadlocks.
+// ============================================================
+window._aiDialogCache = window._aiDialogCache || {}; // id → {status, events?, error?}
+
+// Walk a parsed event stream + collect every (AI:id) block.
+function _collectAiBlocks(events, out) {
+  out = out || [];
+  if (!Array.isArray(events)) return out;
+  for (const ev of events) {
+    if (!ev || typeof ev !== 'object') continue;
+    if (ev.type === 'ai-block' && ev.id) {
+      out.push(ev);
+      // Recurse — placeholder lines themselves could contain ai-blocks.
+      _collectAiBlocks(ev.placeholder, out);
+    }
+  }
+  return out;
+}
+
+// Convert AI worker response lines [{ speaker, text }] into engine
+// 'line' events shaped exactly like parseLine output.
+function _aiLinesToEvents(arr) {
+  if (!Array.isArray(arr)) return [];
+  return arr
+    .filter(o => o && typeof o.speaker === 'string' && typeof o.text === 'string' && o.text.trim())
+    .map(o => ({
+      type: 'line',
+      speaker: o.speaker.toLowerCase(),
+      text: o.text,
+      points: typeof o.points === 'number' ? o.points : 0,
+      cutscene: null,
+      fromAI: true,
+      aiId: o._aiId || null,
+    }));
+}
+
+// Fire one worker request for an AI block. Caches on completion.
+async function _fetchAiBlock(block) {
+  const id = block.id;
+  const cache = window._aiDialogCache;
+  cache[id] = { status: 'pending' };
+  // Build placeholder array as plain {speaker, text} pairs the worker
+  // can rewrite. Skip non-line events (state-update, etc) — the worker
+  // only deals with dialog content.
+  const placeholderLines = (block.placeholder || [])
+    .filter(e => e && e.type === 'line')
+    .map(e => ({ speaker: e.speaker, text: e.text }));
+  if (!placeholderLines.length) {
+    cache[id] = { status: 'empty' };
+    return;
+  }
+  if (!AI_PORTRAIT_PROXY) {
+    cache[id] = { status: 'off' };
+    return;
+  }
+  try {
+    const r = await fetch(AI_PORTRAIT_PROXY.replace(/\/+$/, '') + '/ai-dialog', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({
+        id,
+        attrs: block.attrs || {},
+        placeholder: placeholderLines,
+        context: {
+          scene: (window.activePack && window.currentVenue) || null,
+          player_name: (window.introProfile && window.introProfile.name) || null,
+        },
+      }),
+    });
+    if (!r.ok) {
+      cache[id] = { status: 'error', error: 'HTTP ' + r.status };
+      return;
+    }
+    const data = await r.json();
+    const events = _aiLinesToEvents(data.lines || data || []);
+    if (events.length) {
+      cache[id] = { status: 'ready', events };
+    } else {
+      cache[id] = { status: 'error', error: 'empty response' };
+    }
+  } catch (e) {
+    cache[id] = { status: 'error', error: String(e && e.message || e) };
+  }
+}
+
+// Eager prefetch — kicked off after parseScript finishes. Concurrency
+// 3 so we don't hammer the worker if the script declares many blocks.
+function prefetchAiBlocks(parsedLines, parsedObjects) {
+  const blocks = [];
+  _collectAiBlocks(parsedLines, blocks);
+  if (parsedObjects) {
+    for (const obj of Object.values(parsedObjects)) {
+      _collectAiBlocks(obj.lines, blocks);
+      for (const action of (obj.actions || [])) {
+        _collectAiBlocks(action.lines, blocks);
+      }
+    }
+  }
+  // Dedupe by id — the same id used in multiple places shares one
+  // request. Useful for shared "object-look" blocks across scenes.
+  const seen = new Set();
+  const unique = blocks.filter(b => {
+    if (seen.has(b.id)) return false;
+    seen.add(b.id);
+    return true;
+  });
+  if (!unique.length) return;
+  console.log('[ai-block] prefetching', unique.map(b => b.id).join(', '));
+  // Tiny concurrency pool.
+  const MAX = 3;
+  let i = 0;
+  function next() {
+    if (i >= unique.length) return;
+    const b = unique[i++];
+    _fetchAiBlock(b).finally(next);
+  }
+  for (let k = 0; k < Math.min(MAX, unique.length); k++) next();
+}
+
+// ============================================================
 // GIFT MODULE — script directive (Gift) opens a file picker, runs
 // the AI roundtrip in the background, and stores the result on
 // window.giftState so later script lines (and the (GiftReveal)
@@ -21515,6 +23223,10 @@ function startGiftPicker(rejectionLine) {
   if (t) t.textContent = rejectionLine || 'Pick a gift photo';
   sheet.classList.add('open');
   sheet.setAttribute('aria-hidden', 'false');
+  // Gate the tap-to-advance handler while the picker is up so the
+  // engine doesn't accidentally walk past the (Gift) directive when
+  // the player clicks anywhere on the page (e.g. behind the sheet).
+  if (document.body) document.body.classList.add('gift-picking');
 }
 
 function _closeGiftPicker() {
@@ -21522,6 +23234,19 @@ function _closeGiftPicker() {
   if (!sheet) return;
   sheet.classList.remove('open');
   sheet.setAttribute('aria-hidden', 'true');
+  // NOTE: we deliberately keep the `gift-picking` body class on for
+  // now. onGiftFile is about to await the vision call (1-3s); during
+  // that window we don't want a stray tap to advance the engine past
+  // (GiftPick). The class gets cleared explicitly after the dialog
+  // has advanced into the GiftScene injection. The dismiss path
+  // (cancel without picking) calls _closeGiftPickerAndUnlock instead.
+}
+
+// Picker dismissed without picking a file — release the click gate
+// immediately so the player can interact with the rest of the page.
+function _closeGiftPickerAndUnlock() {
+  _closeGiftPicker();
+  if (document.body) document.body.classList.remove('gift-picking');
 }
 
 // GPT-4o vision recognition. Returns { name, portable, rejection }.
@@ -21549,48 +23274,105 @@ async function _giftVisionCall(file) {
     throw new Error('gift-vision ' + r.status + ': ' + txt.slice(0, 200));
   }
   const d = await r.json();
+  console.log('[gift] vision raw response →', d);
+  // Stash the FULL exchange (prompt, params, raw + parsed response)
+  // on window so the parent's Console panel can inspect it. We tuck it
+  // under giftState so each new gift overwrites the previous trace.
+  window._giftLastExchange = {
+    timestamp: new Date().toISOString(),
+    request: {
+      endpoint: '/gift-vision',
+      file_name: file.name || 'gift.jpg',
+      file_size: file.size,
+      file_type: file.type,
+    },
+    response: d,
+  };
   return {
     name:      d.name || 'a small wrapped box',
     portable:  !!d.portable,
     rejection: d.rejection_reason || null,
+    scene:     d.scene || null,
   };
 }
 
 // ComfyUI Cloud render. Returns the white-bg URL on success, or null
 // on failure (revealGift falls back to the original photo). Demo mode:
-// 1.2s artificial delay then null. Live mode: POST file to the
-// Worker's /gift-render endpoint, which uploads + runs the workflow.
+// 1.2s artificial delay then null. Live mode: kicks off /gift-render-start
+// and polls /gift-render-poll. Splitting the job avoids Cloudflare
+// Workers' 30s wall-clock limit (ComfyUI cold-start can take 30-60s).
 async function _giftCleanedImageCall(file, name) {
   if (window.GIFT_AI_MODE !== 'live') {
     await new Promise(r => setTimeout(r, 1200));
     return null;
   }
   if (!AI_PORTRAIT_PROXY) return null;
-  const form = new FormData();
-  form.append('image', file, file.name || 'gift.jpg');
+  const base = AI_PORTRAIT_PROXY.replace(/\/+$/, '');
+
+  // 1. Submit (5-10s: uploads + /prompt POST). Worker returns promptId.
+  let promptId;
   try {
-    const r = await fetch(AI_PORTRAIT_PROXY.replace(/\/+$/, '') + '/gift-render', {
+    const form = new FormData();
+    form.append('image', file, file.name || 'gift.jpg');
+    const r = await fetch(base + '/gift-render-start', {
       method:  'POST',
       headers: { 'X-User-Id': getUserId() },
       body:    form,
     });
     if (!r.ok) {
       const txt = await r.text().catch(() => '');
-      console.warn('[gift-render] ' + r.status + ': ' + txt.slice(0, 200));
+      console.warn('[gift-render-start] ' + r.status + ': ' + txt.slice(0, 200));
       return null;
     }
     const d = await r.json();
-    // Prefer the WhiteBG variant for the dialog scene reveal. The
-    // transparent PNG is also returned for future use (e.g., dropping
-    // the gift into a static cutscene).
-    if (window.giftState) {
-      window.giftState.transparentUrl = d.transparentUrl || null;
+    promptId = d.promptId;
+    if (!promptId) {
+      console.warn('[gift-render-start] no promptId in response', d);
+      return null;
     }
-    return d.whiteBgUrl || null;
+    console.log('[gift-render] queued', promptId);
+    // Stash promptId so we can manually re-poll from console.
+    if (window.giftState) window.giftState.promptId = promptId;
   } catch (e) {
-    console.warn('[gift-render] threw', e);
+    console.warn('[gift-render-start] threw', e);
     return null;
   }
+
+  // 2. Poll until ready or 120s deadline. ComfyUI Cloud usually finishes
+  // in 20-40s but cold-start can drag to 60-90s on bigger workflows.
+  const deadline = performance.now() + 120_000;
+  let attempt = 0;
+  while (performance.now() < deadline) {
+    attempt++;
+    await new Promise(r => setTimeout(r, attempt < 4 ? 2000 : 3000));
+    try {
+      const r = await fetch(base + '/gift-render-poll?id=' + encodeURIComponent(promptId), {
+        method:  'GET',
+        headers: { 'X-User-Id': getUserId() },
+      });
+      if (!r.ok) {
+        const t = await r.text().catch(() => '');
+        console.warn('[gift-render-poll] HTTP', r.status, t.slice(0, 120));
+        continue;
+      }
+      const d = await r.json();
+      console.log('[gift-render-poll] attempt', attempt, '→', d.status, d.matchedPattern || d.detail || '');
+      if (d.status === 'ready') {
+        if (window.giftState) {
+          window.giftState.transparentUrl = d.transparentUrl || null;
+        }
+        if (!d.whiteBgUrl) {
+          console.warn('[gift-render-poll] ready but whiteBgUrl is null', d);
+        }
+        return d.whiteBgUrl || null;
+      }
+      // status === 'pending' → keep polling.
+    } catch (e) {
+      console.warn('[gift-render-poll] threw', e);
+    }
+  }
+  console.warn('[gift-render-poll] timed out after', attempt, 'attempts');
+  return null;
 }
 
 async function _runGiftRoundtrip(file) {
@@ -21611,6 +23393,7 @@ async function _runGiftRoundtrip(file) {
   let recog;
   try {
     recog = await _giftVisionCall(file);
+    console.log('[gift] vision →', recog);
   } catch (e) {
     console.warn('[gift] vision failed', e);
     window.giftState.status = 'error';
@@ -21620,6 +23403,7 @@ async function _runGiftRoundtrip(file) {
   window.giftState.name      = recog.name;
   window.giftState.portable  = !!recog.portable;
   window.giftState.rejection = recog.rejection || null;
+  window.giftState.scene     = recog.scene || null;
 
   if (!recog.portable) {
     window.giftState.status = 'rejected';
@@ -21649,6 +23433,104 @@ function startGiftPicker_engine() {
   startGiftPicker();
 }
 
+// Shared commit path for any gift photo source — file picker, system
+// camera, or our custom getUserMedia overlay. Kicks off vision +
+// ComfyUI in the background and advances the dialog immediately so
+// the narrative beat appears without a pause. Rejection (absurd
+// photo) falls through softly to the fallback scene.
+function handleGiftFile(file) {
+  if (!file || !file.type.startsWith('image/')) return;
+  if (typeof _closeGiftPicker === 'function') _closeGiftPicker();
+  _runGiftRoundtrip(file).catch(e => console.warn('[gift] roundtrip threw', e));
+  if (typeof idx === 'number') {
+    idx++;
+    if (typeof renderLine === 'function') renderLine();
+  }
+  if (document.body) document.body.classList.remove('gift-picking');
+}
+
+// Live camera overlay using getUserMedia + the existing #cameraModal
+// element (defined for the intro flow but unwired). Snaps a JPEG and
+// hands it to handleGiftFile. Falls back to the legacy file-input
+// (`giftCameraInput`, capture=environment) on permission denial — on
+// mobile that opens the system camera; on desktop it opens the file
+// picker, which is the best available fallback.
+async function openGiftCamera() {
+  const modal      = document.getElementById('cameraModal');
+  const video      = document.getElementById('cameraVideo');
+  const captureBtn = document.getElementById('cameraCapture');
+  const closeBtn   = document.getElementById('cameraClose');
+  const fileFallback = document.getElementById('giftCameraInput');
+
+  const useFallback = () => {
+    if (fileFallback) fileFallback.click();
+  };
+
+  if (!modal || !video || !captureBtn || !closeBtn ||
+      !navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+    useFallback();
+    return;
+  }
+
+  let stream = null;
+  let captureHandler = null;
+  let closeHandler   = null;
+  const stopAndClose = (commit) => {
+    if (stream) {
+      try { stream.getTracks().forEach(t => t.stop()); } catch (_) {}
+      stream = null;
+    }
+    video.srcObject = null;
+    modal.classList.remove('open');
+    modal.setAttribute('aria-hidden', 'true');
+    if (captureHandler) captureBtn.removeEventListener('click', captureHandler);
+    if (closeHandler)   closeBtn.removeEventListener('click', closeHandler);
+    if (!commit && document.body) {
+      document.body.classList.remove('gift-picking');
+    }
+  };
+
+  closeHandler = () => stopAndClose(false);
+  captureHandler = () => {
+    if (!stream) return;
+    const w = video.videoWidth  || 1280;
+    const h = video.videoHeight || 1280;
+    const canvas = document.createElement('canvas');
+    canvas.width = w; canvas.height = h;
+    canvas.getContext('2d').drawImage(video, 0, 0, w, h);
+    canvas.toBlob((blob) => {
+      if (!blob) {
+        alert('Could not capture, try again.');
+        return;
+      }
+      const file = new File([blob], 'gift.jpg', { type: 'image/jpeg' });
+      stopAndClose(true);
+      handleGiftFile(file);
+    }, 'image/jpeg', 0.92);
+  };
+
+  try {
+    stream = await navigator.mediaDevices.getUserMedia({
+      video: {
+        // Object photography → prefer the rear camera on phones,
+        // accept any cam on desktop (laptop webcam).
+        facingMode: { ideal: 'environment' },
+        width:  { ideal: 1280 },
+        height: { ideal: 1280 },
+      },
+      audio: false,
+    });
+    video.srcObject = stream;
+    captureBtn.addEventListener('click', captureHandler);
+    closeBtn.addEventListener('click', closeHandler);
+    modal.classList.add('open');
+    modal.setAttribute('aria-hidden', 'false');
+  } catch (err) {
+    console.warn('[gift-camera] getUserMedia failed', err);
+    useFallback();
+  }
+}
+
 // Wire the gift sheet handlers (camera / upload / file change).
 {
   const sheet     = document.getElementById('giftSheet');
@@ -21666,74 +23548,585 @@ function startGiftPicker_engine() {
   });
   // Backdrop click is a no-op (player must commit a file).
 
-  async function onGiftFile(ev) {
+  function onGiftFile(ev) {
     const file = ev.target.files && ev.target.files[0];
     ev.target.value = '';
-    if (!file || !file.type.startsWith('image/')) return;
-
-    _closeGiftPicker();
-    const result = await _runGiftRoundtrip(file);
-    if (result.rejected) {
-      // Bounce the player back with the rejection line as the sheet
-      // title so it reads as Joy roasting them. They pick again.
-      setTimeout(() => startGiftPicker(result.line), 160);
-      return;
-    }
-    // Advance the dialog one line — engine paused on (Gift), so the
-    // next renderLine() will paint the line after it.
-    if (typeof idx === 'number') {
-      idx++;
-      if (typeof renderLine === 'function') renderLine();
-    }
+    handleGiftFile(file);
   }
   if (camIn)  camIn .addEventListener('change', onGiftFile);
   if (fileIn) fileIn.addEventListener('change', onGiftFile);
 }
 
-// Called by the (GiftReveal) directive. Paints the cleanedUrl as a
-// scene image; if generation is still cooking, waits a moment with
-// a soft loader. Falls back to the original photo if no clean image
-// arrives within the timeout.
-function revealGift() {
+// ---------- AI-driven gift scene expansion ----------
+// (GiftScene) waits for GPT-4o vision to return scene dialog, then
+// splices the generated lines into the script in place. The lines are
+// tagged so {gift} substitution works and so revisits don't re-expand.
+//
+// The valid inner-voice ids match what's used elsewhere in the engine
+// (see VOICE / VALID sets). Anything unrecognized falls through to a
+// safe default so a malformed LLM payload never breaks the scene.
+const GIFT_INNER_VOICES = ['eros','valium','romeo'];
+
+function _giftMakeLine(speaker, text, kind) {
+  // Lines parsed by the engine carry { type:'line', speaker, text, ... }.
+  // We mirror that shape here so handleSceneDialogLine and the regular
+  // dialog renderer don't need to know these came from AI.
+  return {
+    type: 'line',
+    speaker: String(speaker || 'narration'),
+    text: String(text || ''),
+    fromAI: true,
+    kind: kind || null,
+  };
+}
+
+// Static narrative beats describing Joy carefully examining the gift.
+// Picked at random for replay variety. The author asked for these to
+// be hand-written rather than LLM-generated so the prose tone stays
+// consistent across runs. {gift} is substituted to the recognized name.
+// Generic — DON'T reference the gift name. These render IMMEDIATELY
+// after the picker closes, before vision returns, so state.name isn't
+// available yet. Phrasing stays neutral ("it", "the gift", etc.).
+const GIFT_NARRATIVE_BEATS = [
+  'Joy turns it slowly in her hands, careful not to disturb the wrapping. She remembers, somewhere, how meticulous you used to be about ribbon corners.',
+  'She holds it like an old jeweler weighing a stone, light catching the edge. You watch her face for the smallest tell.',
+  'Joy tilts the gift toward the streetlight, examining without unwrapping. She has known you long enough to read a present like a letter.',
+  'Her thumb brushes the wrapping, slow. Years ago you used to wrap her birthday boxes with that same fastidious care. She has not forgotten.',
+];
+function _giftPickNarrative() {
+  return GIFT_NARRATIVE_BEATS[Math.floor(Math.random() * GIFT_NARRATIVE_BEATS.length)];
+}
+
+// Helper — emit a state-update event that updates the dialog stack
+// before the AI lines that follow. Keeps AI-injected content honest:
+// every beat declares its UI mode just like authored beats do, so
+// players never see a surprise UI introduced by a generated line.
+function _giftStateUpdate(updates) {
+  return { type: 'state-update', updates };
+}
+
+// Per-section UI mode defaults. The script may override any key on the
+// (GiftScene) or (GiftClosing) directive. This is the architecture-C
+// contract: AI returns content, the SCRIPT decides which UI mode each
+// section renders in. AI never knows about UI.
+const GIFT_SECTION_UI_DEFAULTS = {
+  narrative:      'narrative',
+  boy_inner_pre:  'inner-large',
+  joy_react:      'cast-large',
+  boy_react:      'multi',
+  boy_inner_mid:  'inner-large',
+  professor:      'inner-large',
+  filler:         'inner-large',
+};
+
+// Parse `key=value` pairs out of a directive tail. Used for AI section
+// overrides on (GiftScene ...) / (GiftClosing ...) directives. Allows
+// dashes + alphanumerics in values so cast-large, inner-small etc work.
+function parseAiUiOverrides(tail) {
+  const out = {};
+  if (!tail) return out;
+  const re = /([a-zA-Z_][a-zA-Z0-9_]*)\s*=\s*([a-zA-Z][a-zA-Z0-9_-]*)/g;
+  let m;
+  while ((m = re.exec(tail)) !== null) {
+    out[m[1].toLowerCase()] = m[2].trim();
+  }
+  return out;
+}
+
+// Resolve the UI mode for a given AI section name, applying overrides
+// if the script provided any. `null` returned when no mapping at all.
+function _giftResolveUi(sectionName, overrides) {
+  if (overrides && overrides[sectionName]) return overrides[sectionName];
+  return GIFT_SECTION_UI_DEFAULTS[sectionName] || null;
+}
+
+// Builds JUST the AI-dependent dialog (no narrative beat — that's
+// already injected by expandGiftScene immediately on picker close).
+//
+// Each section is fronted by a state-update event whose ui mode comes
+// from the script's overrides (or the defaults in
+// GIFT_SECTION_UI_DEFAULTS if the script didn't specify). AI returns
+// content only; the SCRIPT decides where each section lives in the UI.
+function _giftBuildSceneLines(scene, name, overrides) {
+  // Substitute {gift} in any line so the writer can lean on it later
+  // for static authoring too.
+  const sub = (t) => String(t || '').replace(/\{gift\}/g, name || 'it');
+  const out = [];
+  if (!scene) return out;
+
+  // joy_pre intentionally NOT injected — those lines now live in the
+  // hand-authored script before (GiftPick).
+
+  // 1. Inner chorus before Joy reacts.
+  if ((scene.boy_inner_pre || []).length) {
+    const ui = _giftResolveUi('boy_inner_pre', overrides);
+    if (ui) out.push(_giftStateUpdate({ ui }));
+    scene.boy_inner_pre.forEach(it => {
+      if (!it || !it.text) return;
+      const v = GIFT_INNER_VOICES.includes(it.voice) ? it.voice : 'valium';
+      out.push(_giftMakeLine(v, sub(it.text), 'inner_pre'));
+    });
+  }
+
+  // 2. Joy's gift-specific reaction.
+  if ((scene.joy_react || []).length) {
+    const ui = _giftResolveUi('joy_react', overrides);
+    if (ui) out.push(_giftStateUpdate({ ui }));
+    scene.joy_react.forEach(t => {
+      out.push(_giftMakeLine('joy', sub(t), 'joy_react'));
+    });
+  }
+
+  // 3. Fake multichoice for Boy's response.
+  const opts = (scene.boy_react_options || []).filter(Boolean);
+  if (opts.length >= 2) {
+    const ui = _giftResolveUi('boy_react', overrides);
+    if (ui) out.push(_giftStateUpdate({ ui }));
+    out.push({
+      type: 'gift-fake-choice',
+      options: opts.map(t => sub(t)),
+      fromAI: true,
+      kind: 'boy_react_choice',
+      // Stash the override so the picked-line splice can pick a
+      // sensible follow-up UI (post-pick mode).
+      _afterPickUi: _giftResolveUi('joy_react', overrides) || 'cast-large',
+    });
+  } else if (opts.length === 1) {
+    // Only one option — treat as a plain Boy line in the same UI we'd
+    // use for the Joy reaction (the conversation continues from her).
+    const ui = _giftResolveUi('joy_react', overrides);
+    if (ui) out.push(_giftStateUpdate({ ui }));
+    out.push(_giftMakeLine('boy', sub(opts[0]), 'boy_react'));
+  }
+
+  // 4. Inner chorus after Joy and Boy have spoken.
+  if ((scene.boy_inner_mid || []).length) {
+    const ui = _giftResolveUi('boy_inner_mid', overrides);
+    if (ui) out.push(_giftStateUpdate({ ui }));
+    scene.boy_inner_mid.forEach(it => {
+      if (!it || !it.text) return;
+      const v = GIFT_INNER_VOICES.includes(it.voice) ? it.voice : 'eros';
+      out.push(_giftMakeLine(v, sub(it.text), 'inner_mid'));
+    });
+  }
+  return out;
+}
+
+// Static fallback if the AI scene is missing or empty. Generic enough
+// to play with any gift name, since {gift} is substituted in.
+// Note: joy_pre lives in the script before (GiftPick), not here.
+const GIFT_SCENE_FALLBACK = {
+  joy_pre: [], // kept for shape compatibility; engine no longer reads it
+  boy_inner_pre: [
+    { voice: 'eros',   text: 'I told you to spend more. Now look at us.' },
+    { voice: 'valium', text: 'It\'s a first date, not a hostage exchange. Calm down.' },
+    { voice: 'romeo',  text: 'It is the gesture, not the price, that lives in her.' },
+  ],
+  joy_react: [
+    'A {gift}? Hm. Quietly bold of you.',
+    'Not the obvious choice. I\'ll allow it.',
+  ],
+  boy_react_options: [
+    'I thought it suited her.',
+    'Don\'t laugh. Please.',
+    'It was either this or a houseplant.',
+  ],
+  boy_inner_mid: [
+    { voice: 'eros',   text: 'Houseplant would have been fine, by the way. Cheaper.' },
+    { voice: 'valium', text: 'Stop talking. Both of you. We are committed now.' },
+  ],
+  professor_closing: 'Enough, you two. He picked well. The choice is good.',
+};
+
+// Filler inner-voice lines used to pad the wait while ComfyUI cooks.
+// We rotate through these one at a time inside (GiftClosing) when the
+// render isn't ready yet.
+const GIFT_CLOSING_FILLERS = [
+  { voice: 'eros',     text: 'God, what if she opens it and just stares.' },
+  { voice: 'valium',   text: 'It\'s a thing. She\'ll receive it. Move on.' },
+  { voice: 'romeo',    text: 'It is the gesture, not the gift, that lives in her.' },
+  { voice: 'eros',     text: 'Did Joy just tilt her head? Bad sign?' },
+  { voice: 'valium',   text: 'You overthought this for forty minutes. Stop now.' },
+];
+
+function expandGiftScene() {
   const state = window.giftState;
+  // Pull the per-section UI overrides off the (GiftScene) directive
+  // event itself — that's how the script communicates per-section UI
+  // mode preferences. Stashed for the rest-marker handler too.
+  const directive = lines[idx] || {};
+  const overrides = directive.uiOverrides || {};
+
+  // No state at all — should not happen if (Gift)/(GiftPick) ran first.
   if (!state) {
-    // Nothing to reveal — just advance.
     idx++;
     renderLine();
     return;
   }
-  const paintScene = (url) => {
-    // Reuse the existing (Scene:) machinery: synthesise a scene
-    // event and walk the engine through it.
-    if (typeof showNarrativeScene === 'function') {
-      showNarrativeScene(url);
+  // Already expanded? Just advance — defensive against double-render.
+  if (state._sceneExpanded) {
+    idx++;
+    renderLine();
+    return;
+  }
+
+  // Inject the narrative beat IMMEDIATELY — it's hand-authored and
+  // doesn't depend on vision data, so the player can read + tap right
+  // after the picker closes (no awkward waiting screen). The rest of
+  // the AI scene gets injected via the gift-scene-rest placeholder
+  // below, which polls for vision and splices when ready.
+  state._sceneExpanded = true;
+  // Stash the overrides on giftState so the rest-marker can read them
+  // when it fires (it has lost direct access to the directive event by
+  // then because the splice we're about to do removes it).
+  state._sceneUiOverrides = overrides;
+
+  const narrativeUi = _giftResolveUi('narrative', overrides);
+  const stateUpdate = narrativeUi ? _giftStateUpdate({ ui: narrativeUi }) : null;
+  const narrativeLine = {
+    type: 'line',
+    speaker: 'narrative',
+    text: _giftPickNarrative(),
+    points: 0,
+    cutscene: null,
+    fromAI: true,
+    kind: 'narrative_beat',
+  };
+  const restMarker = {
+    type: 'gift-scene-rest',
+    fromAI: true,
+    uiOverrides: overrides,
+  };
+  // Replace the giftscene marker with [optional state-update, narrative, gift-scene-rest].
+  const inserts = stateUpdate
+    ? [stateUpdate, narrativeLine, restMarker]
+    : [narrativeLine, restMarker];
+  lines.splice(idx, 1, ...inserts);
+  el.body.classList.remove('awaiting-gift');
+  renderLine();
+}
+
+// Second-phase injection: after the player taps through the immediate
+// narrative beat, this placeholder polls for vision data and splices
+// in the rest of the AI scene (chorus, joy_react, fake-choice, mid).
+function expandGiftSceneRest() {
+  const state = window.giftState;
+  if (!state) {
+    idx++;
+    renderLine();
+    return;
+  }
+  const startWait = performance.now();
+  el.body.classList.add('awaiting-gift');
+
+  const tryRest = () => {
+    if (!lines[idx] || lines[idx].type !== 'gift-scene-rest') {
+      el.body.classList.remove('awaiting-gift');
+      return;
+    }
+    const s = state.scene;
+    const haveScene = s && (
+      (Array.isArray(s.joy_react) && s.joy_react.length) ||
+      (Array.isArray(s.boy_react_options) && s.boy_react_options.length)
+    );
+    const timedOut = performance.now() - startWait > 12000;
+    // Vision was rejected (absurd photo) — soft fall through to the
+    // fallback scene so the dialog never deadlocks. Real rejection
+    // handling (sarcastic line + reopen picker) is a future polish.
+    const visionFinished = state.status === 'ready' || state.status === 'rejected' ||
+                           state.status === 'error' || state.status === 'generating';
+    if (!haveScene && !visionFinished && !timedOut) {
+      setTimeout(tryRest, 250);
+      return;
+    }
+    const useScene = haveScene ? s : GIFT_SCENE_FALLBACK;
+    if (!haveScene) {
+      console.warn('[gift] scene not ready in time, using fallback', state.status);
+    }
+    // Pull overrides from the rest-marker (set by expandGiftScene) or
+    // the saved giftState copy. Engine-defaults apply for missing keys.
+    const restMarker = lines[idx] || {};
+    const overrides = restMarker.uiOverrides || (state && state._sceneUiOverrides) || {};
+    const inject = _giftBuildSceneLines(useScene, state.name, overrides);
+    lines.splice(idx, 1, ...inject);
+    el.body.classList.remove('awaiting-gift');
+    renderLine();
+  };
+  tryRest();
+}
+
+// (GiftPick) handler — presents the "Show her what you got" button as
+// a single-option choice panel. Picking the option opens the file
+// picker; the rest of the pipeline (vision, ComfyUI, scene injection)
+// runs on file commit just like the legacy (Gift) directive.
+//
+// We deliberately use the existing choice panel instead of a custom
+// button so it matches the multichoice UI elsewhere in the game.
+// Pre-warm was disabled — submitting a warmup prompt actually CLOGS
+// the ComfyUI Cloud queue, slowing the real render down. Cold start
+// is the lesser evil. Keeping the worker endpoint available in case
+// we want to revisit with a different strategy.
+
+// Inline SVGs for the two gift-pick options. They prefix the choice
+// line so the player can read the action at a glance (camera = take a
+// fresh photo, gallery = pick an existing one). Stroke uses
+// currentColor so they inherit the option's text color.
+const GIFT_ICON_CAMERA = '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>';
+const GIFT_ICON_GALLERY = '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>';
+
+// Replaces the legacy single-button (Mike) + bottom-sheet picker with
+// a two-option inner-voice multi-select. Each option taps directly
+// into the underlying camera or upload input — no second screen.
+// Eros pushes for the live shot; Professore's voice suggests using
+// the photo the player already took (and trusts).
+function runGiftPick() {
+  const opts = [
+    {
+      speaker: 'eros',
+      text:    'Hold it up, snap it now.',
+      iconHtml: GIFT_ICON_CAMERA,
+      giftPickAction: 'camera',
+    },
+    {
+      speaker: 'professore',
+      text:    'You already framed it once.',
+      iconHtml: GIFT_ICON_GALLERY,
+      giftPickAction: 'upload',
+    },
+  ];
+  startChoice(opts);
+}
+
+// Fake multichoice for the gift scene. Builds option objects shaped like
+// the rest of the engine's choice system, calls startChoice(), and on
+// pick splices the chosen text in as a normal Boy line. There is no
+// real branching — the picked option is purely cosmetic flavor.
+// Voice rotation for fake-choice options. Multi-select options are
+// always inner voices "pitching" what Mike could say next; the picked
+// line then becomes a real Mike (boy) line via splice. Three voices
+// chosen for distinct personalities — professore is reserved for the
+// closing beat. Order matches the AI prompt's three vibes:
+//   index 0: sincere       → romeo (earnest classical romantic)
+//   index 1: evasive       → valium (deadpan, deflective)
+//   index 2: witty         → eros (passionate, urgent — also dry-humor when nervous)
+const FAKE_CHOICE_VOICES = ['romeo', 'valium', 'eros'];
+
+function runGiftFakeChoice(line) {
+  const opts = (line.options || []).map((text, i) => ({
+    speaker: FAKE_CHOICE_VOICES[i % FAKE_CHOICE_VOICES.length],
+    text:    String(text || ''),
+    fakeGiftChoice: true,
+  }));
+  if (!opts.length) {
+    idx++;
+    renderLine();
+    return;
+  }
+  // Stash a hook the regular endChoice can detect: when a fakeGiftChoice
+  // is picked, we splice the chosen line into the script in place of
+  // the fake-choice marker so the existing advance flow works unchanged.
+  // The fake-choice marker carried an _afterPickUi hint — set when the
+  // scene was built — so the boy line that follows uses the same UI as
+  // joy_react (the conversational continuation). If unset, fall back
+  // to cast-large.
+  const afterPickUi = (line && line._afterPickUi) || 'cast-large';
+  window._giftPendingFakeChoice = (chosenIdx) => {
+    const picked = opts[chosenIdx] || opts[0];
+    const stateUpdate = _giftStateUpdate({ ui: afterPickUi });
+    const newLine = _giftMakeLine('boy', picked.text, 'boy_react_chosen');
+    // Replace the fake-choice marker (at idx) with [state-update, boy line].
+    lines.splice(idx, 1, stateUpdate, newLine);
+    window._giftPendingFakeChoice = null;
+  };
+  startChoice(opts);
+}
+
+function runGiftClosing() {
+  const state = window.giftState;
+  // Per-section overrides come from the (GiftClosing) directive. We
+  // grab them once (the directive event itself sits at lines[idx])
+  // and stash them so the filler injections also see them later.
+  const directive = lines[idx] || {};
+  const overrides = directive.uiOverrides ||
+                    (state && state._closingUiOverrides) || {};
+  if (state && !state._closingUiOverrides) {
+    state._closingUiOverrides = overrides;
+  }
+  if (!state) {
+    idx++;
+    renderLine();
+    return;
+  }
+
+  // Track how many filler beats we've already spent waiting on ComfyUI.
+  if (typeof state._closingFillerIdx !== 'number') state._closingFillerIdx = 0;
+  if (typeof state._closingWaitStart !== 'number') state._closingWaitStart = performance.now();
+
+  const professorUi = _giftResolveUi('professor', overrides);
+  const fillerUi    = _giftResolveUi('filler',    overrides);
+
+  const renderProfessorAndAdvance = () => {
+    el.body.classList.remove('awaiting-gift');
+    const text = (state.scene && state.scene.professor_closing) ||
+                 GIFT_SCENE_FALLBACK.professor_closing;
+    const proLine = _giftMakeLine('professore',
+      String(text || '').replace(/\{gift\}/g, state.name || 'it'),
+      'professor_closing');
+    // Replace the giftclosing marker with [optional state-update, professor].
+    const inserts = professorUi
+      ? [_giftStateUpdate({ ui: professorUi }), proLine]
+      : [proLine];
+    lines.splice(idx, 1, ...inserts);
+    renderLine();
+  };
+
+  const tryClose = () => {
+    // Player navigated away — abort.
+    if (!lines[idx] || lines[idx].type !== 'giftclosing') {
+      el.body.classList.remove('awaiting-gift');
+      return;
+    }
+
+    // ComfyUI ready (with or without a usable URL) → professor speaks.
+    if (state.status === 'ready' || state.status === 'error') {
+      renderProfessorAndAdvance();
+      return;
+    }
+
+    // Cap the filler runway. Beyond MAX, force the professor line even
+    // if ComfyUI is still cooking — revealGift will wait silently for
+    // the image and paint it when ready (no visible loader). This keeps
+    // the dialog from feeling like an infinite loop on slow renders.
+    const MAX_FILLERS = 4;
+    if (state._closingFillerIdx >= MAX_FILLERS) {
+      console.warn('[gift] used', state._closingFillerIdx,
+                   'fillers, forcing professor (status:', state.status, ')');
+      renderProfessorAndAdvance();
+      return;
+    }
+
+    // Hard timeout safety net (very slow renders).
+    if (performance.now() - state._closingWaitStart > 90000) {
+      console.warn('[gift] closing waited 90s, forcing professor');
+      renderProfessorAndAdvance();
+      return;
+    }
+
+    // Still cooking. Inject ONE filler inner-voice line in front of the
+    // closing marker so the dialog keeps moving. After the player taps
+    // through it, runGiftClosing fires again and we re-check status.
+    const f = GIFT_CLOSING_FILLERS[state._closingFillerIdx % GIFT_CLOSING_FILLERS.length];
+    state._closingFillerIdx++;
+    const fillerLine = _giftMakeLine(f.voice, f.text, 'closing_filler');
+    // Front the filler with the script-declared filler UI, or default.
+    const inserts = fillerUi
+      ? [_giftStateUpdate({ ui: fillerUi }), fillerLine]
+      : [fillerLine];
+    lines.splice(idx, 0, ...inserts);
+    el.body.classList.remove('awaiting-gift');
+    renderLine();
+  };
+
+  tryClose();
+}
+
+// Called by the (GiftReveal) directive. Paints the cleanedUrl as a
+// scene image; if generation is still cooking, waits with a small
+// loader pinned to the dialog box. Falls back to the original photo
+// after a generous timeout so the script always continues.
+//
+// While waiting we add `awaiting-gift` to the body — the global
+// "tap anywhere to advance" handler bails on this class so the
+// player can't skip past the reveal beat by mistake.
+function revealGift() {
+  const state = window.giftState;
+  if (!state) {
+    idx++;
+    renderLine();
+    return;
+  }
+  const paintScene = (url, isGenerated) => {
+    el.body.classList.remove('awaiting-gift');
+    if (typeof setNarrativeScene === 'function') {
+      // setNarrativeScene clears gift-scene by default, so we add it
+      // back AFTER the call. This way other (Scene:...) transitions
+      // later in the script auto-clear the contain+vignette layout.
+      setNarrativeScene(url);
+      el.body.classList.add('gift-scene');
     } else {
-      // Generic fallback — just stamp the existing scene layer.
       const layer = document.getElementById('narrativeSceneLayer');
-      if (layer) layer.style.backgroundImage = `url("${url}")`;
+      if (layer) {
+        layer.style.backgroundImage = `url("${url}")`;
+        if (el && el.body) {
+          el.body.classList.add('narrativeScene', 'gift-scene');
+        }
+      }
+    }
+    // Sync v2 state stack so the next dialog beat knows we're in a
+    // scene background with bubble-style UI. Without this, the
+    // following `Joy: Now go` would render under the previous beat's
+    // ui (e.g. inner-large) and look like a UI surprise.
+    if (typeof currentDialogState === 'object' && currentDialogState) {
+      currentDialogState.bg = 'scene=__giftReveal';
+      currentDialogState.ui = 'bubble';
+      if (typeof applyUiState === 'function') applyUiState('bubble');
     }
     idx++;
     renderLine();
   };
 
+  // Already done? Paint right away.
   if (state.status === 'ready' && state.cleanedUrl) {
-    paintScene(state.cleanedUrl);
+    paintScene(state.cleanedUrl, true);
     return;
   }
-  // Still cooking. Wait up to 8 seconds, then fall back to the raw
-  // photo so the script always continues.
+  // Worker finished but render failed (timeout / error) — fall back
+  // to the raw photo immediately rather than spinning for 60s.
+  if (state.status === 'ready' && !state.cleanedUrl) {
+    console.warn('[gift] worker returned ready with no cleanedUrl — falling back to raw photo');
+    paintScene(state.objectUrl, false);
+    return;
+  }
+  if (state.status === 'error') {
+    console.warn('[gift] worker errored — falling back to raw photo', state.error);
+    paintScene(state.objectUrl, false);
+    return;
+  }
+
+  // Still cooking — gate clicks, show a soft loader, and poll for up
+  // to 90s. ComfyUI Cloud cold-start can run 20-40s; the cap leaves
+  // room for slow runs without blocking forever on a stuck job.
+  el.body.classList.add('awaiting-gift');
+  console.log('[gift] reveal waiting on ComfyUI…', state.status);
+
   const started = performance.now();
   const tick = () => {
+    // Player navigated away from this beat (e.g. restarted) — abort.
+    if (!lines[idx] || lines[idx].type !== 'giftreveal') {
+      el.body.classList.remove('awaiting-gift');
+      return;
+    }
     if (state.status === 'ready' && state.cleanedUrl) {
-      paintScene(state.cleanedUrl);
+      console.log('[gift] reveal ready', state.cleanedUrl);
+      paintScene(state.cleanedUrl, true);
       return;
     }
-    if (performance.now() - started > 8000) {
-      // Fallback: use the original photo. Better than blocking forever.
-      paintScene(state.objectUrl);
+    if (state.status === 'ready' && !state.cleanedUrl) {
+      console.warn('[gift] worker came back ready with no URL — falling back');
+      paintScene(state.objectUrl, false);
       return;
     }
-    setTimeout(tick, 250);
+    if (state.status === 'error') {
+      console.warn('[gift] worker errored mid-wait — falling back', state.error);
+      paintScene(state.objectUrl, false);
+      return;
+    }
+    if (performance.now() - started > 90000) {
+      console.warn('[gift] reveal timed out, falling back to raw photo');
+      paintScene(state.objectUrl, false);
+      return;
+    }
+    setTimeout(tick, 400);
   };
   tick();
 }
@@ -22211,7 +24604,7 @@ window.addEventListener('message', (e) => {
     if (exploreTimer) { clearInterval(exploreTimer); exploreTimer = null; }
     el.body.classList.remove(
       'exploring','inner','choosing','inObjectImage','inObjectChar',
-      'narrativeScene','scene-inner','narrating-over-scene','cutscene-active','pickingAction',
+      'narrativeScene','scene-inner','narrating-over-scene','cutscene-active','gift-scene','pickingAction',
       'in-1984-flow','in-endscene','narrative-active'
     );
     el.choicePanel.classList.remove('open');
@@ -22228,6 +24621,15 @@ window.addEventListener('message', (e) => {
     // External editor pushed a new script, load it and play from the
     // top, bypassing the date/map intro so iteration is fast.
     const script = (data.script || '').trim() || SAMPLE;
+    // Set the world context so relative asset paths in the script
+    // (cutscene01.jpg, narrativescene01.jpg, fridge.jpg, …) resolve.
+    // Editor can override via data.pack / data.venue; otherwise we
+    // default to the London / Her Place context the editor uses.
+    const wantPack  = data.pack  || 'london';
+    const wantVenue = data.venue || 'herplace';
+    try { activePack = wantPack; } catch (_) {}
+    el.body.dataset.pack = wantPack;
+    currentVenue = wantVenue;
     el.scriptBox.value = script;
     loadScript(script);
     if (exploreTimer) { clearInterval(exploreTimer); exploreTimer = null; }
@@ -22243,8 +24645,60 @@ window.addEventListener('message', (e) => {
     clearCutscene();
     clearNarrativeScene();
     resetRelationshipScore();
-    idx = 0;
+    // Reset choice gate so a stale pick from a prior run can't make
+    // the wrong (IfChoice:N) branch fire when jumping into a Choice.
+    lastChosenIdx = -1;
+    let startIdx = (typeof data.startIdx === 'number') ? data.startIdx : 0;
+    // Clamp so an editor-side miscount can't crash renderLine — at
+    // worst we land on the last event in the script.
+    if (startIdx < 0) startIdx = 0;
+    if (lines.length && startIdx >= lines.length) startIdx = lines.length - 1;
+    // Pre-roll any state-update events (bg/fx/tr/ui) that appear in
+    // the script BEFORE startIdx, so the visual context matches what
+    // the player would see if they had played through. Without this
+    // a jump-to-line lands with wrong/no background or UI mode.
+    if (startIdx > 0 && typeof applyDialogState === 'function') {
+      for (let i = 0; i < startIdx && i < lines.length; i++) {
+        const ev = lines[i];
+        if (ev && ev.type === 'state-update' && ev.updates) {
+          applyDialogState(ev.updates);
+        }
+      }
+    }
+    idx = startIdx;
     renderLine();
+  } else if (data.type === 'jump-episode') {
+    // Dev shortcut from the index.html chrome: jump straight into a
+    // location's script, bypassing intro / form / map / casting.
+    // Mirrors the "Go to Here" tail of startDateHere() but skips the
+    // POI modal and casting flow.
+    const wantPack  = data.pack  || 'london';
+    const wantVenue = data.venue || 'herplace';
+    try { activePack = wantPack; } catch (_) {}
+    el.body.dataset.pack = wantPack;
+    currentVenue = wantVenue;
+    if (exploreTimer) { clearInterval(exploreTimer); exploreTimer = null; }
+    el.body.classList.remove(
+      'exploring','inner','choosing','inObjectImage','inObjectChar',
+      'narrativeScene','scene-inner','cutscene-active','pickingAction',
+      'in-1984-flow','in-endscene','narrative-active'
+    );
+    el.choicePanel.classList.remove('open');
+    if (typeof closePOI === 'function')   closePOI();
+    if (typeof closeObject === 'function') closeObject();
+    if (typeof clearCutscene === 'function')         clearCutscene();
+    if (typeof clearNarrativeScene === 'function')   clearNarrativeScene();
+    if (typeof resetRelationshipScore === 'function') resetRelationshipScore();
+    el.body.classList.add('in-game-locked');
+    setFlow(null);
+    idx = 0;
+    // Load the location's main.txt; renderLine kicks off after the
+    // load completes (or right away if the inline fallback wins).
+    if (typeof loadActiveScript === 'function') {
+      loadActiveScript().then(() => { idx = 0; renderLine(); });
+    } else {
+      renderLine();
+    }
   } else if (data.type === 'open-dashboard') {
     // Dev shortcut from the index.html chrome: jump straight to the
     // end-of-episode recap dashboard (skip the closing video) so we
@@ -22275,7 +24729,7 @@ window.addEventListener('message', (e) => {
       'exploring','inner','choosing','inObjectImage','inObjectChar',
       'flow-date','flow-map','flow-gallery','flow-addself','flow-final',
       'flow-intro','flow-form','flow-loading','flow-survey',
-      'narrativeScene','scene-inner','narrating-over-scene','cutscene-active','pickingAction'
+      'narrativeScene','scene-inner','narrating-over-scene','cutscene-active','gift-scene','pickingAction'
     );
     el.choicePanel.classList.remove('open');
     closePOI();
