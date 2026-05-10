@@ -7,10 +7,15 @@ node_modules
 _legacy/
 _backup/
 _debug_frames/
-# Local config — keys + worker code stay private. JSON preset
-# registries (fx/tr) are frontend-public, whitelist them back in.
-_config/
-!_config/*.json
+# Local config — only files with secrets stay private. We DO NOT
+# ignore the whole _config/ folder, because git's `!negation` rule
+# can't re-include files inside an ignored directory. Instead each
+# secret file is listed by name; everything else (fx/tr preset
+# JSONs etc.) gets committed normally.
+_config/api.js
+_config/worker.js
+_config/*.bak
+_config/*.local.*
 *.action-backup
 *.backup
 *.backup-music

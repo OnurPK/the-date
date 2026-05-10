@@ -1,0 +1,48 @@
+{
+  "_comment": "Effect packages referenced from script directives like [fx:fx1]. Each preset can compose: overlay_video (looping mp4 layered above background), overlay_image (static PNG), css (blur/tint/brightness/saturation). Add new packages here without touching engine code.",
+
+  "none": {},
+
+  "fx1": {
+    "_label": "Dust + soft blur",
+    "overlay_video": {
+      "src": "assets/fx/dust.mp4",
+      "opacity": 0.3,
+      "blend_mode": "screen",
+      "loop": true
+    },
+    "css": {
+      "blur": 12,
+      "tint": "rgba(0,0,0,0.4)"
+    }
+  },
+
+  "fx2": {
+    "_label": "Red layer",
+    "overlay_video": {
+      "src": "assets/fx/glow.mp4",
+      "opacity": 0.5,
+      "blend_mode": "screen",
+      "loop": true
+    },
+    "css": {
+      "tint": "rgba(180,30,30,0.25)"
+    }
+  },
+
+  "moonlight": {
+    "_label": "Cool night cast",
+    "css": {
+      "tint": "rgba(60,80,140,0.35)",
+      "blur": 4
+    }
+  },
+
+  "warmlight": {
+    "_label": "Warm interior cast",
+    "css": {
+      "tint": "rgba(255,180,90,0.18)",
+      "brightness": 1.05
+    }
+  }
+}
