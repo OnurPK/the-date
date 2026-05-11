@@ -1,0 +1,353 @@
+{
+  "76": {
+    "inputs": {
+      "image": ""
+    },
+    "class_type": "LoadImage",
+    "_meta": {
+      "title": "Object"
+    }
+  },
+  "81": {
+    "inputs": {
+      "image": ""
+    },
+    "class_type": "LoadImage",
+    "_meta": {
+      "title": "Reference"
+    }
+  },
+  "94": {
+    "inputs": {
+      "filename_prefix": "Flux2-Klein",
+      "images": [
+        "127",
+        0
+      ]
+    },
+    "class_type": "SaveImage",
+    "_meta": {
+      "title": "Transparent"
+    }
+  },
+  "125": {
+    "inputs": {
+      "filename_prefix": "Flux2-Klein",
+      "images": [
+        "92:105",
+        0
+      ]
+    },
+    "class_type": "SaveImage",
+    "_meta": {
+      "title": "WhiteBG"
+    }
+  },
+  "127": {
+    "inputs": {
+      "model": "RMBG-2.0",
+      "sensitivity": 1,
+      "process_res": 1024,
+      "mask_blur": 0,
+      "mask_offset": 0,
+      "invert_output": false,
+      "refine_foreground": false,
+      "background": "Alpha",
+      "background_color": "#222222",
+      "image": [
+        "92:105",
+        0
+      ]
+    },
+    "class_type": "RMBG",
+    "_meta": {
+      "title": "Remove Background (RMBG)"
+    }
+  },
+  "92:101": {
+    "inputs": {
+      "sampler_name": "euler"
+    },
+    "class_type": "KSamplerSelect",
+    "_meta": {
+      "title": "KSamplerSelect"
+    }
+  },
+  "92:102": {
+    "inputs": {
+      "steps": 8,
+      "width": 1024,
+      "height": 1024
+    },
+    "class_type": "Flux2Scheduler",
+    "_meta": {
+      "title": "Flux2Scheduler"
+    }
+  },
+  "92:103": {
+    "inputs": {
+      "cfg": 1,
+      "model": [
+        "92:107",
+        0
+      ],
+      "positive": [
+        "92:84:120",
+        0
+      ],
+      "negative": [
+        "92:84:118",
+        0
+      ]
+    },
+    "class_type": "CFGGuider",
+    "_meta": {
+      "title": "CFGGuider"
+    }
+  },
+  "92:104": {
+    "inputs": {
+      "noise": [
+        "92:106",
+        0
+      ],
+      "guider": [
+        "92:103",
+        0
+      ],
+      "sampler": [
+        "92:101",
+        0
+      ],
+      "sigmas": [
+        "92:102",
+        0
+      ],
+      "latent_image": [
+        "92:113",
+        0
+      ]
+    },
+    "class_type": "SamplerCustomAdvanced",
+    "_meta": {
+      "title": "SamplerCustomAdvanced"
+    }
+  },
+  "92:105": {
+    "inputs": {
+      "samples": [
+        "92:104",
+        0
+      ],
+      "vae": [
+        "92:110",
+        0
+      ]
+    },
+    "class_type": "VAEDecode",
+    "_meta": {
+      "title": "VAE Decode"
+    }
+  },
+  "92:106": {
+    "inputs": {
+      "noise_seed": 970650257625114
+    },
+    "class_type": "RandomNoise",
+    "_meta": {
+      "title": "RandomNoise"
+    }
+  },
+  "92:107": {
+    "inputs": {
+      "unet_name": "flux-2-klein-9b.safetensors",
+      "weight_dtype": "default"
+    },
+    "class_type": "UNETLoader",
+    "_meta": {
+      "title": "Load Diffusion Model"
+    }
+  },
+  "92:108": {
+    "inputs": {
+      "clip_name": "qwen_3_8b_fp4mixed.safetensors",
+      "type": "flux2",
+      "device": "default"
+    },
+    "class_type": "CLIPLoader",
+    "_meta": {
+      "title": "Load CLIP"
+    }
+  },
+  "92:109": {
+    "inputs": {
+      "text": "cozy hand-drawn visual novel style, anime-inspired art, warm painterly lighting, detailed linework, rich earthy color palette, soft atmospheric shading, cinematic but readable composition, high-detail illustrated object, separate the object, remove any hands, heads and turn to front view.\n\nchange the style of image 1, use image 2 as reference, single object on a white background\n",
+      "clip": [
+        "92:108",
+        0
+      ]
+    },
+    "class_type": "CLIPTextEncode",
+    "_meta": {
+      "title": "CLIP Text Encode (Positive Prompt)"
+    }
+  },
+  "92:110": {
+    "inputs": {
+      "vae_name": "flux2-vae.safetensors"
+    },
+    "class_type": "VAELoader",
+    "_meta": {
+      "title": "Load VAE"
+    }
+  },
+  "92:111": {
+    "inputs": {
+      "upscale_method": "nearest-exact",
+      "megapixels": 1,
+      "resolution_steps": 1,
+      "image": [
+        "76",
+        0
+      ]
+    },
+    "class_type": "ImageScaleToTotalPixels",
+    "_meta": {
+      "title": "ImageScaleToTotalPixels"
+    }
+  },
+  "92:85": {
+    "inputs": {
+      "upscale_method": "nearest-exact",
+      "megapixels": 1,
+      "resolution_steps": 1,
+      "image": [
+        "81",
+        0
+      ]
+    },
+    "class_type": "ImageScaleToTotalPixels",
+    "_meta": {
+      "title": "ImageScaleToTotalPixels"
+    }
+  },
+  "92:112:115": {
+    "inputs": {
+      "conditioning": [
+        "92:86",
+        0
+      ],
+      "latent": [
+        "92:112:116",
+        0
+      ]
+    },
+    "class_type": "ReferenceLatent",
+    "_meta": {
+      "title": "ReferenceLatent"
+    }
+  },
+  "92:112:116": {
+    "inputs": {
+      "pixels": [
+        "92:111",
+        0
+      ],
+      "vae": [
+        "92:110",
+        0
+      ]
+    },
+    "class_type": "VAEEncode",
+    "_meta": {
+      "title": "VAE Encode"
+    }
+  },
+  "92:112:117": {
+    "inputs": {
+      "conditioning": [
+        "92:109",
+        0
+      ],
+      "latent": [
+        "92:112:116",
+        0
+      ]
+    },
+    "class_type": "ReferenceLatent",
+    "_meta": {
+      "title": "ReferenceLatent"
+    }
+  },
+  "92:84:118": {
+    "inputs": {
+      "conditioning": [
+        "92:112:115",
+        0
+      ],
+      "latent": [
+        "92:84:119",
+        0
+      ]
+    },
+    "class_type": "ReferenceLatent",
+    "_meta": {
+      "title": "ReferenceLatent"
+    }
+  },
+  "92:84:119": {
+    "inputs": {
+      "pixels": [
+        "92:85",
+        0
+      ],
+      "vae": [
+        "92:110",
+        0
+      ]
+    },
+    "class_type": "VAEEncode",
+    "_meta": {
+      "title": "VAE Encode"
+    }
+  },
+  "92:84:120": {
+    "inputs": {
+      "conditioning": [
+        "92:112:117",
+        0
+      ],
+      "latent": [
+        "92:84:119",
+        0
+      ]
+    },
+    "class_type": "ReferenceLatent",
+    "_meta": {
+      "title": "ReferenceLatent"
+    }
+  },
+  "92:86": {
+    "inputs": {
+      "conditioning": [
+        "92:109",
+        0
+      ]
+    },
+    "class_type": "ConditioningZeroOut",
+    "_meta": {
+      "title": "ConditioningZeroOut"
+    }
+  },
+  "92:113": {
+    "inputs": {
+      "width": 1024,
+      "height": 1024,
+      "batch_size": 1
+    },
+    "class_type": "EmptyFlux2LatentImage",
+    "_meta": {
+      "title": "Empty Flux 2 Latent"
+    }
+  }
+}

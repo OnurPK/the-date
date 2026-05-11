@@ -30,8 +30,6 @@ Narrative: Mike walks through London at dusk, dressed too carefully.
 [ui:inner-small]
 Eros: Cream blazer. Black shirt. We look expensive.
 Valium: We look like a waiter at a gallery opening.
-Romeo: The evening asks for effort.
-Valium: The evening also asked for clean socks.
 [ui:narrative]
 Narrative: Mike feels his toe catch inside his shoe.
 [ui:inner-small]
@@ -42,13 +40,8 @@ Narrative: He remembers standing by the door, ten minutes ago.
 Narrative: One sock had a small hole near the toe.
 [bg:cutscene=joy-street01.jpg] [ui:inner-small]
 Eros: Are you insane?
-Valium: It's a sock, not a moral collapse.
-Eros: You saw it and still left?
 Valium: We were late.
-Romeo: Perhaps imperfection makes the evening human.
-Eros: No. It makes the toe public.
 Professore: The choice was made. Now walk with dignity.
-Valium: Dignity currently has ventilation.
 
 // ---- Dog issue ----
 [bg:cutscene=joy-street01.jpg] [fx:none] [tr:softCrossfade]
@@ -57,48 +50,27 @@ Narrative: Mike turns the corner, still checking his pace.
 [ui:inner-small]
 Eros: There is also the dog issue.
 Valium: Of course there is.
-Romeo: A creature in her home. A gatekeeper.
 Valium: It is a dog, not Cerberus.
-Eros: We don't know the breed.
-Valium: Correct. Could be anything from slipper to horse.
-Romeo: Dogs can sense fear.
-Valium: Dogs can smell ham.
-Eros: The last one bit us.
 [bg:cutscene=dogchase.jpg] [ui:narrative]
 Narrative: A childhood memory flashes: Mike running across a garden.
 Narrative: A furious little dog gains on him with heroic confidence.
 [bg:cutscene=joy-street01.jpg] [ui:inner-small]
-Valium: One dog. Years ago.
-Eros: Two teeth marks on my backside say otherwise.
 Romeo: The wound was not only physical.
-Valium: It was extremely physical.
-Professore: You are not meeting the dog. You are meeting Iris.
-Eros: Tell that to the dog.
-Valium: Preferably from another room.
-
+Eros: Two teeth marks on my backside say otherwise.
 
 // ---- Joy on the street ----
 [bg:cutscene=joy-street01.jpg] [tr:softCrossfade] [ui:cast-large]
 Joy: Mike?
-Boy: Joy. Hi. Normal timing.
-Joy: You look like you've ironed your anxiety.
+Boy: Joy. Is that you? What a surprise.
+Joy: Come on, give me a hug! you are shaking darling!.
 Boy: I have a date.
 Joy: I guessed. Your blazer is making announcements.
 Boy: Too much?
 Joy: No. Just very present.
-Boy: Present is survivable.
-Joy: Depends what it's presenting.
 Narrative: Joy notices the object in Mike's hand.
 Joy: Is that for her?
 Boy: Technically.
-Joy: That's never a confident word.
-Boy: It's thoughtful.
-Joy: Thoughtful can go very wrong.
-[ui:inner-small]
-Eros: She hates it.
-Valium: She has not identified it yet.
-Romeo: A gift should be a small weather system.
-Valium: Please stop giving objects climate.
+Joy: Well, that's never a confident word.
 
 // ---- Gift sequence ----
 //
@@ -138,10 +110,6 @@ Narrative: She squeezes your shoulder once, then she's gone. The street is yours
 [bg:cutscene=cutscene01.jpg] [tr:softCrossfade] [ui:narrative]
 Narrative: Mike stands outside Iris's flat.
 [ui:inner-small]
-Eros: Sock. Dog. Gift. This is a three-front war.
-Valium: The date hasn't started and we're already outnumbered.
-Romeo: The door is the threshold.
-Valium: The door is a door.
 Professore: Knock once. Breathe once. Enter once.
 [ui:narrative]
 Narrative: Mike knocks.
@@ -155,39 +123,27 @@ Professore: Easy, buddy... easy, easy.
 [ui:inner-small]
 Eros: That was not a small bark.
 Valium: You cannot determine breed from punctuation.
-Romeo: The guardian announces the house.
-Valium: The guardian needs a chew toy.
 [ui:narrative]
 Narrative: The door opens.
 
 // ---- Inside her place — POV ----
 [bg:none] [ui:cast-large]
-Girl: Hi.
-Boy: Hi.
 Girl: You found it.
-Boy: Mostly.
-Girl: Mostly?
-Boy: I had one philosophical wrong turn.
+Boy: Mostly. I had one philosophical wrong turn.
 Girl: London does that.
 [ui:narrative]
 Narrative: Iris looks at him, amused.
 Girl: You dressed up.
 Boy: A survivable amount?
 Girl: The blazer has opinions.
-Boy: I told it to stay quiet.
-Girl: It didn't listen.
 [ui:inner-small]
 Trilli: He dressed like the date has shareholders.
 Scheggia: That beard has a five-year plan.
-Giulietta: The beard is nervous. I like it.
+Giulietta: The blazer is trying harder than he is. 
 Alfa: He made effort. Let him have that.
-Trilli: The blazer is trying harder than he is.
-Scheggia: The blazer has already planned brunch.
 [ui:inner-small]
 Eros: She noticed the blazer.
 Valium: Everyone noticed the blazer. It's cream and emotional.
-Romeo: She sees the effort.
-Professore: Do not defend the effort.
 
 // ---- Shoes Off ----
 [bg:none] [ui:cast-large]
@@ -196,11 +152,10 @@ Girl: Shoes off, if you don't mind.
 Narrative: Mike freezes for half a second.
 [ui:inner-small]
 Eros: The sock.
-Valium: The prophecy.
 Romeo: Truth reaches the floor.
 Professore: Remove the shoes. Do not negotiate.
 [ui:cast-large]
-Boy: Of course. Shoes. Yes.
+Boy: Of course. Shoes. Yes. Yes.
 [ui:narrative]
 Narrative: Mike removes his shoes carefully.
 Narrative: The torn sock is visible for one quiet second.
@@ -208,31 +163,25 @@ Narrative: The torn sock is visible for one quiet second.
 Girl: Bold sock.
 Boy: It opened up emotionally.
 [ui:inner-small]
-Trilli: His sock has a plot twist.
-Scheggia: He dressed like a gallery owner and came with toe ventilation.
+Trilli: Hah! His sock has a plot twist.
 Giulietta: No, wait. That's painfully sweet.
-Alfa: He didn't hide it. Good.
 Trilli: The blazer is formal. The sock is feral.
-Scheggia: This man is two decisions fighting.
 [ui:cast-large]
 Girl: Happens.
 Boy: To socks?
 Girl: To people pretending they're fine.
-Boy: I feel observed.
-Girl: Good. Saves time.
 
 // ---- Dog Payoff ----
 [bg:none] [ui:cast-large]
 Narrative: A dog trots in from the hallway.
 Girl: That's Pickle.
 Boy: Pickle.
-Girl: He'll inspect you and move on.
+Girl: Don't worry, just bites the bad guys.
 [bg:cutscene=dogsniff.jpg] [ui:inner-small]
 Eros: We are being assessed by a mop.
 Valium: Small. Thank God.
-Romeo: Offer dignity to the creature.
 Narrative: Pickle sniffs Mike's foot, then walks away.
-Valium: We have been dismissed.
+Valium: We have been dismissed, a validated good guy.
 [ui:cast-small]
 Boy: I think he found me acceptable.
 Girl: Don't get proud. He liked a bin bag yesterday.
@@ -241,50 +190,54 @@ Girl: The bag had confidence.
 
 // ---- Gives gift ----
 [bg:none] [ui:narrative]
-Narrative: Mike remembers the gift in his hand.
-[ui:inner-small]
-Eros: Now. Before it gets heavier.
-Valium: It cannot get heavier. Only morally.
-Romeo: Offer it without defence.
-Professore: Joy was right. Let it arrive first.
-[ui:cast-large]
-Boy: I brought you something.
-Girl: I noticed you carrying a mystery.
-Boy: That's one of its features.
-Narrative: Mike gives her the object.
-Girl: Oh.
-Boy: That's the second oh today.
-Girl: It has presence.
-Boy: Too much presence?
-Girl: No. Just very sure of itself.
-[ui:inner-small]
-Eros: Is that good?
-Valium: Nobody knows. Even the object seems unsure.
-[ui:cast-large]
-Girl: Thank you.
-Boy: I can explain it.
-Girl: I know.
-Boy: Right.
-Girl: Don't yet.
-Narrative: Mike closes his mouth with effort.
-[ui:inner-small]
-Valium: Excellent. Character development.
+(AI:gift-give mood=funny)
+  Narrative: Mike remembers the gift in his hand.
+  [ui:inner-small]
+  Eros: Now. Before it becomes part of your body.
+  Valium: Offer it. Do not narrate its childhood.
+  Romeo: Let the gesture arrive clean.
+  Professore: Joy was right. Meaning can wait.
+  [ui:narrative]
+  Narrative: Mike gives it to her.
+  [ui:inner-small]
+  Trilli: Oh. It's weird.
+  Scheggia: Deeply weird.
+  Giulietta: Wait. Weird with effort.
+  Alfa: Keep the face kind. He's watching for damage.
+  [ui:cast-large]
+  Girl: Oh.
+  Boy: That's the second oh today.
+  Girl: It has confidence.
+  Boy: Too much confidence?
+  Girl: No. Just more than both of us.
+  [ui:inner-small]
+  Eros: Is that good?
+  Valium: Nobody knows. Even the object looks employed.
+  Romeo: She hasn't rejected it.
+  Professore: Silence. Let her meet it.
+  Trilli: I want to know the whole story.
+  Scheggia: Absolutely do not ask for the whole story.
+  Giulietta: He chose something no one else would choose.
+  Alfa: That's not nothing.
+  [ui:cast-large]
+  Girl: Thank you.
+  [ui:narrative]
+  Narrative: Mike closes his mouth with effort.
+  [ui:inner-small]
+(EndAI)
 
 // ---- Explore Setup ----
 
 [bg:none] [ui:narrative]
-Girl: I'll get drinks.
+Girl: Let me get drinks.
 Boy: Can I help?
 Girl: You can stand there and not panic.
-Boy: Strong assignment.
-Girl: Advanced, but possible.
 Narrative: Iris disappears into the kitchen.
 [ui:inner-small]
 Valium: Good. We are alone with furniture.
 Eros: Gather intelligence.
 Romeo: Learn the room gently.
 Professore: Observe. Do not become a detective with a pulse.
-Professore: Notice what repeats. Do not perform expertise.
 
 // ---- Explore the room ----
 [bg:explore]

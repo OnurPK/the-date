@@ -1391,6 +1391,14 @@
   .focus-character.c-professore { background-image: url("characters/you/voices/london/professore/portrait.png"); aspect-ratio: 553 / 1493; left: -3px; /* wider body (holds coffee) — nudge 15px left of the default +12 */ }
   .focus-character.c-scheggia   { background-image: url("characters/iris/voices/london/scheggia/portrait.png");   aspect-ratio: 412 / 1539; }
   .focus-character.c-giulietta  { background-image: url("characters/iris/voices/london/giulietta/portrait.png");  aspect-ratio: 519 / 1559; }
+  /* Giulietta's portrait reads ~10% larger in the small slot than the
+     other inner voices because her crop sits her head/shoulders higher
+     in the frame. Pull her down a touch in inner-small mode so she
+     matches the visual weight of trilli/alfa/scheggia/eros. */
+  body.ui-inner-small .focus-character.c-giulietta {
+    height: 350px;        /* base is 390 — 10% smaller */
+    bottom: -210px;        /* deeper into the dialog mask so less torso shows */
+  }
   .focus-character.c-trilli     { background-image: url("characters/iris/voices/london/trilli/portrait.png");     aspect-ratio: 508 / 1566; }
   .focus-character.c-alfa       { background-image: url("characters/iris/voices/london/alfa/portrait.png");       aspect-ratio: 527 / 1572; }
   .focus-character.c-narrative  { display: none; }
@@ -1421,8 +1429,67 @@
     opacity: 1;
   }
   body.ui-cast-small #focusCharacter.show,
-  body.ui-inner-small #focusCharacter.show {
+  body.ui-inner-small #focusCharacter.show,
+  body.ui-gift-reveal #focusCharacter.show {
     opacity: 1;
+  }
+  /* ui:gift-reveal — same chassis as ui:inner-small, but the left
+     "portrait" slot is the rendered gift photo (set inline by
+     revealGift via focusCharacter.style.backgroundImage). The
+     dialog card on the right shows an AI narrative line about the
+     object. Tap-to-advance moves on like any normal beat. */
+  body.ui-gift-reveal #dialogBox {
+    transform: translateY(160%);
+    opacity: 0;
+    pointer-events: none;
+  }
+  body.ui-gift-reveal #objectDialog {
+    transform: translateY(0);
+    opacity: 1;
+  }
+  body.ui-gift-reveal #focusCharacter.show {
+    /* Transparent gift PNG floating just above the narrative card,
+       anchored to the LEFT (above the line of text). No white plate,
+       no border — soft drop-shadow only, so the object reads as a
+       free-standing item picked up from the player's hand. */
+    position: fixed !important;
+    background-size: contain;
+    background-position: bottom left;
+    background-repeat: no-repeat;
+    aspect-ratio: 1 / 1;
+    width: 264px;
+    height: 264px;
+    /* Anchored bottom-left, partially overlapping the top of the
+       narrative card. Negative left bleeds slightly off-canvas so
+       the object feels held / leaning into frame rather than placed. */
+    bottom: 85px;
+    left: -42px;
+    transform: translateX(0) !important;
+    border-radius: 0;
+    background-color: transparent;
+    box-shadow: none;
+    -webkit-mask-image: none;
+            mask-image: none;
+    filter: drop-shadow(0 12px 24px rgba(0,0,0,0.55));
+    z-index: 200;            /* above cutsceneLayer (4) + objectDialog (175) */
+  }
+  /* Soft dark wash over whatever bg was up before, so the gift card +
+     narrative read cleanly without the previous cutscene/scene image
+     fighting for attention. Sits above cutsceneLayer + scene layer
+     but below the gift photo + dialog. */
+  body.ui-gift-reveal::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    background: rgba(8,5,12,0.78);
+    z-index: 50;
+    pointer-events: none;
+  }
+  body.ui-gift-reveal .char.boy,
+  body.ui-gift-reveal .char.girl,
+  body.ui-gift-reveal .char.joy {
+    opacity: 0;
+    pointer-events: none;
   }
   /* Hide the full-body stage characters when small avatar is in play
      — a tall character on stage would compete with it. */
@@ -5063,6 +5130,16 @@
     overflow: hidden;
     text-overflow: ellipsis;
   }
+  /* roles.ai logo (replaces "Welcome <name>," + tagline). PNG asset
+     from assets/ui/logo.png. Height-locked so it scales to the same
+     vertical footprint as the old text header. */
+  .wl-logo-img {
+    display: block;
+    height: 60px;                      /* 54 × 1.1 ≈ 60 */
+    width: auto;
+    user-select: none;
+    transform: translate(15px, -10px); /* 15 right, 10 up */
+  }
   .wl-sub {
     margin: 4px 0 0;
     font-size: 12.5px;
@@ -5071,6 +5148,17 @@
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+  }
+  /* WorldList top-right action icons — smaller chrome to match the
+     map page's pill icons (instead of the full-size dp-iconbtn used
+     in the date picker). */
+  .wl-iconbtn {
+    width: 44px !important;
+    height: 44px !important;
+  }
+  .wl-iconbtn svg {
+    width: 20px !important;
+    height: 20px !important;
   }
 
   /* ---------- Section head (Available Worlds + Get more worlds) ---------- */
@@ -5102,17 +5190,39 @@
   }
   .wl-link:hover { color: #ffb3d4; }
 
-  /* ---------- World cards ---------- */
+  /* ---------- World cards ----------
+     Horizontal swipe rail (mirrors .wl-row-track). Square cards,
+     scroll-snap so each swipe = one card. ~1.5 cards visible: card
+     width is set in viewport units so the next card peeks from
+     the right regardless of the parent flex column's stretch. */
   .wl-cards {
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: 14px;
-    padding-bottom: 14px;
+    display: flex;
+    gap: 12px;
+    margin: 0 -20px;                   /* bleed past parent padding */
+    padding: 4px 20px 18px;
+    /* Explicit min-height so the parent flex column reserves space
+       for the cards. Without it, with align-items:flex-start, the
+       container collapses to padding-only and clips the cards. */
+    min-height: clamp(232px, 70vw, 400px);
+    overflow-x: auto;
+    overflow-y: visible;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    scroll-snap-type: x mandatory;
+    scroll-padding-inline: 20px;
+    align-items: flex-start;           /* stop column-flex from stretching items */
+    flex: 0 0 auto;                    /* don't get squashed by sibling rows */
   }
-  /* Aspect halved (was 16/11 → ~16/22 effectively): 16/5.5 ≈ 32:11. */
+  .wl-cards::-webkit-scrollbar { display: none; }
   .wl-card {
+    flex: 0 0 auto;
+    /* Viewport-based width sidesteps any flex-column stretch oddity:
+       2/3 of viewport per card → 1.5 cards visible at once. min/max
+       caps keep it sane on tablets / wide screens. */
+    width: clamp(220px, 66.66vw, 380px);
+    height: clamp(220px, 66.66vw, 380px);   /* explicit, mirrors width — no aspect-ratio reliance */
+    scroll-snap-align: start;
     position: relative;
-    aspect-ratio: 32 / 11;
     border-radius: 18px;
     overflow: hidden;
     background-color: #1a1423;
@@ -5125,6 +5235,20 @@
     transition: transform 0.18s ease, box-shadow 0.25s ease;
   }
   .wl-card:active { transform: scale(0.98); }
+  /* 2× zoom layer for the map background — same pseudo-element trick
+     as .wl-tile so aspect is preserved (no distortion). The image URL
+     is wired via --wl-card-img on the JS side. */
+  .wl-card::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image: var(--wl-card-img);
+    background-size: cover;
+    background-position: center;
+    transform: scale(2);
+    transform-origin: center center;
+    z-index: 0;
+  }
   .wl-card::after {
     content: '';
     position: absolute; inset: 0;
@@ -5162,14 +5286,14 @@
     gap: 4px;
   }
   .wl-card-progress-ring {
-    width: 30px; height: 30px;
+    width: 45px; height: 45px;        /* 1.5× the old 30px */
     /* Rotate so the dasharray starts at 12 o'clock. */
     transform: rotate(-90deg);
     overflow: visible;
   }
   .wl-card-progress-ring circle {
     fill: none;
-    stroke-width: 3;
+    stroke-width: 5;                  /* thicker ring */
     /* cx/cy/r are HTML attributes on the <circle> elements, set in
        progressRingMarkup(), because Safari treats those as content
        attributes, not CSS properties. */
@@ -5183,6 +5307,63 @@
     letter-spacing: 0.04em;
     color: #fff;
     text-shadow: 0 1px 4px rgba(0,0,0,0.5);
+  }
+
+  /* Locked world card — reuses the store's coin price chip
+     (.store-price) where owned packs show the progress ring. */
+  .wl-card--locked .wl-card-tag {
+    color: rgba(255,255,255,0.78);
+  }
+  /* Override .store-price's default align-self:flex-start so the chip
+     hugs the bottom-right of the card like the progress ring it
+     replaces. Higher opacity + bigger here than in the store grid
+     because it sits over a busy map cover. */
+  .wl-card-price.store-price {
+    align-self: auto;
+    margin-top: 0;
+    padding: 7px 14px 7px 12px;
+    font-size: 14.5px;
+    background: rgba(34,22,8,0.78);
+    border: 1px solid rgba(255,206,120,0.6);
+    color: #ffe39a;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.35);
+  }
+  .wl-card-price.store-price .coin-mini {
+    width: 16px;
+    height: 16px;
+  }
+  .wl-card-unlock {
+    position: absolute;
+    right: 12px; bottom: 12px;
+    z-index: 2;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 7px 10px 7px 9px;
+    border: 0;
+    border-radius: 999px;
+    background: linear-gradient(135deg, #ff7eb9, #ff5f98);
+    color: #fff;
+    font-family: inherit;
+    font-size: 12.5px;
+    font-weight: 800;
+    letter-spacing: 0.01em;
+    cursor: pointer;
+    box-shadow: 0 6px 14px rgba(255,95,152,0.35);
+    transition: transform 0.12s ease, box-shadow 0.18s ease;
+  }
+  .wl-card-unlock:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 10px 20px rgba(255,95,152,0.45);
+  }
+  .wl-card-unlock:active { transform: scale(0.97); }
+  .wl-card-unlock svg { flex: 0 0 auto; }
+  .wl-card-unlock-price {
+    background: rgba(255,255,255,0.22);
+    border-radius: 999px;
+    padding: 1px 8px;
+    font-size: 12px;
+    font-weight: 800;
   }
 
   /* ---------- Netflix-style horizontal rows ---------- */
@@ -5215,14 +5396,36 @@
     border-radius: 12px;
     overflow: hidden;
     background-color: #1a1423;
+    /* Background image still set via inline style on the tile (so
+       legacy callers keep working), but ALSO mirrored on the
+       ::before layer below for a clean 1.2× zoom without distortion.
+       The bare background here acts as a fallback / poster. */
     background-size: cover;
-    background-position: center;
+    background-position: center top;
     position: relative;
     cursor: pointer;
     box-shadow:
       0 8px 18px rgba(0,0,0,0.35),
       inset 0 0 0 1px rgba(255,255,255,0.05);
     transition: transform 0.15s ease;
+  }
+  /* 1.2× zoom layer — same image, scaled on a pseudo-element so the
+     image aspect is PRESERVED (unlike background-size: 120% 120%
+     which distorts non-matching aspects). transform-origin top so
+     the head stays anchored at the top of the tile. The image URL
+     is wired via the --tile-img CSS variable set by the JS that
+     creates each tile (more reliable than `background-image: inherit`,
+     which silently fails in some Safari paths). */
+  .wl-tile::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image: var(--tile-img);
+    background-size: cover;
+    background-position: center top;
+    transform: scale(1.2);
+    transform-origin: center top;
+    z-index: 0;
   }
   .wl-tile:active { transform: scale(0.96); }
   .wl-tile::after {
@@ -5242,6 +5445,113 @@
     text-shadow: 0 2px 6px rgba(0,0,0,0.6);
     line-height: 1.2;
   }
+  /* Stacking fix for the cast row — character heads poke up into the
+     Available Worlds row's vertical space. Without explicit ordering
+     PLUS enough top margin to clear the previous row, heads end up
+     under the world cards.  Bigger top margin gives them physical
+     room; z-index handles paint order if anything still overlaps. */
+  .wl-cards {
+    position: relative;
+    z-index: 1;
+  }
+  .wl-row--cast-wrap {
+    position: relative;
+    z-index: 10;
+  }
+
+  /* ---------- Cast with Famous People row ----------
+     Tile shape: wide-rectangle, ~20% taller than v1. Character PNG
+     stays INSIDE the card now — anchored low, head fully framed by
+     the tile, lower body cropped by the bottom edge. Per-tile bg
+     palette gives each card its own warm/cool feel. */
+  .wl-row-cast {
+    gap: 14px;
+    overflow-y: visible;          /* let character heads escape upward */
+    padding-top: 20px;            /* room above for the head sticking out */
+    /* Keep heads on top when they poke up into the previous row's
+       area (Available Worlds). Without this, sibling rows above
+       paint over the protruding heads. */
+    position: relative;
+    z-index: 4;
+  }
+  .wl-cast-tile {
+    position: relative;
+    z-index: 5;                   /* tile sits above its row's stacking context */
+  }
+  .wl-cast-tile {
+    flex: 0 0 auto;
+    width: 200px;
+    height: 156px;
+    position: relative;
+    cursor: pointer;
+    /* overflow: visible so the character's head can escape the
+       rounded card. The rounded gradient + clipping live on the
+       inner .wl-cast-bg layer instead. */
+    overflow: visible;
+    transition: transform 0.15s ease;
+  }
+  .wl-cast-tile:active { transform: scale(0.96); }
+  /* The actual visible card body — gradient, rounded corners, the
+     box that everything else sits relative to. Set as inset:0
+     siblings of the character so the character isn't clipped by it. */
+  .wl-cast-bg {
+    position: absolute;
+    inset: 0;
+    border-radius: 12px;
+    overflow: hidden;
+    /* Default fallback bg — overridden per-tile via inline style. */
+    background: linear-gradient(135deg, #2a1f3a 0%, #1a1423 100%);
+    box-shadow:
+      0 8px 18px rgba(0,0,0,0.4),
+      inset 0 0 0 1px rgba(255,255,255,0.06);
+    z-index: 1;
+  }
+  .wl-cast-text {
+    position: absolute;
+    left: 14px; bottom: 12px;
+    /* On top of EVERYTHING — character (z:3), bg (z:1) — so the
+       label never gets buried under a torso silhouette. */
+    z-index: 5;
+    max-width: 60%;
+  }
+  .wl-cast-name {
+    font-size: 17px;
+    font-weight: 800;
+    letter-spacing: -0.01em;
+    color: #fff;
+    line-height: 1.15;
+  }
+  .wl-cast-meta {
+    margin-top: 5px;
+    font-size: 12.5px;
+    font-weight: 600;
+    color: rgba(255,255,255,0.85);
+    line-height: 1.2;
+  }
+  /* Character PNG — 2× the tile, anchored TOP-right so head + torso
+     fill the frame and legs crop below the tile bottom. The top is
+     nudged ~8px above the tile so a sliver of the head pokes out
+     for a "stepping out of the frame" feel. */
+  .wl-cast-character {
+    position: absolute;
+    /* Box is constrained to the tile bounds (plus 36px above for the
+       head sticking out). This keeps the layout small so the row
+       doesn't compute extra scrollHeight from the character box. */
+    top: -21px;
+    right: -28px;
+    bottom: 0;
+    width: 80%;
+    /* Image is 2× the box height — only the TOP half (head + torso)
+       fits into the visible area; bottom half (legs) is clipped by
+       the element bounds, no clip-path needed. */
+    background-size: auto 200%;
+    background-position: right top;
+    background-repeat: no-repeat;
+    pointer-events: none;
+    z-index: 3;
+    filter: drop-shadow(-2px 4px 10px rgba(0,0,0,0.45));
+  }
+
   .wl-tile-meta {
     margin-top: 2px;
     font-size: 10.5px;
@@ -6239,6 +6549,32 @@
     font-size: 17px; cursor: pointer; padding: 0 4px;
   }
   .ds-close:hover { color: #fff; }
+  /* Right-side action cluster in the dev-settings header — quick
+     shortcuts to fire camera + gallery flows without playing through
+     the script. */
+  .ds-head-actions {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .ds-icon-btn {
+    background: transparent;
+    border: 1px solid rgba(255,255,255,0.18);
+    color: rgba(255,255,255,0.75);
+    width: 26px; height: 26px;
+    border-radius: 6px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    transition: background 0.12s, color 0.12s, border-color 0.12s;
+  }
+  .ds-icon-btn:hover {
+    background: rgba(255,255,255,0.08);
+    color: #fff;
+    border-color: rgba(255,255,255,0.32);
+  }
   .ds-toggle {
     display: flex; align-items: center; gap: 10px; cursor: pointer;
     user-select: none;
@@ -7119,7 +7455,7 @@
   }
   #musicVideo {
     position: absolute;
-    inset: -100px 0 0 0;          /* shifted up 100px from the top */
+    inset: -70px 0 0 0;           /* was -100px; nudged 30px down */
     width: 100%; height: 100%;
     object-fit: cover;
     /* Loader state, dim but visible, so the first frame reads through */
@@ -7341,7 +7677,7 @@
   #msPolaroids {
     position: absolute;
     left: 0; right: 0;
-    bottom: 240px;             /* tuned to clear the lyrics area */
+    bottom: 210px;             /* lowered from 240, then nudged up 30 */
     height: 200px;
     pointer-events: none;
     z-index: 4;
@@ -7398,7 +7734,7 @@
   .polaroid-caption {
     position: absolute;
     left: 0; right: 0;
-    bottom: 6px;
+    bottom: 9px;
     text-align: center;
     font-family: "Caveat", "Marker Felt", cursive;
     font-weight: 600;
@@ -9433,7 +9769,7 @@
     flex: 1;
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
-    padding: 14px 14px 18px;
+    padding: 14px 14px 60px;          /* extra bottom room so cards don't kiss the input bar */
     display: flex;
     flex-direction: column;
     gap: 6px;
@@ -9456,11 +9792,11 @@
     opacity: 0.55;
     letter-spacing: 0.02em;
   }
-  /* Outgoing, pink gradient, right side */
+  /* Outgoing, light cream chip, right side */
   .ms-bubble.me {
     align-self: flex-end;
-    background: linear-gradient(135deg, #ff7eb9, #ff5f98);
-    color: #fff;
+    background: rgba(245,242,238,0.95);
+    color: #1a1523;
     border-bottom-right-radius: 4px;
   }
   /* Incoming, graphite chip, left side */
@@ -9473,6 +9809,78 @@
   /* Group consecutive same-author bubbles tighter */
   .ms-bubble + .ms-bubble.me   { margin-top: -2px; }
   .ms-bubble + .ms-bubble.them { margin-top: -2px; }
+
+  /* ---------- Card-style bubble (Play Together / location share) ----
+     Explicit width (not max-width) because the inner cover element is
+     width:100% — without a base width on the bubble, flex layout
+     collapses it to content size (which is zero, since nothing has
+     intrinsic width). */
+  .ms-bubble-card {
+    display: block !important;
+    width: 84% !important;
+    max-width: 320px;
+    min-height: 180px;
+    padding: 0 !important;
+    overflow: hidden;
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 18px;
+    align-self: flex-start;
+  }
+  .ms-bubble-card.me { align-self: flex-end; }
+  .ms-bubble-card.me   { background: linear-gradient(135deg, rgba(255,126,185,0.16), rgba(255,95,152,0.16)); border-color: rgba(255,126,185,0.32); }
+  .ms-bubble-card.them { background: rgba(255,255,255,0.06); }
+  .ms-card-cover {
+    display: block;
+    width: 100%;
+    height: 100px;
+    background-color: #1a1423;
+    background-size: cover;
+    background-position: center;
+  }
+  .ms-card-body {
+    display: block;
+    padding: 10px 12px 12px;
+  }
+  .ms-card-title, .ms-card-subtitle {
+    display: block;
+  }
+  .ms-card-title {
+    font-size: 15px;
+    font-weight: 800;
+    color: #fff;
+    line-height: 1.2;
+  }
+  .ms-card-subtitle {
+    margin-top: 3px;
+    font-size: 12px;
+    color: rgba(255,255,255,0.65);
+    line-height: 1.3;
+  }
+  .ms-card-cta {
+    margin-top: 8px;
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 7px 14px 7px 12px;
+    border: 0;
+    border-radius: 999px;
+    background: linear-gradient(135deg, #ff7eb9, #ff5f98);
+    color: #fff;
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 800;
+    letter-spacing: 0.02em;
+    cursor: pointer;
+    box-shadow: 0 6px 14px rgba(255,95,152,0.35);
+    transition: transform 0.12s ease, box-shadow 0.18s ease;
+  }
+  .ms-card-cta:hover { transform: translateY(-1px); box-shadow: 0 10px 20px rgba(255,95,152,0.45); }
+  .ms-card-cta:active { transform: scale(0.97); }
+  .ms-bubble-card .ms-bubble-time {
+    padding: 0 14px 10px;
+    margin-top: -2px;
+  }
 
   /* ---------- Input bar ---------- */
   .ms-chat-input {
@@ -11349,16 +11757,21 @@
        Right → messages icon + profile icon -->
   <div class="wl-top">
     <div class="wl-header">
-      <h1 class="wl-title" id="wlGreeting">Welcome,</h1>
-      <p class="wl-sub">New Friends, Best Friends.</p>
+      <img class="wl-logo-img" src="assets/ui/logo.png" alt="roles.ai">
     </div>
     <div class="wl-top-icons">
-      <button class="dp-iconbtn" id="wlOpenMessages" type="button" aria-label="Messages">
+      <button class="dp-iconbtn wl-iconbtn" id="wlOpenStore" type="button" aria-label="Store">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M3 7h18l-2 12H5z"/>
+          <path d="M8 7V5a4 4 0 0 1 8 0v2"/>
+        </svg>
+      </button>
+      <button class="dp-iconbtn wl-iconbtn" id="wlOpenMessages" type="button" aria-label="Messages">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
           <path d="M4 6h16v11H8l-4 3z"/>
         </svg>
       </button>
-      <button class="dp-iconbtn" id="wlOpenProfile" type="button" aria-label="Open profile">
+      <button class="dp-iconbtn wl-iconbtn" id="wlOpenProfile" type="button" aria-label="Open profile">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
           <circle cx="12" cy="8" r="4"/>
           <path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/>
@@ -11367,16 +11780,17 @@
     </div>
   </div>
 
-  <!-- Available Worlds, section header + horizontal-grid of world cards -->
-  <div class="wl-section-head">
-    <h2 class="wl-section-title">Available Worlds</h2>
-    <button class="wl-link" id="wlGetMoreWorlds" type="button">Get more worlds ›</button>
-  </div>
+  <!-- Available Worlds — header removed; cards render straight in. -->
   <div class="wl-cards" id="wlCards"></div>
 
   <!-- Netflix-style horizontal sections -->
+  <div class="wl-row wl-row--cast-wrap">
+    <div class="wl-row-head"><h3 class="wl-row-title">Cast with Famous People</h3></div>
+    <div class="wl-row-track wl-row-cast" id="wlRowCast"></div>
+  </div>
+
   <div class="wl-row">
-    <div class="wl-row-head"><h3 class="wl-row-title">Blind Dates</h3></div>
+    <div class="wl-row-head"><h3 class="wl-row-title">Date with Famous People</h3></div>
     <div class="wl-row-track" id="wlRowBlind"></div>
   </div>
 
@@ -11673,7 +12087,12 @@
   <div class="ds-card">
     <div class="ds-row ds-head">
       <span>Dev settings</span>
-      <button class="ds-close" id="dsClose" type="button" aria-label="Close">&times;</button>
+      <div class="ds-head-actions">
+        <button class="ds-icon-btn" id="dsGiftJumpBtn" type="button" title="Jump to (GiftPick) in current script" aria-label="Jump to GiftPick">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+        </button>
+        <button class="ds-close" id="dsClose" type="button" aria-label="Close">&times;</button>
+      </div>
     </div>
     <div class="ds-row">
       <label class="ds-toggle">
@@ -13545,9 +13964,25 @@ function applyUiState(uiName) {
   // pairing is `[bg:scene=foo.jpg] [ui:bubble]`. ui:bubble alone is
   // a hint to the renderer; bg:scene is what activates the layer.
   if (!document.body) return;
+  // Remember if we're leaving gift-reveal so we can wipe its inline
+  // backgroundImage on focusCharacter (set by revealGift). Otherwise
+  // the next ui mode would inherit the gift photo as a ghost overlay.
+  const wasGiftReveal = document.body.classList.contains('ui-gift-reveal');
   [...document.body.classList].forEach(c => {
     if (c.indexOf('ui-') === 0) document.body.classList.remove(c);
   });
+  if (wasGiftReveal && uiName !== 'gift-reveal' && el && el.focusCharacter) {
+    el.focusCharacter.style.backgroundImage = '';
+    el.focusCharacter.className = 'focus-character';
+    // Put focusCharacter back where it normally lives (inside
+    // #objectDialog) — handleGiftRevealLine moved it to <body> to
+    // escape objectDialog's transform-induced containing block.
+    const orig = el.focusCharacter._giftRevealOrigParent;
+    if (orig && el.focusCharacter.parentElement !== orig) {
+      orig.appendChild(el.focusCharacter);
+      el.focusCharacter._giftRevealOrigParent = null;
+    }
+  }
   if (!uiName) return;
   document.body.classList.add('ui-' + uiName);
 }
@@ -13755,6 +14190,61 @@ function handleSceneDialogLine(line) {
 // CSS rules, not from this function. Function logic is identical for
 // both: populate object dialog + focus-character portrait, hide stage
 // chars and bubbles, fire any cutscene/points side-effects on the line.
+// ui:gift-reveal — small inner-small-style card with the rendered
+// gift photo on the left + AI narrative on the right. Sourced from
+// revealGift() which splices a single line of this kind into the
+// stream; once the player taps past it, applyUiState clears the
+// inline backgroundImage on focusCharacter so subsequent ui modes
+// (e.g. cast-large) start clean.
+function handleGiftRevealLine(line) {
+  const text  = renderText(line.text || '');
+  // Prefer the transparent PNG (no white plate behind the object) so
+  // the gift floats over whatever background is up. Fall back to the
+  // white-bg render or the original photo if transparent isn't ready.
+  const url   = (window.giftState && window.giftState.transparentUrl) ||
+                line._giftRevealUrl ||
+                (window.giftState && window.giftState.cleanedUrl) ||
+                (window.giftState && window.giftState.objectUrl) ||
+                '';
+  console.log('[gift-reveal] handleGiftRevealLine: url=', url ? url.slice(0, 80) + '…' : '(empty)',
+              'body.classList=', el.body.className);
+  Object.values(el.chars).forEach(c => c.classList.remove('active','exit-left','exit-right'));
+  hideSceneBubbles();
+  // Narrative-style card on the right.
+  el.objectDialog.className = 'narrative';
+  el.odSpeaker.textContent = '';
+  el.odText.innerHTML = applyHighlights(text);
+  // ──────────────────────────────────────────────────────────────
+  // Containing-block fix: focusCharacter normally lives INSIDE
+  // #objectDialog as a peeking-out portrait. objectDialog has a
+  // `transform` on it (CSS animations + the slide-up enter), which
+  // creates a new containing block — so any `position: fixed` on
+  // focusCharacter ends up relative to objectDialog, not the
+  // viewport, and the gift photo gets clipped by objectDialog's
+  // 100px-tall card. We TEMPORARILY move focusCharacter to <body>
+  // for the gift-reveal beat so position:fixed lands at viewport
+  // coords, then put it back when the next beat fires.
+  // ──────────────────────────────────────────────────────────────
+  if (el.focusCharacter.parentElement !== document.body) {
+    // Stash the original parent so we can restore it later.
+    el.focusCharacter._giftRevealOrigParent = el.focusCharacter.parentElement;
+    document.body.appendChild(el.focusCharacter);
+  }
+  // Gift photo as the "portrait" on the left.
+  if (url) {
+    el.focusCharacter.style.backgroundImage = 'url("' + url + '")';
+  } else {
+    el.focusCharacter.style.backgroundImage = '';
+  }
+  el.focusCharacter.className = 'focus-character';
+  void el.focusCharacter.offsetWidth;
+  el.focusCharacter.classList.add('show');
+  // Side-effects (cutscene / points) still honored.
+  if (line.cutscene === '__clear__') clearCutscene();
+  else if (line.cutscene) setCutscene(line.cutscene);
+  if (line.points) addRelationshipPoints(line.points);
+}
+
 function handleCastSmallLine(line) {
   const speaker = line.speaker;
   const text = renderText(line.text);
@@ -14501,17 +14991,62 @@ function renderLine() {
   if (line.type === 'ai-block') {
     const cache = (window._aiDialogCache = window._aiDialogCache || {});
     const slot = cache[line.id];
-    let inject = null;
-    if (slot && slot.status === 'ready' && Array.isArray(slot.events) && slot.events.length) {
-      inject = slot.events;
+    // Detect stale cache: if a gift has been picked since the
+    // request fired, the AI got generic context. Re-fire with the
+    // gift name so the response can actually mention the object.
+    const _normGift = (s) => s ? String(s).replace(/^(?:a|an|the)\s+/i, '').toLowerCase().trim() : '';
+    const currentGift = _normGift((window.giftState && window.giftState.name) || '');
+    const cachedGift  = _normGift(slot && slot.giftUsed);
+    const giftStale   = currentGift && cachedGift !== currentGift;
+    const ready       = slot && slot.status === 'ready' && !giftStale &&
+                        Array.isArray(slot.events) && slot.events.length;
+    if (ready) {
       console.log('[ai-block]', line.id, '→ AI lines (' + slot.events.length + ')');
-    } else {
-      inject = line.placeholder || [];
-      console.log('[ai-block]', line.id, '→ placeholder',
-                  slot ? '(status=' + slot.status + ')' : '(no request fired)');
+      lines.splice(idx, 1, ...slot.events);
+      renderLine();
+      return;
     }
-    lines.splice(idx, 1, ...inject);
-    renderLine();
+    // Not ready or stale. WAIT for the AI to come back (up to 8s)
+    // so the player sees AI dialog on first encounter, not the
+    // placeholder. Stale cache → drop + refetch so the new request
+    // includes the now-known gift.
+    if (giftStale) {
+      console.log('[ai-block]', line.id, 'stale → dropping cache + refetching with gift=', currentGift);
+      delete cache[line.id];
+    }
+    if (typeof _fetchAiBlock === 'function' && !cache[line.id]) {
+      console.log('[ai-block]', line.id, 'firing fresh request');
+      _fetchAiBlock(line);
+    }
+    console.log('[ai-block]', line.id, 'waiting up to 20s for AI…');
+    el.body.classList.add('awaiting-gift'); // reuse existing soft loader
+    const startWait = performance.now();
+    const tick = () => {
+      // Player navigated away (restart, jump) — bail.
+      if (lines[idx] !== line) {
+        el.body.classList.remove('awaiting-gift');
+        return;
+      }
+      const s = cache[line.id];
+      const finished = s && (s.status === 'ready' || s.status === 'error' || s.status === 'empty' || s.status === 'off');
+      if (finished || performance.now() - startWait > 20000) {
+        el.body.classList.remove('awaiting-gift');
+        let inject;
+        if (s && s.status === 'ready' && Array.isArray(s.events) && s.events.length) {
+          inject = s.events;
+          console.log('[ai-block]', line.id, '→ AI lines (' + s.events.length + ') after wait');
+        } else {
+          inject = line.placeholder || [];
+          console.log('[ai-block]', line.id, '→ placeholder',
+                      s ? '(status=' + s.status + ' after wait)' : '(timed out)');
+        }
+        lines.splice(idx, 1, ...inject);
+        renderLine();
+        return;
+      }
+      setTimeout(tick, 250);
+    };
+    tick();
     return;
   }
   if (line.type === 'gift-fake-choice') {
@@ -14594,6 +15129,14 @@ function renderLine() {
   if (line.type === 'line' && el.body.classList.contains('ui-inner-small') &&
       INNER.has(line.speaker)) {
     handleCastSmallLine(line);
+    return;
+  }
+  // ui:gift-reveal — same small chassis as ui:inner-small, but the
+  // left "portrait" is the rendered gift photo (URL on line._giftRevealUrl
+  // or window.giftState.cleanedUrl). Painted ONLY by revealGift()
+  // splicing in this beat; writer never sets ui:gift-reveal manually.
+  if (line.type === 'line' && el.body.classList.contains('ui-gift-reveal')) {
+    handleGiftRevealLine(line);
     return;
   }
 
@@ -15328,13 +15871,21 @@ function spawnMusicPolaroids() {
   //   rot   = per-card tilt (the slot's left position is shared across
   //           cards in the same slot, but rotation is per-photo so the
   //           wall doesn't look like a stamped grid)
+  // 8 memory photos pulled from /worlds/london/locations/herplace/memories/.
+  // Captions placeholder for now (user will fill in). Frames + rotations
+  // rotate through 6 variants so each polaroid feels handmade, not stamped.
+  const memBase = (typeof currentLocationBase === 'function')
+    ? currentLocationBase() + '/memories/'
+    : 'worlds/london/locations/herplace/memories/';
   const photos = [
-    { src: 'characters/iris/appearances/london.png', caption: 'her place',           emoji: '🏠', frame: 'sq-md',   rot: '-7deg' },
-    { src: 'characters/joy/appearances/london.png',  caption: 'ran into Joy',        emoji: '👋', frame: 'port-lg', rot:  '6deg' },
-    { src: 'characters/you/appearances/london.png',  caption: 'all dressed up',      emoji: '✨', frame: 'sq-sm',   rot: '-4deg' },
-    { src: 'characters/iris/appearances/london.png', caption: 'coffee on the couch', emoji: '☕', frame: 'land',    rot:  '3deg' },
-    { src: 'characters/joy/appearances/london.png',  caption: 'good gift, she said', emoji: '🎁', frame: 'port-sm', rot: '-5deg' },
-    { src: 'characters/you/appearances/london.png',  caption: 'the cinema, tuesday', emoji: '🎬', frame: 'sq-lg',   rot:  '7deg' },
+    { src: memBase + 'memory1.jpg', caption: 'Overcoming my trauma',    emoji: '', frame: 'sq-md',   rot: '-7deg' },
+    { src: memBase + 'memory2.jpg', caption: "I'm a verified good guy", emoji: '', frame: 'port-lg', rot:  '6deg' },
+    { src: memBase + 'memory3.jpg', caption: 'Handled really well',     emoji: '', frame: 'sq-sm',   rot: '-4deg' },
+    { src: memBase + 'memory4.jpg', caption: 'She loves Indie Folk',    emoji: '', frame: 'land',    rot:  '3deg' },
+    { src: memBase + 'memory5.jpg', caption: 'Tess is her bestie',      emoji: '', frame: 'port-sm', rot: '-5deg' },
+    { src: memBase + 'memory6.jpg', caption: 'Successful first move',   emoji: '', frame: 'sq-lg',   rot:  '7deg' },
+    { src: memBase + 'memory7.jpg', caption: 'Love of my life',         emoji: '', frame: 'port-lg', rot: '-6deg' },
+    { src: memBase + 'memory8.jpg', caption: 'Good things to come',     emoji: '', frame: 'sq-md',   rot:  '4deg' },
   ];
   if (!photos.length) return;
 
@@ -17469,17 +18020,63 @@ function renderWorldList() {
   const greet = document.getElementById('wlGreeting');
   if (greet) greet.textContent = `Welcome ${firstName},`;
 
-  // Available worlds (full-width cards)
+  // Available worlds — owned packs interleaved with locked "buy me"
+  // tiles (Friends, Wild Wild West) so the player can browse + unlock
+  // from the same row. Order is curated, NOT alphabetical.
+  const LOCKED_WORLDS = {
+    friends: { name: 'Friends',        cover: 'store/covers/maps/friends.jpg', price: 45, episodes: 23 },
+    west:    { name: 'Wild Wild West', cover: 'store/covers/maps/west.jpg',    price: 45, episodes: 18 },
+  };
+  const WORLD_ORDER = [
+    { type: 'pack',   id: 'london'  },
+    { type: 'locked', id: 'friends' },
+    { type: 'locked', id: 'west'    },
+    { type: 'pack',   id: '1984'    },
+  ];
   const wrap = document.getElementById('wlCards');
   if (wrap) {
     wrap.innerHTML = '';
-    PACKS.forEach(p => {
+    WORLD_ORDER.forEach(entry => {
+      if (entry.type === 'locked') {
+        const lk = LOCKED_WORLDS[entry.id];
+        if (!lk) return;
+        const card = document.createElement('div');
+        card.className = 'wl-card wl-card--locked';
+        card.dataset.pack = entry.id;
+        card.style.backgroundImage = `url("${lk.cover}")`;
+        card.style.setProperty('--wl-card-img', `url("${lk.cover}")`);
+        // Reuse the store's coin price chip (.store-price + .coin-mini)
+        // so the unlock affordance reads the same as it does on the
+        // store page. No "Unlock" label — the chip itself signals
+        // "tap to buy". Episode count goes where progress text would.
+        card.innerHTML =
+          '<div class="wl-card-body">' +
+            '<div class="wl-card-name">' + lk.name + '</div>' +
+            '<div class="wl-card-tag">' + lk.episodes + ' Episodes</div>' +
+          '</div>' +
+          '<div class="wl-card-progress">' +
+            '<span class="store-price wl-card-price">' +
+              '<span class="coin-mini" aria-hidden="true"></span>' + lk.price +
+            '</span>' +
+          '</div>';
+        card.addEventListener('click', () => {
+          console.log('[unlock] tapped', entry.id, 'price:', lk.price);
+          // Hook into store flow later.
+        });
+        wrap.appendChild(card);
+        return;
+      }
+      // Owned pack — original tile.
+      const p = PACKS.find(x => x.id === entry.id);
+      if (!p) return;
       const episodes = venueCountForPack(p.id);
       const percent  = WORLD_PROGRESS[p.id] != null ? WORLD_PROGRESS[p.id] : 0;
       const card = document.createElement('div');
       card.className   = 'wl-card';
       card.dataset.pack = p.id;
-      card.style.backgroundImage = `url("worlds/${p.id}/map.jpg")`;
+      const mapUrl = `worlds/${p.id}/map.jpg`;
+      card.style.backgroundImage = `url("${mapUrl}")`;
+      card.style.setProperty('--wl-card-img', `url("${mapUrl}")`);
       card.innerHTML =
         '<div class="wl-card-body">' +
           '<div class="wl-card-name">' + p.name + '</div>' +
@@ -17514,6 +18111,8 @@ function renderWorldList() {
     const tile = document.createElement('div');
     tile.className = 'wl-tile';
     tile.style.backgroundImage = `url("${v.cover}")`;
+    // Same image on the ::before zoom layer.
+    tile.style.setProperty('--tile-img', `url("${v.cover}")`);
     tile.innerHTML =
       '<div class="wl-tile-text">' +
         '<div class="wl-tile-name">' + v.title + '</div>' +
@@ -17539,11 +18138,106 @@ function renderWorldList() {
   const recentPick  = sampleN(allVenues, 6);
   const popularPick = sampleN(allVenues, 6);
 
-  // Blind Dates, 6 random locations (no extra meta)
+  // Cast with Famous People — transparent character PNGs from
+  // /store/voices/, each paired with a believable scene location
+  // for the "where would you meet them" subline.
+  const FAMOUS_CAST = [
+    { id: 'einstein',  name: 'Einstein',   loc: 'Princeton Diner' },
+    { id: 'sherlock',  name: 'Sherlock',   loc: 'Baker Street'    },
+    { id: 'leonardo',  name: 'Leonardo',   loc: 'Florence Studio' },
+    { id: 'kubrick',   name: 'Kubrick',    loc: 'Soho Cutting Room' },
+    { id: 'morpheus',  name: 'Morpheus',   loc: 'Underground Bar' },
+    { id: 'bond',      name: 'James Bond', loc: 'Casino Royale'   },
+    { id: 'socrates',  name: 'Socrates',   loc: 'Athenian Agora'  },
+    { id: 'nietzsche', name: 'Nietzsche',  loc: 'Sils-Maria Inn'  },
+    { id: 'harari',    name: 'Harari',     loc: 'Tel Aviv Café'   },
+    { id: 'david',     name: 'David',      loc: 'Mayfair Bar'     },
+    { id: 'montana',   name: 'Tony Montana', loc: 'Miami Penthouse' },
+    { id: 'vendetta',  name: 'V',          loc: 'Old Bailey Roof' },
+  ];
+  // Per-tile background palette — each card gets a distinct gradient
+  // so the row doesn't read as monotone. Picked from a curated set
+  // of warm/cool/saturated combos that all stay legible behind the
+  // white text. Index → hash by character id so the same character
+  // always gets the same color across renders.
+  const CAST_PALETTE = [
+    'linear-gradient(135deg, #ff8a65 0%, #c2185b 100%)',  // sunset coral
+    'linear-gradient(135deg, #4fc3f7 0%, #1976d2 100%)',  // ocean blue
+    'linear-gradient(135deg, #aed581 0%, #2e7d32 100%)',  // moss green
+    'linear-gradient(135deg, #ba68c8 0%, #4a148c 100%)',  // deep violet
+    'linear-gradient(135deg, #ffb74d 0%, #e65100 100%)',  // amber
+    'linear-gradient(135deg, #4db6ac 0%, #00695c 100%)',  // teal
+    'linear-gradient(135deg, #f06292 0%, #ad1457 100%)',  // rose
+    'linear-gradient(135deg, #7986cb 0%, #283593 100%)',  // indigo
+    'linear-gradient(135deg, #a1887f 0%, #4e342e 100%)',  // mocha
+    'linear-gradient(135deg, #ff7043 0%, #6a1b9a 100%)',  // sunset purple
+    'linear-gradient(135deg, #66bb6a 0%, #1b5e20 100%)',  // forest
+    'linear-gradient(135deg, #5c6bc0 0%, #c2185b 100%)',  // electric pink-blue
+  ];
+  const _hashId = (s) => {
+    let h = 0;
+    for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) >>> 0;
+    return h;
+  };
+
+  const castRow = document.getElementById('wlRowCast');
+  if (castRow) {
+    castRow.innerHTML = '';
+    FAMOUS_CAST.forEach(c => {
+      const tile = document.createElement('div');
+      tile.className = 'wl-cast-tile';
+      const bgColor = CAST_PALETTE[_hashId(c.id) % CAST_PALETTE.length];
+      // The .wl-cast-bg layer holds the rounded gradient + clips
+      // its own contents. The character + text sit ABOVE it as
+      // siblings, so the character can extend past the tile's edge
+      // without being masked by the rounded clip.
+      tile.innerHTML =
+        '<div class="wl-cast-bg" style="background:' + bgColor + '"></div>' +
+        '<div class="wl-cast-character" style="background-image:url(\'store/voices/' + c.id + '.png\')"></div>' +
+        '<div class="wl-cast-text">' +
+          '<div class="wl-cast-name">' + c.name + '</div>' +
+          '<div class="wl-cast-meta">' + c.loc + '</div>' +
+        '</div>';
+      tile.addEventListener('click', () => {
+        // Hook up to a real flow later. For now, log so we know
+        // the click landed.
+        console.log('[famous-cast] picked', c.id);
+      });
+      castRow.appendChild(tile);
+    });
+  }
+
+  // Date with Famous People — celebrity tiles using the venueAsTile
+  // shape but with covers from /store/covers/celebritydate/ and a
+  // movie/show subline as the meta. Ordered by user spec.
+  const CELEBRITY_DATES = [
+    { id: 'emma',      name: 'Emma Stone',         meta: 'Crazy, Stupid, Love' },
+    { id: 'jennifer',  name: 'Jennifer Aniston',   meta: 'Friends'             },
+    { id: 'sandra',    name: 'Sandra Bullock',     meta: 'The Proposal'        },
+    { id: 'scarlet',   name: 'Scarlett Johansson', meta: 'Marriage Story'      },
+    { id: 'zendaya',   name: 'Zendaya',            meta: 'Dune'                },
+    { id: 'margot',    name: 'Margot Robbie',      meta: 'Focus'               },
+  ];
   const blindRow = document.getElementById('wlRowBlind');
   if (blindRow) {
     blindRow.innerHTML = '';
-    blindPick.forEach(([id, v]) => blindRow.appendChild(venueAsTile(id, v)));
+    CELEBRITY_DATES.forEach(c => {
+      const tile = document.createElement('div');
+      tile.className = 'wl-tile';
+      const url = 'store/covers/celebritydate/' + c.id + '.jpg';
+      tile.style.backgroundImage = 'url("' + url + '")';
+      // Mirror to CSS var so the ::before zoom layer can read it.
+      tile.style.setProperty('--tile-img', 'url("' + url + '")');
+      tile.innerHTML =
+        '<div class="wl-tile-text">' +
+          '<div class="wl-tile-name">' + c.name + '</div>' +
+          '<div class="wl-tile-meta">' + c.meta + '</div>' +
+        '</div>';
+      tile.addEventListener('click', () => {
+        console.log('[celebrity-date] picked', c.id);
+      });
+      blindRow.appendChild(tile);
+    });
   }
 
   // Recently Casted, 6 random locations WITH a role label
@@ -17763,7 +18457,7 @@ const ZODIAC_COOLDOWN_TOTAL = 24 * 60;  // 24h reference window for the progress
 const MY_CONTACTS = [
   { id: 'liam',   name: 'Liam',   avatar: 'https://i.pravatar.cc/120?img=12', unread: 0, last: "i'll take it as a compliment",         lastTime: '2:14pm' },
   { id: 'matt',   name: 'Matt',   avatar: 'https://i.pravatar.cc/120?img=33', unread: 2, last: 'the street seller scene was 🔥',       lastTime: '11:42am' },
-  { id: 'sophie', name: 'Sophie', avatar: 'https://i.pravatar.cc/120?img=45', unread: 0, last: 'paris next month, save the date',     lastTime: 'Yesterday' },
+  { id: 'sophie', name: 'Sophie', avatar: 'https://i.pravatar.cc/120?img=45', unread: 1, last: 'should we run this one together?',     lastTime: '11:08am' },
   { id: 'chloe',  name: 'Chloe',  avatar: 'https://i.pravatar.cc/120?img=44', unread: 1, last: 'saw your iris recap. 92? insane',     lastTime: 'Yesterday' },
   { id: 'zara',   name: 'Zara',   avatar: 'https://i.pravatar.cc/120?img=20', unread: 0, last: 'lol the coin flip was rigged',        lastTime: 'Mon' },
   { id: 'hannah', name: 'Hannah', avatar: 'https://i.pravatar.cc/120?img=47', unread: 0, last: 'need a Tour Guide cast, you in?',    lastTime: 'Sun' },
@@ -17789,7 +18483,34 @@ const MY_CHATS = {
     { from: 'them', text: 'recap me when you have a minute',                            time: '11:42am' },
   ],
   sophie: [
-    { from: 'them', text: 'paris next month, save the date',                            time: 'Yesterday' },
+    { from: 'them', text: 'okay i finally watched your iris recap',                                time: '10:14am' },
+    { from: 'them', text: 'mike. she actually said the bag had confidence',                        time: '10:14am' },
+    { from: 'me',   text: 'i KNOW',                                                                time: '10:21am' },
+    { from: 'me',   text: 'i thought i broke the script for a second',                             time: '10:21am' },
+    { from: 'them', text: 'you fed her a paper tote and she made it sound like a memoir 😂',       time: '10:23am' },
+    { from: 'them', text: 'btw — you remember when you dragged me into that pub episode?',        time: '10:25am' },
+    { from: 'me',   text: 'as the bartender 💀',                                                   time: '10:26am' },
+    { from: 'them', text: 'i carried that scene mike, admit it',                                   time: '10:26am' },
+    { from: 'them', text: 'three lines and one of them was "we close at midnight"',                time: '10:27am' },
+    { from: 'me',   text: 'oscar worthy, truly',                                                   time: '10:28am' },
+    { from: 'them', text: 'no but seriously — i didn\'t know you had this side',                   time: '10:31am' },
+    { from: 'them', text: 'the way you let professore stew before answering',                      time: '10:31am' },
+    { from: 'them', text: 'who are you. where is the man who picked the houseplant',               time: '10:32am' },
+    { from: 'me',   text: 'the houseplant haunts me forever',                                      time: '10:34am' },
+    { from: 'me',   text: 'in my defense it was thoughtful',                                       time: '10:34am' },
+    { from: 'them', text: 'it was a SUCCULENT mike. you gave her a desert',                        time: '10:35am' },
+    { from: 'me',   text: '...okay fair',                                                          time: '10:36am' },
+    { from: 'them', text: 'anyway. coffee shop episode dropped',                                   time: '11:05am' },
+    { from: 'them', text: 'should we run this one together?',                                      time: '11:08am' },
+    { from: 'them', type: 'card',
+      card: {
+        cover: 'worlds/london/locations/coffeeshop/cover.jpg',
+        title: 'The Coffee Shop',
+        subtitle: 'London · 18 minutes',
+        cta: 'Play Together',
+        href: 'coffeeshop',
+      },
+      time: '11:08am' },
   ],
   chloe: [
     { from: 'them', text: 'saw your iris recap. 92? insane',                            time: 'Yesterday' },
@@ -18700,6 +19421,8 @@ function stopCoverAutoSwipe() {
 
 // Profile + messages icons live on the World List screen now.
 document.getElementById('wlOpenProfile').addEventListener('click', openProfileSheet);
+// Store icon — opens the same store sheet the rest of the app uses.
+document.getElementById('wlOpenStore').addEventListener('click', () => openStore('worlds'));
 document.getElementById('psBack').addEventListener('click', closeProfileSheet);
 
 // Sign Out (top-right of profile cover) → close everything in
@@ -18759,16 +19482,62 @@ function renderChatThread(contactId) {
   document.getElementById('msChatAvatar').style.backgroundImage = `url('${contact.avatar}')`;
 
   const threadEl = document.getElementById('msChatThread');
-  threadEl.innerHTML = thread.map(m => `
-    <div class="ms-bubble ${m.from === 'me' ? 'me' : 'them'}">
-      ${escapeHtml(m.text)}
-      <span class="ms-bubble-time">${escapeHtml(m.time || '')}</span>
-    </div>
-  `).join('');
+  threadEl.innerHTML = thread.map(m => {
+    // Special "Play Together" card — embedded location banner with a
+    // Play CTA. Renders as a wider, image-topped bubble instead of a
+    // text bubble.
+    if (m.type === 'card' && m.card) {
+      const c = m.card;
+      return `
+        <div class="ms-bubble ms-bubble-card ${m.from === 'me' ? 'me' : 'them'}">
+          <div class="ms-card-cover" style="background-image:url('${escapeHtml(c.cover || '')}')"></div>
+          <div class="ms-card-body">
+            <div class="ms-card-title">${escapeHtml(c.title || '')}</div>
+            <div class="ms-card-subtitle">${escapeHtml(c.subtitle || '')}</div>
+            <button class="ms-card-cta" type="button" data-href="${escapeHtml(c.href || '')}">
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor" aria-hidden="true">
+                <polygon points="6 4 22 12 6 20"/>
+              </svg>
+              <span>${escapeHtml(c.cta || 'Play Together')}</span>
+            </button>
+          </div>
+          <span class="ms-bubble-time">${escapeHtml(m.time || '')}</span>
+        </div>
+      `;
+    }
+    return `
+      <div class="ms-bubble ${m.from === 'me' ? 'me' : 'them'}">
+        ${escapeHtml(m.text)}
+        <span class="ms-bubble-time">${escapeHtml(m.time || '')}</span>
+      </div>
+    `;
+  }).join('');
 
-  // Scroll to latest message
+  // Wire up Play Together CTA buttons → log + close sheet so the
+  // jump can be hooked up later.
+  threadEl.querySelectorAll('.ms-card-cta').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const target = btn.dataset.href || '';
+      console.log('[messages] Play Together →', target);
+      if (typeof closeMessagesSheet === 'function') closeMessagesSheet();
+    });
+  });
+
+  // Scroll to latest message. If the last bubble is a tall card,
+  // align so the Play Together CTA is fully visible (cards can be
+  // taller than the chat viewport on small screens — bottom-anchored
+  // scroll alone clips the button half-off).
   requestAnimationFrame(() => {
-    threadEl.scrollTop = threadEl.scrollHeight;
+    const last = threadEl.lastElementChild;
+    const cta  = last && last.querySelector && last.querySelector('.ms-card-cta');
+    if (cta) {
+      cta.scrollIntoView({ block: 'end', behavior: 'auto' });
+      // Bigger buffer so the whole button + breathing room sits above
+      // the chat input bar (was clipping by ~half).
+      threadEl.scrollTop += 60;
+    } else {
+      threadEl.scrollTop = threadEl.scrollHeight;
+    }
   });
 
   // Clear unread chip on the source row, since the user just read it
@@ -19230,9 +19999,56 @@ function stopLondonAmbient() {
     if (saved === 'live' || saved === 'off') window.GIFT_AI_MODE = saved;
   } catch (_) {}
 
-  const toggle = document.getElementById('dsGiftAiToggle');
-  const label  = document.getElementById('dsGiftAiLabel');
-  const close  = document.getElementById('dsClose');
+  const toggle    = document.getElementById('dsGiftAiToggle');
+  const label     = document.getElementById('dsGiftAiLabel');
+  const close     = document.getElementById('dsClose');
+  const jumpBtn   = document.getElementById('dsGiftJumpBtn');
+
+  // Quick shortcut: jump straight to the (GiftPick) beat in the
+  // current script and play from there. The script's own GiftPick
+  // directive opens the in-game camera/gallery picker — we don't
+  // need separate camera/gallery buttons, the script flow handles it.
+  if (jumpBtn) jumpBtn.addEventListener('click', () => {
+    if (typeof lines === 'undefined' || !Array.isArray(lines)) {
+      console.warn('[dev] no script loaded yet');
+      return;
+    }
+    let target = -1;
+    for (let i = 0; i < lines.length; i++) {
+      if (lines[i] && lines[i].type === 'giftpick') { target = i; break; }
+    }
+    if (target === -1) {
+      console.warn('[dev] no (GiftPick) directive in current script');
+      return;
+    }
+    // Pre-roll bg/ui state-updates so the visual context matches.
+    if (typeof applyDialogState === 'function') {
+      for (let i = 0; i < target; i++) {
+        const ev = lines[i];
+        if (ev && ev.type === 'state-update' && ev.updates) {
+          applyDialogState(ev.updates);
+        }
+      }
+    }
+    idx = target;
+    document.getElementById('devSettings').setAttribute('aria-hidden', 'true');
+    document.body.classList.remove('dev-settings-on');
+    // Drop any other screens that might be on top (intro, casting,
+    // map, gift sheet, etc.) so we land cleanly on the giftpick UI.
+    document.body.classList.remove(
+      'flow-intro','flow-form','flow-loading','flow-survey',
+      'flow-gallery','flow-addself','flow-final',
+      'flow-date','flow-map','choosing','exploring',
+      'inObjectImage','inObjectChar','pickingAction','gift-picking'
+    );
+    if (typeof renderLine === 'function') renderLine();
+    else console.warn('[dev] renderLine not defined');
+    // Re-show the dev settings shortly after — easy to re-trigger.
+    setTimeout(() => {
+      document.body.classList.add('dev-settings-on');
+      document.getElementById('devSettings').setAttribute('aria-hidden', 'false');
+    }, 800);
+  });
 
   function syncLabel() {
     const live = window.GIFT_AI_MODE === 'live';
@@ -19743,8 +20559,8 @@ function renderStore() {
   if (activeStoreTab === 'guests') {
   buildSection('Guests', GUESTS_STORE);
   } else {
-  buildSection('Cities', CITIES_STORE);
   buildSection('Themes', THEMES_STORE);
+  buildSection('Cities', CITIES_STORE);
   }
 }
 function onStoreItemClick(item) {
@@ -23084,20 +23900,47 @@ function _collectAiBlocks(events, out) {
 }
 
 // Convert AI worker response lines [{ speaker, text }] into engine
-// 'line' events shaped exactly like parseLine output.
+// 'line' events shaped exactly like parseLine output. ALSO emits
+// state-update events between speaker tier changes so each line
+// renders in the right UI mode:
+//   narrative  → ui:narrative   (bottom narrative bar)
+//   inner      → ui:inner-small (small overlay + portrait)
+//   cast       → ui:cast-large  (full character on stage)
+// Without these, the AI's mixed-cast output would render every
+// line in whatever ui mode was last set, stacking all UIs on top
+// of each other.
+function _aiSpeakerUi(speaker) {
+  if (!speaker) return null;
+  const s = speaker.toLowerCase();
+  if (s === 'narrative') return 'narrative';
+  if (typeof INNER !== 'undefined' && INNER && INNER.has && INNER.has(s)) return 'inner-small';
+  // Cast members + anything else (dog, joy, boy, girl, npc names).
+  return 'cast-large';
+}
+
 function _aiLinesToEvents(arr) {
   if (!Array.isArray(arr)) return [];
-  return arr
-    .filter(o => o && typeof o.speaker === 'string' && typeof o.text === 'string' && o.text.trim())
-    .map(o => ({
+  const out = [];
+  let lastUi = null;
+  for (const o of arr) {
+    if (!o || typeof o.speaker !== 'string' || typeof o.text !== 'string' || !o.text.trim()) continue;
+    const speaker = o.speaker.toLowerCase();
+    const ui = _aiSpeakerUi(speaker);
+    if (ui && ui !== lastUi) {
+      out.push({ type: 'state-update', updates: { ui } });
+      lastUi = ui;
+    }
+    out.push({
       type: 'line',
-      speaker: o.speaker.toLowerCase(),
+      speaker,
       text: o.text,
       points: typeof o.points === 'number' ? o.points : 0,
       cutscene: null,
       fromAI: true,
       aiId: o._aiId || null,
-    }));
+    });
+  }
+  return out;
 }
 
 // Fire one worker request for an AI block. Caches on completion.
@@ -23120,17 +23963,40 @@ async function _fetchAiBlock(block) {
     return;
   }
   try {
+    // Pull live context so the AI knows the player's name + scene +
+    // the currently picked gift (if any) — without this, lines about
+    // "the guitar she just unwrapped" can't reference the actual
+    // object the player gave.
+    const gs = window.giftState || null;
+    const ctx = {
+      scene: (window.activePack && window.currentVenue) || null,
+      player_name: (window.introProfile && window.introProfile.name) || null,
+    };
+    if (gs && gs.name) {
+      // Strip leading article so the AI gets a clean noun ("guitar"
+      // instead of "a guitar") and can phrase it naturally.
+      ctx.gift = String(gs.name).replace(/^(?:a|an|the)\s+/i, '');
+      ctx.gift_full = gs.name;
+      // Rich description from vision (color, material, condition,
+      // brand…). The AI prompt prefers this — it's what makes the
+      // dialog feel observed, not generic.
+      if (gs.description && gs.description !== gs.name) {
+        ctx.gift_description = gs.description;
+      }
+    }
     const r = await fetch(AI_PORTRAIT_PROXY.replace(/\/+$/, '') + '/ai-dialog', {
       method: 'POST',
-      headers: { 'content-type': 'application/json' },
+      headers: {
+        'content-type': 'application/json',
+        // Worker rejects all calls without an identifying header
+        // (origin gating + per-user rate-limit + R2 prefix).
+        'X-User-Id': (typeof getUserId === 'function') ? getUserId() : 'anon',
+      },
       body: JSON.stringify({
         id,
         attrs: block.attrs || {},
         placeholder: placeholderLines,
-        context: {
-          scene: (window.activePack && window.currentVenue) || null,
-          player_name: (window.introProfile && window.introProfile.name) || null,
-        },
+        context: ctx,
       }),
     });
     if (!r.ok) {
@@ -23140,9 +24006,15 @@ async function _fetchAiBlock(block) {
     const data = await r.json();
     const events = _aiLinesToEvents(data.lines || data || []);
     if (events.length) {
-      cache[id] = { status: 'ready', events };
+      cache[id] = {
+        status: 'ready',
+        events,
+        // Stamp the gift name we sent so the renderer can detect
+        // "request was fired before gift was picked" and re-fire.
+        giftUsed: ctx.gift || null,
+      };
     } else {
-      cache[id] = { status: 'error', error: 'empty response' };
+      cache[id] = { status: 'error', error: 'empty response', giftUsed: ctx.gift || null };
     }
   } catch (e) {
     cache[id] = { status: 'error', error: String(e && e.message || e) };
@@ -23400,10 +24272,33 @@ async function _runGiftRoundtrip(file) {
     // Soft fallback: accept it with a generic name.
     recog = { name: 'a thoughtful little something', portable: true, rejection: null };
   }
-  window.giftState.name      = recog.name;
-  window.giftState.portable  = !!recog.portable;
-  window.giftState.rejection = recog.rejection || null;
-  window.giftState.scene     = recog.scene || null;
+  window.giftState.name        = recog.name;
+  // Rich 10-20 word description used by the AI dialog context so the
+  // chorus can riff on color/material/condition/brand, not just the
+  // bare noun. Falls back to name if vision didn't return it (older
+  // worker versions).
+  window.giftState.description = recog.description || recog.name;
+  window.giftState.portable    = !!recog.portable;
+  window.giftState.rejection   = recog.rejection || null;
+  window.giftState.scene       = recog.scene || null;
+
+  // Now that we KNOW what the gift is, kick off fresh AI requests
+  // for every (AI:id) block in the script. The original prefetch
+  // (fired on script load) had no gift context — those responses
+  // were generic. By the time the player reaches the AI block,
+  // these gift-aware requests should already be back, so no wait.
+  if (typeof prefetchAiBlocks === 'function' &&
+      Array.isArray(lines) && recog.portable) {
+    // Drop existing cache entries so prefetch refires with fresh
+    // (now gift-aware) context for every block.
+    if (window._aiDialogCache) {
+      for (const k of Object.keys(window._aiDialogCache)) {
+        delete window._aiDialogCache[k];
+      }
+    }
+    console.log('[ai-block] gift identified — refetching all AI blocks with gift=', recog.name);
+    prefetchAiBlocks(lines, OBJECTS);
+  }
 
   if (!recog.portable) {
     window.giftState.status = 'rejected';
@@ -24045,90 +24940,71 @@ function revealGift() {
     renderLine();
     return;
   }
-  const paintScene = (url, isGenerated) => {
+  // ── New flow ──────────────────────────────────────────────────
+  // 1. Professore "trust his choice" line already played via
+  //    (GiftClosing) earlier in the script.
+  // 2. Here we splice in a small inner-small-style card with the
+  //    rendered gift photo on the left + an AI narrative line on
+  //    the right. The card is just a normal beat, so tap-to-advance
+  //    moves on naturally without us touching idx ourselves.
+  // 3. The script's NEXT directive (typically `[ui:cast-large]` +
+  //    "Joy: Now go…") then runs untouched — we no longer force
+  //    currentDialogState.ui to 'bubble' the way the old reveal did.
+  //
+  // If ComfyUI isn't ready, we SKIP the card entirely (no waiting,
+  // no spinner, no fallback raw photo). Player taps straight through
+  // (GiftReveal) to the next script line.
+
+  const haveImage = state.status === 'ready' && state.cleanedUrl;
+
+  if (!haveImage) {
     el.body.classList.remove('awaiting-gift');
-    if (typeof setNarrativeScene === 'function') {
-      // setNarrativeScene clears gift-scene by default, so we add it
-      // back AFTER the call. This way other (Scene:...) transitions
-      // later in the script auto-clear the contain+vignette layout.
-      setNarrativeScene(url);
-      el.body.classList.add('gift-scene');
-    } else {
-      const layer = document.getElementById('narrativeSceneLayer');
-      if (layer) {
-        layer.style.backgroundImage = `url("${url}")`;
-        if (el && el.body) {
-          el.body.classList.add('narrativeScene', 'gift-scene');
-        }
-      }
-    }
-    // Sync v2 state stack so the next dialog beat knows we're in a
-    // scene background with bubble-style UI. Without this, the
-    // following `Joy: Now go` would render under the previous beat's
-    // ui (e.g. inner-large) and look like a UI surprise.
-    if (typeof currentDialogState === 'object' && currentDialogState) {
-      currentDialogState.bg = 'scene=__giftReveal';
-      currentDialogState.ui = 'bubble';
-      if (typeof applyUiState === 'function') applyUiState('bubble');
-    }
+    console.log('[gift] reveal: image not ready (status=' + state.status +
+                ') — skipping card, advancing.');
     idx++;
     renderLine();
+    return;
+  }
+
+  // Have the rendered image — paint the small reveal card.
+  // `gift_narrative` comes from the worker's /gift-vision response if
+  // its prompt was extended to include it; otherwise we synthesise a
+  // template from the gift name so the beat still reads naturally.
+  // Trim a leading "a/an/the " from the recognized name so the
+  // template doesn't say "A a pop figure" — vision returns names
+  // like "a pop figure" or "the locket" which already include the
+  // article.
+  const rawName = (state.name || 'small thing').replace(/^(?:a|an|the)\s+/i, '');
+  const narrative = (state.scene && state.scene.gift_narrative) ||
+                    `A ${rawName}. Quietly chosen.`;
+  console.log('[gift-reveal] painting card. cleanedUrl=', state.cleanedUrl,
+              'objectUrl=', state.objectUrl, 'narrative=', narrative);
+
+  // Stash the URL so the renderer can paint it inline (we don't have
+  // a per-line gift slot in the line event shape, so this lives on
+  // the giftState).
+  state._revealCardUrl = state.cleanedUrl;
+
+  // Splice in: ui mode flip → narrative line. After the player taps
+  // through the narrative line, the next script event (whatever the
+  // writer placed after (GiftReveal)) plays untouched.
+  const stateUpdate = {
+    type: 'state-update',
+    updates: { ui: 'gift-reveal' },
   };
-
-  // Already done? Paint right away.
-  if (state.status === 'ready' && state.cleanedUrl) {
-    paintScene(state.cleanedUrl, true);
-    return;
-  }
-  // Worker finished but render failed (timeout / error) — fall back
-  // to the raw photo immediately rather than spinning for 60s.
-  if (state.status === 'ready' && !state.cleanedUrl) {
-    console.warn('[gift] worker returned ready with no cleanedUrl — falling back to raw photo');
-    paintScene(state.objectUrl, false);
-    return;
-  }
-  if (state.status === 'error') {
-    console.warn('[gift] worker errored — falling back to raw photo', state.error);
-    paintScene(state.objectUrl, false);
-    return;
-  }
-
-  // Still cooking — gate clicks, show a soft loader, and poll for up
-  // to 90s. ComfyUI Cloud cold-start can run 20-40s; the cap leaves
-  // room for slow runs without blocking forever on a stuck job.
-  el.body.classList.add('awaiting-gift');
-  console.log('[gift] reveal waiting on ComfyUI…', state.status);
-
-  const started = performance.now();
-  const tick = () => {
-    // Player navigated away from this beat (e.g. restarted) — abort.
-    if (!lines[idx] || lines[idx].type !== 'giftreveal') {
-      el.body.classList.remove('awaiting-gift');
-      return;
-    }
-    if (state.status === 'ready' && state.cleanedUrl) {
-      console.log('[gift] reveal ready', state.cleanedUrl);
-      paintScene(state.cleanedUrl, true);
-      return;
-    }
-    if (state.status === 'ready' && !state.cleanedUrl) {
-      console.warn('[gift] worker came back ready with no URL — falling back');
-      paintScene(state.objectUrl, false);
-      return;
-    }
-    if (state.status === 'error') {
-      console.warn('[gift] worker errored mid-wait — falling back', state.error);
-      paintScene(state.objectUrl, false);
-      return;
-    }
-    if (performance.now() - started > 90000) {
-      console.warn('[gift] reveal timed out, falling back to raw photo');
-      paintScene(state.objectUrl, false);
-      return;
-    }
-    setTimeout(tick, 400);
+  const narrativeLine = {
+    type: 'line',
+    speaker: 'narrative',
+    text: narrative,
+    points: 0,
+    cutscene: null,
+    fromAI: true,
+    kind: 'gift_reveal_narrative',
+    _giftRevealUrl: state.cleanedUrl,
   };
-  tick();
+  lines.splice(idx, 1, stateUpdate, narrativeLine);
+  el.body.classList.remove('awaiting-gift');
+  renderLine();
 }
 
 // ---- iOS-style drag handler for the final-screen bottom sheet ----

@@ -1470,7 +1470,12 @@ const INSERT_TEMPLATES = {
 
   // Generic AI dialog block — placeholder lines stay; if AI returns
   // for `myid`, those lines splice in instead at render time.
-  'ai-block':           '(AI:myid)\nMike: placeholder line\n(EndAI)\n',
+  // Attrs:
+  //   mood=nostalgic    → tone hint passed to the prompt
+  //   length=8          → target line count (narrative + inner voice
+  //                        + cast combined). Without it, AI matches
+  //                        the placeholder's line count exactly.
+  'ai-block':           '(AI:myid mood=tender length=6)\nMike: placeholder line\n(EndAI)\n',
 
   // Object blocks
   'object-image':       '(Object:myobject image=file.png)\nNarrative: \n',
