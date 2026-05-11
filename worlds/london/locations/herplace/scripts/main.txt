@@ -252,29 +252,13 @@ Narrative: Iris sits first. Mike follows, carefully normal.
 [ui:inner-small]
 Giulietta: He's here. He's really here.
 Alfa: Keep your face steady. Don't smile too wide.
-Trilli: Too late. The face has opinions.
-Scheggia: Watch him. He collects details when nervous.
-[ui:bubble]
-Girl: There. Much better.
-Boy: The couch?
-Girl: You. Less doorway-shaped.
-Boy: I was doing my best doorway.
-Girl: It showed.
-[ui:inner-small]
-Eros: Good. Banter. We have banter.
-Valium: We have survived furniture.
-Romeo: She moved us further inside her world.
 Valium: She moved us to a couch. Calm down.
 [ui:bubble]
 Girl: So.
 Boy: So.
-Girl: Did the flat give you enough homework?
-Boy: I tried not to revise too loudly.
 Girl: You have a very investigative face.
 Boy: That's just panic with cheekbones.
 [ui:inner-small]
-Trilli: Panic with cheekbones is not bad.
-Scheggia: The beard is doing half the cheekbone work.
 Alfa: He admitted it. Good.
 Giulietta: Let him keep the joke. He's safer inside jokes.
 [ui:bubble]
@@ -327,45 +311,25 @@ Boy: Dangerous question.
 
 // ---- Movie section ----
 [ui:bubble]
-Girl: So what would you rather know?
-Boy: About you?
-Girl: Unless you've got questions for the lamp.
-Boy: The lamp and I are done.
-Girl: Sensible.
 Boy: I walked past the old cinema on the way.
 Girl: Which one?
 Boy: The one with the broken blue sign.
 [ui:inner-small]
 Trilli: Ohhh, the cinema.
-Giulietta: He remembers. He actually remembers.
-Scheggia: Careful. Memories make people look better than they were.
 Alfa: Let the memory in. Don't hand it the keys.
 [ui:bubble]
 Girl: I can't believe that's still standing.
 Boy: Barely. Same sign. Same tragic carpet.
-Girl: And the little side door?
-Boy: Still there.
-Girl: We used to sneak in through that.
-Boy: You used to sneak in. I followed nervously.
-Girl: You were very committed to looking casual.
-Boy: I had no talent for crime.
-Girl: You had excellent guilty posture.
 
 [ui:inner-small]
-Giulietta: Say it. Say Tuesday.
-Trilli: Tuesday cinema. Tuesday cinema.
 Scheggia: Don't make plans because a memory behaved.
 Alfa: Make the plan. Keep it light.
 [ui:bubble]
 Girl: We should go.
 Boy: To the cinema?
-Girl: Some Tuesday. Bad seats, worse popcorn.
-Boy: That's a very specific dream.
 Girl: I'm a very specific woman. (+8)
 [ui:inner-small]
 Valium: Breathe. This one lands.
-Eros: Tuesday exists. We have a sequel.
-Romeo: A future has entered quietly.
 Professore: Accept without grabbing it.
 
 // ---- Choice 3: accept the invite ----
@@ -403,8 +367,6 @@ Professore: Accept without grabbing it.
 Girl: Cheers, by the way.
 Boy: Cheers. To Tuesday nights.
 [ui:inner-small]
-Giulietta: That was our moment. Hold onto it.
-Scheggia: Don't hold too tight. You'll bruise it.
 Alfa: Good. He came closer without moving.
 
 // ---- Phone call ----
@@ -416,10 +378,6 @@ Girl: Sorry, give me a sec.
 Narrative: She picks up and half-turns away.
 [ui:inner-small]
 Eros: Who's calling at this hour?
-Valium: Don't lean in. Give her space.
-Romeo: Trust is also what you don't take.
-Professore: Tone tells you more than words.
-
 
 // ---- Choice 4: listen or look away ----
 [ui:multi]
@@ -435,13 +393,10 @@ Professore: Tone tells you more than words.
   Girl: Tess. Yeah, I'm fine.
   [ui:inner-small]
   Eros: Tess. Name acquired.
-  Valium: Please don't say acquired.
-  Professore: A name is not a trophy.
   [ui:bubble]
   Girl: No, he's here now.
   [ui:inner-small]
   Scheggia: He's quiet. Too quiet.
-  Trilli: Don't look at him. You'll smile.
   Alfa: Finish the call. Don't let the room split.
   [ui:bubble]
   Girl: I'll tell you tomorrow. Promise.
@@ -451,7 +406,6 @@ Professore: Tone tells you more than words.
   Girl: Sorry. Where were we?
   [ui:inner-small]
   Romeo: Tess. We learned a name. (+10)
-  Valium: We also learned we are nosy.
 (EndIf)
 
 (IfChoice:1)
@@ -484,58 +438,18 @@ Professore: Tone tells you more than words.
 [bg:scene=narrativescene01.jpg] [tr:softCrossfade] [ui:bubble]
 Girl: Where were we?
 Boy: Tuesday. The cinema.
-Girl: Right. The glamorous future.
-Boy: Sticky floor. Bad popcorn. Fluorescent toilets.
-Girl: You really know how to court a woman.
-Boy: I was saving the broken armrests.
-Girl: Don't spoil me all at once.
 [ui:inner-small]
-Trilli: He came back to us.
-Giulietta: He didn't make the call bigger than the room.
-Scheggia: Good. I hate when men chase locked doors.
 Alfa: The night continues. Let it.
 [ui:bubble]
 Girl: I haven't been on a proper cinema date in ages.
-Boy: What's proper?
-Girl: Someone saves you the good seat.
-Boy: There's a good seat?
-Girl: There is if the other person gets the bad one.
-Boy: Noble. Feudal.
 Girl: Romantic, if marketed correctly.
 [ui:inner-small]
-Eros: Say you'll take the bad seat.
-Valium: That is not a legal contract.
-Romeo: Offer it anyway.
 Professore: Generosity is small before it is grand.
 [ui:bubble]
-Boy: I'll take the bad seat.
+Boy: I'll take the best seats.
 Girl: I know.
 Boy: You know?
-Girl: You have bad-seat energy.
-Boy: That's devastating.
-Girl: No. It's useful.
-
-[ui:narrative]
-Narrative: Her laugh fades slowly. The room doesn't rush to fill itself.
-[ui:inner-small]
-Giulietta: There it is. The quiet part.
-Trilli: Say something. No, don't. Wait.
-Scheggia: If he ruins this with a joke, I leave the body.
-Alfa: Let him feel the gap.
-[ui:bubble]
-Girl: You're quieter now.
-Boy: I was trying not to perform the next sentence.
-Girl: That's new.
-Boy: For both of us.
-[ui:inner-small]
-Eros: Move closer.
-Valium: Stay alive.
-Romeo: Ask with your whole face.
-Professore: Do not steal the moment. Enter it.
-[ui:narrative]
-Narrative: She tilts her head and just looks at him. And keeps looking.
-[ui:bubble]
-Girl: Well...
+Girl: You have good-seat energy.
 Girl: Now what?
 
 // ---- Choice 5: the moment ----
@@ -569,8 +483,6 @@ Professore: Heads, we commit. Tails, we retreat.
 [ui:inner-small]
 Professore: Heads.
 Eros: Move. Now.
-Valium: Slowly. Please discover dignity.
-Romeo: Go as yourself. Not as a performance.
 
 // ---- The hug ----
 [bg:scene=hugscene.jpg] [tr:softCrossfade] [ui:narrative]
@@ -582,9 +494,6 @@ Girl: Oh.
 Narrative: Iris stiffens for half a second.
 [ui:inner-small]
 Scheggia: Wait. What is he doing?
-Trilli: Is this a kiss? Is this a fall? What is this?
-Giulietta: No. It's softer than that.
-Alfa: Hold. Don't pull away yet.
 [ui:narrative]
 Narrative: Mike doesn't kiss her. He just holds her.
 [ui:bubble]
@@ -593,10 +502,7 @@ Girl: I do.
 Boy: You do?
 Girl: You ran out of clever.
 [ui:inner-small]
-Valium: Fair.
 Eros: Painful, but fair.
-Romeo: She understood the gesture before he did.
-Professore: Good. The body spoke plainly.
 [ui:narrative]
 Narrative: Her arms find their way around his shoulders.
 [ui:bubble]
@@ -605,30 +511,21 @@ Boy: That's probably the blazer.
 Girl: The blazer is very emotional.
 Boy: It has been a long evening.
 Girl: For the blazer?
-Boy: For all of us.
 
 [ui:inner-small]
 Giulietta: She stayed.
 Trilli: She stayed and she smiled. We are alive.
-Scheggia: Don't celebrate. Don't scare it.
-Alfa: He gave us awkward honesty. We can work with that.
 [ui:bubble]
 Girl: Look at me.
-Boy: Dangerous request.
-Girl: Mike.
 Narrative: He looks at her.
 Girl: Better.
 Boy: Better?
 Girl: You disappear when you panic.
 Boy: I was trying to be normal.
-Girl: Terrible idea.
-Boy: I'm learning.
 [ui:narrative]
 Narrative: Iris shifts closer, still inside the hug.
 [ui:inner-small]
 Eros: Oh.
-Valium: Ah. The situation has evolved.
-Romeo: She is answering.
 Professore: Do not rush the answer.
 [ui:bubble]
 Girl: You can stop apologising now.

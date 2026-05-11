@@ -16702,17 +16702,24 @@ window.devJumpToScene = function(tag) {
       }
     }
   }
-  // Drop any flow / overlay screens that might block the jump landing.
+  // Light cleanup — only the overlay states that would block a fresh
+  // beat from rendering. We DO NOT touch narrativeScene / cutscene-active
+  // / scene-inner here because the target event itself sets those via
+  // its bracket directives. Over-clearing was causing the engine to
+  // wander after a few taps.
   if (el.body) {
     el.body.classList.remove(
       'inner','inObjectImage','inObjectChar','exploring','choosing',
-      'pickingAction','cutscene-active','gift-scene','narrativeScene','scene-inner',
+      'pickingAction','gift-scene',
       'flow-intro','flow-form','flow-loading','flow-survey','flow-gallery',
       'flow-addself','flow-final','flow-date','flow-map'
     );
   }
-  if (typeof clearCutscene === 'function') clearCutscene();
-  if (typeof clearNarrativeScene === 'function') clearNarrativeScene();
+  // Reset choice gate so stale picks don't make wrong (IfChoice:N)
+  // branches fire after the jump.
+  if (typeof lastChosenIdx !== 'undefined') {
+    try { lastChosenIdx = -1; } catch (_) {}
+  }
   idx = target;
   if (typeof renderLine === 'function') renderLine();
   console.log('[dev-jump] →', tag, 'event idx:', target);
