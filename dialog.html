@@ -16659,6 +16659,66 @@ function buildWriteQuickPickRow(innerOpts) {
 // Resets minimal state, sets the couch scene background, and fires
 // the 4-option choice (3 inner voices + Write) directly.
 // ============================================================
+// Dev jump shortcut — finds a notable event in the current script
+// (explore phase / narrative scene) and parks idx there. Lets the
+// wrapper buttons skip straight into a beat without scrubbing through
+// the whole intro.
+//
+//   tag = 'explore'   → first (Explore:N) event
+//   tag = 'couch'     → first state-update that switches bg to a
+//                       narrativescene image (the couch beat)
+window.devJumpToScene = function(tag) {
+  if (!Array.isArray(lines) || !lines.length) {
+    console.warn('[dev-jump] script not loaded');
+    return false;
+  }
+  let target = -1;
+  if (tag === 'explore') {
+    for (let i = 0; i < lines.length; i++) {
+      if (lines[i] && lines[i].type === 'explore') { target = i; break; }
+    }
+  } else if (tag === 'couch' || tag === 'scene') {
+    // Look for the first bg state-update that names a scene file
+    // (e.g. narrativescene01.jpg). That's the couch beat in london/herplace.
+    for (let i = 0; i < lines.length; i++) {
+      const ev = lines[i];
+      if (ev && ev.type === 'state-update' && ev.updates && typeof ev.updates.bg === 'string'
+          && /^scene\s*=/i.test(ev.updates.bg)) {
+        target = i;
+        break;
+      }
+    }
+  }
+  if (target === -1) {
+    console.warn('[dev-jump] no event found for tag:', tag);
+    return false;
+  }
+  // Pre-roll bg/ui state-updates so visual context matches.
+  if (typeof applyDialogState === 'function') {
+    for (let i = 0; i < target; i++) {
+      const ev = lines[i];
+      if (ev && ev.type === 'state-update' && ev.updates) {
+        applyDialogState(ev.updates);
+      }
+    }
+  }
+  // Drop any flow / overlay screens that might block the jump landing.
+  if (el.body) {
+    el.body.classList.remove(
+      'inner','inObjectImage','inObjectChar','exploring','choosing',
+      'pickingAction','cutscene-active','gift-scene','narrativeScene','scene-inner',
+      'flow-intro','flow-form','flow-loading','flow-survey','flow-gallery',
+      'flow-addself','flow-final','flow-date','flow-map'
+    );
+  }
+  if (typeof clearCutscene === 'function') clearCutscene();
+  if (typeof clearNarrativeScene === 'function') clearNarrativeScene();
+  idx = target;
+  if (typeof renderLine === 'function') renderLine();
+  console.log('[dev-jump] →', tag, 'event idx:', target);
+  return true;
+};
+
 window.devShowWriteChoice = function() {
   try {
     if (el.body) {

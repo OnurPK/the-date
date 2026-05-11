@@ -438,6 +438,8 @@
   <a class="act-btn primary" id="btnEditor" href="editor.html" target="_blank" rel="noopener">✎ Open Editor</a>
   <button class="act-btn" id="btnDashboard" type="button">⊙ London Dashboard</button>
   <button class="act-btn" id="btnEpisode" type="button">▶︎ Start Her Place</button>
+  <button class="act-btn" id="btnExplore" type="button">⌖ Explore</button>
+  <button class="act-btn" id="btnCouch" type="button">⊜ Couch</button>
   <button class="act-btn" id="btnWriteChoice" type="button">✎ Write Choice</button>
   <button class="act-btn" id="btnScreenshot" type="button">📷 Screenshot</button>
 </div>
@@ -507,6 +509,33 @@
           console.warn('[write-choice] devShowWriteChoice not available — reload the iframe?');
         }
       } catch (e) { console.warn('[write-choice]', e); }
+    });
+  }
+
+  // ----- Dev shortcut — jump straight to the (Explore:N) phase. The
+  // engine's devJumpToScene helper finds the event in the current
+  // script's main array and parks idx there.
+  const btnExplore = document.getElementById('btnExplore');
+  if (btnExplore) {
+    btnExplore.addEventListener('click', () => {
+      try {
+        const w = frame.contentWindow;
+        if (typeof w.devJumpToScene === 'function') w.devJumpToScene('explore');
+        else console.warn('[explore] devJumpToScene not available');
+      } catch (e) { console.warn('[explore]', e); }
+    });
+  }
+
+  // ----- Dev shortcut — jump straight to the couch narrative scene
+  // (first bg state-update that targets a "scene=" image).
+  const btnCouch = document.getElementById('btnCouch');
+  if (btnCouch) {
+    btnCouch.addEventListener('click', () => {
+      try {
+        const w = frame.contentWindow;
+        if (typeof w.devJumpToScene === 'function') w.devJumpToScene('couch');
+        else console.warn('[couch] devJumpToScene not available');
+      } catch (e) { console.warn('[couch]', e); }
     });
   }
 
