@@ -1,0 +1,201 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Sketch prompt builder — P&P</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital@0;1&family=Inter:wght@400;600;700;800&family=Lora:wght@500;600&family=Playfair+Display:ital,wght@0,600;1,600&display=swap" rel="stylesheet">
+<style>
+  :root{ --ink:#3a2e46; --ink-soft:#6a5d78; --rose:#c0466a; --rose2:#e0668a; --violet:#8b7bd8; }
+  *{ box-sizing:border-box; -webkit-tap-highlight-color:transparent }
+  html,body{ margin:0; height:100%; background:#0b0b0d; font-family:"Inter",system-ui,sans-serif }
+  body{ display:grid; place-items:center }
+  .app{ position:relative; width:412px; height:892px; overflow:hidden; border-radius:38px; background:#141018;
+    box-shadow:0 40px 120px rgba(0,0,0,.6); display:flex; flex-direction:column }
+  .bg{ position:absolute; inset:0; background:radial-gradient(70% 45% at 60% 20%, rgba(150,110,140,.3), transparent 70%), linear-gradient(180deg,#241a26,#160f18 60%,#0e0a10) }
+
+  /* ---- top: the reference sketch pad (becomes the result) ---- */
+  .stage{ position:relative; z-index:2; padding:22px 20px 6px }
+  .pad-wrap{ position:relative; border-radius:8px; aspect-ratio:1/.82; overflow:hidden;
+    background:linear-gradient(135deg,#f7f2e9,#ece2ce); box-shadow:0 16px 40px rgba(0,0,0,.5), inset 0 0 0 1px rgba(255,255,255,.6) }
+  #pad{ position:absolute; inset:0; width:100%; height:100%; touch-action:none; cursor:crosshair }
+  .pad-wrap .hint{ position:absolute; top:10px; left:12px; font-family:"EB Garamond",serif; font-style:italic; color:#a89b86; font-size:12px; pointer-events:none }
+  .pad-wrap.hasink .hint{ display:none }
+  .result{ position:absolute; inset:0; display:none; place-items:center; background:linear-gradient(135deg,#f7f2e9,#ece2ce) }
+  .result.on{ display:grid } .result img{ max-width:100%; max-height:100%; display:block }
+  .shimmer{ position:absolute; inset:0; opacity:0; pointer-events:none; background:linear-gradient(110deg, transparent 30%, rgba(255,255,255,.55) 50%, transparent 70%); background-size:220% 100% }
+  .pad-wrap.gen .shimmer{ opacity:1; animation:sh 1s linear infinite } @keyframes sh{ to{ background-position:-220% 0 } }
+  .ink{ stroke:#3a2c1e; fill:none; stroke-width:2; stroke-linecap:round; stroke-linejoin:round } .ink.t{ stroke-width:1.3; opacity:.7 }
+
+  /* drawing toolbar */
+  .tools{ position:absolute; left:50%; bottom:8px; transform:translateX(-50%); z-index:3; display:flex; align-items:center; gap:4px;
+    padding:4px; border-radius:12px; background:rgba(30,22,30,.6); -webkit-backdrop-filter:blur(8px); backdrop-filter:blur(8px) }
+  .tl{ width:34px; height:30px; border-radius:9px; display:grid; place-items:center; cursor:pointer; color:rgba(255,255,255,.75) }
+  .tl.on{ background:rgba(255,255,255,.2); color:#fff }
+  .tl svg{ width:17px; height:17px }
+  .sizes{ display:flex; align-items:center; gap:3px; padding:0 4px }
+  .sz{ border-radius:50%; background:rgba(255,255,255,.55); cursor:pointer } .sz.on{ background:#fff; box-shadow:0 0 0 2px rgba(255,255,255,.35) }
+  .divide{ width:1px; height:18px; background:rgba(255,255,255,.2) }
+  .cap{ margin-top:8px; font-family:"EB Garamond",serif; font-style:italic; color:rgba(255,255,255,.5); font-size:12px; text-align:center; min-height:15px }
+
+  /* ---- builder sheet ---- */
+  .sheet{ position:relative; z-index:2; margin-top:auto;
+    background:linear-gradient(180deg, rgba(250,248,255,.94), rgba(244,241,252,.98));
+    -webkit-backdrop-filter:blur(30px) saturate(160%); backdrop-filter:blur(30px) saturate(160%);
+    border-top-left-radius:26px; border-top-right-radius:26px; box-shadow:0 -20px 50px rgba(30,16,40,.4);
+    padding:16px 20px calc(16px + env(safe-area-inset-bottom)) }
+  .sheet .lbl{ font-family:"Inter"; font-size:10px; font-weight:800; letter-spacing:.18em; text-transform:uppercase; color:#9a90a2; margin-bottom:11px }
+  .prompt{ font-family:"Lora",Georgia,serif; font-weight:500; font-size:20px; line-height:1.8; color:var(--ink); max-height:150px; overflow-y:auto }
+  .tok{ display:inline; cursor:pointer; color:#a83a63; font-weight:600; background:rgba(224,102,138,.13); border-radius:6px; padding:2px 9px; margin:0 1px;
+    box-decoration-break:clone; -webkit-box-decoration-break:clone; transition:background .15s }
+  .tok:active{ opacity:.6 } .tok.flash{ background:rgba(224,102,138,.32) }
+  .tok .rm{ display:inline-flex; margin-left:6px; opacity:.5; font-style:normal; font-weight:800 }
+  .add{ display:inline-flex; align-items:center; gap:5px; vertical-align:middle; margin-left:6px; cursor:pointer; padding:3px 11px 3px 8px; border-radius:999px;
+    background:#fff; border:1px solid rgba(139,123,216,.4); color:#6a5aa8; font-family:"Inter"; font-size:11px; font-weight:800 }
+  .add svg{ width:13px; height:13px } .add.hide{ display:none }
+  .row{ display:flex; align-items:center; gap:10px; margin-top:16px }
+  .shuffle{ width:48px; height:48px; flex:none; border-radius:13px; display:grid; place-items:center; cursor:pointer; background:#fff; border:1px solid rgba(90,72,45,.2); color:var(--ink-soft) } .shuffle svg{ width:20px; height:20px }
+  .draw{ flex:1; height:48px; border:none; border-radius:13px; cursor:pointer; color:#fff; font-family:"Inter"; font-size:14px; font-weight:800; letter-spacing:.02em;
+    background:linear-gradient(135deg,var(--rose2),var(--violet)); box-shadow:0 8px 20px rgba(139,123,216,.4); display:flex; align-items:center; justify-content:center; gap:9px } .draw svg{ width:18px; height:18px }
+  .draw[disabled]{ opacity:.6 }
+</style>
+</head>
+<body>
+  <div class="app">
+    <div class="bg"></div>
+    <div class="stage">
+      <div class="pad-wrap" id="padWrap">
+        <canvas id="pad"></canvas>
+        <div class="hint">Rough it in — your sketch guides the drawing.</div>
+        <div class="result" id="result"></div>
+        <div class="shimmer"></div>
+        <div class="tools">
+          <div class="tl on" id="tPen" title="Pen"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20c6-2 8-6 12-10 2-2 3-4 3-5 0 0-3 1-5 3-4 4-8 6-10 12z"/><path d="M6 18l3-1"/></svg></div>
+          <div class="tl" id="tEraser" title="Eraser"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 15l7-7 8 8-4 4H8z"/><path d="M9 20h11"/></svg></div>
+          <div class="divide"></div>
+          <div class="sizes" id="sizes">
+            <div class="sz" data-s="2.5" style="width:6px;height:6px"></div>
+            <div class="sz on" data-s="5" style="width:9px;height:9px"></div>
+            <div class="sz" data-s="9" style="width:13px;height:13px"></div>
+          </div>
+          <div class="divide"></div>
+          <div class="tl" id="tClear" title="Clear"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14"/></svg></div>
+        </div>
+      </div>
+      <div class="cap" id="cap"></div>
+    </div>
+
+    <div class="sheet">
+      <div class="lbl">Compose the sketch</div>
+      <div class="prompt" id="prompt"></div>
+      <div class="row">
+        <div class="shuffle" id="shuffle" title="Surprise me"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M16 3h5v5M4 20l17-17M21 16v5h-5M15 15l6 6M4 4l5 5"/></svg></div>
+        <button class="draw" id="draw"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19l7-7-3-3-7 7v3z"/><path d="M15 8l3 3M5 20c1-3 2-4 3-5"/></svg> Draw it</button>
+      </div>
+    </div>
+  </div>
+
+<script>
+  // ================= P&P vocabulary =================
+  const SLOTS = {
+    framing: ['A portrait','A full-length study','A quiet scene','A wide view','A caricature'],
+    subject: ['of Mr Darcy','of Elizabeth Bennet','of Miss Bingley','of Mr Wickham','of Charlotte Lucas','of Jane Bennet','of Arabella','of the two of them','of the Netherfield ballroom','of the supper table','of the moonlit terrace'],
+    action:  ['at the pianoforte','reading a letter','turning to leave','mid-dance','watching from the edge','a fan half-raised','laughing behind a fan'],
+    mood:    ['with a guarded face','with a sly half-smile','with downcast eyes','caught mid-laugh','cold and composed','flushed and unsteady'],
+    where:   ['by candlelight','in the crowded ballroom','against tall dark windows','in half-shadow','on the cold terrace','among the supper silver'],
+    style:   ['in loose ink lines','in fine cross-hatching','in a Regency album hand','in soft graphite','quick and smudged'],
+  };
+  const ORDER = ['action','mood','where','style'];
+  const NEXTLABEL = { action:'action', mood:'mood', where:'place', style:'style' };
+  let chain = [ {cat:'framing',sel:0}, {cat:'subject',sel:0} ];
+  const $=id=>document.getElementById(id);
+  const nextCat=()=>ORDER.find(c=>!chain.some(s=>s.cat===c));
+
+  function render(){
+    const box=$('prompt'); box.innerHTML='';
+    chain.forEach((s,i)=>{
+      const opts=SLOTS[s.cat];
+      const tok=document.createElement('span'); tok.className='tok'; tok.textContent=opts[s.sel];
+      tok.addEventListener('click',(e)=>{ if(e.target.closest('.rm')) return; s.sel=(s.sel+1)%opts.length;
+        tok.classList.remove('flash'); render(); const t2=box.children[i*2]; });
+      if(i>=2){ const rm=document.createElement('span'); rm.className='rm'; rm.textContent='×';
+        rm.addEventListener('click',(e)=>{ e.stopPropagation(); chain.splice(i,1); render(); }); tok.appendChild(rm); }
+      box.appendChild(tok); box.appendChild(document.createTextNode(' '));
+    });
+    const nc=nextCat();
+    const add=document.createElement('span'); add.className='add'+(nc?'':' hide');
+    add.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg> '+(nc?NEXTLABEL[nc]:'');
+    add.addEventListener('click',()=>{ const c=nextCat(); if(c){ chain.push({cat:c,sel:0}); render(); } });
+    box.appendChild(add);
+  }
+  const promptText=()=>chain.map(s=>SLOTS[s.cat][s.sel]).join(' ')+'.';
+
+  $('shuffle').addEventListener('click',()=>{ chain.forEach(s=>{ s.sel=(s.sel+2+s.cat.length)%SLOTS[s.cat].length; }); render(); });
+
+  // ================= drawing pad =================
+  const pad=$('pad'), ctx=pad.getContext('2d'); let dpr=Math.min(window.devicePixelRatio||1,3);
+  function sizePad(){ const r=pad.getBoundingClientRect(); pad.width=r.width*dpr; pad.height=r.height*dpr; ctx.scale(dpr,dpr);
+    ctx.lineCap='round'; ctx.lineJoin='round'; }
+  let tool='pen', pen=5, drawing=false, hasInk=false, last=null;
+  function pos(e){ const r=pad.getBoundingClientRect(); return {x:(e.clientX-r.left), y:(e.clientY-r.top)}; }
+  function start(e){ drawing=true; last=pos(e); e.preventDefault(); }
+  function move(e){ if(!drawing) return; const p=pos(e);
+    ctx.globalCompositeOperation = tool==='eraser'?'destination-out':'source-over';
+    ctx.strokeStyle='#3a2c1e'; ctx.lineWidth = tool==='eraser'? pen*3 : pen;
+    ctx.beginPath(); ctx.moveTo(last.x,last.y); ctx.lineTo(p.x,p.y); ctx.stroke(); last=p;
+    if(tool==='pen'){ hasInk=true; $('padWrap').classList.add('hasink'); } e.preventDefault(); }
+  function end(){ drawing=false; }
+  pad.addEventListener('pointerdown',start); pad.addEventListener('pointermove',move);
+  window.addEventListener('pointerup',end); pad.addEventListener('pointerleave',end);
+  $('tPen').addEventListener('click',()=>{ tool='pen'; $('tPen').classList.add('on'); $('tEraser').classList.remove('on'); });
+  $('tEraser').addEventListener('click',()=>{ tool='eraser'; $('tEraser').classList.add('on'); $('tPen').classList.remove('on'); });
+  $('sizes').addEventListener('click',e=>{ const s=e.target.closest('.sz'); if(!s) return; pen=parseFloat(s.dataset.s);
+    [...document.querySelectorAll('.sz')].forEach(x=>x.classList.remove('on')); s.classList.add('on'); });
+  $('tClear').addEventListener('click',()=>{ ctx.clearRect(0,0,pad.width,pad.height); hasInk=false; $('padWrap').classList.remove('hasink'); backToPad(); });
+  function refDataURL(){ if(!hasInk) return null;
+    // flatten onto paper so the reference reads as ink-on-paper
+    const t=document.createElement('canvas'); t.width=pad.width; t.height=pad.height; const c=t.getContext('2d');
+    c.fillStyle='#f5efe2'; c.fillRect(0,0,t.width,t.height); c.drawImage(pad,0,0); return t.toDataURL('image/png'); }
+
+  // ================= generate (server → OpenAI, fallback placeholder) =================
+  const SK={ piano:'<svg width="66%" viewBox="0 0 140 120"><path class="ink" d="M20 96h96M28 96V70h84v26"/><path class="ink" d="M40 70v14M52 70v14M64 70v14M76 70v14M88 70v14M100 70v14"/><path class="ink" d="M64 66c-3-10-2-20 4-24 5 3 6 12 3 22"/><circle class="ink" cx="70" cy="34" r="7"/><path class="ink" d="M60 50c4-6 14-6 18 0"/></svg>',
+    letter:'<svg width="60%" viewBox="0 0 130 120"><circle class="ink" cx="60" cy="30" r="11"/><path class="ink" d="M44 48c6-8 26-8 32 0l2 40H42z"/><path class="ink" d="M52 66l30-6 2 14-30 6z"/></svg>',
+    portrait:'<svg width="58%" viewBox="0 0 120 120"><path class="ink" d="M35 100c-2-16 0-34 8-44 5-6 12-8 18-6"/><path class="ink" d="M60 40c9 0 15 6 15 16 0 12-4 30-9 44"/><circle class="ink" cx="52" cy="30" r="12"/><path class="ink" d="M42 20c4-8 16-9 22-3"/></svg>' };
+  function placeholder(){ const a=(chain.find(s=>s.cat==='action')||{}); const t=SLOTS.action[a.sel]||'';
+    return /piano/.test(t)?SK.piano : /letter/.test(t)?SK.letter : SK.portrait; }
+  function backToPad(){ $('result').classList.remove('on'); }
+  // Same hidden-key proxy the game uses for portraits: multipart → /v1/images/edits,
+  // model gpt-image-1, the rough sketch goes as image[] (the reference).
+  const PROXY = (typeof window!=='undefined' && window.AI_PORTRAIT_PROXY) || 'https://thedate-portrait.onur-377.workers.dev';
+  function userId(){ try{ let id=localStorage.getItem('thedate.user-id'); if(!id){ id='u-'+Math.random().toString(36).slice(2,10); localStorage.setItem('thedate.user-id',id);} return id; }catch(e){ return 'u-demo'; } }
+  window.__lastGen = null;
+  async function callServer(prompt, ref){
+    try{
+      const fd=new FormData();
+      fd.append('model','gpt-image-1'); fd.append('prompt', prompt);
+      fd.append('size','1024x1024'); fd.append('quality','high'); fd.append('n','1'); fd.append('output_format','png');
+      if(ref){ const blob=await (await fetch(ref)).blob(); fd.append('image[]', blob, 'reference.png'); }
+      const res=await fetch(PROXY,{method:'POST', headers:{'X-User-Id':userId()}, body:fd});   // worker injects the key; needs the id
+      window.__lastGen={status:res.status};
+      if(!res.ok){ window.__lastGen.body=(await res.text()).slice(0,220); throw new Error('proxy '+res.status); }
+      const data=await res.json();
+      const b64=data && data.data && data.data[0] && data.data[0].b64_json;
+      return b64 ? 'data:image/png;base64,'+b64 : (data && data.data && data.data[0] && data.data[0].url) || null;
+    }catch(e){ window.__lastGen=window.__lastGen||{}; window.__lastGen.err=''+e; return null; }
+  }
+  $('draw').addEventListener('click',async()=>{
+    const w=$('padWrap'); const btn=$('draw'); btn.disabled=true; w.classList.add('gen'); $('cap').textContent='';
+    const img = await callServer(promptText(), refDataURL());
+    w.classList.remove('gen'); btn.disabled=false;
+    if(img){ $('result').innerHTML='<img src="'+img+'">'; $('result').classList.add('on'); $('cap').textContent='“'+promptText()+'”'; }
+    else { $('result').innerHTML=placeholder(); $('result').classList.add('on');   // fallback + show WHY
+      const lg=window.__lastGen||{}; const why = lg.status ? ('proxy '+lg.status+(lg.body?(' · '+lg.body):'')) : (lg.err||'blocked');
+      $('cap').innerHTML='<span style="color:#ff9ab0">⚠ AI proxy unreachable — '+why.replace(/</g,'&lt;')+' · showing placeholder</span>'; }
+  });
+
+  addEventListener('load',()=>{ sizePad(); render(); });
+</script>
+</body>
+</html>

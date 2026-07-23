@@ -19,3 +19,9 @@ _config/*.local.*
 *.action-backup
 *.backup
 *.backup-music
+
+# Session working backups + scratch (added when pushing P&P work)
+*.bak-*
+*.before-nodes
+_to_delete/
+**/_to_delete/

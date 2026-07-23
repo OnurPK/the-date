@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Map → Zoom · Transition Studies</title>
+<style>
+  :root{ --ox:72%; --oy:61%; }           /* the High St pin position / zoom origin */
+  *{ box-sizing:border-box; -webkit-tap-highlight-color:transparent }
+  html,body{ margin:0; height:100%; background:#0d0b12; color:#efeaf6;
+    font-family:"Inter",system-ui,-apple-system,sans-serif }
+  .wrap{ min-height:100%; display:flex; flex-direction:column; align-items:center; gap:16px; padding:22px 16px 40px }
+  h1{ font-family:"Playfair Display",Georgia,serif; font-weight:700; font-size:21px; margin:2px 0 0; letter-spacing:.01em }
+  .sub{ font-size:12.5px; color:#a99fbb; margin:0; text-align:center; max-width:360px; line-height:1.5 }
+
+  /* tab bar */
+  .tabs{ display:flex; flex-wrap:wrap; gap:7px; justify-content:center; max-width:420px }
+  .tab{ border:1px solid rgba(255,255,255,.16); background:rgba(255,255,255,.05); color:#d9d2e6;
+    font-size:12px; font-weight:600; padding:8px 13px; border-radius:20px; cursor:pointer; transition:all .18s }
+  .tab:hover{ background:rgba(255,255,255,.1) }
+  .tab.on{ background:linear-gradient(120deg,#e0668a,#8b7bd8); color:#fff; border-color:transparent }
+
+  .desc{ font-size:12.5px; color:#c9c1d8; text-align:center; min-height:34px; max-width:380px; line-height:1.45 }
+  .desc b{ color:#fff }
+
+  /* phone frame */
+  .phone{ position:relative; width:352px; height:720px; border-radius:38px; overflow:hidden;
+    box-shadow:0 30px 80px rgba(0,0,0,.6), 0 0 0 9px #17131f, 0 0 0 11px #2a2333;
+    background:#1a1420; touch-action:manipulation }
+  .stage{ position:absolute; inset:0; overflow:hidden }
+
+  .layer{ position:absolute; inset:0; background-size:cover; background-position:center; will-change:transform,opacity,filter,clip-path }
+  .map{ background-image:url('worlds/pride-and-prejudice/map.jpg'); z-index:1 }
+  .street{ background-image:url('worlds/pride-and-prejudice/map_zoom01.jpeg'); z-index:2; opacity:0 }
+  /* the street image is a wide side-view; show its middle */
+  .street{ background-position:50% 60%; background-size:auto 100% }
+
+  /* the green High St pin with magnifier */
+  .pin{ position:absolute; left:var(--ox); top:var(--oy); transform:translate(-50%,-50%); z-index:5; cursor:pointer;
+    width:40px; height:40px; border-radius:50%; background:#6fe3c8; border:3px solid #fff;
+    box-shadow:0 0 0 1.5px rgba(0,0,0,.55), 0 0 0 6px rgba(111,227,200,.28), 0 4px 14px rgba(0,0,0,.6);
+    display:grid; place-items:center; animation:pinPulse 2.4s ease-in-out infinite }
+  .pin svg{ width:21px; height:21px }
+  @keyframes pinPulse{ 0%,100%{ transform:translate(-50%,-50%) scale(1) } 50%{ transform:translate(-50%,-50%) scale(1.09) } }
+  .stage.run .pin{ opacity:0; transition:opacity .18s; pointer-events:none }
+
+  /* zoom-view chrome that fades in once we're "inside" */
+  .zbar{ position:absolute; top:0; left:0; right:0; z-index:6; display:flex; align-items:center; gap:10px;
+    padding:16px 14px 24px; color:#fff; opacity:0; pointer-events:none;
+    background:linear-gradient(180deg,rgba(8,5,12,.55),transparent) }
+  .stage.done .zbar{ opacity:1; pointer-events:auto; transition:opacity .3s .15s }
+  .zback{ width:38px; height:38px; border-radius:50%; background:rgba(20,12,26,.55); border:1px solid rgba(255,255,255,.25);
+    display:grid; place-items:center; font-size:19px; cursor:pointer; flex:none }
+  .ztitle{ font-family:"Playfair Display",Georgia,serif; font-weight:700; font-size:22px }
+
+  .hint{ position:absolute; bottom:18px; left:50%; transform:translateX(-50%); z-index:5; font-size:11.5px;
+    color:rgba(255,255,255,.9); background:rgba(8,5,12,.5); padding:6px 13px; border-radius:20px; -webkit-backdrop-filter:blur(6px); backdrop-filter:blur(6px) }
+  .stage.run .hint{ opacity:0; transition:opacity .2s }
+
+  .btnrow{ display:flex; gap:10px }
+  .rbtn{ border:1px solid rgba(255,255,255,.16); background:rgba(255,255,255,.06); color:#e7e1f0; font-size:13px; font-weight:600;
+    padding:10px 18px; border-radius:12px; cursor:pointer }
+  .rbtn:hover{ background:rgba(255,255,255,.12) }
+
+  /* ============================================================= *
+   *  TRANSITIONS — each is triggered by adding .run to .stage      *
+   * ============================================================= */
+
+  /* 1 · Point Bloom — the street blooms open from the pin */
+  .t-bloom.run .street{ animation:bloom .6s cubic-bezier(.2,.75,.25,1) both; transform-origin:var(--ox) var(--oy) }
+  @keyframes bloom{ from{ opacity:0; transform:scale(.8) } 55%{ opacity:1 } to{ opacity:1; transform:scale(1) } }
+
+  /* 2 · Camera Dive — the map zooms INTO the pin, then the street is there */
+  .t-dive.run .map{ animation:diveMap .72s cubic-bezier(.5,0,.75,.4) both; transform-origin:var(--ox) var(--oy) }
+  @keyframes diveMap{ from{ transform:scale(1); opacity:1 } to{ transform:scale(2.7); opacity:0 } }
+  .t-dive.run .street{ animation:diveStreet .72s cubic-bezier(.2,.7,.3,1) both; transform-origin:var(--ox) var(--oy) }
+  @keyframes diveStreet{ 0%{ opacity:0; transform:scale(1.35) } 42%{ opacity:0 } 100%{ opacity:1; transform:scale(1) } }
+
+  /* 3 · Iris Reveal — a circle opens from the pin, revealing the street */
+  .t-iris.run .street{ animation:iris .7s ease-in-out both }
+  @keyframes iris{ from{ opacity:1; clip-path:circle(0% at var(--ox) var(--oy)) }
+    to{ opacity:1; clip-path:circle(150% at var(--ox) var(--oy)) } }
+
+  /* 4 · Depth Punch — map pushes back & blurs, street rushes forward into focus */
+  .t-depth.run .map{ animation:depthMap .66s ease-in both; transform-origin:var(--ox) var(--oy) }
+  @keyframes depthMap{ from{ transform:scale(1); filter:blur(0) } to{ transform:scale(1.9); opacity:0; filter:blur(7px) } }
+  .t-depth.run .street{ animation:depthStreet .66s cubic-bezier(.2,.7,.3,1) both; transform-origin:var(--ox) var(--oy) }
+  @keyframes depthStreet{ 0%{ opacity:0; transform:scale(.68); filter:blur(9px) } 100%{ opacity:1; transform:scale(1); filter:blur(0) } }
+
+  /* 5 · Motion Whip — a fast blurred sweep between the two */
+  .t-whip.run .map{ animation:whipMap .5s ease-in both; transform-origin:var(--ox) var(--oy) }
+  @keyframes whipMap{ from{ filter:blur(0); transform:scale(1) } to{ filter:blur(15px); opacity:0; transform:scale(1.45) } }
+  .t-whip.run .street{ animation:whipStreet .5s ease-out both; transform-origin:var(--ox) var(--oy) }
+  @keyframes whipStreet{ 0%{ opacity:0; filter:blur(17px); transform:scale(1.18) } 100%{ opacity:1; filter:blur(0); transform:scale(1) } }
+
+  /* 6 · Rack Focus — map blurs & dims in place, the street snaps sharp */
+  .t-rack.run .map{ animation:rackMap .72s ease both }
+  @keyframes rackMap{ to{ filter:blur(11px) brightness(.55) } }
+  .t-rack.run .street{ animation:rackStreet .72s ease both }
+  @keyframes rackStreet{ 0%{ opacity:0; filter:blur(13px) } 45%{ opacity:1 } 100%{ opacity:1; filter:blur(0) } }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>Map → Zoom · Transition Studies</h1>
+    <p class="sub">Tap the glowing pin (or “Zoom in”) to preview the selected transition into Meryton High Street. Uses your real <code>map.jpg</code> and <code>map_zoom01.jpeg</code>.</p>
+
+    <div class="tabs" id="tabs">
+      <button class="tab on" data-t="bloom">1 · Point Bloom</button>
+      <button class="tab" data-t="dive">2 · Camera Dive</button>
+      <button class="tab" data-t="iris">3 · Iris Reveal</button>
+      <button class="tab" data-t="depth">4 · Depth Punch</button>
+      <button class="tab" data-t="whip">5 · Motion Whip</button>
+      <button class="tab" data-t="rack">6 · Rack Focus</button>
+    </div>
+    <div class="desc" id="desc"></div>
+
+    <div class="phone">
+      <div class="stage t-bloom" id="stage">
+        <div class="layer map"></div>
+        <div class="layer street"></div>
+        <div class="pin" id="pin" title="Zoom in">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#0d3b34" stroke-width="2.6" stroke-linecap="round"><circle cx="10.5" cy="10.5" r="6"/><path d="M15 15l4.6 4.6"/></svg>
+        </div>
+        <div class="hint">Tap the pin to zoom in</div>
+        <div class="zbar">
+          <div class="zback" id="zback">&#8592;</div>
+          <div class="ztitle">Meryton — High Street</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="btnrow">
+      <button class="rbtn" id="playBtn">Zoom in ▸</button>
+      <button class="rbtn" id="resetBtn">Reset</button>
+    </div>
+  </div>
+
+<script>
+(function(){
+  const DESCS={
+    bloom:'<b>Point Bloom</b> — the street view scales open from the pin and fades in. Subtle, quick, low-risk. (Closest to what’s live now.)',
+    dive: '<b>Camera Dive</b> — the map itself zooms <i>into</i> the pin and dissolves as the street rises to meet it. Most cinematic “diving down”.',
+    iris: '<b>Iris Reveal</b> — a circular portal opens from the pin and wipes the street in. Clean, graphic, very readable.',
+    depth:'<b>Depth Punch</b> — the map pushes back and blurs while the street rushes forward into focus. Strong sense of moving through a layer.',
+    whip: '<b>Motion Whip</b> — a fast blurred sweep between the two. Energetic; good if the rest of the app is snappy.',
+    rack: '<b>Rack Focus</b> — the map blurs and dims in place as the street snaps sharp, like a lens pulling focus. Calm and filmic.'
+  };
+  const stage=document.getElementById('stage'), desc=document.getElementById('desc');
+  let variant='bloom', busy=false;
+
+  function setVariant(v){ variant=v; reset();
+    stage.className='stage t-'+v;
+    desc.innerHTML=DESCS[v];
+    document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('on', t.dataset.t===v));
+  }
+  function play(){ if(busy) return; busy=true;
+    stage.classList.remove('done');
+    // restart animation cleanly
+    stage.classList.remove('run'); void stage.offsetWidth; stage.classList.add('run');
+    setTimeout(()=>{ stage.classList.add('done'); busy=false; }, 760);
+  }
+  function reset(){ busy=false; stage.classList.remove('run','done'); }
+
+  document.getElementById('tabs').addEventListener('click', e=>{ const b=e.target.closest('.tab'); if(b) setVariant(b.dataset.t); });
+  document.getElementById('pin').addEventListener('click', play);
+  document.getElementById('playBtn').addEventListener('click', play);
+  document.getElementById('resetBtn').addEventListener('click', reset);
+  document.getElementById('zback').addEventListener('click', reset);
+
+  setVariant('bloom');
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,619 @@
+{
+  "world": "pride-and-prejudice",
+  "assetDir": "pc-select",
+  "traitPool": {
+    "wit": {
+      "title": "Sharpest Tongue in the Room",
+      "desc": "Turns a slight into the room's laughter · never leaves a clever cruelty unanswered · would sooner wound than bore.",
+      "weakness": "a pride as quick as her tongue — she'd rather wound than show she cares.",
+      "play": "Sharp, mocking multiselect options open up at the ball."
+    },
+    "pride": {
+      "title": "Bends for No One",
+      "desc": "Meets condescension with something colder · will not be quietly priced · answers a lord as she'd answer a footman.",
+      "weakness": "cannot step back or soften first, even when her heart has already turned.",
+      "play": "Options that never bow to Darcy; the apology comes late and costly."
+    },
+    "warmth": {
+      "title": "Warms the Coldest Room",
+      "desc": "Puts the nervous at ease · reads kindness as strength, not surrender · the evening is warmer where she stands.",
+      "weakness": "mistakes everyone's best face for their true one, and trusts a beat too long.",
+      "play": "Warm closeness with Jane & Charlotte; the room takes to you."
+    },
+    "cunning": {
+      "title": "Reads the Room",
+      "desc": "Sees the face beneath the face · turns gossip into leverage · never shows her whole hand.",
+      "weakness": "so busy reading the game that she forgets she is also being read.",
+      "play": "Turn Wickham's blade into a weapon; hidden-read options."
+    },
+    "reserve": {
+      "title": "Keeps Her Counsel",
+      "desc": "Shows little, keeps more · lets others fill the silence · plays her card last.",
+      "weakness": "waits so long to speak that the moment — and the man — can slip past her.",
+      "play": "'Say little, watch much' options; you show your hand late."
+    },
+    "candor": {
+      "title": "Says the Unsaid",
+      "desc": "Tells the truth no one else will · asks plainly and dares refusal · will not flatter for advantage.",
+      "weakness": "her honesty makes enemies faster than her charm makes friends.",
+      "play": "Blunt-truth options with high risk and high reward."
+    },
+    "ambition": {
+      "title": "Climbs Every Room",
+      "desc": "Reads a person's price in a handshake · turns a ballroom into a ladder · will not pretend to a birth she didn't have.",
+      "weakness": "so fixed on the next rung she forgets to look at who is beside her.",
+      "play": "Status-seeking options; you leverage every introduction."
+    },
+    "charm": {
+      "title": "Impossible to Refuse",
+      "desc": "Makes every listener feel chosen · turns a first meeting into an old friendship · lands soft, always.",
+      "weakness": "charms so easily she is never quite sure who likes her, and who likes the performance.",
+      "play": "Disarming options that win rooms without a fight."
+    },
+    "devotion": {
+      "title": "Steadfast to the End",
+      "desc": "Once given, her regard does not waver · keeps faith the others abandon · a promise she means to keep.",
+      "weakness": "stays loyal a beat past all reason, even to those who have not earned it.",
+      "play": "Loyalty options; you hold a line others fold on."
+    }
+  },
+  "epithet": {
+    "wit": "The Wit",
+    "pride": "The Proud",
+    "warmth": "The Warm Heart",
+    "cunning": "The Strategist",
+    "reserve": "The Quiet One",
+    "candor": "The Honest",
+    "ambition": "The Climber",
+    "charm": "The Charmer",
+    "devotion": "The Steadfast"
+  },
+  "drivers": {
+    "wit": "To be counted for her mind before her fortune — chosen, not merely settled for.",
+    "pride": "To bend for no one who has not first earned the bending.",
+    "warmth": "To keep her heart open in a room built to harden it.",
+    "cunning": "To read every lock in the room before anyone sees she holds a key.",
+    "reserve": "To give away nothing she has not first decided to give.",
+    "candor": "To say the true thing, whatever the room would rather she didn't.",
+    "ambition": "To climb higher than the birth she was handed.",
+    "charm": "To be adored by a room she has only just walked into.",
+    "devotion": "To keep faith with the few worth keeping it for."
+  },
+  "manners": {
+    "wit": "Quick, dry, and unafraid; where another lowers her eyes, she raises an eyebrow.",
+    "pride": "Composed and unyielding — a civility with a blade held behind it.",
+    "warmth": "Soft-spoken and slow to sharpen; warmth offered before wit.",
+    "cunning": "Watchful and unhurried — the calm of someone already three moves ahead.",
+    "reserve": "Still and measured; she lets others fill the silence for her.",
+    "candor": "Plain and direct; she names aloud what the room is only thinking.",
+    "ambition": "Poised and forward, always angled toward the next introduction.",
+    "charm": "Easy and bright; she makes strangers feel like confidants.",
+    "devotion": "Steady and warm, the same to your face as behind your back."
+  },
+  "bioTune": {
+    "arrival": [
+      "arrive with a small fortune and a larger opinion to match",
+      "arrive knowing no one and watching everyone",
+      "arrive with nothing to trade but a quick tongue",
+      "arrive set on being chosen, not merely settled for"
+    ],
+    "tell": [
+      "keep their counsel and let the silence do the work",
+      "answer a slight with something colder",
+      "turn every barb into the room's laughter",
+      "say the true thing no one else will"
+    ],
+    "want": [
+      "to be counted for a sharp mind before a small fortune",
+      "to read every lock before anyone sees the key",
+      "to keep an open heart in a room built to close it",
+      "to leave a mark this county will not soon forget"
+    ]
+  },
+  "bioSeed": {
+    "wit": {
+      "arrival": 2,
+      "tell": 2,
+      "want": 0
+    },
+    "pride": {
+      "arrival": 0,
+      "tell": 1,
+      "want": 3
+    },
+    "warmth": {
+      "arrival": 1,
+      "tell": 0,
+      "want": 2
+    },
+    "cunning": {
+      "arrival": 1,
+      "tell": 0,
+      "want": 1
+    },
+    "reserve": {
+      "arrival": 1,
+      "tell": 0,
+      "want": 2
+    },
+    "candor": {
+      "arrival": 3,
+      "tell": 3,
+      "want": 3
+    },
+    "ambition": {
+      "arrival": 0,
+      "tell": 1,
+      "want": 3
+    },
+    "charm": {
+      "arrival": 1,
+      "tell": 2,
+      "want": 3
+    },
+    "devotion": {
+      "arrival": 1,
+      "tell": 0,
+      "want": 2
+    }
+  },
+  "galleries": {
+    "woman": [
+      "arabella_frost",
+      "jane_bennet",
+      "charlotte_lucas",
+      "elizabeth_bennet",
+      "lydia_bennet",
+      "miss_bingley",
+      "mrs_bennet"
+    ],
+    "man": [
+      "mr_darcy",
+      "mr_bingley",
+      "mr_wickham",
+      "mr_collins"
+    ]
+  },
+  "traitFace": {
+    "woman": {
+      "wit": "arabella_frost",
+      "pride": "miss_bingley",
+      "warmth": "jane_bennet",
+      "cunning": "charlotte_lucas",
+      "reserve": "elizabeth_bennet",
+      "candor": "lydia_bennet",
+      "ambition": "miss_bingley",
+      "charm": "lydia_bennet",
+      "devotion": "jane_bennet"
+    },
+    "man": {
+      "pride": "mr_darcy",
+      "reserve": "mr_darcy",
+      "candor": "mr_darcy",
+      "warmth": "mr_bingley",
+      "wit": "mr_wickham",
+      "cunning": "mr_wickham",
+      "ambition": "mr_wickham",
+      "charm": "mr_bingley",
+      "devotion": "mr_bingley"
+    }
+  },
+  "traitBg": {
+    "wit": "ballroom",
+    "cunning": "alcove",
+    "warmth": "supper",
+    "pride": "officers",
+    "reserve": "terrace",
+    "candor": "thinning",
+    "ambition": "officers",
+    "charm": "ballroom",
+    "devotion": "supper"
+  },
+  "names": {
+    "woman": [
+      "Beatrice Wren",
+      "Cordelia Ashford",
+      "Marianne Vale",
+      "Georgiana Frost",
+      "Rosamund Kerr",
+      "Isadora Vane",
+      "Cassandra Bly",
+      "Evangeline Rook",
+      "Sophronia Ashby",
+      "Arabella Crane"
+    ],
+    "man": [
+      "Henry Ashford",
+      "Percival Kerr",
+      "Frederick Bly",
+      "Nathaniel Crane",
+      "Ambrose Vane",
+      "Theodore Wren",
+      "Gideon Rook",
+      "Lucius Ashby",
+      "Everett Frost",
+      "Sebastian Crane"
+    ]
+  },
+  "premade": [
+    {
+      "id": "pc_arabella",
+      "name": "Arabella Frost",
+      "epithet": "The Wit",
+      "gender": "woman",
+      "traits": [
+        "wit",
+        "pride",
+        "candor"
+      ],
+      "portrait": "arabella_frost",
+      "bg": "ballroom",
+      "example": false,
+      "bio": "A gentleman's daughter of small fortune and larger opinions — in Meryton to be counted for her mind, not quietly priced by the marriage market.",
+      "driver": "To be counted for her mind before her dowry — to be chosen, not merely settled for.",
+      "manner": "Quick, dry, and unafraid; where another lowers her eyes, she raises an eyebrow.",
+      "save": {
+        "ch": 1,
+        "chTitle": "The Netherfield Ball",
+        "scene": "the supper table",
+        "progress": 40,
+        "playMin": 80,
+        "lastPlayedText": "2 days ago"
+      }
+    },
+    {
+      "id": "pc_marianne",
+      "name": "Marianne Kerr",
+      "epithet": "The Warm Heart",
+      "gender": "woman",
+      "traits": [
+        "warmth",
+        "candor",
+        "reserve"
+      ],
+      "portrait": "jane_bennet",
+      "bg": "thinning",
+      "example": true,
+      "bio": "New to the county and slow to sharpen. She would rather be kind and wrong than clever and cold — and finds warmth opens doors that wit cannot.",
+      "driver": "To keep her heart open in a room built to teach her to close it.",
+      "manner": "Soft-spoken and slow to sharpen; a warmth offered before any wit.",
+      "save": {
+        "ch": 1,
+        "chTitle": "The Netherfield Ball",
+        "scene": "the first dance",
+        "progress": 15,
+        "playMin": 25,
+        "lastPlayedText": "5 hours ago"
+      }
+    },
+    {
+      "id": "pc_cordelia",
+      "name": "Cordelia Vane",
+      "epithet": "The Strategist",
+      "gender": "woman",
+      "traits": [
+        "cunning",
+        "reserve",
+        "pride"
+      ],
+      "portrait": "miss_bingley",
+      "bg": "alcove",
+      "example": true,
+      "bio": "Arrives knowing no one and watching everyone. She treats a ballroom like a lock, and herself as the only one holding the key.",
+      "driver": "To read every lock in the room before anyone notices she is holding a key.",
+      "manner": "Composed, watchful, unhurried — the calm of someone already three moves ahead."
+    },
+    {
+      "id": "pc_edmund",
+      "name": "Edmund Vale",
+      "epithet": "The Gentleman",
+      "gender": "man",
+      "traits": [
+        "pride",
+        "reserve",
+        "candor"
+      ],
+      "portrait": "mr_darcy",
+      "bg": "officers",
+      "example": true,
+      "bio": "Ten thousand a year and not one easy word to spend it on. He would rather be thought cold than be caught caring — a fault he is only beginning to see.",
+      "driver": "To find, just once, regard that is neither awed by his name nor after his fortune.",
+      "manner": "Formal, measured, exact; warmth surfaces only when the structure cracks.",
+      "save": {
+        "ch": 1,
+        "chTitle": "The Netherfield Ball",
+        "scene": "the card room",
+        "progress": 62,
+        "playMin": 115,
+        "lastPlayedText": "yesterday"
+      }
+    },
+    {
+      "id": "pc_charles",
+      "name": "Charles Merrow",
+      "epithet": "The Amiable",
+      "gender": "man",
+      "traits": [
+        "warmth",
+        "candor",
+        "wit"
+      ],
+      "portrait": "mr_bingley",
+      "bg": "ballroom",
+      "example": true,
+      "bio": "Sunny, wealthy, and fatally easy to like — and to lead. He trusts the last voice he heard, and the room, and everyone in it.",
+      "driver": "To be liked by everyone and steered by no one — the second is the harder part.",
+      "manner": "Unguarded and immediate; every thought safe to share, every stranger a friend.",
+      "save": {
+        "ch": 1,
+        "chTitle": "The Netherfield Ball",
+        "scene": "the entrance hall",
+        "progress": 8,
+        "playMin": 12,
+        "lastPlayedText": "just now"
+      }
+    },
+    {
+      "id": "pc_julian",
+      "name": "Julian Rooke",
+      "epithet": "The Rake",
+      "gender": "man",
+      "traits": [
+        "cunning",
+        "wit",
+        "candor"
+      ],
+      "portrait": "mr_wickham",
+      "bg": "alcove",
+      "example": true,
+      "bio": "All surface charm and rehearsed sincerity — a smile you'd trust and a story you shouldn't. He never once acknowledges the calculation beneath the ease.",
+      "driver": "To be adored without ever being pinned down, and to always land soft.",
+      "manner": "Smooth, confiding, practiced; candour worn as a costume, never spent as truth."
+    }
+  ],
+  "types": [
+    {
+      "id": "scandal",
+      "name": "The Scandal",
+      "bias": [
+        "pride",
+        "candor"
+      ],
+      "desc": "You have thrown the rulebook into the fire and danced on the ashes. Society gasps, gossips — and secretly envies the freedom you have seized for yourself."
+    },
+    {
+      "id": "wit",
+      "name": "The Wit",
+      "bias": [
+        "wit"
+      ],
+      "desc": "You arrived armed with nothing but a sharp tongue and sharper eyes, and have never once found either wanting."
+    },
+    {
+      "id": "romantic",
+      "name": "The Romantic",
+      "bias": [
+        "warmth",
+        "candor"
+      ],
+      "desc": "You believe, stubbornly and against all evidence, that a life is measured by whom it is spent beside — and you will not be talked out of it."
+    },
+    {
+      "id": "strategist",
+      "name": "The Strategist",
+      "bias": [
+        "cunning",
+        "reserve"
+      ],
+      "desc": "Every room is a board and every guest a piece. You have been three moves ahead since you learned to curtsy."
+    },
+    {
+      "id": "wallflower",
+      "name": "The Wallflower",
+      "bias": [
+        "reserve",
+        "cunning"
+      ],
+      "desc": "They forget you are in the room. It is the most useful thing about you."
+    }
+  ],
+  "survey": [
+    {
+      "bg": "ballroom",
+      "narr": "The carriage sets you down at Netherfield. The rooms are bright, the company assembled, the evening open before you.",
+      "q": "What have you truly come to find tonight?",
+      "a": [
+        {
+          "t": "Someone quick enough to keep up with me.",
+          "w": {
+            "wit": 2
+          }
+        },
+        {
+          "t": "A door into a world that was closed to me.",
+          "w": {
+            "cunning": 1,
+            "pride": 1
+          }
+        },
+        {
+          "t": "Nothing — I came to watch the rest of them try.",
+          "w": {
+            "reserve": 2
+          }
+        },
+        {
+          "t": "To be seen, properly, for once.",
+          "w": {
+            "candor": 1,
+            "pride": 1
+          }
+        }
+      ]
+    },
+    {
+      "bg": "supper",
+      "narr": "After supper the candles burn low and the conversation turns unexpectedly candid.",
+      "q": "What would you sooner quit the county than have laid bare here?",
+      "a": [
+        {
+          "t": "How little my fortune truly is.",
+          "w": {
+            "pride": 2
+          }
+        },
+        {
+          "t": "How much I actually care what they think.",
+          "w": {
+            "warmth": 1,
+            "pride": 1
+          }
+        },
+        {
+          "t": "The clever cruelty I'm capable of.",
+          "w": {
+            "wit": 1,
+            "cunning": 1
+          }
+        },
+        {
+          "t": "That beneath the poise, I am frightened.",
+          "w": {
+            "reserve": 1,
+            "candor": 1
+          }
+        }
+      ]
+    },
+    {
+      "bg": "thinning",
+      "narr": "The morning post brings word that something has gone very wrong — a scheme undone, a certainty dissolved.",
+      "q": "Before you have composed yourself, what do you find yourself doing?",
+      "a": [
+        {
+          "t": "Making a joke of it, so no one sees my hands shake.",
+          "w": {
+            "wit": 2
+          }
+        },
+        {
+          "t": "Going very still, and saying nothing at all.",
+          "w": {
+            "reserve": 2
+          }
+        },
+        {
+          "t": "Already planning three moves ahead.",
+          "w": {
+            "cunning": 2
+          }
+        },
+        {
+          "t": "Saying exactly what I feel — and damn the cost.",
+          "w": {
+            "candor": 2
+          }
+        }
+      ]
+    },
+    {
+      "bg": "alcove",
+      "narr": "Across the room, Miss Bingley is describing you to a stranger. You cannot hear the words — but you can guess the impression.",
+      "q": "What does the world consistently get wrong about you?",
+      "a": [
+        {
+          "t": "They think me cold. I simply don't perform warmth.",
+          "w": {
+            "reserve": 2
+          }
+        },
+        {
+          "t": "They think me proud. I am only unwilling to grovel.",
+          "w": {
+            "pride": 2
+          }
+        },
+        {
+          "t": "They think me harmless. Their mistake to make.",
+          "w": {
+            "cunning": 2
+          }
+        },
+        {
+          "t": "They think me soft. My kindness is a choice.",
+          "w": {
+            "warmth": 2
+          }
+        }
+      ]
+    },
+    {
+      "bg": "terrace",
+      "narr": "Everyone carries an old injury that time has not softened — a thing they cannot quite set down.",
+      "q": "What have you never, in your heart, forgiven?",
+      "a": [
+        {
+          "t": "Being priced, and found wanting.",
+          "w": {
+            "pride": 2
+          }
+        },
+        {
+          "t": "The friend who chose comfort over me.",
+          "w": {
+            "warmth": 1,
+            "candor": 1
+          }
+        },
+        {
+          "t": "Being underestimated — once.",
+          "w": {
+            "cunning": 1,
+            "wit": 1
+          }
+        },
+        {
+          "t": "Myself, for a silence I should have broken.",
+          "w": {
+            "candor": 1,
+            "reserve": 1
+          }
+        }
+      ]
+    },
+    {
+      "bg": "officers",
+      "narr": "The floor forms for the first dance. A partner you cannot refuse offers his hand — and a moment later, so does one you would.",
+      "q": "Which hand do you take?",
+      "a": [
+        {
+          "t": "The one who'll make the room laugh with me.",
+          "w": {
+            "wit": 1,
+            "warmth": 1
+          }
+        },
+        {
+          "t": "The one everyone will be watching.",
+          "w": {
+            "pride": 1,
+            "cunning": 1
+          }
+        },
+        {
+          "t": "Neither — I'd sooner not dance than dance falsely.",
+          "w": {
+            "candor": 1,
+            "reserve": 1
+          }
+        },
+        {
+          "t": "The safe one — and watch the other all night.",
+          "w": {
+            "reserve": 2
+          }
+        }
+      ]
+    }
+  ]
+}

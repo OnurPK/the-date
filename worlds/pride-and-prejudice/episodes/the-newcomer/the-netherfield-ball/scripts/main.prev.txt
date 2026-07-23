@@ -1,0 +1,239 @@
+// =============================================================
+// Pride & Prejudice — The Netherfield Ball
+// NATIVE runnable script (engine directives only).
+// Single golden route: the_ballroom → officers → overheard →
+// supper → the dance → thinning → carriage → ending.
+// Design/annotated source kept alongside as main.design.txt.
+// Speakers (world-local cast): arabella, bingley, wickham, caroline,
+//   darcy, mrs-bennet, charlotte, lydia — registered in dialog.html.
+// =============================================================
+
+
+// ═══ the_ballroom (HUB) ═══
+[bg:explore=ballroom] [ui:narrative]
+Narrative: Netherfield is lit like a thing on fire. You step into the blaze — and find him at once: Mr Darcy, across the floor, already looking, and not troubling to stop when you catch it.
+Narrative: The whole room arranges itself, to your eye, into one game with one object. Officers by the wall. Miss Bingley at the pianoforte. A crush at the doors. And the long floor between you and the man you came to duel.
+
+[ui:cast-large]
+Bingley: Miss Frost! You came — splendid! I promised you the whole county and here it is, every candle of it.
+Arabella: You promised a crush, sir, and you have over-delivered. One can scarcely move for silk.
+
+[ui:narrative]
+Narrative: He laughs, delighted with the world. Beyond his shoulder, Darcy has not looked away.
+
+[ui:multi]
+(Choice:2)
+Arabella: Return his look across the floor — hold it one beat too long, then break it first, on my terms.
+Arabella: Pretend not to have seen him at all, and let the not-seeing do the work.
+
+(IfChoice:0)
+  [ui:narrative]
+  Narrative: You meet his eyes across the blazing room and do not drop them. He does not either. You let it go — on your own count, not his — and feel the small victory of it.
+(EndIf)
+(IfChoice:1)
+  [ui:narrative]
+  Narrative: You give the room your profile and a studied indifference. Across the floor you feel his attention sharpen, affronted at being unremarked. The not-seeing lands harder than a stare.
+(EndIf)
+
+[ui:cast-small]
+Arabella: So many ways to spend an evening. Only one of them worth the trouble.
+
+[ui:multi]
+(Choice:2)
+Arabella: Drift to the red-coats by the wall — the handsome one has been hoping I would.
+Arabella: Cut straight across to the proud man and have done with it.
+
+(IfChoice:0)
+  [ui:narrative]
+  Narrative: You turn toward the officers, where the handsomest of them has been visibly willing you over, a story already half-out of his mouth.
+(EndIf)
+(IfChoice:1)
+  [ui:narrative]
+  Narrative: Not yet. Let him wait, and wonder, and watch you choose the long way round — by way of the officers, and the story they are so keen to hand you.
+(EndIf)
+
+
+// ═══ the_officers_blade ═══
+[bg:cutscene=officers-corner.jpg] [ui:narrative]
+Narrative: The officer waits the way a man waits who has a gift he is sure will please. The gift is Mr Darcy's character, gutted and handed over.
+
+[ui:cast-large]
+Wickham: You are newly acquainted with Mr Darcy, I think. Then you cannot yet know what he is.
+Arabella: I find I know a great many things people would rather I did not. Go on, then. Improve me.
+Wickham: There was a living promised me — a valuable one — and when it fell vacant it was given elsewhere. By him. In cold blood. His father loved me; the son could not forgive it.
+
+[ui:narrative]
+Narrative: He lets you draw the damning conclusion, so his own mouth stays clean. You notice that he does.
+
+[ui:multi]
+(Choice:2)
+Arabella: Pocket the blade with glee — in plain sight of Darcy, so he can watch me arm myself against him.
+Arabella: Take it, but note that a man this eager to arm a stranger is telling me something about himself.
+
+(IfChoice:0)
+  [ui:cast-small]
+  Arabella: What a very ill-used man. And what a fine thing to know, on a night when I shall be within arm's reach of the man who used you.
+(EndIf)
+(IfChoice:1)
+  [ui:cast-small]
+  Arabella: You are very ready, sir, to hand a stranger a weapon. I shall wield it — but I shall keep my own counsel too.
+(EndIf)
+
+[ui:narrative]
+Narrative: Across the floor the proud man has gone very still, watching you incline your head to a red-coat — and hating it. You will wield the story without wholly swallowing it: that is the difference between a fool with a knife and a woman with one. The story folds away inside you like a blade in a sleeve.
+
+
+// ═══ the_ballroom (re-entry) ═══
+[bg:explore=ballroom] [ui:narrative]
+Narrative: The room takes you back into its noise and heat, the blade warm in your sleeve. You smile at nothing, for his benefit, and feel his attention catch on it like wool on a nail.
+
+[ui:multi]
+(Choice:2)
+Arabella: Drift toward the alcove where Darcy has just drawn Bingley aside.
+Arabella: Stay in the light a moment longer, and let him come find the joke he has been shut out of.
+
+(IfChoice:0)
+  [ui:narrative]
+  Narrative: You find a reason to be near the half-shadow by the far windows — close enough, if you are quiet, to hear what a proud man says when he believes you cannot.
+(EndIf)
+(IfChoice:1)
+  [ui:narrative]
+  Narrative: You hold the light a beat — then curiosity wins, and you drift after all toward the half-shadow by the far windows, where a proud man is speaking low, believing himself unheard.
+(EndIf)
+
+
+// ═══ the_overheard_crack ═══
+// scene mode (not cutscene) so the dialog box hides and the Caroline/
+// Darcy bubbles frame cleanly. alcove-shadow.jpg resolves to the same
+// backgrounds/ image under either bg kind.
+[bg:scene=alcove-shadow.jpg] [ui:narrative]
+Narrative: His voice is low here, stripped of its public armour. You hold your breath at the edge of the alcove.
+
+[ui:bubble]
+Caroline: — the mother impossible, the connexions nothing at all. I wonder you can look at her.
+Darcy: I have been meditating on the very great pleasure a pair of fine eyes in the face of a pretty woman can bestow.
+
+[ui:multi]
+(Choice:2)
+Arabella: Lean a breath closer — I want the rest of it.
+Arabella: Stay perfectly still, and let it come to me.
+
+(IfChoice:0)
+  [ui:bubble]
+  Darcy: I never was so bewitched by any woman. Were it not for the inferiority of her connexions, I should be in some danger.
+(EndIf)
+(IfChoice:1)
+  [ui:bubble]
+  Darcy: I never was so bewitched by any woman. Were it not for the inferiority of her connexions, I should be in some danger.
+(EndIf)
+
+[ui:narrative]
+Narrative: He believes no one is listening. You are listening to every word, and you will never, ever tell him so.
+
+[ui:cast-small]
+Arabella: In some danger. Oh, Mr Darcy. You have no idea how much.
+
+[ui:narrative]
+Narrative: What he will not give you to your face he gives away the instant he thinks himself unobserved. He is further gone than you are — and he knows it, and it terrifies him. You slip off before he can suspect he was heard.
+
+
+// ═══ the_ballroom → supper ═══
+[bg:explore=ballroom] [ui:narrative]
+Narrative: You slip back into the bright noise carrying the single most useful thing you have gathered all season. Supper is called, and the blazing evening funnels down to a long table, silver, and — rising over all of it — the unmistakable voice of your neighbour Mrs Bennet.
+
+
+// ═══ the_supper_table ═══
+[bg:explore=supper] [ui:narrative]
+Narrative: A long white-clothed table, the clatter of good china — and Mrs Bennet in full, carrying voice.
+
+[ui:cast-large]
+Mrs-Bennet: — and once my Jane is settled at Netherfield, why, it will throw the other girls in the way of other rich men! Depend upon it!
+
+[ui:narrative]
+Narrative: Three seats down, Mr Darcy sets down his glass with the particular care of a man filing every word against the whole family. This loud, public vulgarity is the very thing that will one day hand a proud man every excuse he needs to part Bingley from Jane.
+
+[ui:cast-large]
+Charlotte: You are collecting the room, Miss Frost. A word, from a woman with none of your advantages and all of your eyes: do not sharpen your wit on Mr Darcy for the pleasure of it. A woman with more spirit than fortune cannot afford to make an enemy of ten thousand a year.
+
+[ui:multi]
+(Choice:2)
+Arabella: You would have me count the cost before I cut.
+Arabella: You would have me dull the only blade I own.
+
+(IfChoice:0)
+  [ui:cast-large]
+  Charlotte: I would. It is what the rest of us do, who cannot afford to be as amusing as you.
+(EndIf)
+(IfChoice:1)
+  [ui:cast-large]
+  Charlotte: I would have you keep it sheathed near a man who can ruin your sister with a word. That is not dullness. That is arithmetic.
+(EndIf)
+
+[ui:cast-large]
+Lydia: La! Miss Frost — do you know why Wickham is not come tonight, of all nights, when there is dancing? Denny says town, but I say a man does not miss a ball unless he is avoiding somebody!
+
+[ui:narrative]
+Narrative: A silly girl's chatter — but it catches: Wickham, absent, avoiding someone in this very house. You choose, tonight, not to pull the thread. A footman leans in — "the sets are forming again, miss" — and draws you back toward the floor, where he is waiting.
+
+
+// ═══ the_dance (SPINE PEAK) ═══
+[bg:scene=the-dance-set.jpg] [ui:bubble]
+Narrative: You had not meant to say yes. And now here you are, standing up with Mr Darcy before the entire neighbourhood, the set forming, the music striking up, no possible way left to pretend this is nothing.
+Arabella: It is your turn to say something now, Mr Darcy. I talked of the dance; you ought to remark on the size of the room, or the number of couples.
+Darcy: Do you talk by rule, then, while you are dancing?
+Arabella: One must speak a little. It would look odd to be entirely silent for half an hour together.
+
+[ui:multi]
+(Choice:2)
+Arabella: Tell him the truth about the two of us — that we are alike, and neither will speak first.
+Arabella: Keep it light, and let the silence say the dangerous part.
+
+(IfChoice:0)
+  [ui:bubble]
+  Arabella: I have always seen a great similarity in the turn of our minds. We are each of an unsocial, taciturn disposition, unwilling to speak unless we expect to amaze the whole room.
+(EndIf)
+(IfChoice:1)
+  [ui:bubble]
+  Arabella: We may as well be silent, then. It is a very fine way to be looked at, and asks nothing of either of us but nerve.
+(EndIf)
+
+[ui:narrative]
+Narrative: The duel is joined. The room falls away. There is nothing in the whole blazing evening but the two of you and the drawn line neither will step back from.
+
+[ui:multi]
+(Choice:2)
+Arabella: Draw the blade mid-set — needle him about Mr Wickham and watch his composure ice over.
+Arabella: Hold the blade. Win the set to a glittering, bloodless draw.
+
+(IfChoice:0)
+  [ui:bubble]
+  Arabella: I made a new acquaintance this evening. A Mr Wickham. He tells the most affecting stories of a friend who used him very ill.
+  Darcy: Mr Wickham is blessed with such happy manners as may ensure his making friends. Whether he is equally capable of retaining them is less certain.
+  [ui:narrative]
+  Narrative: The warmth goes out of his face by degrees, like a room shut up for winter. You read the cold as a hit — a delicious, palpable hit — and do not see the wound under it.
+(EndIf)
+(IfChoice:1)
+  [ui:bubble]
+  Arabella: We are neither of us performing to strangers, I think. We may as well be honest — and I cannot decide which would alarm the room more.
+  Darcy: We may compare our different opinions, at least. There can be no want of subject.
+(EndIf)
+
+[ui:narrative]
+Narrative: At the height of it a look of his lands somewhere you did not brace for, and you feel it: a small vertigo, the floor tilting. You are not only winning this. You are falling into it.
+Narrative: To stand up with you before this neighbourhood — a woman of no fortune he can approve — is a public act with a public cost, and he paid it, in front of everyone, because he could not make himself do otherwise. The music ends. He bows, precise and unreadable; you curtsey; and you part on the floor with everything between you said and nothing settled.
+
+
+// ═══ the_thinning_ball (CODA) ═══
+[bg:cutscene=thinning-ball.jpg] [ui:narrative]
+Narrative: The last set has been danced and the great room is coming apart into its ordinary furniture — footmen snuffing the candles two by two, the neighbourhood loosening toward the cloakroom.
+Narrative: Across the guttering candlelight his gaze finds yours over the wreckage of the evening, and neither of you bows, and the whole unspoken thing hangs there, wound as tight as it can go without breaking. Then the wraps are found, and you go out into the dark, the coal of the evening carried carefully home.
+
+
+// ═══ the_last_carriage (CLOSE → ENDING) ═══
+[bg:cutscene=carriage-night.jpg] [ui:narrative]
+Narrative: The carriage rocks onto the dark road with the whole blazing evening still ringing in you — the dance, the blade, the stolen crack, the moment the game stopped being only a game.
+Narrative: Behind you, at a bright window growing small, a still dark figure watches the carriage-lamps go — a man hoping, against every rule he lives by, that you find a name for this before it finds one for you.
+Narrative: You ride home through the dark with the whole loaded set still turning in you — at war with him and wide awake with it — and you do not try to name it, because naming it is for another night.
+
+(EndScene)
+(Music)

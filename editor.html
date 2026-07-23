@@ -7,6 +7,11 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<!-- LiteGraph.js for the visual node editor (Phase 1: read-only graph view).
+     Same library ComfyUI uses, so the interaction patterns (pan, zoom,
+     right-click menu, sockets) will feel familiar. -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/litegraph.js@0.7.18/css/litegraph.css">
+<script src="https://cdn.jsdelivr.net/npm/litegraph.js@0.7.18/build/litegraph.js"></script>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
   :root {
@@ -128,6 +133,87 @@
     height: calc(100vh - 60px);
     overflow: hidden;
   }
+
+  /* ---------- Graph view (read-only LiteGraph canvas) ---------- */
+  #graphView {
+    position: fixed;
+    inset: 60px 0 0 0;          /* sit below the app header */
+    background: #1a1a23;
+    z-index: 80;
+    display: flex;
+    flex-direction: column;
+  }
+  .graph-toolbar {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 8px 14px;
+    background: var(--bg-2);
+    border-bottom: 1px solid var(--line);
+    flex-shrink: 0;
+  }
+  .graph-label {
+    flex: 1;
+    font-size: 12px;
+    color: var(--text-dim);
+  }
+  .graph-body {
+    flex: 1;
+    display: flex;
+    min-height: 0;
+  }
+  #graphCanvas {
+    flex: 1;
+    background: #1a1a23;
+    min-width: 0;
+  }
+  /* Right-side inspector — edits the currently selected node. */
+  .graph-inspector {
+    flex: 0 0 320px;
+    background: var(--bg-2);
+    border-left: 1px solid var(--line);
+    padding: 16px 14px;
+    overflow-y: auto;
+    color: var(--text);
+    font-size: 13px;
+  }
+  .gi-empty { color: var(--text-dim); font-size: 12px; padding: 8px 0; }
+  .gi-form { display: flex; flex-direction: column; gap: 8px; }
+  .gi-label {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.16em;
+    color: var(--text-dim);
+    margin-top: 6px;
+  }
+  .gi-input, .gi-textarea {
+    background: var(--bg);
+    color: var(--text);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 8px 10px;
+    font-family: inherit;
+    font-size: 13px;
+    width: 100%;
+    outline: none;
+  }
+  .gi-input:focus, .gi-textarea:focus { border-color: var(--purple); }
+  .gi-textarea {
+    min-height: 220px;
+    resize: vertical;
+    font-family: "JetBrains Mono", ui-monospace, monospace;
+    font-size: 12.5px;
+    line-height: 1.55;
+  }
+  .gi-actions { display: flex; gap: 8px; margin-top: 10px; }
+  .gi-hint {
+    margin-top: 8px;
+    color: var(--text-dim);
+    font-size: 11px;
+    line-height: 1.45;
+  }
+  /* Tweak LiteGraph node colors to match the editor palette. */
+  .litegraph .lgraphcanvas { background: #1a1a23; }
 
   /* ---------- Editor pane ---------- */
   .editor-pane {
@@ -763,10 +849,19 @@
   <div class="sep"></div>
 
   <div class="sc-select-wrap">
+    <label>World</label>
+    <select id="worldSelect">
+      <option value="london">London</option>
+      <option value="1984">1984</option>
+    </select>
+  </div>
+
+  <div class="sc-select-wrap">
     <label>Scenario</label>
     <select id="scenarioSelect"></select>
   </div>
 
+  <button class="hbtn primary" id="newLocation" title="Create a new location in this world"><span class="icon">⛌</span>New Location</button>
   <button class="hbtn" id="newScenario" title="New scenario"><span class="icon">＋</span>New</button>
   <button class="hbtn" id="duplicateScenario" title="Duplicate current scenario"><span class="icon">⎘</span>Dup</button>
   <button class="hbtn" id="renameScenario" title="Rename scenario">Rename</button>
@@ -783,6 +878,7 @@
   <button class="hbtn" id="importScript" title="Import .txt"><span class="icon">↑</span>Import</button>
   <input type="file" id="importFile" accept=".txt" style="display:none">
   <button class="hbtn primary" id="saveScript"><span class="icon">✓</span>Save</button>
+  <button class="hbtn" id="toggleGraph" title="Toggle visual graph view (read-only)"><span class="icon">⌘</span>Graph</button>
 </header>
 
 <main class="app-main">
@@ -936,6 +1032,45 @@
     </div>
   </section>
 </main>
+
+<!-- Graph view (Phase 1: read-only). Full-screen overlay that
+     replaces the text editor when "Graph" toggle is active. The
+     LiteGraph canvas auto-sizes to its container. -->
+<div id="graphView" style="display:none;">
+  <div class="graph-toolbar">
+    <span class="graph-label">Graph view — right-click canvas to add nodes · click a node to edit</span>
+    <button class="hbtn" id="graphRefresh" title="Re-parse script from text">↻ Refresh</button>
+    <button class="hbtn primary" id="graphSave" title="Rebuild script from graph + save">✓ Save Graph</button>
+    <button class="hbtn" id="graphClose" title="Back to text editor">✕ Close</button>
+  </div>
+  <div class="graph-body">
+    <canvas id="graphCanvas" style="display:block;"></canvas>
+    <aside id="graphInspector" class="graph-inspector">
+      <div class="gi-empty">Select a node to edit.</div>
+      <div class="gi-form" style="display:none;">
+        <label class="gi-label">Node name</label>
+        <input type="text" id="giName" class="gi-input" />
+        <label class="gi-label">Type</label>
+        <select id="giType" class="gi-input">
+          <option>Intro</option>
+          <option>Dialogue Group</option>
+          <option>Single Dialogue</option>
+          <option>Explore</option>
+          <option>AI Dialogue</option>
+          <option>Gift</option>
+          <option>Ending</option>
+        </select>
+        <label class="gi-label">Body (raw DSL between markers)</label>
+        <textarea id="giBody" class="gi-textarea" spellcheck="false"></textarea>
+        <div class="gi-actions">
+          <button class="hbtn primary" id="giApply">Apply</button>
+          <button class="hbtn danger" id="giDelete">Delete Node</button>
+        </div>
+        <p class="gi-hint">Apply updates this node in memory. Click <b>Save Graph</b> at the top to write everything back to the script.</p>
+      </div>
+    </aside>
+  </div>
+</div>
 
 <!-- Floating bracket-directive panel — drag the header to move,
      click − to collapse. Position + collapsed state persisted to
@@ -1223,6 +1358,18 @@ function saveCurrent() {
   saveScenarios(scenarios);
   flashSaved();
   refreshImageList();
+  // Disk-write paths (only one will fire):
+  //   a) Tracked disk path from "Load from game" → write back to it
+  //   b) Custom venue (key shape "pack::venueId") → write to
+  //      worlds/{pack}/locations/{venueId}/scripts/main.txt
+  if (_currentScriptDiskPath) {
+    persistScriptToPath(_currentScriptDiskPath, scriptArea.value);
+    return;
+  }
+  const m = currentName.match(/^([a-z0-9_-]+)::([a-z0-9_-]+)$/i);
+  if (m && typeof persistVenueToDisk === 'function') {
+    persistVenueToDisk(m[1], m[2], scriptArea.value);
+  }
 }
 
 scSelect.addEventListener('change', () => {
@@ -1284,6 +1431,149 @@ $('modalCancel').addEventListener('click', () => {
 $('modalInput').addEventListener('keydown', (e) => {
   if (e.key === 'Enter') { e.preventDefault(); $('modalOk').click(); }
   if (e.key === 'Escape') $('modalCancel').click();
+});
+
+// ============================================================
+// Custom venues — created via "+ New Location". Stored alongside
+// scenarios in localStorage; the engine picks them up at boot and
+// renders them on the world map. Schema:
+//   cowork.room.customVenues = {
+//     london: { rooftop: { title, cover, kind, desc, pack } }
+//   }
+// Scenario script keyed `${pack}::${venueId}`.
+// ============================================================
+const CUSTOM_VENUES_KEY = 'cowork.room.customVenues';
+function loadCustomVenues() {
+  try {
+    const raw = localStorage.getItem(CUSTOM_VENUES_KEY);
+    return raw ? JSON.parse(raw) : {};
+  } catch (_) { return {}; }
+}
+function saveCustomVenues(data) {
+  localStorage.setItem(CUSTOM_VENUES_KEY, JSON.stringify(data));
+}
+
+function slugify(s) {
+  return String(s || '')
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-|-$/g, '')
+    .slice(0, 32);
+}
+
+// Tracks where the current scenario lives on disk (if anywhere). Set
+// when the user picks an option from "Load from game" — used by the
+// save flow so edits round-trip back to the same file the engine reads.
+// Custom venues use the `${pack}::${venueId}` convention instead.
+let _currentScriptDiskPath = null;
+
+async function persistScriptToPath(relPath, content) {
+  try {
+    const r = await fetch('/api/save-script', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ path: relPath, content }),
+    });
+    if (!r.ok) {
+      const t = await r.text().catch(() => '');
+      console.warn('[disk-save] HTTP', r.status, t.slice(0, 200));
+      return false;
+    }
+    const data = await r.json();
+    console.log('[disk-save] wrote', data.path);
+    return true;
+  } catch (e) {
+    console.log('[disk-save] dev-server not running — localStorage only');
+    return false;
+  }
+}
+
+// Try to persist to disk via the local dev-server's /api endpoint.
+// Quietly no-ops if the server isn't running (python http.server),
+// in which case only the localStorage copy is kept.
+async function persistVenueToDisk(pack, venueId, scriptTxt) {
+  try {
+    const r = await fetch('/api/save-venue', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ pack, venueId, script: scriptTxt }),
+    });
+    if (!r.ok) {
+      const t = await r.text().catch(() => '');
+      console.warn('[disk-save] HTTP', r.status, t.slice(0, 120));
+      return false;
+    }
+    const data = await r.json();
+    console.log('[disk-save] wrote', data.path);
+    return true;
+  } catch (e) {
+    // Network error → server not running. Not an error, just localStorage-only mode.
+    console.log('[disk-save] dev-server not running — localStorage only');
+    return false;
+  }
+}
+
+$('newLocation').addEventListener('click', async () => {
+  const title = await promptName(
+    'New location',
+    'Title for this location (e.g. "The Rooftop"). The engine will use this on the map.',
+    ''
+  );
+  if (!title) return;
+  const pack = $('worldSelect').value;
+  const slug = slugify(title);
+  if (!slug) { alert('Title must contain at least one letter or number.'); return; }
+  const venueId = slug;
+  const cv = loadCustomVenues();
+  if (!cv[pack]) cv[pack] = {};
+  if (cv[pack][venueId]) {
+    if (!confirm(`A custom location "${venueId}" already exists in ${pack}. Overwrite?`)) return;
+  }
+  cv[pack][venueId] = {
+    title,
+    kind: 'Custom',
+    cover: `worlds/${pack}/locations/${venueId}/cover.jpg`,
+    desc: '',
+    startable: true,
+    pack,
+  };
+  saveCustomVenues(cv);
+
+  // Seed the scenario keyed `${pack}::${venueId}` with a starter script.
+  const seedKey = `${pack}::${venueId}`;
+  const seedScript = (
+    `// ${title} — ${pack}\n` +
+    `[bg:none] [ui:cast-large]\n` +
+    `Narrative: Welcome to ${title}.\n` +
+    `Boy: Hey.\n` +
+    `Girl: Hey there.\n`
+  );
+  if (!scenarios[seedKey]) {
+    scenarios[seedKey] = seedScript;
+    saveScenarios(scenarios);
+  }
+  // Mirror to disk if the dev-server is running.
+  const onDisk = await persistVenueToDisk(pack, venueId, scenarios[seedKey]);
+
+  currentName = seedKey;
+  setCurrentScenario(currentName);
+  renderScenarioList();
+  loadCurrent();
+  alert(
+    `Location "${title}" created.\n\n` +
+    (onDisk
+      ? `Folder created on disk:\n  worlds/${pack}/locations/${venueId}/scripts/main.txt\n\n` +
+        `Reload the app → the new pin appears on the ${pack} map.`
+      : `Saved to browser only — start the dev-server (node dev-server.js) for disk writes.\n\n` +
+        `Reload the app in this browser → pin appears on the ${pack} map.`)
+  );
+});
+
+$('worldSelect').addEventListener('change', () => {
+  // World switch is purely a metadata filter for the New Location flow.
+  // Existing scenarios still show in the picker; future iteration could
+  // filter them by pack.
 });
 
 $('newScenario').addEventListener('click', async () => {
@@ -1368,6 +1658,10 @@ $('loadFromGame').addEventListener('change', async (e) => {
     refreshImageList();
     flashSaved();
     pushToPreview('loadScript');
+    // Remember where this script came from so Save can write back to
+    // the same file (dev-server only, no-ops in production).
+    _currentScriptDiskPath = url;
+    console.log('[editor] linked current scenario to disk path:', url);
   } catch (err) {
     alert('Could not load the script from the game.\n\n' + (err && err.message || err));
   }
@@ -2207,6 +2501,771 @@ previewFrame.addEventListener('load', () => {
     });
   });
 })();
+
+// ============================================================
+// ============================================================
+// GRAPH VIEW (Phase 1: read-only)
+// LiteGraph canvas that visualises the current script. Each event
+// becomes a node; sequential events are wired left-to-right; (Choice:N)
+// produces N output sockets that connect to subsequent (IfChoice:K)
+// branches. Click a node → text editor jumps to its origin line.
+// ============================================================
+const NODE_COLORS = {
+  start:    '#6fe3c8',
+  end:      '#ff6b6b',
+  dialog:   '#9b7fff',
+  choice:   '#ff7eb9',
+  ifchoice: '#ff7eb9',
+  endif:    '#ff7eb9',
+  explore:  '#ffb74d',
+  object:   '#ffd09f',
+  action:   '#ffe0b3',
+  cutscene: '#b6a2ff',
+  scene:    '#b6a2ff',
+  video:    '#b6a2ff',
+  music:    '#b6a2ff',
+  endscene: '#b6a2ff',
+  state:    '#6fe3c8',
+  ai:       '#d6c0ff',
+  gift:     '#d6c0ff',
+};
+
+let _graphInstance = null;
+let _graphCanvas   = null;
+function ensureGraph() {
+  if (_graphInstance) return _graphInstance;
+  if (typeof LiteGraph === 'undefined' || typeof LGraph === 'undefined') {
+    console.warn('[graph] LiteGraph not loaded yet');
+    return null;
+  }
+  // Register a generic read-only node type — we don't need different
+  // class definitions for each kind, just colours + labels.
+  function BeatNode() {
+    this.title = 'Beat';
+    this.addInput('in',  -1);
+    this.addOutput('out', -1);
+    this.size = [220, 60];
+    this.color = '#2a2433';
+    this.bgcolor = '#1f1a28';
+  }
+  BeatNode.prototype.onDrawForeground = function(ctx) {
+    if (!this.flags.collapsed && this.properties && this.properties.subtitle) {
+      ctx.save();
+      ctx.fillStyle = 'rgba(255,255,255,0.6)';
+      ctx.font = '11px JetBrains Mono, monospace';
+      const lines = String(this.properties.subtitle).split('\n').slice(0, 3);
+      lines.forEach((ln, i) => {
+        ctx.fillText(ln.slice(0, 30), 10, 38 + i * 14);
+      });
+      ctx.restore();
+    }
+  };
+  BeatNode.title = 'Beat';
+  LiteGraph.registerNodeType('script/beat', BeatNode);
+
+  _graphInstance = new LGraph();
+  const canvasEl = document.getElementById('graphCanvas');
+  _graphCanvas = new LGraphCanvas(canvasEl, _graphInstance);
+  _graphCanvas.background_image = null;
+  _graphCanvas.clear_background_color = '#1a1a23';
+  // Allow dragging + connecting (visual only in Phase 1 — wiring
+  // changes don't write back to text yet, but layout exploration
+  // is hands-on). Disable the search/menu so the canvas stays
+  // focused on the script's existing nodes.
+  _graphCanvas.allow_searchbox      = false;
+  _graphCanvas.allow_reconnect_links = true;
+  _graphCanvas.allow_interaction    = true;
+  // Click a node → load into inspector + scroll text editor to its
+  // origin line. The edit form lives in the right-side panel.
+  _graphCanvas.onNodeSelected = (node) => {
+    if (typeof onLgNodeSelectedForEdit === 'function') {
+      onLgNodeSelectedForEdit(node);
+    } else if (node && node.properties && typeof node.properties.line === 'number') {
+      jumpTextEditorToLine(node.properties.line);
+    }
+  };
+  _graphCanvas.onNodeDeselected = () => {
+    if (typeof selectNodeForEditing === 'function') selectNodeForEditing(null);
+  };
+  return _graphInstance;
+}
+
+function jumpTextEditorToLine(lineNo) {
+  // Position the textarea so the target line is roughly centered.
+  const lines = scriptArea.value.split('\n');
+  if (lineNo < 1 || lineNo > lines.length) return;
+  // Compute character offset = sum of (line length + 1) for each prior line.
+  let offset = 0;
+  for (let i = 0; i < lineNo - 1; i++) offset += lines[i].length + 1;
+  const endOffset = offset + (lines[lineNo - 1] || '').length;
+  scriptArea.focus();
+  scriptArea.setSelectionRange(offset, endOffset);
+  // Scroll so the selection is visible.
+  const lineHeight = 1.7 * 13.5;          // line-height * font-size
+  scriptArea.scrollTop = Math.max(0, (lineNo - 1) * lineHeight - scriptArea.clientHeight / 2);
+}
+
+// ─── Marker-based parser ─────────────────────────────────────
+// The writer wraps each logical beat with:
+//   // === Node 3 · Dialogue Group · Joy on the street ===
+//   ... script content ...
+//   // === /Node 3 ===
+// We render ONE LiteGraph node per script-node (NOT per dialog line),
+// connect them sequentially, and use the type to colour them. The
+// "Single Dialogue" type unfolds its (Choice:N) into N output sockets
+// so the branching is visible at-a-glance.
+const NODE_TYPE_COLORS = {
+  'Intro':           '#6fe3c8',
+  'Dialogue Group':  '#9b7fff',
+  'Single Dialogue': '#ff7eb9',
+  'Explore':         '#ffb74d',
+  'AI Dialogue':     '#d6c0ff',
+  'Gift':            '#ffd6e9',
+  'Ending':          '#ff6b6b',
+  'Unknown':         '#8a8398',
+};
+const NODE_TYPE_ICONS = {
+  'Intro':           '▶',
+  'Dialogue Group':  '💬',
+  'Single Dialogue': '◇',
+  'Explore':         '🌐',
+  'AI Dialogue':     '✨',
+  'Gift':            '🎁',
+  'Ending':          '🎬',
+  'Unknown':         '•',
+};
+
+function parseScriptNodes(text) {
+  const lines = text.split('\n');
+  const nodes = [];
+  let cur = null;
+  // Accept both `// === Node N · Type · Name ===` and the looser
+  // `// ---- Node N Start ----` legacy variant the writer mentioned.
+  const richOpenRe   = /^\/\/\s*===\s*Node\s+(\d+)\s*[·\-]\s*([^·\-=]+?)\s*[·\-]\s*([^=]+?)\s*===/i;
+  const looseOpenRe  = /^\/\/\s*-+\s*Node\s+(\d+)\b[^-]*?(Start)?\s*-+/i;
+  const richCloseRe  = /^\/\/\s*===\s*\/Node\s+(\d+)\s*===/i;
+  const looseCloseRe = /^\/\/\s*-+\s*Node\s+(\d+)\s+End\s*-+/i;
+
+  function flush() {
+    if (cur) nodes.push(cur);
+    cur = null;
+  }
+  for (let i = 0; i < lines.length; i++) {
+    const ln = lines[i];
+    let m;
+    if ((m = ln.match(richOpenRe))) {
+      flush();
+      cur = {
+        id: parseInt(m[1], 10),
+        type: m[2].trim(),
+        name: m[3].trim(),
+        startLine: i + 1,
+        endLine:   i + 1,
+        body: [],
+      };
+      continue;
+    }
+    if ((m = ln.match(looseOpenRe))) {
+      flush();
+      cur = {
+        id: parseInt(m[1], 10),
+        type: 'Unknown',
+        name: `Node ${m[1]}`,
+        startLine: i + 1,
+        endLine:   i + 1,
+        body: [],
+      };
+      continue;
+    }
+    if (ln.match(richCloseRe) || ln.match(looseCloseRe)) {
+      if (cur) cur.endLine = i + 1;
+      flush();
+      continue;
+    }
+    if (cur) {
+      cur.endLine = i + 1;
+      cur.body.push(ln);
+    }
+  }
+  flush();
+  return nodes;
+}
+
+// Inspect a node's body and pull out useful subtitle info:
+// dialog line count, presence of choice (with N options), etc.
+function summariseNode(n) {
+  const summary = { dialogs: 0, choiceCount: 0, hasExplore: false, hasAI: false };
+  for (const ln of n.body) {
+    const t = ln.trim();
+    if (!t || t.startsWith('//')) continue;
+    if (/^\(Choice\s*:\s*(\d+)/i.test(t)) {
+      summary.choiceCount = parseInt(t.match(/^\(Choice\s*:\s*(\d+)/i)[1], 10);
+      continue;
+    }
+    if (/^\(Explore\s*:/i.test(t)) summary.hasExplore = true;
+    if (/^\(AI\s*:/i.test(t))      summary.hasAI = true;
+    if (/^[A-Za-z][A-Za-z0-9_-]*\s*:/.test(t)) summary.dialogs++;
+  }
+  return summary;
+}
+
+function buildGraphFromScript(text) {
+  const g = ensureGraph();
+  if (!g) return;
+  g.clear();
+  const nodes = parseScriptNodes(text);
+  if (!nodes.length) {
+    // Fallback to the old per-event view if no markers present.
+    return buildGraphFromScript_perEvent(text);
+  }
+  // Stash into the editable model so right-click "Add Node" + the
+  // inspector form can mutate the same source.
+  _scriptNodeModel = nodes;
+  _lgByModelId.clear();
+  ensureCanvasRightClickMenu();
+
+  let prevLg = null;
+  let x = 80, y = 80;
+  const COL = 260, ROW = 130;
+  let colCount = 0;
+  const COLS_PER_ROW = 4;
+  const lgNodesById = new Map();
+
+  for (const n of nodes) {
+    const summary = summariseNode(n);
+    const color = NODE_TYPE_COLORS[n.type] || NODE_TYPE_COLORS.Unknown;
+    const icon  = NODE_TYPE_ICONS[n.type] || '•';
+    const lg = LiteGraph.createNode('script/beat');
+    lg.title = `${icon} Node ${n.id} · ${n.name}`;
+    lg.color = '#241d2e';
+    // soft tinted body, bright title bar
+    const m = color.match(/^#([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})$/i);
+    if (m) {
+      const r  = parseInt(m[1], 16), gg = parseInt(m[2], 16), b  = parseInt(m[3], 16);
+      lg.bgcolor = `rgba(${r},${gg},${b},0.10)`;
+    }
+    lg.boxcolor = color;
+    // Subtitle lines
+    const subParts = [n.type];
+    if (summary.dialogs)     subParts.push(`${summary.dialogs} dialog`);
+    if (summary.choiceCount) subParts.push(`${summary.choiceCount} options`);
+    if (summary.hasExplore)  subParts.push('explore');
+    if (summary.hasAI)       subParts.push('AI');
+    lg.properties = {
+      kind: n.type,
+      modelId: n.id,
+      subtitle: subParts.join(' · ') + `\nlines ${n.startLine}–${n.endLine}`,
+      line: n.startLine,
+    };
+    // Inputs / outputs: Single Dialogue gets N outputs (one per choice
+    // option). Others get a single linear output.
+    lg.removeOutput(0);
+    if (n.type === 'Single Dialogue' && summary.choiceCount > 0) {
+      for (let k = 0; k < Math.min(4, summary.choiceCount); k++) {
+        lg.addOutput(`opt ${k}`, -1);
+      }
+    } else if (n.type === 'Ending') {
+      // No output — the road ends here.
+    } else {
+      lg.addOutput('next', -1);
+    }
+    lg.pos = [x, y];
+    lg.size = [220, 80];
+    g.add(lg);
+    lgNodesById.set(n.id, lg);
+    _lgByModelId.set(n.id, lg);
+
+    // Connect sequentially (linear flow). Single Dialogue branches
+    // all converge into the next node by default in this view.
+    if (prevLg && prevLg.outputs && prevLg.outputs.length) {
+      try {
+        for (let s = 0; s < prevLg.outputs.length; s++) {
+          prevLg.connect(s, lg, 0);
+        }
+      } catch (_) {}
+    }
+    prevLg = lg;
+
+    // Layout: 4-wide grid, then next row.
+    colCount++;
+    if (colCount >= COLS_PER_ROW) {
+      colCount = 0;
+      x = 80;
+      y += ROW;
+    } else {
+      x += COL;
+    }
+  }
+  _graphCanvas.setDirty(true, true);
+}
+
+// Legacy per-event view (kept as a fallback when no node markers are
+// present). Walks raw events and produces one node per dialog beat.
+function buildGraphFromScript_perEvent(text) {
+  const g = ensureGraph();
+  if (!g) return;
+  g.clear();
+  const rawLines = text.split('\n');
+  let lastNode = null;
+  let nodeX = 60, nodeY = 60;
+  const COL_W = 280;
+
+  function makeNode(kind, label, subtitle, lineNo) {
+    const n = LiteGraph.createNode('script/beat');
+    n.title = label;
+    n.color = '#241d2e';
+    n.bgcolor = NODE_COLORS[kind] ? hexToBg(NODE_COLORS[kind]) : '#1f1a28';
+    n.boxcolor = NODE_COLORS[kind] || '#9b7fff';
+    n.properties = { kind, subtitle: subtitle || '', line: lineNo };
+    n.pos = [nodeX, nodeY];
+    nodeY += 90;
+    if (nodeY > 700) { nodeY = 60; nodeX += COL_W; }
+    g.add(n);
+    return n;
+  }
+  function hexToBg(hex) {
+    // Soft, dimmer fill so the title bar (boxcolor) accents.
+    const m = hex.match(/^#([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})$/i);
+    if (!m) return '#1f1a28';
+    const r = parseInt(m[1], 16), gg = parseInt(m[2], 16), b = parseInt(m[3], 16);
+    return `rgba(${r},${gg},${b},0.08)`;
+  }
+  function connect(prev, curr) {
+    if (!prev || !curr) return;
+    try { prev.connect(0, curr, 0); } catch (_) {}
+  }
+
+  // Start
+  const start = makeNode('start', '▶ Start', '', 1);
+  lastNode = start;
+
+  // Track open contexts for choice branches.
+  const choiceStack = [];   // each entry: { choiceNode, branchOuts: Map<index, lastIfChoiceNode>, lastBranchNode }
+  let inObject = false;
+
+  for (let i = 0; i < rawLines.length; i++) {
+    const t = rawLines[i].trim();
+    const lineNo = i + 1;
+    if (!t || t.indexOf('//') === 0) continue;
+
+    // Bracket directives
+    const brackets = t.match(/\[(?:bg|fx|tr|ui):[^\]]*\]/g);
+    if (brackets && t.replace(/\[(?:bg|fx|tr|ui):[^\]]*\]/g, '').trim() === '') {
+      const isScene = /\[bg:scene/i.test(t) || /\[bg:cutscene/i.test(t);
+      const kind = isScene ? 'cutscene' : 'state';
+      const n = makeNode(kind, isScene ? '🖼 Scene' : '▸ State', brackets.join(' '), lineNo);
+      connect(lastNode, n);
+      lastNode = n;
+      continue;
+    }
+
+    // (Explore:N)
+    let m = t.match(/^\(\s*Explore\s*:\s*(\d+)\s*\)/i);
+    if (m) {
+      const n = makeNode('explore', '🌐 Explore', `${m[1]}s phase`, lineNo);
+      connect(lastNode, n);
+      lastNode = n;
+      continue;
+    }
+    // (Object:...)
+    m = t.match(/^\(\s*Object\s*:\s*([a-z0-9_-]+)/i);
+    if (m) {
+      inObject = true;
+      const n = makeNode('object', '📦 Object', m[1], lineNo);
+      connect(lastNode, n);
+      lastNode = n;
+      continue;
+    }
+    // (Action) inside object
+    if (/^\(\s*Action\b/i.test(t)) {
+      const n = makeNode('action', '⚙ Action', t.slice(0, 40), lineNo);
+      connect(lastNode, n);
+      lastNode = n;
+      continue;
+    }
+    // (Choice:N)
+    m = t.match(/^\(\s*Choice\s*:\s*(\d+)\s*\)/i);
+    if (m) {
+      const n = makeNode('choice', '◇ Choice', `${m[1]} options`, lineNo);
+      n.removeOutput(0);
+      const optCount = Math.max(1, Math.min(4, parseInt(m[1], 10)));
+      for (let k = 0; k < optCount; k++) n.addOutput(`opt ${k}`, -1);
+      connect(lastNode, n);
+      choiceStack.push({ choiceNode: n, branchOuts: new Map(), lastBranchNode: null });
+      lastNode = n;
+      continue;
+    }
+    // (IfChoice:N)
+    m = t.match(/^\(\s*IfChoice\s*:\s*(\d+)/i);
+    if (m && choiceStack.length) {
+      const ctx = choiceStack[choiceStack.length - 1];
+      const branchIdx = parseInt(m[1], 10);
+      const n = makeNode('ifchoice', `↳ If ${branchIdx}`, '', lineNo);
+      try { ctx.choiceNode.connect(branchIdx, n, 0); } catch (_) {}
+      ctx.lastBranchNode = n;
+      ctx.currentBranchIdx = branchIdx;
+      lastNode = n;
+      continue;
+    }
+    // (EndIf)
+    if (/^\(\s*EndIf\s*\)/i.test(t)) {
+      const ctx = choiceStack[choiceStack.length - 1];
+      if (ctx) {
+        ctx.branchOuts.set(ctx.currentBranchIdx, ctx.lastBranchNode);
+        ctx.lastBranchNode = null;
+      }
+      lastNode = null;  // following beats are NOT inside this branch
+      continue;
+    }
+    // (AI:id)
+    m = t.match(/^\(\s*AI\s*:\s*([a-z0-9_-]+)/i);
+    if (m) {
+      const n = makeNode('ai', '✨ AI Block', m[1], lineNo);
+      connect(lastNode, n);
+      lastNode = n;
+      continue;
+    }
+    if (/^\(\s*EndAI\s*\)/i.test(t)) continue;
+    // (Gift...) (GiftPick) (GiftScene) (GiftClosing) (GiftReveal)
+    if (/^\(\s*Gift\w*\b/i.test(t)) {
+      const label = t.match(/^\((\w+)/)[1];
+      const n = makeNode('gift', '🎁 ' + label, '', lineNo);
+      connect(lastNode, n);
+      lastNode = n;
+      continue;
+    }
+    // (Music) (EndScene) (Video:foo)
+    if (/^\(\s*Music\s*\)/i.test(t)) { const n = makeNode('music', '🎵 Music', '', lineNo); connect(lastNode, n); lastNode = n; continue; }
+    if (/^\(\s*EndScene\s*\)/i.test(t)) { const n = makeNode('endscene', '🎬 EndScene', '', lineNo); connect(lastNode, n); lastNode = n; continue; }
+    m = t.match(/^\(\s*Video\s*:\s*([^)]+)\)/i);
+    if (m) { const n = makeNode('video', '🎞 Video', m[1].trim(), lineNo); connect(lastNode, n); lastNode = n; continue; }
+    m = t.match(/^\(\s*Scene\s*:\s*([^)]+)\)/i);
+    if (m) { const n = makeNode('scene', '🖼 Scene', m[1].trim(), lineNo); connect(lastNode, n); lastNode = n; continue; }
+    // /EndScene closer for the reel block
+    if (/^\(\s*\/EndScene\s*\)/i.test(t)) continue;
+
+    // Regular speaker line: Speaker: text
+    m = t.match(/^([A-Za-z][A-Za-z0-9_-]*)\s*:\s*(.+)$/);
+    if (m) {
+      const sp = m[1];
+      const txt = m[2].slice(0, 80);
+      const n = makeNode('dialog', sp, txt, lineNo);
+      connect(lastNode, n);
+      lastNode = n;
+      continue;
+    }
+  }
+
+  // Arrange roughly into a vertical timeline. LiteGraph's auto-layout
+  // can be invoked via `arrange()` for a cleaner pass.
+  try { g.arrange(80, LiteGraph.VERTICAL_LAYOUT); } catch (_) {}
+  _graphCanvas.setDirty(true, true);
+}
+
+// ─── Phase 2.0: editing on canvas ─────────────────────────────
+// In-memory model: array of node objects { id, type, name, body, x, y }.
+// LiteGraph is the render layer; this is the data layer. Save Graph
+// serialises this model back to the marker-wrapped DSL.
+let _scriptNodeModel = []; // populated by buildGraphFromScript
+let _selectedNodeId  = null;
+
+// Right-click menu — add node by type at cursor position.
+function ensureCanvasRightClickMenu() {
+  const canvasEl = document.getElementById('graphCanvas');
+  if (!canvasEl || canvasEl._rcMenuWired) return;
+  canvasEl._rcMenuWired = true;
+  canvasEl.addEventListener('contextmenu', (e) => {
+    // LiteGraph also handles right-click; only trigger if click is on
+    // EMPTY canvas (no node under cursor).
+    if (!_graphCanvas) return;
+    const ctx = _graphCanvas;
+    const pos = [e.offsetX, e.offsetY];
+    const worldPos = ctx.convertEventToCanvasOffset(e);
+    const node = ctx.graph.getNodeOnPos(worldPos[0], worldPos[1]);
+    if (node) return; // let LiteGraph handle node menus
+    e.preventDefault();
+    showAddNodeMenu(e.clientX, e.clientY, worldPos);
+  });
+}
+
+function showAddNodeMenu(screenX, screenY, worldPos) {
+  // Remove any previous custom menu.
+  const old = document.getElementById('addNodeMenu');
+  if (old) old.remove();
+  const menu = document.createElement('div');
+  menu.id = 'addNodeMenu';
+  menu.style.cssText = `
+    position: fixed;
+    left: ${screenX}px;
+    top: ${screenY}px;
+    background: var(--bg-3);
+    border: 1px solid var(--line-2);
+    border-radius: 8px;
+    padding: 6px 0;
+    z-index: 100;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    min-width: 180px;
+    color: var(--text);
+    font-size: 13px;
+    font-family: inherit;
+  `;
+  const types = ['Intro', 'Dialogue Group', 'Single Dialogue', 'Explore', 'AI Dialogue', 'Gift', 'Ending'];
+  menu.innerHTML = `<div style="padding:5px 12px;color:var(--text-dim);font-size:10px;letter-spacing:0.18em;text-transform:uppercase;">Add Node</div>`;
+  types.forEach(t => {
+    const it = document.createElement('div');
+    it.textContent = `${NODE_TYPE_ICONS[t] || '•'}  ${t}`;
+    it.style.cssText = 'padding:8px 14px; cursor:pointer;';
+    it.onmouseenter = () => it.style.background = 'rgba(155,127,255,0.18)';
+    it.onmouseleave = () => it.style.background = 'transparent';
+    it.onclick = () => {
+      menu.remove();
+      addNodeOfType(t, worldPos);
+    };
+    menu.appendChild(it);
+  });
+  document.body.appendChild(menu);
+  // Click-anywhere-else closes.
+  const closeOnOut = (evt) => {
+    if (!menu.contains(evt.target)) {
+      menu.remove();
+      document.removeEventListener('mousedown', closeOnOut, true);
+    }
+  };
+  setTimeout(() => document.addEventListener('mousedown', closeOnOut, true), 0);
+}
+
+function addNodeOfType(type, worldPos) {
+  // Pick a fresh ID = max existing + 1.
+  const nextId = _scriptNodeModel.reduce((m, n) => Math.max(m, n.id), 0) + 1;
+  const stub = stubBodyForType(type);
+  const newNode = {
+    id: nextId,
+    type,
+    name: `New ${type}`,
+    body: stub.split('\n'),
+    startLine: -1,
+    endLine: -1,
+  };
+  _scriptNodeModel.push(newNode);
+  renderModelToGraph();
+  // Position the newly-created LG node at the right-click spot.
+  const lg = lgNodeForModelId(nextId);
+  if (lg) {
+    lg.pos = [worldPos[0] - 110, worldPos[1] - 30];
+    _graphCanvas.setDirty(true, true);
+    _graphCanvas.selectNode(lg);
+    selectNodeForEditing(newNode);
+  }
+}
+
+function stubBodyForType(type) {
+  switch (type) {
+    case 'Intro':
+      return `[bg:cutscene=opening.jpg] [ui:narrative]\nNarrative: A new beginning.`;
+    case 'Dialogue Group':
+      return `[bg:none] [ui:cast-large]\nMike: ...\nIris: ...`;
+    case 'Single Dialogue':
+      return `[ui:multi]\n(Choice:2)\nRomeo: Lean in\nValium: Step back\n(IfChoice:0)\n  Mike: I leaned in.\n(EndIf)\n(IfChoice:1)\n  Mike: I held off.\n(EndIf)`;
+    case 'Explore':
+      return `[bg:explore]\n(Explore:60)`;
+    case 'AI Dialogue':
+      return `(AI:new-block length=6 mood=tender)\nMike: placeholder\n(EndAI)`;
+    case 'Gift':
+      return `(GiftPick)\n(GiftScene)\n(GiftClosing)\n(GiftReveal)`;
+    case 'Ending':
+      return `(EndScene)\n(Music)`;
+    default:
+      return ``;
+  }
+}
+
+// Maps model node IDs → LiteGraph nodes so we can find/select them.
+let _lgByModelId = new Map();
+function lgNodeForModelId(id) { return _lgByModelId.get(id) || null; }
+
+function renderModelToGraph() {
+  const g = ensureGraph();
+  if (!g) return;
+  g.clear();
+  _lgByModelId.clear();
+  let prevLg = null;
+  let x = 80, y = 80;
+  const COL = 260, ROW = 130;
+  let colCount = 0;
+  const COLS_PER_ROW = 4;
+  for (const n of _scriptNodeModel) {
+    const summary = summariseNode(n);
+    const color = NODE_TYPE_COLORS[n.type] || NODE_TYPE_COLORS.Unknown;
+    const icon  = NODE_TYPE_ICONS[n.type] || '•';
+    const lg = LiteGraph.createNode('script/beat');
+    lg.title = `${icon} Node ${n.id} · ${n.name}`;
+    lg.color = '#241d2e';
+    const m = color.match(/^#([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})$/i);
+    if (m) {
+      const r = parseInt(m[1], 16), gg = parseInt(m[2], 16), b = parseInt(m[3], 16);
+      lg.bgcolor = `rgba(${r},${gg},${b},0.10)`;
+    }
+    lg.boxcolor = color;
+    const subParts = [n.type];
+    if (summary.dialogs)     subParts.push(`${summary.dialogs} dialog`);
+    if (summary.choiceCount) subParts.push(`${summary.choiceCount} options`);
+    if (summary.hasExplore)  subParts.push('explore');
+    if (summary.hasAI)       subParts.push('AI');
+    lg.properties = {
+      kind: n.type,
+      modelId: n.id,
+      subtitle: subParts.join(' · '),
+      line: n.startLine,
+    };
+    lg.removeOutput(0);
+    if (n.type === 'Single Dialogue' && summary.choiceCount > 0) {
+      for (let k = 0; k < Math.min(4, summary.choiceCount); k++) lg.addOutput(`opt ${k}`, -1);
+    } else if (n.type !== 'Ending') {
+      lg.addOutput('next', -1);
+    }
+    lg.pos = [x, y];
+    lg.size = [220, 80];
+    g.add(lg);
+    _lgByModelId.set(n.id, lg);
+    if (prevLg && prevLg.outputs && prevLg.outputs.length) {
+      try {
+        for (let s = 0; s < prevLg.outputs.length; s++) {
+          prevLg.connect(s, lg, 0);
+        }
+      } catch (_) {}
+    }
+    prevLg = lg;
+    colCount++;
+    if (colCount >= COLS_PER_ROW) { colCount = 0; x = 80; y += ROW; }
+    else x += COL;
+  }
+  _graphCanvas.setDirty(true, true);
+}
+
+// Wire the inspector form fields.
+const giEmpty = document.querySelector('.gi-empty');
+const giForm  = document.querySelector('.gi-form');
+const giName  = document.getElementById('giName');
+const giType  = document.getElementById('giType');
+const giBody  = document.getElementById('giBody');
+
+function selectNodeForEditing(modelNode) {
+  if (!modelNode) {
+    giEmpty.style.display = 'block';
+    giForm.style.display  = 'none';
+    _selectedNodeId = null;
+    return;
+  }
+  _selectedNodeId = modelNode.id;
+  giEmpty.style.display = 'none';
+  giForm.style.display  = 'flex';
+  giName.value = modelNode.name;
+  giType.value = modelNode.type;
+  giBody.value = modelNode.body.join('\n');
+}
+
+document.getElementById('giApply').addEventListener('click', () => {
+  const id = _selectedNodeId;
+  if (id == null) return;
+  const n = _scriptNodeModel.find(x => x.id === id);
+  if (!n) return;
+  n.name = giName.value.trim() || `Node ${n.id}`;
+  n.type = giType.value;
+  n.body = giBody.value.split('\n');
+  renderModelToGraph();
+  // Re-select the same node (renderModelToGraph rebuilt LG nodes).
+  const lg = lgNodeForModelId(id);
+  if (lg) _graphCanvas.selectNode(lg);
+});
+
+document.getElementById('giDelete').addEventListener('click', () => {
+  const id = _selectedNodeId;
+  if (id == null) return;
+  if (!confirm('Delete this node?')) return;
+  _scriptNodeModel = _scriptNodeModel.filter(x => x.id !== id);
+  selectNodeForEditing(null);
+  renderModelToGraph();
+});
+
+// Hook node selection in LiteGraph → load into inspector.
+function onLgNodeSelectedForEdit(node) {
+  if (!node || !node.properties) {
+    selectNodeForEditing(null);
+    if (node && typeof node.properties?.line === 'number') {
+      jumpTextEditorToLine(node.properties.line);
+    }
+    return;
+  }
+  const modelId = node.properties.modelId;
+  const mn = _scriptNodeModel.find(x => x.id === modelId);
+  if (mn) selectNodeForEditing(mn);
+  if (typeof node.properties.line === 'number') {
+    jumpTextEditorToLine(node.properties.line);
+  }
+}
+
+// Serialise model → marker-wrapped DSL text.
+function modelToScript() {
+  const out = [];
+  for (const n of _scriptNodeModel) {
+    out.push(`// === Node ${n.id} · ${n.type} · ${n.name} ===`);
+    for (const ln of n.body) out.push(ln);
+    out.push(`// === /Node ${n.id} ===`);
+    out.push('');
+  }
+  return out.join('\n');
+}
+
+document.getElementById('graphSave').addEventListener('click', async () => {
+  const text = modelToScript();
+  scriptArea.value = text;
+  updateCharCount();
+  scenarios[currentName] = text;
+  saveScenarios(scenarios);
+  // Mirror to disk if we know where this script lives. Three paths:
+  //   a) Tracked disk path (set when user picks "Load from game")
+  //   b) Custom venue (scenario key "pack::venueId")
+  //   c) Neither — localStorage only
+  let diskPath = null;
+  if (_currentScriptDiskPath) {
+    diskPath = _currentScriptDiskPath;
+    await persistScriptToPath(diskPath, text);
+  } else {
+    const m = currentName.match(/^([a-z0-9_-]+)::([a-z0-9_-]+)$/i);
+    if (m && typeof persistVenueToDisk === 'function') {
+      diskPath = `worlds/${m[1]}/locations/${m[2]}/scripts/main.txt`;
+      await persistVenueToDisk(m[1], m[2], text);
+    }
+  }
+  flashSaved();
+  alert(
+    `Saved ${_scriptNodeModel.length} nodes.` +
+    (diskPath ? `\n\nWritten to disk:\n  ${diskPath}\n\nReload the app to see changes.` :
+                `\n\nlocalStorage only — start the dev-server (node dev-server.js) + use "Load from game" to enable disk writes.`)
+  );
+});
+
+// Toggle visibility + render when opened.
+const graphView   = document.getElementById('graphView');
+const toggleGraph = document.getElementById('toggleGraph');
+toggleGraph.addEventListener('click', () => {
+  const opening = graphView.style.display === 'none';
+  graphView.style.display = opening ? 'flex' : 'none';
+  if (opening) {
+    // Defer one frame so the canvas has its final size before draw.
+    requestAnimationFrame(() => {
+      buildGraphFromScript(scriptArea.value);
+      if (_graphCanvas) _graphCanvas.resize();
+    });
+  }
+});
+document.getElementById('graphRefresh').addEventListener('click', () => {
+  buildGraphFromScript(scriptArea.value);
+  if (_graphCanvas) _graphCanvas.resize();
+});
+document.getElementById('graphClose').addEventListener('click', () => {
+  graphView.style.display = 'none';
+});
 
 // ============================================================
 // Init

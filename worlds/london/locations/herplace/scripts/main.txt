@@ -23,6 +23,7 @@
 // where the engine's specialized handlers are needed.
 // =============================================================
 
+// === Node 1 · Intro · Remembering sock ===
 // ---- Remembering sock ----
 [bg:cutscene=joy-street01.jpg] [fx:none] [tr:softCrossfade]
 [ui:narrative]
@@ -43,6 +44,9 @@ Eros: Are you insane?
 Valium: We were late.
 Professore: The choice was made. Now walk with dignity.
 
+// === /Node 1 ===
+
+// === Node 2 · Intro · Dog issue childhood flashback ===
 // ---- Dog issue ----
 [bg:cutscene=joy-street01.jpg] [fx:none] [tr:softCrossfade]
 [ui:narrative]
@@ -58,6 +62,9 @@ Narrative: A furious little dog gains on him with heroic confidence.
 Romeo: The wound was not only physical.
 Eros: Two teeth marks on my backside say otherwise.
 
+// === /Node 2 ===
+
+// === Node 3 · Dialogue Group · Joy on the street ===
 // ---- Joy on the street ----
 [bg:cutscene=joy-street01.jpg] [tr:softCrossfade] [ui:cast-large]
 Joy: Mike?
@@ -72,6 +79,9 @@ Joy: Is that for her?
 Boy: Technically.
 Joy: Well, that's never a confident word.
 
+// === /Node 3 ===
+
+// === Node 4 · Gift · Gift sequence with Joy ===
 // ---- Gift sequence ----
 //
 // (GiftScene) and (GiftClosing) accept per-section UI overrides. AI
@@ -104,6 +114,9 @@ Joy: You always did pick out odd little things.
 [ui:cast-large]
 Joy: Now go. Don't keep her waiting.
 
+// === /Node 4 ===
+
+// === Node 5 · Dialogue Group · Inner voices at the door ===
 // ---- Inner voices while waiting at the door ----
 [bg:cutscene=joy-street01.jpg]
 Narrative: She squeezes your shoulder once, then she's gone. The street is yours again.
@@ -126,6 +139,9 @@ Valium: You cannot determine breed from punctuation.
 [ui:narrative]
 Narrative: The door opens.
 
+// === /Node 5 ===
+
+// === Node 6 · Dialogue Group · Inside her place POV ===
 // ---- Inside her place — POV ----
 [bg:none] [ui:cast-large]
 Girl: You found it.
@@ -145,6 +161,9 @@ Alfa: He made effort. Let him have that.
 Eros: She noticed the blazer.
 Valium: Everyone noticed the blazer. It's cream and emotional.
 
+// === /Node 6 ===
+
+// === Node 7 · Dialogue Group · Shoes off torn sock reveal ===
 // ---- Shoes Off ----
 [bg:none] [ui:cast-large]
 Girl: Shoes off, if you don't mind.
@@ -171,6 +190,9 @@ Girl: Happens.
 Boy: To socks?
 Girl: To people pretending they're fine.
 
+// === /Node 7 ===
+
+// === Node 8 · Dialogue Group · Dog Payoff with Pickle ===
 // ---- Dog Payoff ----
 [bg:none] [ui:cast-large]
 Narrative: A dog trots in from the hallway.
@@ -188,6 +210,9 @@ Girl: Don't get proud. He liked a bin bag yesterday.
 Boy: Strong competition.
 Girl: The bag had confidence.
 
+// === /Node 8 ===
+
+// === Node 9 · AI Dialogue · Gives gift AI beat ===
 // ---- Gives gift ----
 [bg:none] [ui:narrative]
 (AI:gift-give mood=funny)
@@ -226,6 +251,9 @@ Girl: The bag had confidence.
   [ui:inner-small]
 (EndAI)
 
+// === /Node 9 ===
+
+// === Node 10 · Dialogue Group · Explore Setup ===
 // ---- Explore Setup ----
 
 [bg:none] [ui:narrative]
@@ -239,6 +267,9 @@ Eros: Gather intelligence.
 Romeo: Learn the room gently.
 Professore: Observe. Do not become a detective with a pulse.
 
+// === /Node 10 ===
+
+// === Node 11 · Explore · Explore the room ===
 // ---- Explore the room ----
 [bg:explore]
 (Explore:60)
@@ -246,6 +277,9 @@ Professore: Observe. Do not become a detective with a pulse.
 Girl: Sorry, didn't take long. You know what, let's grab wine and move to the couch.
 Boy: Yeah, I'd like that.
 
+// === /Node 11 ===
+
+// === Node 12 · Dialogue Group · Couch scene opener ===
 // ---- Couch scene (two-person illustration with bubbles) ----
 [bg:scene=narrativescene01.jpg] [tr:softCrossfade] [ui:bubble]
 Narrative: Iris sits first. Mike follows, carefully normal.
@@ -265,6 +299,9 @@ Giulietta: Let him keep the joke. He's safer inside jokes.
 Girl: What did you conclude?
 Boy: Dangerous question.
 
+// === /Node 12 ===
+
+// === Node 13 · Single Dialogue · Choice 2 caught investigating ===
 // ---- Choice 2: caught investigating ----
 [ui:multi]
 (Choice:3)
@@ -309,6 +346,9 @@ Boy: Dangerous question.
   Valium: It is basically a police report with manners.
 (EndIf)
 
+// === /Node 13 ===
+
+// === Node 14 · Dialogue Group · Movie section old cinema ===
 // ---- Movie section ----
 [ui:bubble]
 Boy: I walked past the old cinema on the way.
@@ -332,6 +372,9 @@ Girl: I'm a very specific woman. (+8)
 Valium: Breathe. This one lands.
 Professore: Accept without grabbing it.
 
+// === /Node 14 ===
+
+// === Node 15 · Single Dialogue · Choice 3 accept the invite ===
 // ---- Choice 3: accept the invite ----
 [ui:multi]
 (Choice:3)
@@ -369,6 +412,9 @@ Boy: Cheers. To Tuesday nights.
 [ui:inner-small]
 Alfa: Good. He came closer without moving.
 
+// === /Node 15 ===
+
+// === Node 16 · Dialogue Group · Phone call interrupts ===
 // ---- Phone call ----
 [ui:narrative]
 Narrative: A phone buzzes face-up on the coffee table.
@@ -379,6 +425,9 @@ Narrative: She picks up and half-turns away.
 [ui:inner-small]
 Eros: Who's calling at this hour?
 
+// === /Node 16 ===
+
+// === Node 17 · Single Dialogue · Choice 4 listen or look away ===
 // ---- Choice 4: listen or look away ----
 [ui:multi]
 (Choice:2)
@@ -434,6 +483,9 @@ Eros: Who's calling at this hour?
   Valium: Not everything is a leaderboard.
 (EndIf)
 
+// === /Node 17 ===
+
+// === Node 18 · Dialogue Group · Back on the couch ===
 // ---- Back on the couch ----
 [bg:scene=narrativescene01.jpg] [tr:softCrossfade] [ui:bubble]
 Girl: Where were we?
@@ -452,6 +504,9 @@ Boy: You know?
 Girl: You have good-seat energy.
 Girl: Now what?
 
+// === /Node 18 ===
+
+// === Node 19 · Single Dialogue · Choice 5 the moment ===
 // ---- Choice 5: the moment ----
 [ui:multi]
 (Choice:4)
@@ -462,6 +517,9 @@ Girl: Now what?
 [ui:narrative]
 Narrative: The impulse arrives, clean and whole, {{input}}.
 
+// === /Node 19 ===
+
+// === Node 20 · Dialogue Group · Inner-voice deliberation ===
 // ---- Inner-voice deliberation ----
 [ui:inner-small]
 Scheggia: Wait. He's about to do something.
@@ -477,6 +535,9 @@ Valium: It absolutely feels like a spreadsheet.
 Professore: A coin. Fair and square.
 Professore: Heads, we commit. Tails, we retreat.
 
+// === /Node 20 ===
+
+// === Node 21 · Dialogue Group · Coin flip cinematic ===
 // ---- Coin flip cinematic ----
 (Video:coinflip.mp4)
 
@@ -484,6 +545,9 @@ Professore: Heads, we commit. Tails, we retreat.
 Professore: Heads.
 Eros: Move. Now.
 
+// === /Node 21 ===
+
+// === Node 22 · Dialogue Group · The hug and first kiss ===
 // ---- The hug ----
 [bg:scene=hugscene.jpg] [tr:softCrossfade] [ui:narrative]
 Narrative: Mike closes the gap before his mind can stop him.
@@ -563,6 +627,9 @@ Girl: Good.
 Boy: Maybe slightly more.
 Girl: Also good.
 
+// === /Node 22 ===
+
+// === Node 23 · Ending · End of dialogue and explore objects ===
 // ---- End of dialogue ----
 [bg:none]
 (EndScene)
@@ -697,3 +764,4 @@ Valium: That's called not tidying before guests.
 Eros: She didn't overprepare. Good sign.
 Valium: Or she has a normal relationship with tables.
 Professore: A room can be honest without becoming evidence.
+// === /Node 23 ===

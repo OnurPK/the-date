@@ -1,0 +1,79 @@
+/* ============================================================
+   roles.ai — roles-ui.css  (base component sheet — write ONCE)
+   Every colour / font / radius / blur / shadow is a --token.
+   A new world overrides ONLY tokens (see worlds/<world>/theme.css).
+   Never edit component rules per world.
+   ------------------------------------------------------------
+   TOKEN CONTRACT (defaults live here; themes override):
+     surfaces : --bg --bg-image --surface --surface-2 --surface-line
+                --hair --surface-blur --surface-sat
+     text     : --ink --ink-soft --on-accent
+     accents  : --accent --accent-2
+     semantic : --c-affection --c-trust --c-tension --c-family
+                --c-gossip --c-success --c-warning
+     choices  : --cat-character --cat-consequence --cat-exit
+                --cat-discovery --cat-wildcard
+     type     : --font-display --font-body --font-ui --font-script --name-style
+     shape    : --radius-card --radius-pill --radius-sm --frame-opacity
+     depth    : --shadow-card --shadow-soft --card-inset
+     motion   : --ease --dur          spacing: --s1..--s5 (8pt)
+   ============================================================ */
+:root{
+  --bg:#f4f1fb; --bg-image:none;
+  --surface:rgba(255,255,255,.6); --surface-2:rgba(255,255,255,.4);
+  --surface-line:rgba(255,255,255,.6); --hair:rgba(255,255,255,.8);
+  --surface-blur:24px; --surface-sat:150%;
+  --ink:#3a2e46; --ink-soft:#6a5d78; --on-accent:#fff;
+  --accent:#e0668a; --accent-2:#8b7bd8;
+  --c-affection:#e0668a; --c-trust:#5ec9a8; --c-tension:#c58b7a;
+  --c-family:#e9cf9c; --c-gossip:#a99cc7; --c-success:#5ec9a8; --c-warning:#e0a45a;
+  --cat-character:#5ec9a8; --cat-consequence:#e0668a; --cat-exit:#8b7bd8;
+  --cat-discovery:#e9cf9c; --cat-wildcard:#c58be0;
+  --font-display:"Playfair Display",Georgia,serif; --font-body:"Inter",system-ui,sans-serif;
+  --font-ui:"Inter",system-ui,sans-serif; --font-script:"Caveat",cursive; --name-style:italic;
+  --radius-card:24px; --radius-pill:40px; --radius-sm:14px; --frame-opacity:0;
+  --shadow-card:0 18px 44px rgba(120,90,150,.18); --shadow-soft:0 8px 20px rgba(120,90,150,.12);
+  --card-inset:inset 0 1px 0 rgba(255,255,255,.7);
+  --ease:cubic-bezier(.22,1,.36,1); --dur:.2s;
+  --s1:4px; --s2:8px; --s3:16px; --s4:24px; --s5:32px;
+}
+/* --- components (structure only; all values via tokens) --- */
+.ui-bg{background:var(--bg-image),var(--bg);color:var(--ink);font-family:var(--font-body)}
+.panel{background:var(--surface);-webkit-backdrop-filter:blur(var(--surface-blur)) saturate(var(--surface-sat));backdrop-filter:blur(var(--surface-blur)) saturate(var(--surface-sat));border:1px solid var(--surface-line);border-top:1px solid var(--hair);border-radius:var(--radius-card);padding:var(--s4) 26px;box-shadow:var(--shadow-card),var(--card-inset);position:relative}
+.panel::after{content:"";position:absolute;inset:7px;border:1px solid var(--accent-2);border-radius:calc(var(--radius-card) - 8px);opacity:var(--frame-opacity);pointer-events:none}
+.btn{font-family:var(--font-ui);font-weight:600;font-size:15px;cursor:pointer;padding:12px 28px;border-radius:var(--radius-pill);border:none;transition:filter var(--dur) var(--ease)}
+.btn-primary{background:linear-gradient(120deg,var(--accent),var(--accent-2));color:var(--on-accent);box-shadow:var(--shadow-soft),inset 0 1px 0 rgba(255,255,255,.4)}
+.btn-ghost{background:var(--surface-2);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);color:var(--accent);border:1px solid var(--surface-line)}
+.dbox{background:var(--surface);-webkit-backdrop-filter:blur(var(--surface-blur));backdrop-filter:blur(var(--surface-blur));border:1px solid var(--surface-line);border-top:1px solid var(--hair);border-radius:var(--radius-sm);padding:14px 20px;box-shadow:var(--shadow-soft)}
+.dbox .nm{font-family:var(--font-display);font-style:var(--name-style);font-weight:600;font-size:20px;color:var(--accent);margin-bottom:4px}
+.dbox .tx{font-family:var(--font-body);font-size:17px;line-height:1.55;color:var(--ink)}
+.cast-small{background:var(--surface-2);border:1px solid var(--surface-line);border-radius:var(--radius-sm);padding:10px 14px;display:flex;gap:10px;align-items:center}
+.cast-small .dot{width:32px;height:32px;border-radius:50%;background:linear-gradient(140deg,var(--accent),var(--accent-2));flex:none}
+.bubble{background:linear-gradient(120deg,var(--accent),var(--accent-2));color:var(--on-accent);border-radius:var(--radius-sm) var(--radius-sm) 6px var(--radius-sm);padding:11px 16px;font-size:16px;box-shadow:var(--shadow-soft)}
+.narr{font-family:var(--font-display);font-style:italic;font-size:18px;text-align:center;color:var(--accent-2)}
+.choice{display:flex;gap:12px;align-items:flex-start;background:var(--surface-2);-webkit-backdrop-filter:blur(var(--surface-blur));backdrop-filter:blur(var(--surface-blur));border:1px solid var(--surface-line);border-top:1px solid var(--hair);border-radius:var(--radius-sm);padding:13px 16px;cursor:pointer;transition:transform var(--dur) var(--ease);box-shadow:var(--shadow-soft)}
+.choice:hover{transform:translateY(-2px)}
+.choice .tag{font-family:var(--font-ui);font-size:9px;letter-spacing:1.5px;text-transform:uppercase;font-weight:700;padding:4px 11px;border-radius:20px;flex:none;color:var(--on-accent)}
+.choice .otx{font-family:var(--font-body);font-size:16px;color:var(--ink)}
+.tag.character{background:var(--cat-character)}.tag.consequence{background:var(--cat-consequence)}.tag.exit{background:var(--cat-exit)}.tag.discovery{background:var(--cat-discovery);color:#4a3a10}.tag.wildcard{background:var(--cat-wildcard)}
+.nav{background:var(--ink);border-radius:var(--radius-sm);padding:18px 0;font-family:var(--font-ui);color:var(--bg)}
+.nav a{display:flex;align-items:center;gap:11px;padding:10px 20px;color:rgba(255,255,255,.6);font-size:14px;text-decoration:none}
+.nav a.on{color:#fff;background:linear-gradient(90deg,color-mix(in srgb,var(--accent) 30%,transparent),transparent);box-shadow:inset 3px 0 0 var(--accent-2)}
+.oval{border-radius:50%/45%;background:linear-gradient(150deg,var(--accent),var(--accent-2));border:2px solid var(--accent-2);display:flex;align-items:center;justify-content:center;font-family:var(--font-display);color:var(--on-accent);box-shadow:var(--shadow-soft)}
+.slider{display:flex;align-items:center;gap:10px;margin:8px 0;font-family:var(--font-ui);font-size:13px}
+.track{flex:1;height:3px;background:color-mix(in srgb,var(--ink) 22%,transparent);border-radius:3px;position:relative}
+.bead{position:absolute;top:50%;transform:translate(-50%,-50%);width:14px;height:14px;border-radius:50%;box-shadow:0 1px 3px rgba(0,0,0,.4)}
+.meter{display:flex;align-items:center;gap:10px;margin:8px 0}
+.meter .bar{flex:1;height:8px;background:color-mix(in srgb,var(--ink) 15%,transparent);border-radius:8px;position:relative;overflow:hidden}
+.meter .fill{position:absolute;top:0;left:50%;bottom:0;border-radius:8px}
+.meter .stg{font-family:var(--font-display);font-style:italic;font-size:14px;color:var(--accent)}
+.toast{display:inline-flex;align-items:center;gap:8px;background:var(--surface);-webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px);border:1px solid var(--surface-line);border-radius:30px;padding:9px 16px;font-family:var(--font-display);font-style:italic;font-size:16px;color:var(--ink);box-shadow:var(--shadow-soft)}
+.toast .k{color:var(--accent);font-weight:600;font-style:normal}
+.disc{background:color-mix(in srgb,var(--c-family) 22%,var(--surface));border:1px solid var(--c-family);border-radius:var(--radius-sm);padding:12px 15px}
+.disc .dh{font-family:var(--font-ui);font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--c-family);font-weight:700;margin-bottom:5px}
+.disc .dt{font-family:var(--font-display);font-style:italic;font-size:16px;color:var(--ink)}
+.obj{display:flex;align-items:center;gap:10px;font-family:var(--font-body);font-size:15px;color:var(--ink);margin:7px 0}
+.obj .bx{width:17px;height:17px;border:1.5px solid var(--accent);border-radius:6px;flex:none;display:flex;align-items:center;justify-content:center;font-size:11px;color:var(--accent)}
+.obj.done{opacity:.5;text-decoration:line-through}
+.chip{font-family:var(--font-display);font-style:italic;font-size:15px;color:var(--on-accent);background:linear-gradient(120deg,var(--accent),var(--accent-2));padding:5px 14px;border-radius:20px;box-shadow:var(--shadow-soft)}
+.react{font-family:var(--font-script);font-size:24px;color:var(--accent)}

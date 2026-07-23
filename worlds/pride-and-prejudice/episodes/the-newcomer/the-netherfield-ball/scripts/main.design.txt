@@ -1,0 +1,412 @@
+// =============================================================
+// Pride & Prejudice — The Netherfield Ball — SINGLE-ROUTE SCRIPT
+// world: pride_and_prejudice · pack: pride
+// episode: episodes/the-newcomer/the-netherfield-ball
+// PC: arabella_frost ("Arabella", The Wit) · female
+//
+// This is ONE golden route from opening to the ending
+// `e_the_charge_at_its_height`. No branching yet (branches later).
+//
+// ---- TURN MODEL ----
+// A TURN = player picks a multi-select option (or writes) → the
+// resulting dialog/narrative → any mechanics that fire.
+// Each situation runs ~4-5 turns. Marked `// TURN n`.
+// The player's pick is written as:  > PICK [Category]: "..."
+//   Categories: Character | Consequence | Exit | Discovery | Wildcard
+// (single route = only the chosen option is written)
+//
+// ---- MODES (every line is tagged) ----
+//   [ui:narrative]  off-screen narrator, no portrait
+//   [ui:cast-large] NPC big + name + dialog box
+//   [ui:cast-small] NPC small bottom-left, bg stays visible
+//   [ui:bubble]     position speech bubble over a scene
+//   [ui:multi]      choice picker open
+//
+// ---- MECHANICS (0+ per turn; shown in a `>> MECH` block) ----
+//   (Discovery:id "text")            surface a discovery
+//   (Consequence:key=true)           set a story fact
+//   TRUST <char> <±N> / ROMANCE ...  relation (clamps -3..+3)
+//   (Memory:<char> "text")           X-will-remember-this
+//   (Objective:set|active|done id "text")
+//   (Trait:<char> "TraitName" <±N>)  progress(+) / stress(-)
+//   (Reaction:<char> "brief visible reaction")   transient NPC beat
+//
+// ---- SITUATION MARKERS ----
+//   // ═══ ENTER: <id> ═══   (Situation:<id>)
+//   // ═══ EXIT: <id> → <next> ═══   (Exit:<next> when="...")
+// =============================================================
+
+
+// Objectives seeded at chapter open
+(Objective:set  obj_work_room "Work the blazing room — every game orbits Mr Darcy." )
+(Objective:active obj_work_room)
+(Objective:set  obj_the_dance "Dance the promised duel with Mr Darcy." )
+
+
+// ═══════════════════════════════════════════════════════════
+// ═══ ENTER: the_ballroom  (HUB) ═══
+// ═══════════════════════════════════════════════════════════
+(Situation:the_ballroom)
+[bg:explore=ballroom]
+[ui:narrative]
+Narrative: Netherfield is lit like a thing on fire. You step into the blaze — and find him at once: Mr Darcy, across the floor, already looking, and not troubling to stop when you catch it.
+[ui:narrative]
+Narrative: The whole room arranges itself, to your eye, into one game with one object. Officers by the wall. Miss Bingley at the pianoforte. A crush at the doors. And the long floor between you and the man you came to duel.
+>> MECH: (Consequence:at_the_ball=true)
+
+// ---- TURN 1 ----  (greet the host)
+[ui:multi]
+> PICK [Character]: "Meet Mr Bingley's delight with a dry little curtsey."
+[ui:cast-large]
+Bingley: Miss Frost! You came — splendid! I promised you the whole county and here it is, every candle of it.
+[ui:cast-large]
+Arabella: You promised a crush, sir, and you have over-delivered. One can scarcely move for silk.
+[ui:narrative]
+Narrative: He laughs, delighted with the world. Beyond his shoulder, Darcy has not looked away.
+>> MECH: (Reaction:mr_darcy "watches her from across the floor, unmoving") · (Trait:arabella_frost "Sharpest Wit" +1)
+
+// ---- TURN 2 ----  (take the room's measure)
+[ui:multi]
+> PICK [Character]: "Let my eye travel the room and price every game in it."
+[ui:narrative]
+Narrative: The officers have a story to tell. The pianoforte has a rival performing at it. The crush keeps threatening to throw you into his path. And under it all, the promised dance.
+[ui:cast-small]
+Arabella: So many ways to spend an evening. Only one of them worth the trouble.
+>> MECH: — none —
+
+// ---- TURN 3 ----  (a look exchanged)
+[ui:multi]
+> PICK [Character]: "Return his look across the floor — hold it one beat too long, then break it first, on my terms."
+[ui:narrative]
+Narrative: You meet his eyes across the blazing room and do not drop them. He does not either. You let it go — on your own count, not his — and feel the small victory of it.
+>> MECH: (Reaction:mr_darcy "the ghost of something crosses his face; he masters it") · ROMANCE mr_darcy +1
+
+// ---- TURN 4 ----  (choose the first move)
+[ui:multi]
+> PICK [Exit->the_officers_blade]: "Drift to the red-coats by the wall — the handsome one has been hoping I would."
+[ui:narrative]
+Narrative: You turn toward the officers, where the handsomest of them has been visibly willing you over, a story already half-out of his mouth.
+>> MECH: (Objective:active obj_work_room)
+
+// ═══ EXIT: the_ballroom → the_officers_blade ═══
+(Exit:the_officers_blade when="she crosses to the officers' corner for the dirt on Darcy")
+
+
+// ═══════════════════════════════════════════════════════════
+// ═══ ENTER: the_officers_blade ═══
+// ═══════════════════════════════════════════════════════════
+(Situation:the_officers_blade)
+[bg:cutscene=officers-corner.jpg]
+[ui:narrative]
+Narrative: The officer waits the way a man waits who has a gift he is sure will please. The gift is Mr Darcy's character, gutted and handed over.
+
+// ---- TURN 1 ----
+[ui:multi]
+> PICK [Character]: "Let him lean in — and keep my own face pleasant and unreadable."
+[ui:cast-large]
+Wickham: You are newly acquainted with Mr Darcy, I think. Then you cannot yet know what he is.
+[ui:cast-large]
+Arabella: I find I know a great many things people would rather I did not. Go on, then. Improve me.
+>> MECH: (Trait:arabella_frost "Sharpest Wit" +1)
+
+// ---- TURN 2 ----  (the grievance)
+[ui:multi]
+> PICK [Character]: "Hear the grievance out — and weigh the man telling it while he tells it."
+[ui:cast-large]
+Wickham: There was a living promised me — a valuable one — and when it fell vacant it was given elsewhere. By him. In cold blood. His father loved me; the son could not forgive it.
+[ui:narrative]
+Narrative: He lets you draw the damning conclusion, so his own mouth stays clean. You notice that he does.
+>> MECH: (Discovery:wickham_story_has_holes "A man this practised in the telling, this careful to let you reach the verdict for him, is not confiding a wound — he is recruiting an ally.") · (Consequence:kept_her_head=true)
+
+// ---- TURN 3 ----  (pocket the blade, under Darcy's eye)
+[ui:multi]
+> PICK [Consequence]: "Pocket it with a sweet smile — in plain sight of Darcy, so he can watch me arm myself against him."
+[ui:cast-small]
+Arabella: What a very ill-used man. And what a fine thing to know, on a night when I shall be within arm's reach of the man who used you.
+[ui:narrative]
+Narrative: Across the floor the proud man has gone very still, watching you incline your head to a red-coat — and hating it.
+>> MECH: (Consequence:wickham_poison=true) · (Consequence:built_the_week=true) · (Consequence:stoked_his_jealousy=true) · (Reaction:mr_darcy "jaw tight, gaze fixed on her across the room") · (Objective:done obj_blade)
+
+// ---- TURN 4 ----  (she keeps her head)
+[ui:multi]
+> PICK [Discovery]: "File the doubt away too — the blade is real enough to draw; whether it's true is a question for another night."
+[ui:narrative]
+Narrative: You will wield the story without wholly swallowing it. That is the difference between a fool with a knife and a woman with one.
+>> MECH: (Memory:mr_wickham "She took his story — but he saw her see the seams in it.") · (Trait:arabella_frost "Pride" +1)
+
+// ---- TURN 5 ----  (turn back to the room)
+[ui:multi]
+> PICK [Exit->the_ballroom]: "Leave him mid-flourish and turn back to the one man I can't wait to draw it on."
+[ui:narrative]
+Narrative: The story folds away inside you like a blade in a sleeve.
+
+// ═══ EXIT: the_officers_blade → the_ballroom ═══
+(Exit:the_ballroom when="she has the blade and her attention snaps back to Darcy")
+
+
+// ═══════════════════════════════════════════════════════════
+// ═══ ENTER: the_ballroom  (HUB re-entry) ═══
+// ═══════════════════════════════════════════════════════════
+(Situation:the_ballroom)
+[bg:explore=ballroom]
+[ui:narrative]
+Narrative: The room takes you back into its noise and heat, the blade warm in your sleeve.
+
+// ---- TURN 1 ----
+[ui:multi]
+> PICK [Character]: "Let him see me enjoying the secret — a small private smile aimed nowhere near him."
+[ui:narrative]
+Narrative: You smile at nothing, for his benefit, and feel his attention catch on it like wool on a nail.
+>> MECH: (Reaction:mr_darcy "follows the smile, unsettled by being shut out of the joke")
+
+// ---- TURN 2 ----  (choose the next move)
+[ui:multi]
+> PICK [Exit->the_overheard_crack]: "Drift toward the alcove where Darcy has just drawn Bingley aside."
+[ui:narrative]
+Narrative: You find a reason to be near the half-shadow by the far windows — close enough, if you are quiet, to hear what a proud man says when he believes you cannot.
+
+// ═══ EXIT: the_ballroom → the_overheard_crack ═══
+(Exit:the_overheard_crack when="she drifts near where Darcy is speaking privately, to overhear")
+
+
+// ═══════════════════════════════════════════════════════════
+// ═══ ENTER: the_overheard_crack ═══
+// ═══════════════════════════════════════════════════════════
+(Situation:the_overheard_crack)
+[bg:cutscene=alcove-shadow.jpg]
+[ui:narrative]
+Narrative: His voice is low here, stripped of its public armour. You hold your breath at the edge of the alcove.
+
+// ---- TURN 1 ----
+[ui:multi]
+> PICK [Character]: "Stay perfectly still and listen — give nothing away."
+[ui:bubble]
+Miss Bingley: — the mother impossible, the connexions nothing at all. I wonder you can look at her.
+[ui:bubble]
+Darcy: I have been meditating on the very great pleasure a pair of fine eyes in the face of a pretty woman can bestow.
+>> MECH: — none —
+
+// ---- TURN 2 ----  (the crack)
+[ui:multi]
+> PICK [Character]: "Lean a breath closer — I want the rest of it."
+[ui:bubble]
+Darcy: I never was so bewitched by any woman. Were it not for the inferiority of her connexions, I should be in some danger.
+[ui:narrative]
+Narrative: He believes no one is listening. You are listening to every word, and you will never, ever tell him so.
+>> MECH: (Reaction:mr_darcy "unguarded — a man arguing with himself, and losing")
+
+// ---- TURN 3 ----  (take it as a weapon)
+[ui:multi]
+> PICK [Consequence]: "Take it in like a live coal cupped in both hands — proof that he is already, quietly, undone."
+[ui:cast-small]
+Arabella: In some danger. Oh, Mr Darcy. You have no idea how much.
+>> MECH: (Consequence:overheard_crack=true) · (Consequence:built_the_week=true) · (Objective:done obj_overhear) · ROMANCE mr_darcy +1
+
+// ---- TURN 4 ----  (the deeper read + slip away)
+[ui:multi]
+> PICK [Discovery]: "Understand exactly how far gone he is — then slip off before he can suspect he was heard."
+[ui:narrative]
+Narrative: What he will not give you to your face he gives away the instant he thinks himself unobserved. He is further gone than you are — and he knows it, and it terrifies him.
+>> MECH: (Discovery:darcy_undone_in_private "The proud man is not toying with her; he is losing to her. His public reserve is armour over a thing that has already given way.") · (Memory:mr_darcy "He confessed himself bewitched aloud, believing no one heard — and she heard all of it.") · (Reaction:arabella_frost "heart going like the music; grinning, and unable to stop")
+
+// ═══ EXIT: the_overheard_crack → the_ballroom ═══
+(Exit:the_ballroom when="she has overheard the crack and slipped away with it")
+
+
+// ═══════════════════════════════════════════════════════════
+// ═══ ENTER: the_ballroom  (HUB re-entry) ═══
+// ═══════════════════════════════════════════════════════════
+(Situation:the_ballroom)
+[bg:explore=ballroom]
+[ui:narrative]
+Narrative: You slip back into the bright noise carrying the single most useful thing you have gathered all season.
+
+// ---- TURN 1 ----
+[ui:multi]
+> PICK [Exit->the_supper_table]: "Let myself be swept toward the supper room — my mother's voice is already carrying over the crowd."
+[ui:narrative]
+Narrative: Supper is called, and the blazing evening funnels down to a long table, silver, and — rising over all of it — the unmistakable voice of your neighbour Mrs Bennet.
+>> MECH: (Objective:set obj_supper "Survive the supper table — and what your family says at it.") · (Objective:active obj_supper)
+
+// ═══ EXIT: the_ballroom → the_supper_table ═══
+(Exit:the_supper_table when="supper is called and she goes through to the table")
+
+
+// ═══════════════════════════════════════════════════════════
+// ═══ ENTER: the_supper_table  (FreeExplore) ═══
+// ═══════════════════════════════════════════════════════════
+(Situation:the_supper_table)
+[bg:explore=supper]
+[ui:narrative]
+Narrative: A long white-clothed table, the clatter of good china — and Mrs Bennet in full, carrying voice.
+(FreeExplore:supper_table back="a footman leans in — 'the sets are forming again, miss' — and draws you back toward the floor")
+
+// ---- TURN 1 ----  (the indiscretion)
+[ui:multi]
+> PICK [Consequence]: "Sit near my mother and let the mortification unfold in Darcy's hearing."
+[ui:cast-large]
+Mrs Bennet: — and once my Jane is settled at Netherfield, why, it will throw the other girls in the way of other rich men! Depend upon it!
+[ui:narrative]
+Narrative: Three seats down, Mr Darcy sets down his glass with the particular care of a man filing every word against the whole family.
+>> MECH: (Consequence:supper_indiscretion=true) · (Consequence:built_the_week=true) · (Reaction:mr_darcy "cold, deliberate — a verdict forming") · (Objective:done obj_supper)
+
+// ---- TURN 2 ----  (see what it means)
+[ui:multi]
+> PICK [Discovery]: "Watch it land on him and understand what it will cost."
+[ui:narrative]
+Narrative: This loud, public vulgarity is the very thing that will one day hand a proud man every excuse he needs to part Bingley from Jane. The family is doing itself a harm no enemy could manage.
+>> MECH: (Discovery:the_family_is_its_own_undoing "The Bennets are their own worst case against themselves — and Darcy is taking notes.") · (Memory:mr_darcy "At supper her mother broadcast the family's designs to the whole table, within his hearing.")
+
+// ---- TURN 3 ----  (Charlotte's warning)
+[ui:multi]
+> PICK [Character]: "Take the empty chair by Charlotte Lucas and hear her sober counsel."
+[ui:cast-large]
+Charlotte: You are collecting the room, Miss Frost. A word, from a woman with none of your advantages and all of your eyes: do not sharpen your wit on Mr Darcy for the pleasure of it. A woman with more spirit than fortune cannot afford to make an enemy of ten thousand a year.
+[ui:cast-small]
+Arabella: You would have me count the cost before I cut.
+[ui:cast-large]
+Charlotte: I would. It is what the rest of us do, who cannot afford to be as amusing as you.
+>> MECH: (Discovery:charlotte_counts_the_cost "The plainest, truest thing anyone has said all night — and she has no intention of taking it.") · (Memory:charlotte_lucas "She warned Miss Frost, plainly, and was not heeded.") · TRUST charlotte_lucas +1
+
+// ---- TURN 4 ----  (Lydia + the Wickham thread)
+[ui:multi]
+> PICK [Character]: "Answer Lydia's chatter — and let it snag on the blade in my sleeve."
+[ui:cast-large]
+Lydia: La! Miss Frost — do you know why Wickham is not come tonight, of all nights, when there is dancing? Denny says town, but I say a man does not miss a ball unless he is avoiding somebody!
+[ui:narrative]
+Narrative: A silly girl's chatter — but it catches: Wickham, absent, avoiding someone in this very house. You choose, tonight, not to pull the thread.
+>> MECH: (Discovery:wickham_avoids_the_ball "Wickham stayed away from the one house where Darcy would be — a fact she notices and sets aside.")
+
+// ---- TURN 5 ----  (drawn back to the floor)
+[ui:multi]
+> PICK [Exit->the_dance]: "Let the footman draw me back toward the forming sets — everything from the table folded away."
+[ui:narrative]
+Narrative: You rise with the mother's indiscretion, the officer's absence, and the warning you will not take all folded away inside you — and step back into the bright and dangerous room, where he is waiting.
+>> MECH: (Objective:done obj_work_room) · (Objective:active obj_the_dance)
+
+// ═══ EXIT: the_supper_table → the_dance ═══
+(Exit:the_dance when="the free-explore ends and she is drawn back toward the floor, and Darcy asks her to stand up")
+
+
+// ═══════════════════════════════════════════════════════════
+// ═══ ENTER: the_dance  (SPINE PEAK) ═══
+// ═══════════════════════════════════════════════════════════
+(Situation:the_dance)
+[bg:scene=the-dance-set.jpg]
+[ui:bubble]
+Narrative: You had not meant to say yes. And now here you are, standing up with Mr Darcy before the entire neighbourhood, the set forming, the music striking up, no possible way left to pretend this is nothing.
+>> MECH: (Consequence:danced_with_darcy=true) · (Consequence:carried_darcy=true)
+
+// ---- TURN 1 ----  (make him speak — canon)
+[ui:multi]
+> PICK [Character]: "Break the silence sweetly — inform him it is his turn to say something."
+[ui:bubble]
+Arabella: It is your turn to say something now, Mr Darcy. I talked of the dance; you ought to remark on the size of the room, or the number of couples.
+[ui:bubble]
+Darcy: Do you talk by rule, then, while you are dancing?
+[ui:bubble]
+Arabella: One must speak a little. It would look odd to be entirely silent for half an hour together.
+>> MECH: (Reaction:mr_darcy "the corner of his mouth does something it has not been given leave to do") · (Trait:arabella_frost "Sharpest Wit" +1)
+
+// ---- TURN 2 ----  (the matched register — canon)
+[ui:multi]
+> PICK [Character]: "Tell him the truth about the two of us — that we are alike, and neither of us will speak first."
+[ui:bubble]
+Arabella: I have always seen a great similarity in the turn of our minds. We are each of an unsocial, taciturn disposition, unwilling to speak unless we expect to amaze the whole room.
+[ui:narrative]
+Narrative: The duel is joined. The room falls away. There is nothing in the whole blazing evening but the two of you and the drawn line neither will step back from.
+>> MECH: ROMANCE mr_darcy +1
+
+// ---- TURN 3 ----  (draw the Wickham blade)
+[ui:multi]
+> PICK [Consequence]: "Draw the blade mid-set — needle him about Mr Wickham and watch his composure ice over."
+[ui:bubble]
+Arabella: I made a new acquaintance this evening. A Mr Wickham. He tells the most affecting stories of a friend who used him very ill.
+[ui:bubble]
+Darcy: Mr Wickham is blessed with such happy manners as may ensure his making friends. Whether he is equally capable of retaining them is less certain.
+[ui:narrative]
+Narrative: The warmth goes out of his face by degrees, like a room shut up for winter. You read the cold as a hit — a delicious, palpable hit — and do not see the wound under it.
+>> MECH: (Consequence:twisted_the_knife=true) · (Reaction:mr_darcy "goes still and cold; will not defend himself") · (Discovery:darcy_will_not_defend_himself "Handed a clean chance to clear his name, the proudest man in England will not take it — she reads guilt; it is something far more interesting.") · (Trait:mr_darcy "Reserve" +1) · (Memory:mr_darcy "She threw Wickham's name in his face on the floor, and he would not answer it.")
+
+// ---- TURN 4 ----  (she cracks too — peak of the peak)
+[ui:multi]
+> PICK [Character]: "Press the advantage — and get caught, for one unguarded second, by my own wanting."
+[ui:narrative]
+Narrative: At the height of it a look of his lands somewhere you did not brace for, and you feel it: a small vertigo, the floor tilting. You are not only winning this. You are falling into it.
+[ui:bubble]
+Arabella: We are neither of us performing to strangers, I think.
+[ui:narrative]
+Narrative: You do not soften. You do not confess. But the stakes have shifted under your feet, from "I am making him want me" to "we are both in this fire now" — and you know it, and you think he knows you know.
+>> MECH: (Consequence:she_cracked=true) · (Consequence:the_charge_at_height=true) · (Consequence:made_him_see=true) · (Consequence:wove_the_week=true) · TRUST mr_darcy +1 · (Trait:arabella_frost "Pride" -1) · (Objective:done obj_the_dance)
+
+// ---- TURN 5 ----  (what it cost him — discovery + part)
+[ui:multi]
+> PICK [Discovery]: "Understand, as the set ends, what it cost a man like him to ask me at all."
+[ui:narrative]
+Narrative: To stand up with you before this neighbourhood — a woman of no fortune he can approve — is a public act with a public cost, and he paid it, in front of everyone, because he could not make himself do otherwise. Whatever he is fighting, he is losing.
+[ui:bubble]
+Narrative: The music ends. The set breaks apart. He bows, precise and unreadable; you curtsey; and you part on the floor with everything between you said and nothing settled.
+>> MECH: (Discovery:he_asked_knowing_the_cost "He asked her anyway, and paid the cost in public, because he could not not.") · (Memory:mr_darcy "He danced with her before the whole neighbourhood, and could not make himself not.")
+
+// ═══ EXIT: the_dance → the_thinning_ball ═══
+(Exit:the_thinning_ball when="the set ends at the charge's height — route straight to the coda")
+
+
+// ═══════════════════════════════════════════════════════════
+// ═══ ENTER: the_thinning_ball  (CODA) ═══
+// ═══════════════════════════════════════════════════════════
+(Situation:the_thinning_ball)
+[bg:cutscene=thinning-ball.jpg]
+[ui:narrative]
+Narrative: The last set has been danced and the great room is coming apart into its ordinary furniture — footmen snuffing the candles two by two, the neighbourhood loosening toward the cloakroom.
+>> MECH: (Consequence:left_the_ball=true)
+
+// ---- TURN 1 ----  (the last wordless look)
+[ui:multi]
+> PICK [Character]: "Find his eyes one last time across the emptied floor — and neither of us looks away."
+[ui:narrative]
+Narrative: Across the guttering candlelight his gaze finds yours over the wreckage of the evening, and neither of you bows, and the whole unspoken thing hangs there, wound as tight as it can go without breaking.
+>> MECH: (Reaction:mr_darcy "holds the look; says nothing; lets it hang")
+
+// ---- TURN 2 ----  (to the door)
+[ui:multi]
+> PICK [Exit->the_last_carriage]: "Let the wraps be found and go out into the dark, the coal of the evening carried carefully home."
+[ui:narrative]
+Narrative: The crowd pours out into the cold, the carriage is at the step, and the lit windows of Netherfield begin, at last, to fall away behind you.
+
+// ═══ EXIT: the_thinning_ball → the_last_carriage ═══
+(Exit:the_last_carriage when="the coda has sounded its last note")
+
+
+// ═══════════════════════════════════════════════════════════
+// ═══ ENTER: the_last_carriage  (CLOSE → ENDING) ═══
+// ═══════════════════════════════════════════════════════════
+(Situation:the_last_carriage)
+[bg:cutscene=carriage-night.jpg]
+[ui:narrative]
+Narrative: The carriage rocks onto the dark road with the whole blazing evening still ringing in you — the dance, the blade, the stolen crack, the moment the game stopped being only a game.
+
+// ---- TURN 1 ----  (the close, and the ending fires)
+[ui:multi]
+> PICK [Character]: "Refuse to name the thing that has me smiling at nothing in a cold carriage — naming it is for another night."
+[ui:narrative]
+Narrative: Behind you, at a bright window growing small, a still dark figure watches the carriage-lamps go — a man hoping, against every rule he lives by, that you find a name for this before it finds one for you.
+>> MECH: (Consequence:the_charge_at_height=true) · (Consequence:built_the_week=true)
+
+// ---- ENDING (facts satisfied: the_charge_at_height + built_the_week) ----
+(Ending:e_the_charge_at_its_height "Two Adversaries, Fully Alight")
+[ui:narrative]
+Narrative: You ride home through the dark with the whole loaded set still turning in you — the blade and the stolen look and the mutual fire all folded into it — at war with him and wide awake with it, and you do not try to name it, because naming it is for another night.
+
+(EndScene)
+(Music)
+// =============================================================
+// ROUTE FACTS SET (for promote_flags → later chapters):
+//   at_the_ball · wickham_poison · kept_her_head · built_the_week
+//   stoked_his_jealousy · overheard_crack · supper_indiscretion
+//   danced_with_darcy · carried_darcy · twisted_the_knife
+//   she_cracked · the_charge_at_height · made_him_see · wove_the_week
+//   left_the_ball
+// RELATION END STATE (this route): Darcy Trust +2 / Romance +3
+//                                  Charlotte Trust +1
+// =============================================================

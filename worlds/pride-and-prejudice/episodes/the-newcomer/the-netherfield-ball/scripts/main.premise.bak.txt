@@ -1,0 +1,519 @@
+// =============================================================
+// Pride & Prejudice — The Netherfield Ball  (native, playable)
+// Single golden route. 6 situations, each 3-4 turns (so the
+// situation changes every few turns, not every beat). Mechanics
+// are deliberately sparse — ~one per turn, at most two at the
+// dance peak — so the screen never floods.
+// Speakers: arabella, bingley, wickham, caroline, darcy,
+//           mrs-bennet, charlotte, lydia.
+// =============================================================
+
+
+// ═══════════════════════════════════════════════════════════
+// SITUATION 1 · THE BALLROOM   (3 turns)
+// ═══════════════════════════════════════════════════════════
+(Situation: the_ballroom | The Ballroom | Working the blazing room — greeting your host, taking its measure, and holding Mr Darcy's eye across the floor.)
+[bg:explore=ballroom] [ui:narrative]
+Narrative: Netherfield blazes like a thing on fire. You step in — and Darcy is already looking, and does not stop.
+Narrative: One room. One object. A long floor between you and the man you came to duel.
+(Quest: Work the blazing room — every game tonight orbits Mr Darcy.)
+
+// --- Turn 1 · the first look ---
+[ui:multi]
+(Choice:3)
+Arabella: Hold his look, then drop it first — on my count.
+Arabella: Look clean through him, as if he were furniture.
+Arabella: Give him a slow smile and let him wonder at it.
+
+(IfChoice:0)
+  [ui:narrative]
+  Narrative: You hold his eyes, then let go on your own count. A small, private win.
+(EndIf)
+(IfChoice:1)
+  [ui:narrative]
+  Narrative: You look straight through him. Across the floor his attention sharpens, affronted.
+(EndIf)
+(IfChoice:2)
+  [ui:narrative]
+  Narrative: You smile at him like a secret. He cannot place it, and it snags on him.
+(EndIf)
+(Relation: darcy | romance | +1)
+
+// --- Turn 2 · greet the host ---
+[ui:cast-large]
+Bingley: Miss Frost! You came — splendid! Every candle of it, just as I promised.
+Arabella: You promised a crush, sir. You have over-delivered.
+
+[ui:narrative]
+Narrative: Bingley beams at the world. Past his shoulder, Darcy still has not looked away.
+
+[ui:multi]
+(Choice:3)
+Arabella: Match his warmth — and keep half an eye on the proud man.
+Arabella: Answer him wickedly, loud enough to carry.
+Arabella: Thank him softly, and let the room lean in to hear.
+
+(IfChoice:0)
+  [ui:cast-small]
+  Arabella: You keep the finest company, Mr Bingley. One of them will not stop staring.
+(EndIf)
+(IfChoice:1)
+  [ui:cast-small]
+  Arabella: A crush, sir, is only a duel with better lighting.
+(EndIf)
+(IfChoice:2)
+  [ui:cast-small]
+  Arabella: You are too kind by half. It will ruin you in this county.
+(EndIf)
+
+// --- Turn 3 · choose the first move ---
+[ui:multi]
+(Choice:3)
+Arabella: Drift to the officers — the handsome one wants me over.
+Arabella: Cross straight to Darcy and have done with it.
+Arabella: Hold the light, and let them all come to me.
+
+(IfChoice:0)
+  [ui:narrative]
+  Narrative: You turn for the red-coats, where a story is already half out of one eager mouth.
+(EndIf)
+(IfChoice:1)
+  [ui:narrative]
+  Narrative: Not yet. Let him wait, and watch you take the long way round — by way of the officers.
+(EndIf)
+(IfChoice:2)
+  [ui:narrative]
+  Narrative: You hold the light. An officer breaks first, drifting your way with his gift.
+(EndIf)
+
+
+// ═══════════════════════════════════════════════════════════
+// SITUATION 2 · THE OFFICERS' CORNER   (4 turns)
+// ═══════════════════════════════════════════════════════════
+(Situation: the_officers_corner | The Officers' Corner | Wickham offers you a weapon against Darcy — and you weigh the man handing it over.)
+[bg:cutscene=officers-corner.jpg] [ui:cast-large]
+Wickham: You are newly acquainted with Mr Darcy. Then you cannot yet know what he is.
+Arabella: I know a great many things people would rather I did not. Improve me.
+
+// --- Turn 1 · let him lean in ---
+[ui:multi]
+(Choice:3)
+Arabella: Keep my face pleasant and unreadable — and let him talk.
+Arabella: Bait him a little, and see how fast the story comes.
+Arabella: Warn him, sweetly, that I am hard to lie to.
+
+(IfChoice:0)
+  [ui:cast-small]
+  Arabella: Go on, then. I am all attention, and no opinion. Yet.
+(EndIf)
+(IfChoice:1)
+  [ui:cast-small]
+  Arabella: You have the look of a man with a grievance. Do share it.
+(EndIf)
+(IfChoice:2)
+  [ui:cast-small]
+  Arabella: I should tell you — I hear the false notes in a story. Proceed at your peril.
+(EndIf)
+
+// --- Turn 2 · the grievance ---
+[ui:cast-large]
+Wickham: A living was promised me. When it fell vacant, he gave it elsewhere. In cold blood.
+
+[ui:narrative]
+Narrative: He lets you draw the damning verdict, so his own mouth stays clean. You notice that he does.
+(Discovery: Wickham lets you reach the verdict for him. That is a man recruiting an ally, not confiding a wound.)
+
+// --- Turn 3 · pocket the blade ---
+[ui:multi]
+(Choice:3)
+Arabella: Take the blade with glee — in plain sight of Darcy.
+Arabella: Take it, but mark the man so eager to arm a stranger.
+Arabella: Take it, and believe exactly none of it yet.
+
+(IfChoice:0)
+  [ui:narrative]
+  Narrative: Across the floor Darcy goes very still, watching you bow your head to a red-coat — and hating it.
+(EndIf)
+(IfChoice:1)
+  [ui:narrative]
+  Narrative: You take it, and file the giver away beside the gift. A man this generous with knives bears watching.
+(EndIf)
+(IfChoice:2)
+  [ui:narrative]
+  Narrative: You take it, unswallowed. A blade is useful whether or not it is true.
+(EndIf)
+
+// --- Turn 4 · keep your head ---
+[ui:multi]
+(Choice:3)
+Arabella: Keep the story, and my doubts, both.
+Arabella: Decide it is probably true — it is more fun that way.
+Arabella: Resolve to ask Darcy himself, and watch his face.
+
+(IfChoice:0)
+  [ui:cast-small]
+  Arabella: A fool holds a knife. A woman holds a knife and knows where the giver stood.
+(EndIf)
+(IfChoice:1)
+  [ui:cast-small]
+  Arabella: True enough to draw. That will do, for tonight.
+(EndIf)
+(IfChoice:2)
+  [ui:cast-small]
+  Arabella: How he answers the name will tell me more than the tale ever could.
+(EndIf)
+(Memory: wickham | She took his story — but he saw her see the seams in it.)
+
+
+// ═══════════════════════════════════════════════════════════
+// SITUATION 3 · THE ALCOVE   (3 turns)
+// ═══════════════════════════════════════════════════════════
+(Situation: the_alcove | The Alcove | Off his guard, Darcy admits far more than he means to — and you hear all of it.)
+[bg:explore=ballroom] [ui:narrative]
+Narrative: You drift back into the heat, the blade warm in your sleeve, and find the half-shadow where Darcy has drawn Bingley aside.
+
+// --- Turn 1 · settle in to listen ---
+[ui:multi]
+(Choice:3)
+Arabella: Stand perfectly still, and give nothing away.
+Arabella: Fuss with my glove, so I look occupied, not listening.
+Arabella: Angle myself so I can watch his face as he speaks.
+
+(IfChoice:0)
+  [ui:narrative]
+  Narrative: You go still as furniture. His voice, low and unguarded, carries just to you.
+(EndIf)
+(IfChoice:1)
+  [ui:narrative]
+  Narrative: You busy your hands with a glove and listen with your whole skin.
+(EndIf)
+(IfChoice:2)
+  [ui:narrative]
+  Narrative: You turn so his face is yours to read. Every word will have a picture to go with it.
+(EndIf)
+
+// --- Turn 2 · the crack ---
+[bg:scene=alcove-shadow.jpg] [ui:bubble]
+Caroline: The mother impossible, the connexions nothing. I wonder you can look at her.
+Darcy: I never was so bewitched by any woman. Were it not for her connexions, I should be in danger.
+
+[ui:narrative]
+Narrative: He believes no one is listening. You are listening to every word — and will never tell him so.
+(Discovery: The proud man is not toying with her. He is losing to her — and it terrifies him.)
+
+// --- Turn 3 · take it away ---
+[ui:multi]
+(Choice:3)
+Arabella: Cup it like a live coal, and slip off before he suspects.
+Arabella: Savour it a moment — let him feel watched without knowing why.
+Arabella: Catch his eye once, so he wonders, all night, what I heard.
+
+(IfChoice:0)
+  [ui:cast-small]
+  Arabella: In some danger. Oh, Mr Darcy — you have no idea how much.
+(EndIf)
+(IfChoice:1)
+  [ui:cast-small]
+  Arabella: Let him feel the draught of it, and never find the window.
+(EndIf)
+(IfChoice:2)
+  [ui:cast-small]
+  Arabella: One look. Let it haunt him — did she hear, or did she not?
+(EndIf)
+(Memory: darcy | He confessed himself bewitched aloud, believing no one heard — and she heard all of it.)
+
+
+// ═══════════════════════════════════════════════════════════
+// SITUATION 4 · SUPPER   (4 turns)
+// ═══════════════════════════════════════════════════════════
+(Situation: the_supper_table | Supper | Your family performs its worst in Darcy's hearing, and Charlotte hands you a hard, true warning.)
+[bg:explore=supper] [ui:narrative]
+Narrative: Supper is called. The evening funnels to a long table, silver — and your mother's carrying voice.
+
+// --- Turn 1 · the indiscretion ---
+[ui:cast-large]
+Mrs-Bennet: Once my Jane is settled here, it will throw the other girls in the way of rich men! Depend upon it.
+
+[ui:narrative]
+Narrative: Three seats down, Darcy sets down his glass with the care of a man filing every word.
+(Discovery: The Bennets are their own worst case against themselves — and Darcy is taking notes.)
+
+[ui:multi]
+(Choice:3)
+Arabella: Sit near her, and let it all unfold in his hearing.
+Arabella: Draw the table's eye to me, and off her.
+Arabella: Meet Darcy's look — let him see that I see it too.
+
+(IfChoice:0)
+  [ui:cast-small]
+  Arabella: There is no stopping her. I may as well let him see the whole of what he judges.
+(EndIf)
+(IfChoice:1)
+  [ui:cast-small]
+  Arabella: Watch me, sir, not her. I am by far the better performance.
+(EndIf)
+(IfChoice:2)
+  [ui:cast-small]
+  Arabella: Yes. I hear it too. Do not imagine I am blind to my own people.
+(EndIf)
+
+// --- Turn 2 · Charlotte's warning ---
+[ui:cast-large]
+Charlotte: You are collecting the room, Miss Frost. A word: do not sharpen your wit on Darcy for sport.
+Charlotte: A woman with more spirit than fortune cannot afford to make an enemy of ten thousand a year.
+
+[ui:multi]
+(Choice:3)
+Arabella: You would have me count the cost before I cut.
+Arabella: You would have me dull the only blade I own.
+Arabella: You are right. And I shall do it anyway.
+
+(IfChoice:0)
+  [ui:cast-large]
+  Charlotte: I would. It is what the rest of us do, who cannot afford to be amusing.
+(EndIf)
+(IfChoice:1)
+  [ui:cast-large]
+  Charlotte: I would have you keep it sheathed near a man who can ruin your sister with a word.
+(EndIf)
+(IfChoice:2)
+  [ui:cast-large]
+  Charlotte: Then at least you go in with your eyes open. That is more than most.
+(EndIf)
+(Relation: charlotte | trust | +1)
+
+// --- Turn 3 · Lydia's thread ---
+[ui:cast-large]
+Lydia: La! Miss Frost — why is Wickham not come tonight, when there is dancing? A man avoids somebody!
+
+[ui:multi]
+(Choice:3)
+Arabella: Let the thread lie — tonight is not for pulling it.
+Arabella: Tug it once, lightly, to see what moves.
+Arabella: Laugh her off, and remember it for the morning.
+
+(IfChoice:0)
+  [ui:narrative]
+  Narrative: A silly girl's chatter — but it catches. Wickham, absent, avoiding this house. You leave it be.
+(EndIf)
+(IfChoice:1)
+  [ui:narrative]
+  Narrative: You ask a soft question. Lydia knows nothing useful — but the shape of the absence sharpens.
+(EndIf)
+(IfChoice:2)
+  [ui:narrative]
+  Narrative: You laugh, and file it. A man who avoids one house on ball night is telling you where he cannot go.
+(EndIf)
+
+// --- Turn 4 · drawn back to the floor ---
+[ui:multi]
+(Choice:3)
+Arabella: Rise, and let the footman lead me back to the sets.
+Arabella: Take one last look down the table before I go.
+Arabella: Catch Darcy's eye, and dare him to ask me.
+
+(IfChoice:0)
+  [ui:narrative]
+  Narrative: You rise with the whole loud evening folded away inside you, and step back toward the bright, dangerous room.
+(EndIf)
+(IfChoice:1)
+  [ui:narrative]
+  Narrative: One look down the silver and the noise — your family, entire — then you turn from it, toward the floor.
+(EndIf)
+(IfChoice:2)
+  [ui:narrative]
+  Narrative: You hold his eye a beat too long. When you reach the floor, he is already crossing it toward you.
+(EndIf)
+(Quest: Dance the promised duel with Mr Darcy.)
+
+
+// ═══════════════════════════════════════════════════════════
+// SITUATION 5 · THE DANCE   (4 turns · the peak)
+// ═══════════════════════════════════════════════════════════
+(Situation: the_dance | The Dance | You stand up with Darcy before the whole neighbourhood — and the duel becomes something neither of you meant.)
+[bg:scene=the-dance-set.jpg] [ui:bubble]
+Narrative: You had not meant to say yes. Now you stand up with Darcy before the whole neighbourhood.
+Arabella: It is your turn to say something, Mr Darcy. Remark on the room, or the number of couples.
+Darcy: Do you talk by rule, then, while you dance?
+
+// --- Turn 1 · make him speak ---
+[ui:multi]
+(Choice:3)
+Arabella: One must speak a little — it looks odd to be silent half an hour.
+Arabella: Only when I mean to amaze the whole room. As now.
+Arabella: I talk so that you must answer. It is the only way to hear you.
+
+(IfChoice:0)
+  [ui:bubble]
+  Darcy: Do you consult your own feelings in this case, or seek to gratify mine?
+(EndIf)
+(IfChoice:1)
+  [ui:bubble]
+  Darcy: Then we are well matched. I say nothing worth the saying, and you say everything.
+(EndIf)
+(IfChoice:2)
+  [ui:bubble]
+  Darcy: You have a way of forcing a man to speak against his own better judgement.
+(EndIf)
+(Trait: arabella | Sharpest Wit | +1)
+
+// --- Turn 2 · the matched register ---
+[ui:multi]
+(Choice:3)
+Arabella: Tell him the truth — we are alike, and neither speaks first.
+Arabella: Keep it light, and let the silence carry the danger.
+Arabella: Ask, plainly, what he means to do about wanting me.
+
+(IfChoice:0)
+  [ui:bubble]
+  Arabella: I see a great similarity in our minds. Both unsocial, unwilling to speak unless we mean to amaze the room.
+(EndIf)
+(IfChoice:1)
+  [ui:bubble]
+  Arabella: We may as well be silent. It is a very fine way to be looked at.
+(EndIf)
+(IfChoice:2)
+  [ui:bubble]
+  Arabella: You want something, sir, and cannot say it. I am the same. How inconvenient for us both.
+(EndIf)
+(Relation: darcy | romance | +1)
+
+[ui:narrative]
+Narrative: The duel is joined. The room falls away. Only the two of you, and a line neither will step back from.
+
+// --- Turn 3 · draw the blade ---
+[ui:multi]
+(Choice:3)
+Arabella: Draw the blade — needle him about Wickham.
+Arabella: Hold the blade. Win to a glittering draw.
+Arabella: Drop the games, and let him see I mean it.
+
+(IfChoice:0)
+  [ui:bubble]
+  Arabella: I met a Mr Wickham tonight. He tells affecting stories of a friend who used him ill.
+  Darcy: He is blessed with happy manners. Whether he keeps his friends is less certain.
+  [ui:narrative]
+  Narrative: The warmth leaves his face like a room shut for winter. You read the cold as a hit — and miss the wound beneath.
+  (Trait: darcy | Reserve | +1)
+  (Memory: darcy | She threw Wickham's name in his face on the floor, and he would not answer it.)
+(EndIf)
+(IfChoice:1)
+  [ui:bubble]
+  Arabella: We are neither of us performing to strangers. We may as well be honest.
+  Darcy: We may compare our different opinions, at least. There can be no want of subject.
+(EndIf)
+(IfChoice:2)
+  [ui:bubble]
+  Arabella: I am tired of fencing, sir. Say the true thing, or let me go.
+  Darcy: You ask for the one thing I have spent all evening not saying.
+(EndIf)
+
+// --- Turn 4 · she cracks too ---
+[ui:multi]
+(Choice:3)
+Arabella: Press the advantage, and hope my face holds.
+Arabella: Let one true thing slip, just to see what he does.
+Arabella: Hold the line — do not, whatever happens, look away.
+
+(IfChoice:0)
+  [ui:narrative]
+  Narrative: You press — and a look of his lands somewhere you did not brace for. A small vertigo. You are falling into this.
+(EndIf)
+(IfChoice:1)
+  [ui:narrative]
+  Narrative: One true thing slips out in your face before you can stop it. He sees it. Of course he sees it.
+(EndIf)
+(IfChoice:2)
+  [ui:narrative]
+  Narrative: You hold the line — but holding it costs you, and the cost is written plain for one man to read.
+(EndIf)
+(Trait: arabella | Pride | -1)
+(Relation: darcy | trust | +1)
+
+[ui:bubble]
+Arabella: We are both in this fire now. I think you know that I know it.
+
+[ui:narrative]
+Narrative: The music ends. He bows, precise and unreadable. You curtsey. Everything said, nothing settled.
+(Memory: darcy | He danced with her before the whole neighbourhood, and could not make himself not.)
+
+
+// ═══════════════════════════════════════════════════════════
+// SITUATION 6 · AFTER THE BALL   (3 turns · close)
+// ═══════════════════════════════════════════════════════════
+(Situation: after_the_ball | After the Ball | Air on the terrace, a last look across the emptying room, and the dark road home.)
+[bg:explore=terrace] [ui:narrative]
+Narrative: You slip out to the cold terrace for air, the whole set still turning in you.
+
+// --- Turn 1 · the terrace ---
+[ui:multi]
+(Choice:3)
+Arabella: Steady myself — I do not lose my head over a proud man.
+Arabella: Admit it, just here, just to the dark: I am in trouble.
+Arabella: Go back in before the wanting shows on my face.
+
+(IfChoice:0)
+  [ui:cast-small]
+  Arabella: A game. Only a game. I have played harder men than you, Mr Darcy.
+(EndIf)
+(IfChoice:1)
+  [ui:cast-small]
+  Arabella: Oh, this is trouble. The good kind and the worst kind at once.
+(EndIf)
+(IfChoice:2)
+  [ui:cast-small]
+  Arabella: Composure. In you go. Let no one read it — least of all him.
+(EndIf)
+(Discovery: The game turned somewhere on that floor. She is no longer only playing him — and she knows it.)
+
+// --- Turn 2 · the last look ---
+[bg:cutscene=thinning-ball.jpg] [ui:narrative]
+Narrative: The last set is danced. Footmen snuff the candles two by two; the room comes apart into furniture.
+Narrative: Across the guttering light his gaze finds yours, and neither of you bows.
+
+[ui:multi]
+(Choice:3)
+Arabella: Hold the look until the wraps are brought.
+Arabella: Break it first — leave him the wanting.
+Arabella: Let one true thing cross my face, just for him.
+
+(IfChoice:0)
+  [ui:narrative]
+  Narrative: You hold it, and hold it, until a servant breaks the line with your wrap.
+(EndIf)
+(IfChoice:1)
+  [ui:narrative]
+  Narrative: You break it first and turn away, leaving the wanting with him. Let him carry it home.
+(EndIf)
+(IfChoice:2)
+  [ui:narrative]
+  Narrative: You let it show — just once, just for him. His breath catches across the ruined room.
+(EndIf)
+
+// --- Turn 3 · the carriage, and the close ---
+[bg:cutscene=carriage-night.jpg] [ui:narrative]
+Narrative: The carriage rocks onto the dark road, the whole blazing evening still ringing in you.
+Narrative: At a bright window growing small, a still dark figure watches the lamps go.
+
+[ui:multi]
+(Choice:3)
+Arabella: Refuse to name it — naming it is for another night.
+Arabella: Name it once, in the dark, where no one can use it against me.
+Arabella: Lay the evening out like cards, and see how I shall use it.
+
+(IfChoice:0)
+  [ui:narrative]
+  Narrative: You will not name it. You only smile at nothing, in a cold carriage, all the way home.
+(EndIf)
+(IfChoice:1)
+  [ui:narrative]
+  Narrative: You name it once, silently, to the dark — then fold it away where it cannot be turned against you.
+(EndIf)
+(IfChoice:2)
+  [ui:narrative]
+  Narrative: You lay it out like cards: the blade, the crack, the dance. And find it will not come out as strategy.
+(EndIf)
+(Memory: arabella | The night the game stopped being only a game — and she let it.)
+
+(EndScene)
+(Music)

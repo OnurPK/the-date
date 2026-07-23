@@ -1,0 +1,212 @@
+/* ============================================================
+   worlds/pride-and-prejudice/theme.css
+   P&P skin — MODERN (Apple-glass romance). Scoped to
+   body[data-pack="pride"] so London / 1984 are never touched
+   (same mechanism as the 1984 skin). Matches the D-glass style
+   reference: light frosted glass, plum ink, blush + violet accents,
+   Playfair (display/narrative) + Inter (dialogue).
+   ============================================================ */
+
+/* ---- theme tokens ---- */
+body[data-pack="pride"]{
+  --t-ink:          #3a2e46;   /* plum-ink, readable on glass */
+  --t-ink-soft:     #6a5d78;
+  --t-rose:         #e0668a;   /* blush */
+  --t-rose-2:       #f4a6c0;
+  --t-violet:       #8b7bd8;
+  --t-peach:        #f6b98a;
+  --t-glass:        rgba(250,248,255,.62);
+  --t-glass-2:      rgba(250,248,255,.46);
+  --t-glass-line:   rgba(255,255,255,.62);
+  --font-display:   "Playfair Display", Georgia, serif;
+  --font-body:      "Inter", system-ui, sans-serif;
+  --explore-bg:     url("worlds/pride-and-prejudice/locations/netherfield-ball/explore/ballroom.png");
+}
+
+/* ============================================================
+   1. DIALOGUE CARD (cast-large / default) — light frosted glass
+   ============================================================ */
+body[data-pack="pride"] #dialogBox{
+  background:linear-gradient(180deg, rgba(250,248,255,.62) 0%, rgba(244,241,252,.78) 100%);
+  color:#3a2e46;
+  backdrop-filter:blur(30px) saturate(160%);
+  -webkit-backdrop-filter:blur(30px) saturate(160%);
+  border:1px solid rgba(255,255,255,.62);
+  border-bottom:none;
+  border-left:3px solid #e0668a;
+  border-radius:26px 26px 0 0;
+}
+body[data-pack="pride"] #dialogBox .speaker,
+body[data-pack="pride"] #dialogBox #speakerLabel{
+  font-family:-apple-system, BlinkMacSystemFont, "Segoe UI", "Inter", sans-serif; font-style:normal; font-weight:800;
+  font-size:12px; letter-spacing:.14em; color:#c0466a;
+}
+body[data-pack="pride"] #dialogBox .text{
+  font-family:"Inter",system-ui,sans-serif; color:#3a2e46;
+}
+body[data-pack="pride"] #dialogBox .continue{ color:#8b7bd8; }
+
+/* ============================================================
+   2. NARRATIVE — keep the engine's cinematic dark scrim (readable
+   over any photo) but swap the cursive Cormorant for Playfair.
+   (item 1: "narrative font okunmuyor → Playfair")
+   ============================================================ */
+body[data-pack="pride"] #dialogBox.narrative .text,
+body[data-pack="pride"] #objectDialog.narrative .od-text{
+  font-family:"Playfair Display", Georgia, serif !important;
+  font-style:italic !important;
+  font-weight:600 !important;
+  letter-spacing:0.006em !important;
+}
+
+/* ============================================================
+   3. OBJECT / CAST-SMALL card — light glass, plum ink
+   ============================================================ */
+body[data-pack="pride"] #objectDialog{
+  background:linear-gradient(180deg, rgba(250,248,255,.62) 0%, rgba(244,241,252,.78) 100%);
+  color:#3a2e46;
+  backdrop-filter:blur(30px) saturate(160%); -webkit-backdrop-filter:blur(30px) saturate(160%);
+  border:1px solid rgba(255,255,255,.62); border-left:3px solid #e0668a; border-radius:26px;
+}
+body[data-pack="pride"] #objectDialog .od-speaker{ font-family:-apple-system, BlinkMacSystemFont, "Segoe UI", "Inter", sans-serif; font-style:normal; font-weight:800; font-size:12px; letter-spacing:.14em; color:#c0466a; }
+body[data-pack="pride"] #objectDialog .od-text{ font-family:"Inter",sans-serif; color:#3a2e46; }
+
+/* item 6: in cast-small the full-body sprite crammed into the portrait
+   slot overlapped the text. Drop the portrait for P&P cast-small and let
+   the text use the full card width (clean, matches the modern-glass look). */
+body[data-pack="pride"].ui-cast-small #focusCharacter{ display:none !important; }
+body[data-pack="pride"].ui-cast-small #objectDialog{ padding-left:22px !important; }
+
+/* ============================================================
+   4. MULTISELECT — full-bleed ANGULAR cards, tight stack,
+   smaller+bolder ink. Optional right-side aux (trait label /
+   continue arrow) + a "Write your own" row pinned at the bottom.
+   ============================================================ */
+body[data-pack="pride"] #choicePanel{ padding:16px 0 max(6px, calc(env(safe-area-inset-bottom) + 2px)); }
+body[data-pack="pride"] .choice-list{ gap:3px; padding:0; }   /* edge-to-edge, tight */
+body[data-pack="pride"] .choice-opt{
+  background:linear-gradient(180deg, rgba(250,248,255,.62) 0%, rgba(244,241,252,.80) 100%);
+  color:#3a2e46;
+  backdrop-filter:blur(22px) saturate(150%); -webkit-backdrop-filter:blur(22px) saturate(150%);
+  border:1px solid rgba(255,255,255,.5);
+  border-radius:0;              /* angular, not oval — no left accent stripe */
+  box-shadow:0 3px 12px rgba(120,90,150,.14);
+  min-height:0;                 /* no reserved avatar height */
+  padding:13px 16px;            /* collapse the 100px avatar gutter */
+  gap:10px;
+}
+body[data-pack="pride"] .choice-opt:hover{
+  background:linear-gradient(180deg, rgba(255,255,255,.74) 0%, rgba(247,243,255,.88) 100%);
+}
+/* No inner-voice avatar / redundant speaker for P&P (every option is Arabella) */
+body[data-pack="pride"] .choice-avatar-clip{ display:none !important; }
+body[data-pack="pride"] .choice-speaker{ display:none !important; }
+body[data-pack="pride"] .choice-body{ flex:1 1 auto; min-width:0; }
+body[data-pack="pride"] .choice-text{
+  color:#3a2e46 !important;
+  font-family:"Inter",system-ui,sans-serif;
+  font-size:14px; font-weight:600; line-height:1.34;
+}
+
+/* trait dossier card — a single cover image with the name + subtext overlaid */
+body[data-pack="pride"] .trait-card{ width:100%; overflow:hidden; flex:none }
+body[data-pack="pride"] .tc-hero{ position:relative; min-height:184px; display:flex; align-items:flex-end;
+  background:linear-gradient(160deg, #2b2131, #140d18); background-size:cover; background-position:center 22% }
+body[data-pack="pride"] .tc-hero::after{ content:""; position:absolute; inset:0;
+  background:linear-gradient(180deg, transparent 28%, rgba(10,6,14,.5) 58%, rgba(10,6,14,.92) 100%) }
+body[data-pack="pride"] .tc-cap{ position:relative; z-index:2; padding:16px }
+body[data-pack="pride"] .tc-name{ font-family:"Playfair Display",Georgia,serif; font-weight:600; font-size:26px; color:#fff;
+  text-shadow:0 2px 12px rgba(0,0,0,.7) }
+body[data-pack="pride"] .tc-desc{ margin-top:6px; font-family:"Inter",system-ui,sans-serif; font-size:13px; line-height:1.5;
+  color:rgba(255,255,255,.88); text-shadow:0 1px 8px rgba(0,0,0,.85) }
+
+/* right-side aux slot */
+body[data-pack="pride"] .choice-aux{ flex:none; display:flex; align-items:center; gap:6px; margin-left:6px; }
+/* trait-derived option → the trait name as a pill label */
+body[data-pack="pride"] .choice-trait{
+  font-family:"Inter",sans-serif; font-size:9px; font-weight:800; letter-spacing:.06em; text-transform:uppercase;
+  color:#8b7bd8; background:rgba(139,123,216,.14); border:1px solid rgba(139,123,216,.42);
+  padding:3px 8px; border-radius:999px; white-space:nowrap;
+}
+/* continue arrow retired — was too loud on the cards */
+body[data-pack="pride"] .choice-cont{ display:none !important; }
+
+/* WRITE YOUR OWN — bottom input row */
+body[data-pack="pride"] .choice-opt.pride-write{
+  background:linear-gradient(180deg, rgba(255,255,255,.84) 0%, rgba(248,244,255,.92) 100%);
+  cursor:text; align-items:center; gap:8px; padding:10px 12px 10px 16px;
+}
+body[data-pack="pride"] .pw-input{
+  flex:1 1 auto; min-width:0; border:none; background:transparent; outline:none;
+  font-family:"Inter",sans-serif; font-size:14px; font-weight:600; color:#3a2e46;
+}
+body[data-pack="pride"] .pw-input::placeholder{ color:#9a8fb0; font-style:italic; font-weight:500; }
+/* line/outline send icon — quiet until there's text to send */
+body[data-pack="pride"] .pw-go{
+  flex:none; width:32px; height:32px; border:1.5px solid rgba(139,123,216,.5); border-radius:999px; cursor:pointer;
+  display:grid; place-items:center; color:#8b7bd8; background:transparent; box-shadow:none;
+  opacity:.55; transition:opacity .2s, transform .1s, border-color .2s;
+}
+body[data-pack="pride"] .pw-go.active{ opacity:1; border-color:#8b7bd8; }
+body[data-pack="pride"] .pw-go:active{ transform:scale(.92); }
+body[data-pack="pride"] .pw-go svg{ width:16px; height:16px; }
+
+/* INFINITE MODE — thin strip at the top of the multi-select while the talk
+   (infinite) icon is engaged (body.pride-infinite). */
+body[data-pack="pride"].pride-infinite #choicePanel .choice-list::before{
+  content:"INFINITE MODE"; order:-1; align-self:stretch; text-align:center; margin:0 0 -3px; padding:7px 0;
+  background:#8b7bd8; color:#fff;
+  font-family:-apple-system, BlinkMacSystemFont, "Segoe UI", "Inter", sans-serif;
+  font-size:9.5px; font-weight:800; letter-spacing:.28em; text-transform:uppercase;
+}
+
+/* ============================================================
+   NO DARKENING — the illustrated scenes are already dark/moody, so
+   cancel every engine dimming pass for P&P (choice scrim, cast-large
+   cutscene dim, backdrop dim, corner vignette). Nothing murks further.
+   ============================================================ */
+/* explore backdrops (ballroom / supper / terrace): full brightness */
+body[data-pack="pride"] #backdrop{ filter:brightness(1) blur(0) !important; }
+/* choice picker open: do NOT dim the scene behind the cards */
+body[data-pack="pride"].choosing #backdrop{ filter:brightness(1) blur(1px) !important; transform:scale(1.04) !important; }
+/* cast-large over a cutscene illustration: remove the 0.55 brightness dim */
+body[data-pack="pride"].ui-cast-large.cutscene-active #cutsceneLayer{ filter:none !important; }
+/* backdrop sitting behind a cutscene: don't crush it to 15% */
+body[data-pack="pride"].cutscene-active #backdrop{ opacity:0.5 !important; filter:brightness(0.9) blur(2px) !important; }
+/* soften the corner vignette so it doesn't darken the already-dark art */
+body[data-pack="pride"] .vignette{ background:radial-gradient(ellipse at center, transparent 62%, rgba(0,0,0,0.16) 100%) !important; }
+
+/* ============================================================
+   5. SPEECH BUBBLES (dance / overheard) — the proposed romance
+   bubbles: Arabella warm rose, the men cool violet, white text,
+   tails recoloured to match. (item 7)
+   ============================================================ */
+/* Restyled to match the dialogue UI: light frosted glass + plum ink, so the
+   overheard bubbles read like the game's dialogue card (not coloured chips). */
+body[data-pack="pride"] .scene-bubble{
+  background:linear-gradient(180deg, rgba(250,248,255,.72) 0%, rgba(244,241,252,.88) 100%);
+  color:#3a2e46;
+  border:1px solid rgba(255,255,255,.6);
+  border-left:none !important;
+  border-radius:16px;
+  backdrop-filter:blur(26px) saturate(150%); -webkit-backdrop-filter:blur(26px) saturate(150%);
+  box-shadow:0 16px 32px rgba(120,90,150,.24), inset 0 1px 0 rgba(255,255,255,.55);
+  max-width:76%;
+}
+body[data-pack="pride"] .scene-bubble .bubble-text{ color:#3a2e46; font-family:"Inter",sans-serif; }
+body[data-pack="pride"] .scene-bubble .bubble-speaker{ color:#c0466a !important;
+  font-family:-apple-system, BlinkMacSystemFont, "Segoe UI", "Inter", sans-serif; font-weight:800; font-style:normal; letter-spacing:.14em; }
+body[data-pack="pride"] .scene-bubble::after{ display:none; }   /* çentik/tail kaldırıldı */
+/* the men — same light card, cool violet name accent (keeps the two-sided read) */
+body[data-pack="pride"] .scene-bubble.speaker-darcy,
+body[data-pack="pride"] .scene-bubble.speaker-wickham,
+body[data-pack="pride"] .scene-bubble.speaker-bingley{
+  background:linear-gradient(180deg, rgba(250,248,255,.72) 0%, rgba(244,241,252,.88) 100%);
+  box-shadow:0 16px 32px rgba(110,100,160,.24), inset 0 1px 0 rgba(255,255,255,.5);
+}
+body[data-pack="pride"] .scene-bubble.speaker-darcy .bubble-speaker,
+body[data-pack="pride"] .scene-bubble.speaker-wickham .bubble-speaker,
+body[data-pack="pride"] .scene-bubble.speaker-bingley .bubble-speaker{ color:#8b7bd8 !important; }
+body[data-pack="pride"] .scene-bubble.speaker-darcy::after,
+body[data-pack="pride"] .scene-bubble.speaker-wickham::after,
+body[data-pack="pride"] .scene-bubble.speaker-bingley::after{ background:rgba(247,244,252,.92); }
