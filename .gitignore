@@ -25,3 +25,10 @@ _config/*.local.*
 *.before-nodes
 _to_delete/
 **/_to_delete/
+
+# Docs / scratch / experiments — not part of the game
+_docs/jira-backlog.html
+mockups/
+zoom-transitions.html
+worlds/london/locations/deneme2/
+worlds/london/locations/deneme3/

@@ -1,5 +1,0 @@
-// Deneme2 — london
-[bg:none] [ui:cast-large]
-Narrative: Welcome to Deneme2.
-Boy: Hey.
-Girl: Hey there.
