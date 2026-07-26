@@ -338,6 +338,7 @@ Arabella: Catch Darcy's eye, and dare him to ask me.
 (IfChoice:2)
   [ui:narrative]
   Narrative: You hold his eye a beat too long. When you reach the floor, he is already crossing it toward you.
+  (Combat: darcy-duel)
 (EndIf)
 (Quest: Dance the promised duel with Mr Darcy.)
 

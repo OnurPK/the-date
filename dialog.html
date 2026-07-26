@@ -15017,7 +15017,7 @@ function parseScript(text) {
     // auto-dismisses. Payload fields are pipe-separated. Fire-and-continue
     // (auto-advances), so they attach to whatever dialog/narrative beat
     // they're authored next to.
-    const mechMatch = s.match(/^\(\s*(Trait|Relation|Memory|Discovery|Quest)\s*:\s*(.+)\)$/i);
+    const mechMatch = s.match(/^\(\s*(Trait|Relation|Memory|Discovery|Quest|Combat)\s*:\s*(.+)\)$/i);
     if (mechMatch) {
       const kind = mechMatch[1].toLowerCase();
       const parts = mechMatch[2].split('|').map(x => x.trim());
@@ -15461,6 +15461,26 @@ function renderLine() {
   // Mechanic → slide a toast down from the top, then advance silently so
   // it reads as attached to the surrounding dialog/narrative beat.
   if (line.type === 'mechanic') {
+    // Pride combat: (Combat: darcy-duel) — pause the script, run the card duel
+    // as a full-screen overlay, then apply results and resume on the next line.
+    if (line.kind === 'combat') {
+      if (typeof window.prideCombat === 'function') {
+        window.prideCombat({ onDone: function(win){
+          try {
+            if (win && typeof window.showRelation === 'function') {
+              const pc = (window.__pridePC && window.__pridePC.portrait) || 'arabella_frost';
+              window.showRelation(pc, 'mr_darcy', 'Romance', '+2');
+            }
+            if (win && typeof window.showMemory === 'function') {
+              window.showMemory('mr_darcy');
+            }
+          } catch (e) {}
+          idx++; renderLine();
+        }});
+        return;   // combat resumes the script when it finishes
+      }
+      idx++; renderLine(); return;   // no combat module → skip cleanly
+    }
     // Pride discovery: don't advance silently. Paint the insight into the
     // narrative box, swept left→right under a highlighter pen, and hold the
     // beat so the player reads it. showMechToast still collects it for the
@@ -17382,6 +17402,40 @@ window.devJumpToScene = function(tag) {
   return true;
 };
 
+// Dev jump — park the engine right on the dare choice that opens the
+// Darcy duel (the beat just before the (Combat:) directive). Pick option
+// 3 and combat launches. Returns false if the current script has no combat.
+window.devJumpToCombat = function () {
+  if (!Array.isArray(lines) || !lines.length) { console.warn('[dev-combat] script not loaded'); return false; }
+  const ci = lines.findIndex(l => l && l.type === 'mechanic' && l.kind === 'combat');
+  if (ci < 0) { console.warn('[dev-combat] no (Combat:) in current script — launch the Netherfield episode first'); return false; }
+  let chi = ci; while (chi >= 0 && !(lines[chi] && lines[chi].type === 'choice')) chi--;
+  const target = chi >= 0 ? chi : ci;
+  if (typeof applyDialogState === 'function') {
+    for (let i = 0; i < target; i++) { const ev = lines[i]; if (ev && ev.type === 'state-update' && ev.updates) applyDialogState(ev.updates); }
+  }
+  if (el.body) {
+    el.body.classList.remove('inner','inObjectImage','inObjectChar','exploring','choosing',
+      'pickingAction','gift-scene','flow-intro','flow-form','flow-loading','flow-survey',
+      'flow-gallery','flow-addself','flow-final','flow-date','flow-map','pe-combat','pe-beat');
+  }
+  if (typeof lastChosenIdx !== 'undefined') { try { lastChosenIdx = -1; } catch (_) {} }
+  idx = target;
+  if (typeof renderLine === 'function') renderLine();
+  console.log('[dev-combat] → parked at the dare choice (idx ' + target + ')');
+  return true;
+};
+
+window.devJumpToSuccess = function () {
+  if (typeof window.prideCombatSuccess === 'function') {
+    window.prideCombatSuccess({ onDone: function () {} });
+    console.log('[dev-success] → success end screen');
+    return true;
+  }
+  console.warn('[dev-success] combat module not ready');
+  return false;
+};
+
 window.devShowWriteChoice = function() {
   try {
     if (el.body) {
@@ -18114,6 +18168,8 @@ function inObject() {
 }
 
 function next() {
+  // Pride combat owns the dialog box while it runs — don't let taps walk the script.
+  if (document.body.classList.contains('pe-combat')) return;
   // Object character mode: the main dialog box advances the object sub-dialog
   if (el.body.classList.contains('inObjectChar')) { advanceObjectLine(); return; }
   if (el.body.classList.contains('exploring')) return;
@@ -28422,6 +28478,561 @@ body[data-pack="pride"] #dialogBox.pride-discovery .speaker::before{
 })();
 </script>
 <!-- ===== /PRIDE EPISODE CHROME ===== -->
+<!-- ===== PRIDE COMBAT (The Dance — a duel with Mr Darcy) — injected ===== -->
+<style id="pridecombat-css">
+#peCombat{ --ink:#3a2e46; --ink2:#6a5d78; --rose:#e0668a; --rose2:#f4a6c0; --wine:#c0466a; --violet:#8b7bd8; --violet2:#b79cf0;
+  --gold:#d7a95a; --teal:#4bb0c9; --blue:#5b7bff; --blue2:#8fb0ff; --red:#e0566a; --red2:#f4909f;
+  --glass:rgba(250,248,255,.72); --glass2:rgba(244,241,252,.88); --line:rgba(255,255,255,.6);
+  --fdisp:"Playfair Display",Georgia,serif; --fbody:"Inter",system-ui,sans-serif; --fnarr:"Lora","Source Serif Pro",Georgia,serif;
+  position:fixed; inset:0; z-index:9000; display:none; overflow:hidden; background:#0d0912; color:#fff; user-select:none; flex-direction:column }
+#peCombat.on{ display:flex }
+#peCombat *{ box-sizing:border-box; -webkit-tap-highlight-color:transparent }
+#peCombat .bg-fallback{ position:absolute; inset:0; z-index:0;
+  background:radial-gradient(120% 70% at 50% 4%, rgba(255,214,150,.30), transparent 55%), radial-gradient(90% 60% at 80% 26%, rgba(255,180,110,.22), transparent 60%), radial-gradient(80% 70% at 16% 42%, rgba(120,90,160,.26), transparent 62%), linear-gradient(180deg,#2a1d24 0%,#1a1220 44%,#120c18 100%) }
+#peCombat .bg-scene{ position:absolute; inset:0; z-index:1; background-size:cover; background-position:center 30%; opacity:0; transition:opacity .6s ease }
+#peCombat .bg-scene.on{ opacity:1 }
+#peCombat .scrim{ position:absolute; inset:0; z-index:2; pointer-events:none;
+  background:linear-gradient(180deg, rgba(8,5,12,.34) 0%, transparent 22%, transparent 44%, rgba(8,5,12,.6) 100%); box-shadow:inset 0 0 130px rgba(0,0,0,.5) }
+#peCombat .top{ position:relative; z-index:5; flex:none; padding:calc(env(safe-area-inset-top,0px) + 14px) 14px 2px; display:flex; justify-content:center }
+#peCombat .rail{ display:flex; align-items:center; justify-content:center }
+#peCombat .node{ display:flex; flex-direction:column; align-items:center; gap:3px; opacity:.5; transition:opacity .4s }
+#peCombat .node.on{ opacity:1 } #peCombat .node.done{ opacity:.85 }
+#peCombat .node .dot{ width:30px; height:30px; border-radius:10px; display:grid; place-items:center; background:rgba(20,12,26,.55); border:1px solid rgba(255,255,255,.25); box-shadow:0 4px 12px rgba(0,0,0,.4) }
+#peCombat .node.on .dot{ border-color:var(--wine); box-shadow:0 0 0 2px rgba(192,70,106,.35),0 6px 14px rgba(0,0,0,.5) }
+#peCombat .node.done .dot{ border-color:var(--teal) }
+#peCombat .node .dot svg{ width:15px; height:15px; stroke:#fff; fill:none; stroke-width:1.9 } #peCombat .node.done .dot svg{ stroke:var(--teal) }
+#peCombat .node .cap{ font-size:7.5px; font-weight:800; letter-spacing:.1em; text-transform:uppercase; color:rgba(255,255,255,.72) }
+#peCombat .link{ width:20px; height:2px; margin-top:-13px; border-radius:2px; background:linear-gradient(90deg,rgba(255,255,255,.18),rgba(255,255,255,.32)) }
+#peCombat .link.done{ background:linear-gradient(90deg,rgba(75,176,201,.5),rgba(75,176,201,.7)) }
+#peCombat .meter{ position:relative; z-index:5; flex:none; align-self:center; width:76%; margin:12px auto 0; padding:9px 15px 11px; border-radius:14px;
+  background:linear-gradient(180deg, rgba(24,16,32,.5), rgba(14,9,20,.58)); border:1px solid rgba(255,255,255,.18); box-shadow:0 10px 26px rgba(0,0,0,.35);
+  -webkit-backdrop-filter:blur(16px) saturate(140%); backdrop-filter:blur(16px) saturate(140%) }
+#peCombat .meter .ml{ display:flex; align-items:baseline; justify-content:space-between; margin-bottom:6px }
+#peCombat .meter .mn{ font-size:9.5px; font-weight:800; letter-spacing:.18em; text-transform:uppercase; color:#ffd0dd; text-shadow:0 1px 6px rgba(0,0,0,.8) }
+#peCombat .meter .mc{ font-family:var(--fdisp); font-size:13px; font-weight:700; color:#fff; text-shadow:0 1px 6px rgba(0,0,0,.8) }
+#peCombat .meter .bar{ height:5px; border-radius:5px; background:rgba(255,255,255,.16); overflow:hidden; box-shadow:0 1px 4px rgba(0,0,0,.5) }
+#peCombat .meter .fill{ height:100%; width:0%; border-radius:5px; background:linear-gradient(90deg,var(--rose),var(--rose2)); box-shadow:0 0 10px rgba(224,102,138,.5); transition:width .55s cubic-bezier(.2,.9,.3,1) }
+#peCombat .meter{ transition:min-height .4s ease }
+#peCombat .mbord{ position:absolute; inset:0; z-index:8; width:100%; height:100%; pointer-events:none; opacity:0; overflow:visible; transition:opacity .35s ease }
+#peCombat .mbord .mbordr{ fill:none; stroke:#4ade80; stroke-width:2.5; stroke-linejoin:round; filter:drop-shadow(0 0 6px rgba(74,222,128,.85)) }
+#peCombat .mover{ position:absolute; left:0; right:0; top:0; bottom:0; z-index:9; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:3px; padding:0 16px; text-align:center; opacity:0; pointer-events:none; transition:opacity .32s ease }
+#peCombat .mover.msucc span{ font-family:var(--fbody); font-weight:900; font-size:15px; letter-spacing:.3em; color:#4ade80; text-shadow:0 0 16px rgba(74,222,128,.65) }
+#peCombat .mover.mstage .k{ font-family:var(--fbody); font-weight:800; font-size:8.5px; letter-spacing:.22em; text-transform:uppercase; color:var(--rose2) }
+#peCombat .mover.mstage .t{ font-family:var(--fnarr); font-style:italic; font-size:12px; line-height:1.4; color:#fff; text-shadow:0 1px 8px rgba(0,0,0,.85) }
+#peCombat .meter.m-success .ml, #peCombat .meter.m-success .bar{ opacity:0; transition:opacity .3s ease }
+#peCombat .meter.m-success .msucc{ opacity:1 }
+#peCombat .meter{ transition:min-height .4s ease, opacity .4s ease }
+#peCombat .meter.m-gone{ opacity:0 }
+#peCombat .duel{ position:relative; z-index:6; flex:1 1 auto; min-height:0 }
+#peCombat .cbt{ position:absolute; bottom:24px; display:flex; flex-direction:column; align-items:flex-start; transition:transform .5s cubic-bezier(.5,0,.2,1) }
+#peCombat .cbt.left{ left:12px } #peCombat .cbt.right{ right:12px; align-items:flex-end }
+#peCombat.t-out .cbt.left{ transform:translateX(-140%) }
+#peCombat.t-out .cbt.right{ transform:translateX(140%) }
+#peCombat.t-out .cardsdock{ transform:translateY(140%) }
+#peCombat .pose-wrap{ position:relative; width:250px; height:110px; margin-left:-98px; overflow:hidden }
+#peCombat .cbt.right .pose-wrap{ margin-left:0; margin-right:-98px }
+#peCombat .pose{ position:relative; z-index:1; width:250px; height:110px; background-repeat:no-repeat; background-position:top center; background-size:auto 470px; transform:scaleX(1); filter:drop-shadow(0 10px 26px rgba(0,0,0,.55)) }
+#peCombat .cbt.right .pose{ transform:scaleX(1) }
+#peCombat .pose-bg{ position:absolute; left:50%; bottom:0; transform:translateX(calc(-50% + 30px)); z-index:0; pointer-events:none; width:270px; height:120px; background-repeat:no-repeat; background-position:center top; background-size:270px auto; opacity:.7; background-image:url('worlds/pride-and-prejudice/story-notif/bg-blue.png') }
+#peCombat .cbt.right .pose-bg{ background-image:url('worlds/pride-and-prejudice/story-notif/bg-red.png'); transform:translateX(calc(-50% - 30px)) scaleX(-1) }
+#peCombat .cap-line{ width:152px; height:2px; margin:0 0 9px; background:linear-gradient(90deg,#fff,rgba(255,255,255,.12)) }
+#peCombat .cbt.right .cap-line{ margin-left:auto; background:linear-gradient(270deg,#ff6f9d,rgba(255,111,157,.12)) }
+#peCombat .cap-txt{ padding-left:2px } #peCombat .cbt.right .cap-txt{ padding-left:0; padding-right:2px; text-align:right }
+#peCombat .cap-txt .nm{ display:block; font-family:var(--fbody); font-size:16px; font-weight:800; letter-spacing:.05em; text-transform:uppercase; color:#fff; line-height:1.08; text-shadow:0 2px 10px rgba(0,0,0,.9) }
+#peCombat .plate{ position:relative; display:flex; flex-direction:column; justify-content:flex-start; height:96px }
+#peCombat .cbt.left .plate{ align-items:flex-start } #peCombat .cbt.right .plate{ align-items:flex-end }
+#peCombat .stats{ width:150px; margin-top:8px; padding:0 2px }
+#peCombat .stat + .stat{ margin-top:8px }
+#peCombat .stat .sl{ display:flex; align-items:baseline; justify-content:space-between; margin-bottom:4px }
+#peCombat .stat .sl .k{ font-family:var(--fbody); font-size:9.5px; font-weight:700; letter-spacing:.14em; text-transform:uppercase; color:rgba(255,255,255,.66); text-shadow:0 1px 6px rgba(0,0,0,.85) }
+#peCombat .stat .sl .v{ font-family:var(--fbody); font-size:10.5px; font-weight:800; color:#fff; text-shadow:0 1px 6px rgba(0,0,0,.85) }
+#peCombat .stat .sbar{ height:4px; border-radius:3px; background:rgba(255,255,255,.18); overflow:hidden; box-shadow:0 1px 4px rgba(0,0,0,.5) }
+#peCombat .stat .sfill{ height:100%; width:100%; border-radius:3px; transition:width .45s ease }
+#peCombat .sfill.c-comp{ background:linear-gradient(90deg,var(--rose),var(--rose2)) }
+#peCombat .sfill.c-rest{ background:linear-gradient(90deg,var(--teal),#8fe6f2) }
+#peCombat .sfill.c-res{ background:linear-gradient(90deg,var(--red),var(--red2)) }
+#peCombat .telegraph{ position:absolute; right:0; bottom:0; width:150px; text-align:right }
+#peCombat .telegraph .tgv{ font-size:12px; font-weight:700; line-height:1.25; color:#fff; text-shadow:0 1px 6px rgba(0,0,0,.9) }
+#peCombat .telegraph .tgpre{ font-size:9px; font-weight:800; letter-spacing:.12em; text-transform:uppercase; color:#b9a6ff }
+#peCombat .telegraph .tgsub{ margin-top:3px; font-size:10.5px; font-weight:800; text-shadow:0 1px 6px rgba(0,0,0,.9) }
+#peCombat .tgsub.i-comp{ color:var(--rose2) } #peCombat .tgsub.i-rest{ color:#8fe6f2 } #peCombat .tgsub.i-res{ color:var(--red2) } #peCombat .tgsub.i-pull{ color:#ffd88a }
+#peCombat .fxpill{ position:fixed; z-index:9500; display:inline-flex; align-items:center; gap:5px; padding:5px 11px; border-radius:999px; font-family:var(--fbody); font-weight:900; font-size:14px; letter-spacing:.01em; white-space:nowrap; opacity:0; pointer-events:none; box-shadow:0 6px 16px rgba(0,0,0,.5) }
+#peCombat .fxpill small{ font-size:9px; font-weight:800; letter-spacing:.06em; text-transform:uppercase; opacity:.92 }
+#peCombat .fxpill.g{ color:#3a2c07; background:linear-gradient(180deg,#f6d98a,#ecc879); border:1px solid #fff7e0 }
+#peCombat .fxpill.b{ color:#fff; background:linear-gradient(180deg,#e97f88,#c0466a); border:1px solid #ffd9dd }
+@keyframes pefxpop{ 0%{opacity:0; transform:translate(-50%,6px) scale(.7)} 18%{opacity:1; transform:translate(-50%,0) scale(1.12)} 32%{transform:translate(-50%,0) scale(1)} 78%{opacity:1; transform:translate(-50%,-2px) scale(1)} 100%{opacity:0; transform:translate(-50%,-14px) scale(.96)} }
+#peCombat .cardsdock{ position:relative; z-index:7; flex:none; transition:transform .45s cubic-bezier(.5,0,.2,1) }
+#peCombat .cards{ display:flex; gap:7px; padding:4px 12px calc(env(safe-area-inset-bottom,0px) + 8px); overflow-x:auto; overflow-y:hidden; scroll-snap-type:x mandatory; scroll-padding-left:12px; -webkit-overflow-scrolling:touch; scrollbar-width:none }
+#peCombat .cards::-webkit-scrollbar{ display:none }
+#peCombat .cards::after{ content:""; flex:0 0 5px }
+#peCombat .cardsdock::after{ content:""; position:absolute; top:0; bottom:0; right:0; width:30px; z-index:2; pointer-events:none; background:linear-gradient(90deg, transparent, rgba(10,7,16,.45)); opacity:0; transition:opacity .3s ease }
+#peCombat .cardsdock.more::after{ opacity:1 }
+#peCombat .card{ position:relative; flex:0 0 108px; height:148px; scroll-snap-align:start; cursor:pointer; display:flex; flex-direction:column; overflow:hidden;
+  background:linear-gradient(180deg, rgba(250,248,255,.82) 0%, rgba(243,240,252,.96) 100%); color:var(--ink);
+  border:none; border-radius:9px 9px 0 0; box-shadow:0 9px 22px rgba(80,50,120,.3);
+  -webkit-backdrop-filter:blur(18px) saturate(150%); backdrop-filter:blur(18px) saturate(150%); transition:transform .12s ease; animation:pecin .44s cubic-bezier(.2,.9,.3,1.05) both }
+@keyframes pecin{ from{opacity:0;transform:translateY(40px)} to{opacity:1;transform:none} }
+#peCombat .card:active{ transform:scale(.97) }
+#peCombat .cbanner{ flex:none; padding:5px 8px; text-align:center; font-size:8.5px; font-weight:800; letter-spacing:.05em; text-transform:uppercase }
+#peCombat .cbanner.reads{ background:#d3ecf1; color:#1c7c8f }
+#peCombat .cbanner.wit{ background:#e6def7; color:#5a45a8 }
+#peCombat .cbanner.nerve{ background:#f7dbe4; color:#b23d63 }
+#peCombat .cbanner.pride{ background:#f3e7c6; color:#96731c }
+#peCombat .cbanner.blade{ background:#efe1bf; color:#8a6014 }
+#peCombat .cbody{ flex:1 1 auto; display:flex; flex-direction:column; padding:8px 10px 11px }
+#peCombat .cbody .ct{ font-family:var(--fbody); font-size:12px; font-weight:700; line-height:1.26; color:var(--ink) }
+#peCombat .cbody .ce{ margin-top:auto; padding-top:7px; font-size:9.5px; font-weight:800; line-height:1.5 }
+#peCombat .cbody .ce .g{ display:block; color:#1f9c86 } #peCombat .cbody .ce .b{ display:block; color:#c0554a }
+#peCombat .top, #peCombat .meter, #peCombat .duel{ transition:opacity .55s ease, transform .55s ease }
+#peCombat.p-prep .top, #peCombat.p-prep .meter, #peCombat.p-prep .duel, #peCombat.p-prep .cards, #peCombat.p-chrome .cards{ opacity:0; pointer-events:none }
+#peCombat.p-prep .top, #peCombat.p-prep .meter{ transform:translateY(-14px) }
+#peCombat.p-prep .duel{ transform:translateY(18px) }
+#peCombat .ov{ position:absolute; inset:0; z-index:30; display:none; flex-direction:column; align-items:center; justify-content:center; padding:30px; text-align:center }
+#peCombat .ov.show{ display:flex; animation:peovin .45s ease }
+@keyframes peovin{ from{opacity:0} to{opacity:1} }
+#peCombat .ov .ovbg{ position:absolute; inset:0; z-index:0; background-size:cover; background-position:center 28% }
+#peCombat .ov .ovscrim{ position:absolute; inset:0; z-index:1; transition:opacity .5s ease; background:linear-gradient(180deg, rgba(8,5,12,.55), rgba(8,5,12,.35) 40%, rgba(8,5,12,.9)) }
+#peCombat .ov .ovcontent{ position:relative; z-index:2; display:flex; flex-direction:column; align-items:center; transition:opacity .5s ease, transform .5s ease }
+#peCombat .ov.flyout .ovcontent{ opacity:0; transform:translateY(-30px) }
+#peCombat .ov.flyout .ovscrim{ opacity:0 }
+#peCombat .ov .ok{ font-size:9px; font-weight:800; letter-spacing:.28em; text-transform:uppercase; color:var(--rose2); margin-bottom:12px }
+#peCombat .ov h2{ font-family:var(--fdisp); font-weight:700; font-size:27px; margin:0 0 14px; line-height:1.15; color:#fff; text-shadow:0 2px 16px rgba(0,0,0,.7) }
+#peCombat .ov p{ font-family:var(--fnarr); font-style:italic; font-size:15px; line-height:1.55; color:rgba(255,255,255,.94); margin:0 0 16px; max-width:320px; text-shadow:0 2px 12px rgba(0,0,0,.8) }
+#peCombat .ov .objline{ display:flex; flex-direction:column; gap:3px; margin:0 0 22px; padding:11px 16px; border-radius:12px; max-width:320px; background:var(--glass); border:1px solid var(--line); color:var(--ink) }
+#peCombat .ov .objline span{ font-size:8px; font-weight:800; letter-spacing:.18em; text-transform:uppercase; color:var(--wine) }
+#peCombat .ov .objline b{ font-family:var(--fbody); font-size:12px; font-weight:600; color:var(--ink); line-height:1.4 }
+#peCombat .ov .rewards{ display:flex; flex-direction:column; gap:8px; width:100%; max-width:300px; margin-bottom:20px }
+#peCombat .ov .rw{ display:flex; align-items:center; gap:10px; padding:9px 12px; border-radius:12px; text-align:left; background:var(--glass); border:1px solid var(--line); color:var(--ink) }
+#peCombat .ov .rw .ri{ font-size:16px } #peCombat .ov .rw .rk{ font-size:8px; font-weight:800; letter-spacing:.14em; text-transform:uppercase; color:var(--wine) }
+#peCombat .ov .rw .rt{ font-size:11.5px; font-weight:600; color:var(--ink) }
+#peCombat .ov button{ font-family:var(--fbody); font-size:12px; font-weight:800; letter-spacing:.1em; text-transform:uppercase; color:#fff; background:linear-gradient(135deg,var(--rose),var(--violet)); border:none; border-radius:999px; padding:13px 34px; cursor:pointer; box-shadow:0 8px 20px rgba(139,123,216,.45) }
+/* intro overlay: title + aim high on screen, wide Start button pinned to the bottom */
+#peCombat .ov.intro{ justify-content:flex-start; align-items:stretch; padding:0 }
+#peCombat .ov.intro .ovcontent{ flex:1; justify-content:space-between; align-items:center; padding:calc(env(safe-area-inset-top,0px) + 66px) 26px calc(env(safe-area-inset-bottom,0px) + 34px) }
+#peCombat .ov.intro .introtop{ display:flex; flex-direction:column; align-items:center }
+#peCombat .ov.intro .ok{ text-shadow:none }
+#peCombat .ov.intro h2{ text-shadow:none }
+#peCombat .ov.intro p{ margin:0; font-size:19px; line-height:1.5; max-width:340px; text-shadow:none }
+#peCombat .ov.intro button{ width:100%; max-width:360px; padding:17px 34px; border-radius:16px }
+#peCombat .ov.end{ justify-content:flex-start; align-items:stretch; padding:0; background:#0c0812 }
+#peCombat .ov.end .ovcontent{ flex:1; display:flex; flex-direction:column; justify-content:flex-start; align-items:center; padding:calc(env(safe-area-inset-top,0px) + 40px) 22px calc(env(safe-area-inset-bottom,0px) + 26px) }
+#peCombat .ov.end .endtop{ flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center }
+#peCombat .ov.end .ok{ text-shadow:none }
+#peCombat .ov.end .ok.succ{ color:#4ade80; text-shadow:0 0 16px rgba(74,222,128,.5) }
+#peCombat .ov.end h2{ text-shadow:none }
+#peCombat .ov.end p{ margin:0; font-size:21px; line-height:1.4; max-width:340px; text-shadow:none }
+#peCombat .ov.end .endbottom{ flex:none; width:100%; display:flex; flex-direction:column; align-items:center; gap:40px }
+#peCombat .ov.end .endcards{ display:flex; width:100%; align-items:stretch }
+#peCombat .ov.end .ecard{ flex:1 1 0; min-width:0; display:flex; flex-direction:column; align-items:center; text-align:center; gap:9px; padding:4px 8px; background:none; border:none; color:#fff }
+#peCombat .ov.end .ecard .eic{ width:52px; height:52px; border-radius:50%; display:flex; align-items:center; justify-content:center; margin-bottom:3px }
+#peCombat .ov.end .ecard .eic svg{ width:30px; height:30px; fill:none; stroke:currentColor; stroke-width:1.5; stroke-linecap:round; stroke-linejoin:round }
+#peCombat .ov.end .e-relation .eic{ background:rgba(224,102,138,.2); color:#f4a6c0 }
+#peCombat .ov.end .e-discovery .eic{ background:rgba(139,123,216,.22); color:#b79cf0 }
+#peCombat .ov.end .e-trait .eic{ background:rgba(236,200,121,.2); color:#ecc879 }
+#peCombat .ov.end .ecard .eck{ font-size:8.5px; font-weight:800; letter-spacing:.15em; text-transform:uppercase; color:var(--rose2); line-height:1.3 }
+#peCombat .ov.end .ecard .ect{ font-size:13px; font-weight:800; color:#fff; line-height:1.3 }
+#peCombat .ov.end .ecard .ecs{ font-size:10px; font-weight:600; color:rgba(255,255,255,.6); line-height:1.3 }
+#peCombat .ov.end button{ width:100%; max-width:420px; padding:18px 34px; border-radius:16px }
+#peCombat .trans{ position:absolute; inset:0; z-index:25; display:none; align-items:center; justify-content:center; padding:0 34px; background:radial-gradient(120% 80% at 50% 50%, rgba(8,5,12,.55), rgba(8,5,12,.86)) }
+#peCombat .trans.show{ display:flex; animation:peovin .4s ease }
+#peCombat .trans .tin{ display:flex; flex-direction:column; align-items:center; gap:14px; max-width:360px; animation:petransin .55s cubic-bezier(.2,.9,.3,1.02) }
+#peCombat .trans .tk{ font-family:var(--fbody); font-weight:800; font-size:12px; letter-spacing:.32em; text-transform:uppercase; color:var(--rose2); text-shadow:0 2px 14px rgba(0,0,0,.8) }
+#peCombat .trans .tline{ font-family:var(--fdisp); font-style:italic; font-weight:600; font-size:23px; line-height:1.42; color:#fff; text-align:center; text-shadow:0 2px 20px rgba(0,0,0,.92) }
+@keyframes petransin{ 0%{opacity:0; transform:translateY(14px) scale(.97)} 100%{opacity:1; transform:none } }
+#peCombat .trans{ transition:opacity .38s ease } #peCombat .trans.fade{ opacity:0 }
+/* beats reuse the game's real #dialogBox — reveal it above the combat only during a beat */
+body.pe-combat #dialogBox{ z-index:9001; opacity:0 !important; transform:translateY(140%) !important; pointer-events:none !important; border-radius:0 !important; }
+body.pe-combat.pe-beat #dialogBox{ opacity:1 !important; transform:none !important; pointer-events:auto !important; display:block !important; }
+</style>
+
+<div id="peCombat" class="p-prep">
+  <div class="bg-fallback"></div>
+  <div class="bg-scene" id="peBg"></div>
+  <div class="scrim"></div>
+  <div class="top"><div class="rail" id="peRail"></div></div>
+  <div class="meter" id="peMeter">
+    <svg class="mbord" id="peMbord" preserveAspectRatio="none"><rect class="mbordr"></rect></svg>
+    <div class="ml"><span class="mn" id="peMname">Gain his attention</span><span class="mc" id="peMcount">0 / 10</span></div>
+    <div class="bar"><div class="fill" id="peMfill"></div></div>
+    <div class="mover msucc"><span>SUCCESS</span></div>
+  </div>
+  <div class="duel">
+    <div class="cbt left">
+      <div class="pose-wrap"><div class="pose-bg"></div><div class="pose" id="peImgL"></div></div>
+      <div class="plate">
+        <div class="cap-line"></div>
+        <div class="cap-txt"><span class="nm">Arabella Frost</span></div>
+        <div class="stats">
+          <div class="stat"><div class="sl"><span class="k">Composure</span><span class="v" id="peCompVal">20/20</span></div><div class="sbar"><div class="sfill c-comp" id="peCompFill"></div></div></div>
+          <div class="stat"><div class="sl"><span class="k">Restraint</span><span class="v" id="peRestVal">10/10</span></div><div class="sbar"><div class="sfill c-rest" id="peRestFill"></div></div></div>
+        </div>
+      </div>
+    </div>
+    <div class="cbt right">
+      <div class="pose-wrap"><div class="pose-bg"></div><div class="pose" id="peImgR"></div></div>
+      <div class="plate">
+        <div class="cap-line"></div>
+        <div class="cap-txt"><span class="nm" id="peFnameR">Mr Darcy</span></div>
+        <div class="stats">
+          <div class="stat"><div class="sl"><span class="k" id="peResLbl">Reserve</span><span class="v" id="peResVal">10/10</span></div><div class="sbar"><div class="sfill c-res" id="peResFill"></div></div></div>
+        </div>
+        <div class="telegraph"><div class="tgv"><span class="tgpre">Next :</span> <span id="peItext">A cold appraisal</span></div><div class="tgsub" id="peIsub">−2 Composure</div></div>
+      </div>
+    </div>
+  </div>
+  <div class="cardsdock" id="peCardsDock"><div class="cards" id="peCards"></div></div>
+  <div class="trans" id="peTrans"><div class="tin"><div class="tk" id="peTransK"></div><div class="tline" id="peTline"></div></div></div>
+  <div class="ov intro" id="peIntroOv">
+    <div class="ovscrim"></div>
+    <div class="ovcontent">
+      <div class="introtop">
+        <div class="ok">Situation 5 · The Dance</div>
+        <h2>The Duel Is Joined</h2>
+        <p>You dared him with a single look. Now the dance is a duel.</p>
+      </div>
+      <button id="peEnterBtn">Start the Duel</button>
+    </div>
+  </div>
+  <div class="ov end" id="peEndOv">
+    <div class="ovbg" id="peEndBg"></div><div class="ovscrim"></div>
+    <div class="ovcontent">
+      <div class="endtop">
+        <div class="ok" id="peEndKick">The Dance</div>
+        <h2 id="peEndTitle"></h2>
+        <p id="peEndLine"></p>
+      </div>
+      <div class="endbottom">
+        <div class="endcards" id="peEndRewards"></div>
+        <button id="peContinueBtn">Continue</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  const $=id=>document.getElementById(id);
+  const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+  const IMG='worlds/pride-and-prejudice/episodes/the-newcomer/the-netherfield-ball/cutscenes/';
+  const CHAR='worlds/pride-and-prejudice/characters/';
+  const setBg=(el,id)=>{ if(el) el.style.backgroundImage="url('"+IMG+id+".png')"; };
+  const setFace=(el,id)=>{ if(el) el.style.backgroundImage="url('"+CHAR+id+"/appearances/pride.png')"; };
+  let ROOT=null, ONDONE=null, lastWin=false;
+
+  const PREP=[
+    "The musicians lift their bows; along the floor the sets are forming for the next.",
+    "Mr Darcy keeps to the wall, apart from all of it — as he has kept apart the whole evening.",
+    "You had not meant to. But your gaze crosses the room, finds his — and does not fall."
+  ];
+  const ENTER=[
+    "He has seen it. He does not look away.",
+    "The pull is on now. Everything the evening becomes turns on this — the eyes, and what you do not let him see."
+  ];
+  const STAGES=[
+    { key:'look', cap:'The Look', mname:'Gain his attention', target:10, img:'cb_look', doneImg:'cb_moves',
+      opp:{name:'Mr Darcy', face:'mr_darcy', bar:'Reserve', sub:'The Reserve', max:10},
+      done:'His guard breaks. He is crossing the floor to you — and someone steps into his path.' },
+    { key:'interloper', cap:'Interloper', mname:'Send him off', target:12, img:'cb_interloper', doneImg:'cb_sendoff',
+      opp:{name:'Mr Collins', face:'mr_collins', bar:'Insistence', sub:'The Interloper', max:14},
+      done:'Collins bows himself away, satisfied. The floor is open. Darcy is here.' },
+    { key:'dance', cap:'The Dance', mname:'Take the upper hand', target:14, img:'cb_dance', doneImg:'cb_upperhand',
+      opp:{name:'Mr Darcy', face:'mr_darcy', bar:'Guard', sub:'The Duel', max:16},
+      done:'The music ends. He bows, undone. Everything said — nothing settled.' },
+  ];
+  const INTENTS={
+    look:[{n:'A cold appraisal', comp:2},{n:'He almost smiles', rest:2},{n:'He composes himself', reserve:2},{n:'He looks away', pull:3}],
+    interloper:[{n:'A tedious flattery', comp:2},{n:'He angles for your hand', rest:2},{n:'He digs in', reserve:3},{n:'He blocks your view', pull:3}],
+    dance:[{n:'He goes cold', comp:4},{n:'He holds your eye', rest:3},{n:'He recovers his guard', reserve:3},{n:'He turns away', pull:3}],
+  };
+  function pickIntent(key){ const a=INTENTS[key]; return a[Math.floor(Math.random()*a.length)]; }
+  function intentSub(I){
+    if(I.comp) return {cls:'i-comp', t:'−'+I.comp+' Composure'};
+    if(I.rest) return {cls:'i-rest', t:'−'+I.rest+' Restraint'};
+    if(I.reserve) return {cls:'i-res', t:'+'+I.reserve+' Reserve'};
+    if(I.pull) return {cls:'i-pull', t:'−'+I.pull+' Pull'};
+    return {cls:'', t:''};
+  }
+  const CARDS={
+    look:[
+      {trait:'reads', t:'Meet his eyes, then look past him', gain:{k:'pull',v:4}, cost:{k:'reserve',v:2},
+        beat:[{t:'You hold his gaze a breath too long — then let it slide past him, to the candles, the window, anywhere but his face.'},{t:'Across the floor you feel him go still — caught by the very indifference you spent on him.'},{who:'ara', t:'Let him wonder whether I meant anything by it at all.'}]},
+      {trait:'wit',   t:'A slow smile, like a secret',       gain:{k:'pull',v:5}, cost:{k:'restraint',v:2},
+        beat:[{t:'The corner of your mouth lifts — not for him, you let it seem, but at some private thought of your own.'},{who:'darcy', t:'...What is it that amuses her so?'},{t:'He would give a great deal to know. That is precisely the point.'}]},
+      {trait:'pride', t:'Hold his eye, let go on your count', gain:{k:'restraint',v:3}, cost:{k:'pull',v:1},
+        beat:[{t:'You meet him squarely and hold — one beat, two — then release him, unhurried, on your own terms.'},{who:'ara', t:'Not chased off, sir. Chosen away from.'},{t:'He knows the difference. You give nothing you did not first decide to give.'}]},
+      {trait:'nerve', t:'Drift a step toward him',            gain:{k:'pull',v:7}, cost:{k:'composure',v:3},
+        beat:[{t:'Almost without meaning to, you close the distance by a single step.'},{t:'The room narrows to the space between you — too much, too soon, and you feel what it costs.'},{who:'darcy', t:'(his breath catches) Miss Frost.'}]},
+    ],
+    interloper:[
+      {trait:'reads', t:'Agree, and steer him to Charlotte',  gain:{k:'pull',v:5}, cost:{k:'reserve',v:2},
+        beat:[{who:'ara', t:'How fortunate Miss Lucas is — to want just such a partner as yourself.'},{t:'Mr Collins swells, follows your glance to Charlotte, and is already composing his bow.'},{who:'collins', t:'I had not considered it — but you are very right, very right indeed.'}]},
+      {trait:'wit',   t:'Praise his sermons till he must go', gain:{k:'pull',v:5}, cost:{k:'restraint',v:2},
+        beat:[{who:'ara', t:'I so admire your sermons, Mr Collins. Might the room not hear the very finest of them?'},{who:'collins', t:'To Lady Catherine\'s own words! If you will but excuse me —'},{t:'And off he bustles, to find an audience worthier than a dance. Gone, and grateful to you for it.'}]},
+      {trait:'pride', t:'A cool, final civility',             gain:{k:'composure',v:2}, cost:{k:'pull',v:1},
+        beat:[{t:'You thank him with a civility so complete it leaves no crack for another word.'},{who:'collins', t:'Ah — yes — quite — of course.'},{t:'He bows, retreats, uncertain quite how he was refused so kindly. You keep your countenance, and the floor.'}]},
+      {trait:'nerve', t:'Cut him off plainly',                gain:{k:'pull',v:8}, cost:{k:'composure',v:3},
+        beat:[{who:'ara', t:'You must excuse me, Mr Collins.'},{t:'Plain, unmistakable, a shade too sharp. He colours; a matron nearby lifts a brow — it costs you a breath of composure.'},{t:'But he goes. And Darcy is almost upon you now.'}]},
+    ],
+    dance:[
+      {trait:'wit',   t:'One clean line he cannot laugh off', gain:{k:'pull',v:6}, cost:{k:'restraint',v:2},
+        beat:[{t:'You set down a single line, light as a step, edged as a blade.'},{who:'darcy', t:'You have a dangerous wit, Miss Frost.'},{who:'ara', t:'Only to those who stand still long enough to feel it.'}]},
+      {trait:'reads', t:'Match his register, then turn it',   gain:{k:'reserve',v:3}, cost:{k:'pull',v:1},
+        beat:[{t:'You answer him in his own cool key — then, half a beat later, turn it warm.'},{who:'darcy', t:'...You are not at all what I expected.'},{t:'For an instant he is only a man dancing with you. You felt the reserve give.'}]},
+      {trait:'pride', t:'Refuse, plainly, to be measured',    gain:{k:'pull',v:5}, cost:{k:'composure',v:2},
+        beat:[{who:'ara', t:'You are taking my measure, sir. I would rather you did not.'},{who:'darcy', t:'Forgive me. I find I cannot help it.'},{t:'Something in him yields the point. You dance on, unmeasured.'}]},
+      {trait:'blade', t:'Draw the blade — say Wickham’s name', gain:{k:'reserve',v:5}, cost:{k:'restraint',v:3}, need:'blade',
+        beat:[{who:'ara', t:'Mr Wickham speaks of you often, I find.'},{t:'The cold comes down over his face like a shutter — but beneath it, you have reached something real.'},{who:'darcy', t:'...Does he.'}]},
+    ],
+  };
+  const CAP={pull:'Pull', composure:'Composure', restraint:'Restraint', reserve:'Reserve'};
+  const PILL={reads:'Reads the Room', wit:'Sharpest Wit', nerve:'Reckless Nerve', pride:'Pride', blade:'The Blade'};
+
+  let S;
+  function fresh(){ S={ si:0, mv:0, res:{composure:{c:20,m:20}, restraint:{c:10,m:10}, leverage:{c:1,m:1}}, over:false, busy:false, intent:null }; }
+
+  function renderRail(){
+    const r=$('peRail'); r.innerHTML='';
+    STAGES.forEach((st,i)=>{
+      if(i>0){ const l=document.createElement('div'); l.className='link'+(i<=S.si?' done':''); r.appendChild(l); }
+      const n=document.createElement('div'); n.className='node'+(i===S.si?' on':(i<S.si?' done':''));
+      const ic=i<S.si?'<path d="M5 12.5l4.5 4.5L19 6.5"/>':['<path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="2.5"/>','<path d="M12 3v18M7 8l5-5 5 5"/>','<path d="M6 15l4-9 4 9M4 19h16"/>'][i];
+      n.innerHTML='<div class="dot"><svg viewBox="0 0 24 24">'+ic+'</svg></div><div class="cap">'+st.cap+'</div>';
+      r.appendChild(n);
+    });
+  }
+  function renderRes(){
+    const comp=S.res.composure, rest=S.res.restraint;
+    $('peCompFill').style.width=(100*clamp(comp.c,0,comp.m)/comp.m)+'%'; $('peCompVal').textContent=comp.c+'/'+comp.m;
+    $('peRestFill').style.width=(100*clamp(rest.c,0,rest.m)/rest.m)+'%'; $('peRestVal').textContent=rest.c+'/'+rest.m;
+    const st=STAGES[S.si], o=st.opp;
+    $('peResFill').style.width=(100*clamp(o.cur,0,o.max)/o.max)+'%'; $('peResVal').textContent=Math.max(0,o.cur)+'/'+o.max;
+    const I=S.intent;
+    if(I){ $('peItext').textContent=I.n; const s=intentSub(I); $('peIsub').className='tgsub '+s.cls; $('peIsub').textContent=s.t; }
+    else { $('peItext').textContent='—'; $('peIsub').className='tgsub'; $('peIsub').textContent=''; }
+  }
+  function renderStage(setBgToo){
+    const st=STAGES[S.si], o=st.opp;
+    o.cur=o.max;
+    $('peMname').textContent=st.mname; $('peMcount').textContent=S.mv+' / '+st.target;
+    $('peMfill').style.width=(100*clamp(S.mv,0,st.target)/st.target)+'%';
+    $('peFnameR').textContent=o.name; $('peResLbl').textContent=o.bar;
+    setFace($('peImgL'),'arabella_frost'); setFace($('peImgR'), o.face);
+    renderRail();
+    if(setBgToo!==false){ setBg($('peBg'), st.img); }
+    $('peBg').classList.add('on');
+  }
+  function effTxt(e, good){ const sign = (e.k==='reserve') ? (good?'−':'+') : (good?'+':'−'); return sign+e.v+' '+CAP[e.k]; }
+  function effLine(c){ return '<span class="g">'+effTxt(c.gain,true)+'</span><span class="b">'+effTxt(c.cost,false)+'</span>'; }
+  function applyEff(e, st, sign){
+    if(!e) return;
+    if(e.k==='pull'){ S.mv=Math.max(0, S.mv + sign*e.v); }
+    else if(e.k==='reserve'){ st.opp.cur=clamp(st.opp.cur - sign*e.v, 0, st.opp.max); }
+    else { const R=S.res[e.k]; R.c=clamp(R.c + sign*e.v, 0, R.m); }
+  }
+  function fxAnchor(k){ return $( k==='pull'?'peMfill' : k==='composure'?'peCompFill' : k==='restraint'?'peRestFill' : 'peResFill' ); }
+  function fxPill(anchor, txt, label, good, slot){
+    if(!anchor || !ROOT) return;
+    const r=anchor.getBoundingClientRect();
+    const p=document.createElement('div'); p.className='fxpill '+(good?'g':'b');
+    p.innerHTML='<span>'+txt+'</span><small>'+label+'</small>';
+    ROOT.appendChild(p);
+    p.style.left=(r.left + r.width/2)+'px';
+    p.style.top =(r.top - 34 - (slot||0)*30)+'px';
+    p.style.animation='pefxpop 1.3s ease forwards';
+    p.addEventListener('animationend', ()=> p.remove());
+  }
+  function pillEff(k, v, good, slotMap){
+    const sign=(k==='reserve') ? (good?'−':'+') : (good?'+':'−');
+    const slot=slotMap[k]||0; slotMap[k]=slot+1;
+    fxPill(fxAnchor(k), sign+v, CAP[k], good, slot);
+  }
+  function spawnTurnPills(c, I){
+    const sm={};
+    if(c.gain) pillEff(c.gain.k, c.gain.v, true, sm);
+    if(c.cost) pillEff(c.cost.k, c.cost.v, false, sm);
+  }
+  function dealCards(){
+    const el=$('peCards'); el.innerHTML=''; el.scrollLeft=0;
+    let pool=CARDS[STAGES[S.si].key].filter(c=> c.trait!=='blade' || S.res.leverage.c>=1);
+    pool.forEach((c,i)=>{
+      const b=document.createElement('div'); b.className='card'; b.style.animationDelay=(i*70)+'ms';
+      b.innerHTML='<div class="cbanner '+c.trait+'">'+PILL[c.trait]+'</div><div class="cbody"><div class="ct">'+c.t+'</div><div class="ce">'+effLine(c)+'</div></div>';
+      b.addEventListener('click',()=>{ if(!S.over && !S.busy) play(c,b); });
+      el.appendChild(b);
+    });
+    $('peCardsDock').classList.toggle('more', pool.length>3);
+    S.busy=false;
+  }
+  function play(c,el){
+    if(S.over || S.busy) return;
+    S.busy=true;
+    const st=STAGES[S.si];
+    applyEff(c.gain, st, +1); applyEff(c.cost, st, -1);
+    if(c.need==='blade'){ S.res.leverage.c=Math.max(0,S.res.leverage.c-1); }
+    const I=S.intent;
+    if(I){
+      if(I.comp) S.res.composure.c=clamp(S.res.composure.c-I.comp,0,S.res.composure.m);
+      if(I.rest) S.res.restraint.c=clamp(S.res.restraint.c-I.rest,0,S.res.restraint.m);
+      if(I.reserve) st.opp.cur=clamp(st.opp.cur+I.reserve,0,st.opp.max);
+      if(I.pull) S.mv=Math.max(0,S.mv-I.pull);
+    }
+    S.intent=pickIntent(st.key);
+    renderRes();
+    spawnTurnPills(c, I);
+    if(S.res.composure.c<=0){ setTimeout(()=> end(false), 900); return; }
+    $('peMcount').textContent=Math.max(0,Math.min(S.mv,st.target))+' / '+st.target;
+    $('peMfill').style.width=(100*clamp(S.mv,0,st.target)/st.target)+'%';
+    if(S.mv>=st.target){ setTimeout(advance, 900); return; }
+    turnInterlude(c);
+  }
+  function turnInterlude(c){
+    setTimeout(()=>{
+      ROOT.classList.add('t-out');
+      setTimeout(()=>{
+        showNarr(c.beat || ['…'], ()=>{ dealCards(); setTimeout(()=> ROOT.classList.remove('t-out'), 30); });
+      }, 540);
+    }, 780);
+  }
+  function meterBorderLap(cb){
+    const m=$('peMeter'); if(!m){ cb&&cb(); return; }
+    const r=m.getBoundingClientRect(); const svg=$('peMbord'); const rect=svg.querySelector('.mbordr');
+    const w=r.width, h=r.height, ins=1.6, rad=14;
+    svg.setAttribute('viewBox','0 0 '+w+' '+h);
+    rect.setAttribute('x',ins); rect.setAttribute('y',ins);
+    rect.setAttribute('width', Math.max(0,w-ins*2)); rect.setAttribute('height', Math.max(0,h-ins*2));
+    rect.setAttribute('rx',rad); rect.setAttribute('ry',rad); rect.setAttribute('pathLength','100');
+    rect.style.transition='none'; rect.style.strokeDasharray='100'; rect.style.strokeDashoffset='100';
+    svg.style.opacity='1'; void rect.getBoundingClientRect();
+    rect.style.transition='stroke-dashoffset .85s cubic-bezier(.4,0,.2,1)'; rect.style.strokeDashoffset='0';
+    setTimeout(()=> cb&&cb(), 880);
+  }
+  function advance(){
+    const st=STAGES[S.si]; const m=$('peMeter'); const isLast=S.si>=STAGES.length-1;
+    if(ROOT) ROOT.querySelectorAll('.fxpill').forEach(p=>p.remove());
+    setBg($('peBg'), st.doneImg);
+    ROOT.classList.add('t-out');
+    meterBorderLap(()=>{
+      m.classList.add('m-success');
+      setTimeout(()=>{
+        if(isLast){ m.classList.remove('m-success'); $('peMbord').style.opacity='0'; return end(true); }
+        const ni=S.si+1, ns=STAGES[ni];
+        $('peTransK').textContent='Stage '+(ni+1)+' · '+ns.cap;
+        $('peTline').textContent=st.done;
+        $('peMbord').style.opacity='0';
+        m.classList.remove('m-success'); m.classList.add('m-gone');
+        $('peTrans').classList.remove('fade'); $('peTrans').classList.add('show');
+        setTimeout(()=>{
+          S.si++; S.mv=0; S.intent=pickIntent(STAGES[S.si].key);
+          renderStage(true); renderRes(); dealCards();
+          $('peTrans').classList.add('fade');
+          setTimeout(()=> $('peTrans').classList.remove('show','fade'), 380);
+          m.classList.remove('m-gone');
+          setTimeout(()=> ROOT.classList.remove('t-out'), 80);
+        }, 1900);
+      }, 950);
+    });
+  }
+  const ECARD_ICON={
+    relation:'<svg viewBox="0 0 24 24"><path d="M12 20.2C6.9 16.4 3.6 12.9 3.6 9.3 3.6 6.7 5.5 5 7.7 5c1.7 0 3 1 3.8 2.3l.5.8.5-.8C13.3 6 14.6 5 16.3 5c2.2 0 4.1 1.7 4.1 4.3 0 3.6-3.3 7.1-8.4 10.9z"/></svg>',
+    discovery:'<svg viewBox="0 0 24 24"><circle cx="10.6" cy="10.6" r="6.4"/><path d="M15.2 15.2l4.6 4.6"/></svg>',
+    trait:'<svg viewBox="0 0 24 24"><path d="M12 3.2c.9 5 2.4 6.6 7.6 7.6-5.2 1-6.7 2.6-7.6 7.6-.9-5-2.4-6.6-7.6-7.6C9.6 9.8 11.1 8.2 12 3.2z"/></svg>'
+  };
+  function ecard(kind, label, main, sub){
+    return '<div class="ecard e-'+kind+'"><div class="eic">'+ECARD_ICON[kind]+'</div><div class="eck">'+label+'</div><div class="ect">'+main+'</div>'+(sub?'<div class="ecs">'+sub+'</div>':'')+'</div>';
+  }
+  function end(win){
+    S.over=true; lastWin=win;
+    setBg($('peEndBg'), win?'cb_win':'cb_lose');
+    const kick=$('peEndKick');
+    if(win){
+      kick.textContent='SUCCESS'; kick.classList.add('succ');
+      $('peEndTitle').textContent='Nothing Settled';
+      $('peEndLine').textContent='The music ends. He bows, undone — and his eyes will not leave you.';
+      const bruised=S.res.restraint.c<=3;
+      $('peEndRewards').innerHTML=
+        ecard('relation','Relation','Mr Darcy — Desire +'+(bruised?1:2),'Now: Interest')+
+        ecard('discovery','Discovery','A crack beneath his pride.','')+
+        ecard('trait', bruised?'Unguarded':'Composed', bruised?'You showed your hand.':'Never once too eager.','');
+    } else {
+      kick.textContent='The Colder Side'; kick.classList.remove('succ');
+      $('peEndTitle').textContent='You Look Away First';
+      $('peEndLine').textContent='Composure fails before your wit can land — the moment lost between you.';
+      $('peEndRewards').innerHTML=
+        ecard('relation','Relation','Mr Darcy — retreats','Now: Distant')+
+        ecard('discovery','Discovery','His reserve, unbroken.','')+
+        ecard('trait','Eager','You reached too far, too soon.','');
+    }
+    $('peEndOv').classList.add('show');
+  }
+
+  const SPK={ara:'Arabella', darcy:'Mr Darcy', collins:'Mr Collins'};
+  // beats drive the game's real #dialogBox (styled by theme.css)
+  function showNarr(lines, onDone){
+    let i=0; const box=$('dialogBox'), lab=$('speakerLabel'), txt=$('dialogText');
+    document.body.classList.add('pe-beat');
+    function draw(){
+      const ln=lines[i], who=(ln&&typeof ln==='object')?ln.who:null, t=(ln&&typeof ln==='object')?ln.t:ln;
+      if(who){ box.className=''; lab.textContent=SPK[who]||who; }
+      else { box.className='narrative'; lab.textContent=''; }
+      txt.textContent=t;
+    }
+    draw();
+    box.onclick=()=>{ i++; if(i>=lines.length){ box.onclick=null; document.body.classList.remove('pe-beat'); if(onDone) onDone(); } else draw(); };
+  }
+
+  function showIntro(){ $('peIntroOv').classList.remove('flyout'); $('peIntroOv').classList.add('show'); }
+  function boot(){
+    ROOT.className='p-prep on';
+    $('peEndOv').classList.remove('show'); $('peIntroOv').classList.remove('show');
+    setBg($('peBg'),'cb_intro'); $('peBg').classList.add('on');
+    setFace($('peImgL'),'arabella_frost'); setFace($('peImgR'),'mr_darcy');
+    showNarr(PREP, showIntro);
+  }
+  function finish(){
+    ROOT.classList.remove('on'); document.body.classList.remove('pe-combat','pe-beat');
+    const box=$('dialogBox'); if(box) box.onclick=null;
+    const cb=ONDONE; ONDONE=null; if(typeof cb==='function') cb(lastWin);
+  }
+
+  document.addEventListener('click', function(e){
+    const t=e.target;
+    if(t && t.id==='peEnterBtn'){
+      $('peIntroOv').classList.add('flyout');
+      setTimeout(()=>{
+        $('peIntroOv').classList.remove('show','flyout');
+        fresh(); S.intent=pickIntent('look');
+        // stay in p-prep: only the scene + narrative, NO characters/chrome yet
+        showNarr(ENTER, ()=>{
+          // narrative done → scene changes and everything rises in together
+          setBg($('peBg'),'cb_look');
+          ROOT.classList.remove('p-prep','p-chrome'); ROOT.classList.add('p-play');
+          renderStage(false); renderRes(); dealCards();
+        });
+      }, 520);
+    } else if(t && t.id==='peContinueBtn'){ finish(); }
+  });
+
+  // public entry — called by the (Combat: darcy-duel) script directive
+  window.prideCombat=function(opts){
+    ROOT=document.getElementById('peCombat'); if(!ROOT) return;
+    ONDONE = opts && opts.onDone; lastWin=false;
+    document.body.classList.add('pe-combat');
+    boot();
+  };
+  // dev shortcut — jump straight to the SUCCESS end screen
+  window.prideCombatSuccess=function(opts){
+    ROOT=document.getElementById('peCombat'); if(!ROOT) return;
+    ONDONE = opts && opts.onDone; lastWin=false;
+    document.body.classList.add('pe-combat');
+    ROOT.className='on p-play';
+    $('peIntroOv').classList.remove('show'); $('peBg').classList.remove('on');
+    fresh(); S.si=STAGES.length-1;
+    end(true);
+  };
+})();
+</script>
+<!-- ===== /PRIDE COMBAT ===== -->
+
 <!-- ===== PRIDE STORY NOTIFICATIONS (relation / memory) — injected ===== -->
 <style id="pridenotifs-css">
 #peNotif{ position:fixed; left:0; top:50%; transform:translate(-115%,-50%); z-index:99; pointer-events:none;

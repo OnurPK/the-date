@@ -32,3 +32,7 @@ mockups/
 zoom-transitions.html
 worlds/london/locations/deneme2/
 worlds/london/locations/deneme3/
+
+# Combat scratch mock + accidental cutscenes duplicate
+combat-mock.html
+**/cutscenes copy/

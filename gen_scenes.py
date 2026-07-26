@@ -55,7 +55,7 @@ STYLE = ("Regency England circa 1810s, warm candlelit Netherfield ballroom, "
 # character id -> sprite reference file
 CHARS = {c: f"{WORLD}/characters/{c}/appearances/pride.png" for c in [
     "arabella_frost", "mr_darcy", "mr_wickham", "mr_bingley",
-    "miss_bingley", "mrs_bennet", "charlotte_lucas", "lydia_bennet"]}
+    "miss_bingley", "mrs_bennet", "charlotte_lucas", "lydia_bennet", "mr_collins"]}
 
 # location id -> background/scene reference file
 LOCS = {
@@ -74,6 +74,26 @@ SQUARE   = "1024x1024"   # 1:1
 
 # id: (size, [character ids], location id, prompt-subject)
 SCENES = {
+
+ # ---- COMBAT STORYBOARD - Arabella vs Darcy (The Look -> The Interloper -> The Dance) ----
+ "cb_intro": (PORTRAIT, ["arabella_frost","mr_darcy"], "ballroom",
+   "Across the crowded candlelit ballroom Arabella locks eyes with Mr Darcy over the heads of the dancers - a cool deliberate dare, the instant a private duel begins; she is composed, unhurried, giving nothing away. Leave the upper area uncluttered for a title."),
+ "cb_look": (PORTRAIT, ["arabella_frost","mr_darcy"], "ballroom",
+   "Arabella holds Darcy's gaze across the ballroom floor, drawing him in with her eyes yet perfectly composed - quietly alluring but careful not to seem eager, hiding what it costs her; Darcy stands still among the guests, caught, unable to look away."),
+ "cb_moves": (PORTRAIT, ["mr_darcy","arabella_frost"], "ballroom",
+   "Mr Darcy breaks first and begins crossing the ballroom floor toward Arabella, the guests parting before him; she watches him come, composed and quietly certain, not triumphant."),
+ "cb_interloper": (PORTRAIT, ["arabella_frost","mr_collins","mr_darcy"], "ballroom",
+   "Before Darcy reaches her, the pompous clergyman Mr Collins bustles in front of Arabella, bowing and fawning as he presumes to claim her hand for the next dance, blocking her path; over his shoulder Darcy is still approaching. Arabella keeps a gracious but cornered smile."),
+ "cb_sendoff": (PORTRAIT, ["arabella_frost","mr_collins"], "ballroom",
+   "Arabella deftly and graciously extricates herself from Mr Collins - a polite practised turn that redirects him without a scene - keeping the floor open; Darcy nearly upon them."),
+ "cb_dance": (PORTRAIT, ["arabella_frost","mr_darcy"], "ballroom",
+   "Arabella and Mr Darcy take the floor together, the set forming around them, the whole candlelit room watching; they face each other a formal arm's length apart, poised and charged - the duel joined."),
+ "cb_upperhand": (PORTRAIT, ["arabella_frost","mr_darcy"], "ballroom",
+   "Mid-dance Arabella lands the decisive line; Darcy's guarded composure cracks for an instant, a flicker of real feeling breaking through the reserve, the two very close, the watching room a golden blur."),
+ "cb_win": (PORTRAIT, ["arabella_frost","mr_darcy"], "ballroom",
+   "The music ended, Arabella and Darcy stand a single breath apart - everything said, nothing settled; his reserve undone, his gaze fixed on her with unmistakable helpless regard. Warm, romantic, radiant. Leave the lower area open for a caption."),
+ "cb_lose": (PORTRAIT, ["arabella_frost","mr_darcy"], "ballroom",
+   "Arabella turns away first, composed but shut; Darcy closes back behind his pride, the charged moment lost between them. Cooler, dimmer, a little melancholy. Leave the lower area open for a caption."),
  "s1a_arrival_doorway": (PORTRAIT, ["arabella_frost"], "ballroom",
    "Arabella framed in the tall candlelit doorway of a grand ballroom, warm light spilling past her, a blurred crowd half-turning to look; poised, chin up, faintly amused."),
  "s1b_darcy_across": (PORTRAIT, ["mr_darcy"], "ballroom",

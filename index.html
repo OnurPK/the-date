@@ -494,6 +494,8 @@
 <div class="actions">
   <a class="act-btn primary" id="btnEditor" href="editor.html" target="_blank" rel="noopener">✎ Open Editor</a>
   <button class="act-btn primary" id="btnNetherfield" type="button">♛ Netherfield Ball</button>
+  <button class="act-btn" id="btnCombat" type="button">⚔ Darcy Duel (combat)</button>
+  <button class="act-btn" id="btnSuccess" type="button">✓ Success Screen</button>
   <button class="act-btn" id="btnDashboard" type="button">⊙ London Dashboard</button>
   <button class="act-btn" id="btnEpisode" type="button">▶︎ Start Her Place</button>
   <button class="act-btn" id="btnExplore" type="button">⌖ Explore</button>
@@ -586,6 +588,39 @@
           venue: 'netherfield-ball',
         }, '*');
       } catch (e) { console.warn('[netherfield]', e); }
+    });
+  }
+
+  // ⚔ Darcy Duel — park the engine right on the dare choice that opens
+  // the combat (the beat just before (Combat:)). Loads the Netherfield
+  // episode first if needed, then jumps. Pick option 3 → duel launches.
+  const btnCombat = document.getElementById('btnCombat');
+  if (btnCombat) {
+    btnCombat.addEventListener('click', () => {
+      const w = frame.contentWindow;
+      try { if (typeof w.devJumpToCombat === 'function' && w.devJumpToCombat()) return; } catch (e) {}
+      try { frame.contentWindow.postMessage({ type: 'jump-episode', pack: 'pride', venue: 'netherfield-ball' }, '*'); } catch (e) {}
+      let tries = 0;
+      const t = setInterval(() => {
+        tries++;
+        try { if (typeof frame.contentWindow.devJumpToCombat === 'function' && frame.contentWindow.devJumpToCombat()) { clearInterval(t); return; } } catch (e) {}
+        if (tries > 50) { clearInterval(t); console.warn('[combat] could not reach the duel — Netherfield script loaded?'); }
+      }, 200);
+    });
+  }
+
+  // ✓ Success Screen — jump straight to the combat SUCCESS end screen
+  // (overlays on top of whatever the iframe shows) so we can iterate on
+  // the win-screen UI without playing through the duel.
+  const btnSuccess = document.getElementById('btnSuccess');
+  if (btnSuccess) {
+    btnSuccess.addEventListener('click', () => {
+      try {
+        const w = frame.contentWindow;
+        if (w.document && w.document.body) w.document.body.setAttribute('data-pack', 'pride');
+        if (typeof w.devJumpToSuccess === 'function') { w.devJumpToSuccess(); return; }
+        console.warn('[success] combat module not ready in iframe');
+      } catch (e) { console.warn('[success]', e); }
     });
   }
 
