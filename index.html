@@ -111,7 +111,7 @@
   /* ---------- Desktop UI around the phone ---------- */
   .topbar {
     position: fixed;
-    top: 20px; left: 22px;
+    top: 20px; left: 64px;
     z-index: 10;
   }
   .title {
@@ -302,14 +302,39 @@
   }
 
   /* External action buttons — these sit OUTSIDE the phone frame */
+  /* Dev shortcuts → collapsible left panel */
   .actions {
-    position: fixed;
-    left: 50%;
-    bottom: 28px;
-    transform: translateX(-50%);
-    display: flex; gap: 10px;
-    z-index: 10;
+    position: fixed; top: 0; left: 0; bottom: 0;
+    width: 236px;
+    display: flex; flex-direction: column; gap: 7px;
+    padding: 62px 14px 18px;
+    overflow-y: auto;
+    background: rgba(10,8,16,0.94);
+    border-right: 1px solid rgba(255,255,255,0.12);
+    -webkit-backdrop-filter: blur(16px); backdrop-filter: blur(16px);
+    box-shadow: 12px 0 44px rgba(0,0,0,0.45);
+    transform: translateX(-100%);
+    transition: transform 0.3s cubic-bezier(0.22,1,0.36,1);
+    z-index: 200;
   }
+  body.dock-open .actions { transform: translateX(0); }
+  .actions::-webkit-scrollbar { width: 6px; }
+  .actions::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.16); border-radius: 3px; }
+  .actions .dock-title {
+    font-size: 10px; font-weight: 800; letter-spacing: 0.18em; text-transform: uppercase;
+    color: rgba(255,255,255,0.4); padding: 2px 4px 6px;
+  }
+  .actions .act-btn { width: 100%; justify-content: flex-start; border-radius: 10px; padding: 11px 14px; font-size: 13px; }
+  /* toggle handle (top-left) */
+  .dock-toggle {
+    position: fixed; top: 12px; left: 12px; z-index: 210;
+    width: 40px; height: 40px; border-radius: 12px;
+    background: rgba(20,14,26,0.82); border: 1px solid rgba(255,255,255,0.2);
+    color: #fff; font-size: 17px; cursor: pointer; display: grid; place-items: center;
+    -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
+    transition: transform 0.2s;
+  }
+  .dock-toggle:active { transform: scale(0.94); }
   .act-btn {
     background: rgba(255,255,255,0.06);
     border: 1px solid rgba(255,255,255,0.14);
@@ -502,7 +527,9 @@
      restart / showIntro signal that briefly flashed the "Start" screen
      during gameplay. The phone-frame stays clean; the in-game restart
      path is reachable via the in-game UI. -->
+<button class="dock-toggle" id="dockToggle" type="button" aria-label="Shortcuts">☰</button>
 <div class="actions">
+  <div class="dock-title">Shortcuts</div>
   <a class="act-btn primary" id="btnEditor" href="editor.html" target="_blank" rel="noopener">✎ Open Editor</a>
   <button class="act-btn primary" id="btnNetherfield" type="button">♛ Netherfield Ball</button>
   <button class="act-btn" id="btnCombat" type="button">⚔ Darcy Duel (combat)</button>
@@ -576,6 +603,14 @@
         } catch (e) { /* cross-origin / not ready */ }
       }, 400);
     }
+  })();
+  // Shortcuts dock: toggle the collapsible left panel.
+  (function wireDock(){
+    const t = document.getElementById('dockToggle');
+    if (t) t.addEventListener('click', function(){
+      const open = document.body.classList.toggle('dock-open');
+      t.textContent = open ? '✕' : '☰';
+    });
   })();
   // "Open Editor" is a real <a> link — no JS handler needed.
   // "London Dashboard" sends a postMessage into the iframe so the
