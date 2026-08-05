@@ -434,6 +434,17 @@
     }
     .screen iframe { width: 100%; height: 100%; }
   }
+  /* quick jump to the v2 build — inside the phone screen, top-left, outline */
+  #v2Link {
+    position: absolute; top: 12px; left: 12px; z-index: 40;
+    padding: 7px 13px; border-radius: 20px;
+    background: rgba(12,8,18,.42); color: #fff;
+    border: 1.5px solid rgba(255,255,255,.6);
+    font-family: system-ui, sans-serif; font-weight: 800; font-size: 11.5px;
+    letter-spacing: .12em; text-transform: uppercase; text-decoration: none;
+    -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px);
+  }
+  #v2Link:active { transform: scale(.96); }
 </style>
 </head>
 <body>
@@ -482,6 +493,7 @@
         <!-- src is set in JS below so we can forward the wrapper's
              URL params (?dev=keys, ?edit=paths, etc.) into the iframe. -->
         <iframe id="gameFrame" title="Oda — Visual Novel"></iframe>
+        <a href="dialog2.html" id="v2Link" title="Open the v2 build">v2 &rarr;</a>
       </div>
     </div>
   </div>
@@ -544,6 +556,27 @@
       .replace(/[?&]embed=1\b/, '')   // wrapper-only flag
       .replace(/^&/, '?');            // tidy up leading char
     frame.src = 'dialog.html' + (cleaned || '');
+    // v2 link: swap the iframe between dialog.html (v1) and dialog2.html (v2)
+    // WITHOUT leaving the phone frame. Toggles its own label.
+    const v2 = document.getElementById('v2Link');
+    if (v2) {
+      v2.style.display = 'none';   // hidden until we confirm the entry screen
+      v2.addEventListener('click', function(e){
+        e.preventDefault();
+        const onV2 = /dialog2\.html/.test(frame.src);
+        frame.src = (onV2 ? 'dialog.html' : 'dialog2.html') + (cleaned || '');
+        v2.textContent = onV2 ? 'v2 →' : 'v1 →';
+      });
+      // Only show the v1/v2 toggle on the game's entry (landing) screen —
+      // hide it once the player is past it. Same-origin iframe, so we can
+      // read its body class.
+      setInterval(function(){
+        try {
+          const b = frame.contentDocument && frame.contentDocument.body;
+          v2.style.display = (b && b.classList.contains('flow-intro')) ? '' : 'none';
+        } catch (e) { /* cross-origin / not ready */ }
+      }, 400);
+    }
   })();
   // "Open Editor" is a real <a> link — no JS handler needed.
   // "London Dashboard" sends a postMessage into the iframe so the
