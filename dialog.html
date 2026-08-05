@@ -11431,6 +11431,17 @@
 </head>
 <body>
 
+<!-- build switch — only on the entry (landing) screen -->
+<style>
+  #gameVer{ position:fixed; top:calc(env(safe-area-inset-top,0px) + 12px); left:12px; z-index:99998; display:none;
+    padding:7px 13px; border-radius:20px; background:rgba(12,8,18,.42); color:#fff; border:1.5px solid rgba(255,255,255,.6);
+    font:800 11.5px/1 system-ui,sans-serif; letter-spacing:.12em; text-transform:uppercase; text-decoration:none;
+    -webkit-backdrop-filter:blur(8px); backdrop-filter:blur(8px); }
+  body.flow-intro #gameVer{ display:inline-flex; }
+  #gameVer:active{ transform:scale(.96); }
+</style>
+<a href="dialog2.html" id="gameVer" title="Switch build">v2 &rarr;</a>
+
 <!-- =========================================================
      ONBOARDING FLOW, welcome video + form + astrology
      loading + 10-question survey. Only shown on first launch
