@@ -19562,11 +19562,14 @@ function dismissPOI() {
 }
 
 async function startDateHere() {
-  // Fast-forward stand-in: in a gameplay state, the active episode pin doesn't
-  // play the real episode — show the black "episode playing" screen instead.
+  // Fast-forward stand-in: ONLY placeholder episodes (no real script yet) show
+  // the black "episode playing" screen so we can jump to the next map state.
+  // Real episodes (e.g. the Netherfield Ball) play for real — no stand-in.
+  const PRIDE_SIM_STANDINS = ['lucas-lodge', 'longbourn'];
   const _ep = document.body.classList;
   if ((_ep.contains('pride-ep1') || _ep.contains('pride-ep2') || _ep.contains('pride-ep3'))
-      && currentVenue === window.prideActiveEp) {
+      && currentVenue === window.prideActiveEp
+      && PRIDE_SIM_STANDINS.indexOf(currentVenue) !== -1) {
     if (typeof closePOI === 'function') closePOI();
     if (typeof window.pridePlayEp === 'function') window.pridePlayEp();
     return;
