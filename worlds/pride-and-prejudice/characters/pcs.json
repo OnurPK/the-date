@@ -252,6 +252,18 @@
       "bio": "A gentleman's daughter of small fortune and larger opinions — in Meryton to be counted for her mind, not quietly priced by the marriage market.",
       "driver": "To be counted for her mind before her dowry — to be chosen, not merely settled for.",
       "manner": "Quick, dry, and unafraid; where another lowers her eyes, she raises an eyebrow.",
+      "intro": "Arabella Frost enters a room already composing the sentence that will define it, weighing which truth will land cleanest and which vanity most deserves puncturing. She is genuinely the quickest wit in any company and she knows it, which is precisely the thing that gives her away: watch her in the moment after the laugh lands, when her eyes flick to see who noticed, and you will find beneath all that assurance a woman determined to be counted for her mind before she can be quietly priced by the marriage market.",
+      "whoYouAre": [
+        "Arabella Frost is the elder daughter of a Hertfordshire gentleman of small fortune and larger opinions, educated beyond her prospects and possessed of a tongue polished enough to charm a drawing-room and sharp enough to empty one.",
+        "She is known in the neighbourhood as diverting but dangerous company, the sort of young woman hostesses seat far from the proud and the pompous, uncertain whether she will smooth the evening or set it delightfully alight.",
+        "She has a slight but genuine acquaintance with Mr Bingley's set, having been introduced at the Meryton assembly, and Miss Bingley has twice found her amusing and once found her insupportable, which Arabella considers a fair evening's work.",
+        "The neighbourhood regards her as a young woman of promise perpetually on the verge of either a brilliant match or a memorable scandal, though no one, including Arabella herself, can say with certainty which it will be."
+      ],
+      "carryIn": [
+        "I was seventeen and cleverer than kind when I made my cousin Sophia the evening's amusement over some small affectation of dress, and the room laughed, and she laughed too, a beat too late, and I watched her decide never again to trust me with a soft thing, and understood that a wit is a blade that does not know whose hand it is in.",
+        "My mother told me once, without unkindness, that a woman admired for her cleverness is a woman men enjoy at dinner and marry no one like, and I have spent every year since trying to prove her wrong without becoming someone I would find dull.",
+        "At the Netherfield assembly I answered a proud man's slight before he had finished delivering it, and the table went silent and then delighted, and for one clean moment I felt the only power the world reliably grants a woman of my situation, and I decided then that I would rather be feared for my mind than forgotten for my fortune."
+      ],
       "save": {
         "ch": 1,
         "chTitle": "The Netherfield Ball",
