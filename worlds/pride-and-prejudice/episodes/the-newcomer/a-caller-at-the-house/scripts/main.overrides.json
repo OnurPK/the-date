@@ -1,0 +1,340 @@
+{
+  "42": {
+    "x": "83%",
+    "y": "109",
+    "size": "112%",
+    "drop": "200",
+    "turn": "-18",
+    "pan": "50",
+    "flip": "1",
+    "anim": [
+      {
+        "type": "enter",
+        "mode": "slide",
+        "amount": "70",
+        "dur": "0.55",
+        "ease": "out",
+        "dir": "right"
+      },
+      {
+        "type": "exit",
+        "mode": "fade",
+        "amount": "",
+        "dur": "0.4",
+        "ease": "out",
+        "dir": "left"
+      }
+    ],
+    "poses": [
+      {
+        "w": 10,
+        "image": "proud_boast",
+        "transition": "cut"
+      }
+    ]
+  },
+  "43": {
+    "x": "17%",
+    "y": "109",
+    "size": "112%",
+    "drop": "200",
+    "turn": "18",
+    "pan": "50",
+    "flip": "1",
+    "anim": [
+      {
+        "type": "enter",
+        "mode": "slide",
+        "amount": "70",
+        "dur": "0.55",
+        "ease": "out",
+        "dir": "left"
+      },
+      {
+        "type": "exit",
+        "mode": "fade",
+        "amount": "",
+        "dur": "0.4",
+        "ease": "out",
+        "dir": "left"
+      }
+    ],
+    "poses": [
+      {
+        "w": 9,
+        "image": "warm_smile",
+        "transition": "cut"
+      }
+    ]
+  },
+  "44": {
+    "poses": [
+      {
+        "w": 6,
+        "image": "smirk",
+        "transition": "cut"
+      }
+    ]
+  },
+  "59": {
+    "poses": [
+      {
+        "w": 2,
+        "image": "curtsy",
+        "transition": "cut"
+      }
+    ]
+  },
+  "65": {
+    "poses": [
+      {
+        "w": 11,
+        "image": "smirk",
+        "transition": "cut"
+      }
+    ]
+  },
+  "71": {
+    "poses": [
+      {
+        "w": 2,
+        "image": "back_turned",
+        "transition": "cut"
+      }
+    ]
+  },
+  "78": {
+    "poses": [
+      {
+        "w": 10,
+        "image": "hand_offered",
+        "transition": "cut"
+      }
+    ]
+  },
+  "79": {
+    "poses": [
+      {
+        "w": 6,
+        "image": "smirk",
+        "transition": "cut"
+      }
+    ]
+  },
+  "88": {
+    "poses": [
+      {
+        "w": 17,
+        "image": "proud_boast",
+        "transition": "cut"
+      }
+    ]
+  },
+  "89": {
+    "poses": [
+      {
+        "w": 0,
+        "image": "thoughtful",
+        "transition": "cut"
+      }
+    ]
+  },
+  "90": {
+    "poses": [
+      {
+        "w": 10,
+        "image": "with_fan",
+        "transition": "cut"
+      }
+    ]
+  },
+  "107": {
+    "poses": [
+      {
+        "w": 12,
+        "image": "arms_crossed",
+        "transition": "cut"
+      }
+    ]
+  },
+  "114": {
+    "poses": [
+      {
+        "w": 4,
+        "image": "laughing",
+        "transition": "cut"
+      }
+    ]
+  },
+  "120": {
+    "poses": [
+      {
+        "w": 13,
+        "image": "warm_smile",
+        "transition": "cut"
+      }
+    ]
+  },
+  "130": {
+    "poses": [
+      {
+        "w": 2,
+        "image": "delighted",
+        "transition": "cut"
+      }
+    ]
+  },
+  "131": {
+    "poses": [
+      {
+        "w": 14,
+        "image": "smirk",
+        "transition": "cut"
+      }
+    ]
+  },
+  "155": {
+    "poses": [
+      {
+        "w": 2,
+        "image": "curtsy",
+        "transition": "cut"
+      }
+    ]
+  },
+  "161": {
+    "poses": [
+      {
+        "w": 14,
+        "image": "warm_smile",
+        "transition": "cut"
+      }
+    ]
+  },
+  "162": {
+    "poses": [
+      {
+        "w": 8,
+        "image": "smirk",
+        "transition": "cut"
+      }
+    ]
+  },
+  "172": {
+    "poses": [
+      {
+        "w": 1,
+        "image": "disapproving",
+        "transition": "cut"
+      }
+    ]
+  },
+  "184": {
+    "poses": [
+      {
+        "w": 5,
+        "image": "curtsy",
+        "transition": "cut"
+      }
+    ]
+  },
+  "195": {
+    "poses": [
+      {
+        "w": 5,
+        "image": "laughing",
+        "transition": "cut"
+      }
+    ]
+  },
+  "201": {
+    "poses": [
+      {
+        "w": 15,
+        "image": "warm_smile",
+        "transition": "cut"
+      }
+    ]
+  },
+  "202": {
+    "poses": [
+      {
+        "w": 3,
+        "image": "smirk",
+        "transition": "cut"
+      }
+    ]
+  },
+  "211": {
+    "poses": [
+      {
+        "w": 9,
+        "image": "thoughtful",
+        "transition": "cut"
+      }
+    ]
+  },
+  "212": {
+    "poses": [
+      {
+        "w": 6,
+        "image": "smirk",
+        "transition": "cut"
+      }
+    ]
+  },
+  "213": {
+    "poses": [
+      {
+        "w": 3,
+        "image": "thoughtful",
+        "transition": "cut"
+      }
+    ]
+  },
+  "225": {
+    "poses": [
+      {
+        "w": 3,
+        "image": "curtsy",
+        "transition": "cut"
+      }
+    ]
+  },
+  "232": {
+    "poses": [
+      {
+        "w": 3,
+        "image": "arms_crossed",
+        "transition": "cut"
+      }
+    ]
+  },
+  "238": {
+    "poses": [
+      {
+        "w": 3,
+        "image": "smirk",
+        "transition": "cut"
+      }
+    ]
+  },
+  "249": {
+    "poses": [
+      {
+        "w": 1,
+        "image": "delighted",
+        "transition": "cut"
+      }
+    ]
+  },
+  "250": {
+    "poses": [
+      {
+        "w": 18,
+        "image": "spectacles",
+        "transition": "cut"
+      }
+    ]
+  }
+}

@@ -1,0 +1,1027 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<title>roles.ai</title>
+
+<!-- PWA / iOS web-app metadata -->
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="roles.ai">
+<meta name="theme-color" content="#0a0a0f">
+<meta name="color-scheme" content="dark">
+<meta name="format-detection" content="telephone=no">
+<link rel="icon" type="image/png" href="assets/ui/app-icon.png">
+<link rel="apple-touch-icon" href="assets/ui/app-icon.png">
+<link rel="manifest" href="manifest.json">
+
+<!-- On a phone-sized screen, go straight to the game -->
+<script>
+  (function() {
+    try {
+      var qs = new URLSearchParams(window.location.search);
+      var skip = qs.get('noredirect') === '1';
+      if (!skip && window.innerWidth <= 700 &&
+          !/[?&]embed=1/.test(window.location.search)) {
+        window.location.replace('dialog2.html' + window.location.search);
+      }
+    } catch (e) {}
+  })();
+</script>
+<style>
+  :root {
+    --phone-w: 390px;
+    --phone-h: 844px;
+    --bezel: 10px;
+    --radius-outer: 52px;
+    --radius-inner: 42px;
+  }
+
+  * { box-sizing: border-box; }
+
+  html, body {
+    margin: 0; padding: 0;
+    width: 100%; height: 100%;
+    overflow: hidden;
+    color: #fff;
+    font-family: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", sans-serif;
+    background:
+      radial-gradient(ellipse at 20% 10%, rgba(255,126,185,0.10), transparent 45%),
+      radial-gradient(ellipse at 85% 85%, rgba(155,127,255,0.10), transparent 45%),
+      radial-gradient(ellipse at 50% 50%, #1a1423 0%, #0a0a0f 60%, #050508 100%);
+  }
+
+  body::before {
+    content: "";
+    position: fixed; inset: 0;
+    background-image:
+      linear-gradient(rgba(255,255,255,0.014) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,0.014) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .center {
+    position: fixed; inset: 0;
+    display: flex; align-items: center; justify-content: center;
+    z-index: 1;
+  }
+
+  /* Phone stage (scales down when window is smaller) */
+  .stage {
+    width: calc(var(--phone-w) + var(--bezel) * 2);
+    height: calc(var(--phone-h) + var(--bezel) * 2);
+    transform-origin: center center;
+    will-change: transform;
+  }
+
+  .phone {
+    width: 100%; height: 100%;
+    padding: var(--bezel);
+    background: #0a0a0f;
+    border-radius: var(--radius-outer);
+    box-shadow:
+      inset 0 0 0 1.5px rgba(255,255,255,0.07),
+      0 30px 80px -20px rgba(0,0,0,0.75),
+      0 10px 40px -10px rgba(255,126,185,0.12),
+      0 60px 120px -30px rgba(155,127,255,0.15);
+  }
+
+  .screen {
+    position: relative;
+    width: var(--phone-w);
+    height: var(--phone-h);
+    border-radius: var(--radius-inner);
+    overflow: hidden;
+    background: #000;
+    box-shadow: inset 0 0 0 1px rgba(255,255,255,0.05);
+  }
+
+  .screen iframe {
+    width: var(--phone-w);
+    height: var(--phone-h);
+    border: 0;
+    display: block;
+    background: #0a0a0f;
+  }
+
+  /* ---------- Desktop UI around the phone ---------- */
+  .topbar {
+    position: fixed;
+    top: 20px; left: 22px;
+    z-index: 10;
+  }
+  .title {
+    font-size: 13px;
+    letter-spacing: 0.26em;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.75);
+    font-weight: 600;
+  }
+  .subtitle {
+    font-size: 11px;
+    color: rgba(255,255,255,0.4);
+    letter-spacing: 0.14em;
+    margin-top: 4px;
+  }
+
+  .sizes {
+    position: fixed;
+    top: 20px; right: 20px;
+    display: flex; gap: 6px;
+    z-index: 10;
+  }
+
+  /* Console pill — slightly distinct so it reads as a tool, not a size. */
+  .size-pill.console-pill {
+    border-color: rgba(155,127,255,0.45);
+    color: rgba(220,200,255,0.95);
+    margin-left: 6px;
+  }
+  .size-pill.console-pill:hover {
+    background: rgba(155,127,255,0.15);
+    border-color: rgba(155,127,255,0.7);
+  }
+  body.console-open .size-pill.console-pill {
+    background: rgba(155,127,255,0.22);
+    border-color: rgba(155,127,255,0.85);
+  }
+
+  /* Right-side inspector panel — slides in from the right edge. */
+  .console-panel {
+    position: fixed;
+    top: 0; right: 0;
+    width: 460px;
+    max-width: 95vw;
+    height: 100vh;
+    background: rgba(15,12,22,0.96);
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
+    border-left: 1px solid rgba(155,127,255,0.25);
+    box-shadow: -20px 0 60px -10px rgba(0,0,0,0.6);
+    transform: translateX(100%);
+    transition: transform 0.28s ease;
+    z-index: 30;
+    display: flex;
+    flex-direction: column;
+    color: rgba(255,255,255,0.92);
+    font-family: -apple-system, BlinkMacSystemFont, "Inter", sans-serif;
+  }
+  body.console-open .console-panel {
+    transform: translateX(0);
+  }
+  .console-header {
+    flex: 0 0 auto;
+    padding: 18px 20px 14px;
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .console-title {
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    color: rgba(220,200,255,0.95);
+    text-transform: uppercase;
+  }
+  .console-actions { display: flex; gap: 6px; }
+  .console-btn {
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.14);
+    color: rgba(255,255,255,0.85);
+    width: 30px; height: 30px;
+    border-radius: 8px;
+    font-size: 14px;
+    cursor: pointer;
+    display: inline-flex; align-items: center; justify-content: center;
+    transition: background 0.15s, border-color 0.15s;
+    font-family: inherit;
+  }
+  .console-btn:hover {
+    background: rgba(255,255,255,0.12);
+    border-color: rgba(255,255,255,0.25);
+  }
+  .console-body {
+    flex: 1 1 auto;
+    overflow-y: auto;
+    padding: 18px 20px 32px;
+  }
+  .console-empty {
+    color: rgba(255,255,255,0.5);
+    font-size: 13px;
+    padding: 40px 0;
+    text-align: center;
+  }
+  .console-section {
+    margin-bottom: 22px;
+  }
+  .console-section h3 {
+    margin: 0 0 8px;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    color: rgba(155,127,255,0.85);
+    text-transform: uppercase;
+  }
+  .console-kv {
+    display: grid;
+    grid-template-columns: 120px 1fr;
+    gap: 6px 12px;
+    font-size: 13px;
+    background: rgba(255,255,255,0.03);
+    border-radius: 10px;
+    padding: 12px 14px;
+  }
+  .console-kv .k {
+    color: rgba(255,255,255,0.55);
+    font-weight: 500;
+  }
+  .console-kv .v {
+    color: rgba(255,255,255,0.92);
+    word-break: break-word;
+  }
+  .console-kv .v.mono {
+    font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+    font-size: 12px;
+    color: rgba(255,200,140,0.9);
+  }
+  .console-pre {
+    background: rgba(0,0,0,0.35);
+    border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 10px;
+    padding: 12px 14px;
+    font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+    font-size: 12px;
+    line-height: 1.55;
+    color: rgba(220,220,235,0.92);
+    white-space: pre-wrap;
+    word-break: break-word;
+    max-height: 320px;
+    overflow-y: auto;
+  }
+  .console-list {
+    margin: 0; padding: 0; list-style: none;
+    background: rgba(255,255,255,0.03);
+    border-radius: 10px;
+    padding: 8px 0;
+  }
+  .console-list li {
+    padding: 7px 14px;
+    font-size: 13px;
+    color: rgba(255,255,255,0.92);
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+    line-height: 1.45;
+  }
+  .console-list li:last-child { border-bottom: none; }
+  .console-list .voice {
+    display: inline-block;
+    min-width: 80px;
+    color: rgba(155,127,255,0.85);
+    font-weight: 600;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-right: 8px;
+  }
+  .console-pill-inline {
+    display: inline-block;
+    background: rgba(155,127,255,0.2);
+    color: rgba(230,210,255,0.95);
+    padding: 2px 8px;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 600;
+    margin-right: 6px;
+  }
+  .console-stamp {
+    color: rgba(255,255,255,0.4);
+    font-size: 11px;
+    font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  }
+
+  /* External action buttons — these sit OUTSIDE the phone frame */
+  .actions {
+    position: fixed;
+    left: 50%;
+    bottom: 28px;
+    transform: translateX(-50%);
+    display: flex; gap: 10px;
+    z-index: 10;
+  }
+  .act-btn {
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.14);
+    color: rgba(255,255,255,0.85);
+    padding: 11px 18px;
+    border-radius: 999px;
+    font-size: 13px;
+    font-weight: 500;
+    letter-spacing: 0.05em;
+    cursor: pointer;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    font-family: inherit;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    transition: background 0.2s, transform 0.15s, border-color 0.2s, color 0.2s;
+  }
+  .act-btn:hover {
+    background: rgba(255,255,255,0.1);
+    color: #fff;
+    border-color: rgba(255,255,255,0.25);
+  }
+  .act-btn:active { transform: scale(0.97); }
+  .act-btn.primary {
+    background: linear-gradient(135deg, rgba(255,126,185,0.22), rgba(155,127,255,0.22));
+    border-color: rgba(255,178,213,0.4);
+    color: #ffd8ea;
+  }
+  .act-btn.primary:hover {
+    background: linear-gradient(135deg, rgba(255,126,185,0.32), rgba(155,127,255,0.32));
+    border-color: rgba(255,178,213,0.6);
+  }
+
+  .size-pill {
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.1);
+    color: rgba(255,255,255,0.7);
+    padding: 7px 11px;
+    border-radius: 999px;
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    font-family: ui-monospace, "SF Mono", monospace;
+    cursor: pointer;
+    transition: background 0.2s, color 0.2s, border-color 0.2s;
+  }
+  .size-pill:hover { background: rgba(255,255,255,0.1); color: #fff; }
+  .size-pill.active {
+    background: rgba(255,126,185,0.15);
+    border-color: rgba(255,126,185,0.4);
+    color: #ffc7e1;
+  }
+
+  /* ---------- Situation info panel (outside the phone, top-right) ------
+     Shows which situation the player is in and what's happening, driven
+     by postMessage from the game iframe. Dev/inspection aid. */
+  .sit-panel {
+    position: fixed;
+    top: 70px; right: 20px;
+    width: 244px;
+    z-index: 12;
+    padding: 15px 17px 16px;
+    border-radius: 16px;
+    background: rgba(20,16,30,0.72);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(255,178,213,0.22);
+    box-shadow: 0 18px 46px -14px rgba(0,0,0,0.6);
+    color: rgba(255,255,255,0.92);
+    opacity: 0;
+    transform: translateY(-8px);
+    transition: opacity 0.3s ease, transform 0.3s ease;
+    pointer-events: none;
+  }
+  .sit-panel.show { opacity: 1; transform: translateY(0); }
+  .sit-eyebrow {
+    font-size: 10px; letter-spacing: 0.22em; text-transform: uppercase;
+    color: rgba(255,178,213,0.85); font-weight: 700; margin-bottom: 7px;
+    display: flex; align-items: center; gap: 7px;
+  }
+  .sit-eyebrow::before {
+    content: ""; width: 7px; height: 7px; border-radius: 50%;
+    background: #ff7eb9; box-shadow: 0 0 0 4px rgba(255,126,185,0.18);
+    animation: sitPulse 2s ease-in-out infinite;
+  }
+  @keyframes sitPulse { 0%,100%{opacity:1} 50%{opacity:.4} }
+  .sit-title {
+    font-family: "Playfair Display", Georgia, serif;
+    font-size: 19px; font-weight: 600; font-style: italic;
+    color: #fff; line-height: 1.2; margin-bottom: 8px;
+  }
+  .sit-desc {
+    font-size: 12.5px; line-height: 1.5;
+    color: rgba(255,255,255,0.72);
+  }
+  .sit-id {
+    margin-top: 10px; font-size: 10px; letter-spacing: 0.05em;
+    font-family: ui-monospace, "SF Mono", Menlo, monospace;
+    color: rgba(255,255,255,0.34);
+  }
+  @media (max-width: 900px) { .sit-panel { display: none; } }
+
+  /* --- On actual mobile: drop the frame, full-screen --- */
+  @media (max-width: 500px) {
+    html, body { background: #000; }
+    body::before { display: none; }
+    .topbar, .sizes, .actions { display: none; }
+    .center { display: block; }
+    .stage {
+      width: 100vw; height: 100vh;
+      transform: none !important;
+    }
+    .phone {
+      padding: 0;
+      border-radius: 0;
+      background: transparent;
+      box-shadow: none;
+    }
+    .screen {
+      width: 100vw; height: 100vh;
+      border-radius: 0;
+    }
+    .screen iframe { width: 100%; height: 100%; }
+  }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="title">Room</div>
+  <div class="subtitle" id="sizeLabel">390 × 844 · iPhone 14</div>
+</div>
+
+<div class="sizes">
+  <button class="size-pill" data-w="375" data-h="812">SE</button>
+  <button class="size-pill active" data-w="390" data-h="844">14</button>
+  <button class="size-pill" data-w="430" data-h="932">Max</button>
+  <button class="size-pill console-pill" id="btnConsole" type="button" title="Show GPT request/response">⌘ Console</button>
+</div>
+
+<!-- Right-side inspector panel: shows the most recent GPT-4o vision
+     request and response (system prompt, image meta, recognized object,
+     dialog scene). Toggled by the Console pill in the topbar. -->
+<aside class="console-panel" id="consolePanel" aria-hidden="true">
+  <header class="console-header">
+    <div class="console-title">GPT Console</div>
+    <div class="console-actions">
+      <button class="console-btn" id="btnConsoleRefresh" type="button" title="Re-read iframe state">⟳</button>
+      <button class="console-btn" id="btnConsoleCopy" type="button" title="Copy as JSON">⎘</button>
+      <button class="console-btn" id="btnConsoleClose" type="button" title="Close">✕</button>
+    </div>
+  </header>
+  <div class="console-body" id="consoleBody">
+    <div class="console-empty">No gift exchange yet — send a photo to see the prompt &amp; response.</div>
+  </div>
+</aside>
+
+<!-- Situation info panel — populated from the game via postMessage. -->
+<aside class="sit-panel" id="sitPanel" aria-live="polite">
+  <div class="sit-eyebrow">Now Playing</div>
+  <div class="sit-title" id="sitTitle">The Netherfield Ball</div>
+  <div class="sit-desc" id="sitDesc">Launch the episode to follow the story situation by situation.</div>
+  <div class="sit-id" id="sitId"></div>
+</aside>
+
+<div class="center">
+  <div class="stage" id="stage">
+    <div class="phone">
+      <div class="screen">
+        <!-- src is set in JS below so we can forward the wrapper's
+             URL params (?dev=keys, ?edit=paths, etc.) into the iframe. -->
+        <iframe id="gameFrame" title="Oda — Visual Novel"></iframe>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Action buttons removed: ↺ Restart and ⏮ Replay Intro could send a
+     restart / showIntro signal that briefly flashed the "Start" screen
+     during gameplay. The phone-frame stays clean; the in-game restart
+     path is reachable via the in-game UI. -->
+<div class="actions">
+  <a class="act-btn primary" id="btnEditor" href="editor.html" target="_blank" rel="noopener">✎ Open Editor</a>
+  <button class="act-btn primary" id="btnNetherfield" type="button">♛ Netherfield Ball</button>
+  <button class="act-btn" id="btnCombat" type="button">⚔ Darcy Duel (combat)</button>
+  <button class="act-btn" id="btnSuccess" type="button">✓ Success Screen</button>
+  <button class="act-btn primary" id="btnWorldScreen" type="button">🌍 World Screen (new)</button>
+  <button class="act-btn" id="btnStage1" type="button">① Ep only</button>
+  <button class="act-btn" id="btnStage2" type="button">② +Stories</button>
+  <button class="act-btn" id="btnStage3" type="button">③ Full map</button>
+  <button class="act-btn primary" id="btnCreate" type="button">✦ Create Character</button>
+  <button class="act-btn" id="btnDashboard" type="button">⊙ London Dashboard</button>
+  <button class="act-btn" id="btnEpisode" type="button">▶︎ Start Her Place</button>
+  <button class="act-btn" id="btnExplore" type="button">⌖ Explore</button>
+  <button class="act-btn" id="btnSupper" type="button">🍽 Supper Free-Explore</button>
+  <button class="act-btn" id="btnRelation" type="button">❤ Relation</button>
+  <button class="act-btn" id="btnMemory" type="button">✎ Memory</button>
+  <button class="act-btn" id="btnObjAdd" type="button">＋ Objective</button>
+  <button class="act-btn" id="btnObjDone" type="button">✓ Complete Obj</button>
+  <button class="act-btn" id="btnCouch" type="button">⊜ Couch</button>
+  <button class="act-btn" id="btnWriteChoice" type="button">✎ Write Choice</button>
+  <button class="act-btn" id="btnScreenshot" type="button">📷 Screenshot</button>
+</div>
+
+<!-- html2canvas — used by the Screenshot button to rasterize the
+     iframe's DOM into a PNG. Same-origin so contentDocument access
+     is allowed. ~50KB gzipped, deferred so it doesn't block boot. -->
+<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js" defer></script>
+
+<script>
+  const stage      = document.getElementById('stage');
+  const frame      = document.getElementById('gameFrame');
+  const sizeLabel  = document.getElementById('sizeLabel');
+  const pills      = document.querySelectorAll('.size-pill');
+
+  // ----- Situation info panel: the game posts {type:'situation', title,
+  // desc, id} whenever it enters a new situation. Reflect it top-right.
+  const sitPanel = document.getElementById('sitPanel');
+  const sitTitle = document.getElementById('sitTitle');
+  const sitDesc  = document.getElementById('sitDesc');
+  const sitId    = document.getElementById('sitId');
+  window.addEventListener('message', (e) => {
+    const d = e && e.data;
+    if (!d || d.type !== 'situation') return;
+    if (sitTitle) sitTitle.textContent = d.title || '—';
+    if (sitDesc)  sitDesc.textContent  = d.desc || '';
+    if (sitId)    sitId.textContent    = d.id ? ('situation: ' + d.id) : '';
+    if (sitPanel) sitPanel.classList.add('show');
+  });
+
+  // Forward the wrapper's URL params into the iframe so flags like
+  // ?dev=keys and ?edit=paths reach the game. We strip ?embed=1
+  // because that flag belongs to the wrapper itself.
+  (function forwardQueryToIframe() {
+    const search = window.location.search || '';
+    const cleaned = search
+      .replace(/[?&]embed=1\b/, '')   // wrapper-only flag
+      .replace(/^&/, '?');            // tidy up leading char
+    frame.src = 'dialog2.html' + (cleaned || '');
+  })();
+  // "Open Editor" is a real <a> link — no JS handler needed.
+  // "London Dashboard" sends a postMessage into the iframe so the
+  // game jumps straight to the end-of-episode recap (skips the
+  // closing video). Lets us iterate on the dashboard without
+  // playing through the script.
+  const btnDashboard = document.getElementById('btnDashboard');
+  if (btnDashboard) {
+    btnDashboard.addEventListener('click', () => {
+      try {
+        frame.contentWindow.postMessage({ type: 'open-dashboard', pack: 'london' }, '*');
+      } catch (e) { console.warn('[dash]', e); }
+    });
+  }
+  // ▶︎ Start Her Place — jump straight into the herplace episode
+  // (with the Joy street cutscene at the top), skipping intro/form/
+  // map/casting. Saves a lot of clicks while iterating on the script.
+  const btnEpisode = document.getElementById('btnEpisode');
+  if (btnEpisode) {
+    btnEpisode.addEventListener('click', () => {
+      try {
+        frame.contentWindow.postMessage({
+          type: 'jump-episode',
+          pack: 'london',
+          venue: 'herplace',
+        }, '*');
+      } catch (e) { console.warn('[episode]', e); }
+    });
+  }
+
+  // ♛ Netherfield Ball — launch the Pride & Prejudice episode directly,
+  // skipping intro / form / map / casting. Same jump-episode path the
+  // London dev shortcut uses; the engine's pride branch loads the
+  // episode's main.txt and renders straight into the ballroom.
+  const btnNetherfield = document.getElementById('btnNetherfield');
+  if (btnNetherfield) {
+    btnNetherfield.addEventListener('click', () => {
+      try {
+        frame.contentWindow.postMessage({
+          type: 'jump-episode',
+          pack: 'pride',
+          venue: 'netherfield-ball',
+        }, '*');
+      } catch (e) { console.warn('[netherfield]', e); }
+    });
+  }
+
+  // ⚔ Darcy Duel — park the engine right on the dare choice that opens
+  // the combat (the beat just before (Combat:)). Loads the Netherfield
+  // episode first if needed, then jumps. Pick option 3 → duel launches.
+  const btnCombat = document.getElementById('btnCombat');
+  if (btnCombat) {
+    btnCombat.addEventListener('click', () => {
+      const w = frame.contentWindow;
+      try { if (typeof w.devJumpToCombat === 'function' && w.devJumpToCombat()) return; } catch (e) {}
+      try { frame.contentWindow.postMessage({ type: 'jump-episode', pack: 'pride', venue: 'netherfield-ball' }, '*'); } catch (e) {}
+      let tries = 0;
+      const t = setInterval(() => {
+        tries++;
+        try { if (typeof frame.contentWindow.devJumpToCombat === 'function' && frame.contentWindow.devJumpToCombat()) { clearInterval(t); return; } } catch (e) {}
+        if (tries > 50) { clearInterval(t); console.warn('[combat] could not reach the duel — Netherfield script loaded?'); }
+      }, 200);
+    });
+  }
+
+  // ✓ Success Screen — jump straight to the combat SUCCESS end screen
+  // (overlays on top of whatever the iframe shows) so we can iterate on
+  // the win-screen UI without playing through the duel.
+  // 🌍 World Screen (new flow) — full-page world select. Overlays the
+  // iframe via devWorldPages() so we can iterate on it directly.
+  const btnWorldScreen = document.getElementById('btnWorldScreen');
+  if (btnWorldScreen) {
+    btnWorldScreen.addEventListener('click', () => {
+      try {
+        const w = frame.contentWindow;
+        if (typeof w.devWorldPages === 'function') { w.devWorldPages(); return; }
+        console.warn('[worldscreen] devWorldPages not ready');
+      } catch (e) { console.warn('[worldscreen]', e); }
+    });
+  }
+
+  // ----- Pride progression (staged flow) — jump the map's stage, or open
+  // the Create Your Character screen. These call into the iframe so the
+  // controls live OUT here (outside the phone), keeping the game view clean.
+  function prideCall(fn, arg){
+    try {
+      const w = frame.contentWindow;
+      if (w.document && w.document.body) w.document.body.setAttribute('data-pack', 'pride');
+      if (typeof w[fn] === 'function') { w[fn](arg); }
+      else console.warn('[pride-stage]', fn, 'not ready in iframe');
+    } catch (e) { console.warn('[pride-stage]', e); }
+  }
+  ['1','2','3'].forEach(n => {
+    const btn = document.getElementById('btnStage' + n);
+    if (btn) btn.addEventListener('click', () => prideCall('setPrideStage', +n));
+  });
+  const btnCreate = document.getElementById('btnCreate');
+  if (btnCreate) btnCreate.addEventListener('click', () => { prideCall('setPrideStage', 1); prideCall('showCharCreate'); });
+
+  const btnSuccess = document.getElementById('btnSuccess');
+  if (btnSuccess) {
+    btnSuccess.addEventListener('click', () => {
+      try {
+        const w = frame.contentWindow;
+        if (w.document && w.document.body) w.document.body.setAttribute('data-pack', 'pride');
+        if (typeof w.devJumpToSuccess === 'function') { w.devJumpToSuccess(); return; }
+        console.warn('[success] combat module not ready in iframe');
+      } catch (e) { console.warn('[success]', e); }
+    });
+  }
+
+  // ----- Dev shortcut — jump straight to the Write choice. Spawns
+  // the 4-option panel (3 inner voices + Write) on top of the couch
+  // narrative scene so we can iterate the Write UI without playing
+  // through the whole episode every time.
+  const btnWriteChoice = document.getElementById('btnWriteChoice');
+  if (btnWriteChoice) {
+    btnWriteChoice.addEventListener('click', () => {
+      try {
+        const w = frame.contentWindow;
+        if (typeof w.devShowWriteChoice === 'function') {
+          w.devShowWriteChoice();
+        } else {
+          console.warn('[write-choice] devShowWriteChoice not available — reload the iframe?');
+        }
+      } catch (e) { console.warn('[write-choice]', e); }
+    });
+  }
+
+  // ----- Dev shortcut — jump straight to the (Explore:N) phase. The
+  // engine's devJumpToScene helper finds the event in the current
+  // script's main array and parks idx there.
+  const btnExplore = document.getElementById('btnExplore');
+  if (btnExplore) {
+    btnExplore.addEventListener('click', () => {
+      try {
+        const w = frame.contentWindow;
+        if (typeof w.devJumpToScene === 'function') w.devJumpToScene('explore');
+        else console.warn('[explore] devJumpToScene not available');
+      } catch (e) { console.warn('[explore]', e); }
+    });
+  }
+
+  // ----- 🍽 Supper Free-Explore — open the pride supper free-explore
+  // scene directly (unlimited-conversation table), skipping the story.
+  const btnSupper = document.getElementById('btnSupper');
+  if (btnSupper) {
+    btnSupper.addEventListener('click', () => {
+      try {
+        const w = frame.contentWindow;
+        if (typeof w.openFreeExplore === 'function') w.openFreeExplore();
+        else console.warn('[supper] openFreeExplore not available — reload the iframe?');
+      } catch (e) { console.warn('[supper]', e); }
+    });
+  }
+
+  // ----- ❤ Relation / ✎ Memory — demo the story notifications that
+  // attach above the current dialogue box (relation = 2 avatars, memory = 1).
+  const btnRelation = document.getElementById('btnRelation');
+  if (btnRelation) {
+    btnRelation.addEventListener('click', () => {
+      try { const w = frame.contentWindow;
+        if (typeof w.showRelation === 'function') w.showRelation('arabella_frost','mr_darcy','Romance','+1');
+        else console.warn('[relation] showRelation not available'); } catch (e) { console.warn('[relation]', e); }
+    });
+  }
+  const btnMemory = document.getElementById('btnMemory');
+  if (btnMemory) {
+    btnMemory.addEventListener('click', () => {
+      try { const w = frame.contentWindow;
+        if (typeof w.showMemory === 'function') w.showMemory('mr_darcy');
+        else console.warn('[memory] showMemory not available'); } catch (e) { console.warn('[memory]', e); }
+    });
+  }
+  // ＋ Objective / ✓ Complete — drive the top-left objective list states.
+  let objDemoN = 0;
+  const objDemos = ['Secure a second dance', 'Find out what Wickham wants', 'Avoid Mr Collins'];
+  const btnObjAdd = document.getElementById('btnObjAdd');
+  if (btnObjAdd) {
+    btnObjAdd.addEventListener('click', () => {
+      try { const w = frame.contentWindow;
+        if (typeof w.prideObjective === 'function') w.prideObjective('add', objDemos[objDemoN++ % objDemos.length]);
+        else console.warn('[obj] prideObjective not available'); } catch (e) { console.warn('[obj]', e); }
+    });
+  }
+  const btnObjDone = document.getElementById('btnObjDone');
+  if (btnObjDone) {
+    btnObjDone.addEventListener('click', () => {
+      try { const w = frame.contentWindow;
+        if (typeof w.prideObjective === 'function') w.prideObjective('complete', 'Work the room');
+        else console.warn('[obj] prideObjective not available'); } catch (e) { console.warn('[obj]', e); }
+    });
+  }
+
+  // ----- Dev shortcut — jump straight to the couch narrative scene
+  // (first bg state-update that targets a "scene=" image).
+  const btnCouch = document.getElementById('btnCouch');
+  if (btnCouch) {
+    btnCouch.addEventListener('click', () => {
+      try {
+        const w = frame.contentWindow;
+        if (typeof w.devJumpToScene === 'function') w.devJumpToScene('couch');
+        else console.warn('[couch] devJumpToScene not available');
+      } catch (e) { console.warn('[couch]', e); }
+    });
+  }
+
+  // ----- Screenshot — rasterize the iframe's current frame to PNG.
+  // Captures only the iframe content (not the phone bezel). Saves
+  // with a timestamp so multiple shots don't overwrite each other.
+  const btnScreenshot = document.getElementById('btnScreenshot');
+  if (btnScreenshot) {
+    btnScreenshot.addEventListener('click', async () => {
+      if (typeof html2canvas !== 'function') {
+        alert('Screenshot lib still loading, try again in a sec.');
+        return;
+      }
+      const doc = frame.contentDocument;
+      const win = frame.contentWindow;
+      if (!doc || !doc.body) { alert('Iframe not ready.'); return; }
+      const original = btnScreenshot.textContent;
+      btnScreenshot.disabled = true;
+      btnScreenshot.textContent = 'Capturing…';
+      try {
+        const canvas = await html2canvas(doc.body, {
+          // Devicepixel ratio for crisp shots on retina screens.
+          scale: window.devicePixelRatio || 2,
+          // The iframe is the same origin, so we can let html2canvas
+          // pull asset bytes directly — gives correct rendering of
+          // <img> + background-image elements.
+          useCORS: true,
+          allowTaint: true,
+          // Match the iframe's actual viewport so off-screen layers
+          // don't get clipped or repositioned.
+          width:  win.innerWidth,
+          height: win.innerHeight,
+          windowWidth:  win.innerWidth,
+          windowHeight: win.innerHeight,
+          backgroundColor: '#000',
+        });
+        canvas.toBlob((blob) => {
+          if (!blob) { alert('Screenshot failed.'); return; }
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          const stamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
+          a.href = url;
+          a.download = `roles-ai-${stamp}.png`;
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          setTimeout(() => URL.revokeObjectURL(url), 1000);
+          btnScreenshot.textContent = 'Saved ✓';
+          setTimeout(() => { btnScreenshot.textContent = original; }, 1100);
+        }, 'image/png');
+      } catch (e) {
+        console.warn('[screenshot]', e);
+        alert('Screenshot failed: ' + (e.message || e));
+        btnScreenshot.textContent = original;
+      } finally {
+        btnScreenshot.disabled = false;
+      }
+    });
+  }
+
+  // ----- Console: peek at the iframe's most recent /gift-vision
+  // request and response. The dialog2.html iframe stashes the full
+  // exchange on `window._giftLastExchange` after each call. We just
+  // read it on demand and render a structured view.
+  const btnConsole       = document.getElementById('btnConsole');
+  const btnConsoleClose  = document.getElementById('btnConsoleClose');
+  const btnConsoleRefresh= document.getElementById('btnConsoleRefresh');
+  const btnConsoleCopy   = document.getElementById('btnConsoleCopy');
+  const consoleBody      = document.getElementById('consoleBody');
+
+  function escapeHtml(s) {
+    return String(s == null ? '' : s)
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  }
+
+  function readGiftExchange() {
+    try { return frame.contentWindow._giftLastExchange || null; }
+    catch (e) { return null; }
+  }
+
+  // Track the timestamp of the most recently rendered exchange. We
+  // skip the rebuild if nothing changed — otherwise the auto-refresh
+  // interval blows away the user's scroll position every 1.5s.
+  let _lastRenderedStamp = null;
+  let _lastRenderedHadData = null;
+
+  function renderConsole(force) {
+    const ex = readGiftExchange();
+    const stamp = ex ? (ex.timestamp || '') : '';
+    const hadData = !!ex;
+    // Skip rebuild if data is identical to what's currently shown.
+    if (!force && stamp === _lastRenderedStamp && hadData === _lastRenderedHadData) {
+      return;
+    }
+    _lastRenderedStamp = stamp;
+    _lastRenderedHadData = hadData;
+
+    if (!ex) {
+      consoleBody.innerHTML =
+        '<div class="console-empty">No gift exchange yet — send a photo to see the prompt &amp; response.</div>';
+      return;
+    }
+    const req = ex.request || {};
+    const res = ex.response || {};
+    const dbg = res._debug || {};
+    const scene = res.scene || {};
+
+    const dialogList = (arr, kind) => {
+      if (!Array.isArray(arr) || !arr.length) {
+        return '<li style="color:rgba(255,255,255,0.4)">— none —</li>';
+      }
+      if (kind === 'inner') {
+        return arr.map(it => {
+          const v = (it && it.voice) || '';
+          const t = (it && it.text)  || '';
+          return `<li><span class="voice">${escapeHtml(v)}</span>${escapeHtml(t)}</li>`;
+        }).join('');
+      }
+      return arr.map(t => `<li>${escapeHtml(t)}</li>`).join('');
+    };
+
+    consoleBody.innerHTML = `
+      <div class="console-section">
+        <h3>Exchange · <span class="console-stamp">${escapeHtml(ex.timestamp || '')}</span></h3>
+        <div class="console-kv">
+          <div class="k">endpoint</div>      <div class="v mono">POST ${escapeHtml(req.endpoint || '')}</div>
+          <div class="k">file</div>          <div class="v">${escapeHtml(req.file_name || '')} (${escapeHtml(req.file_type || '')}, ${escapeHtml(req.file_size || 0)} bytes)</div>
+          <div class="k">model</div>         <div class="v mono">${escapeHtml(dbg.model || '?')}</div>
+          <div class="k">temperature</div>   <div class="v mono">${escapeHtml(dbg.temperature ?? '?')}</div>
+          <div class="k">max_tokens</div>    <div class="v mono">${escapeHtml(dbg.max_tokens ?? '?')}</div>
+          <div class="k">response_format</div><div class="v mono">${escapeHtml(dbg.response_format || '?')}</div>
+        </div>
+      </div>
+
+      <div class="console-section">
+        <h3>System prompt → GPT</h3>
+        <pre class="console-pre">${escapeHtml(dbg.system_prompt || '(prompt missing — redeploy worker)')}</pre>
+      </div>
+
+      <div class="console-section">
+        <h3>User text + image</h3>
+        <div class="console-kv">
+          <div class="k">user text</div>   <div class="v mono">${escapeHtml(dbg.user_text || '')}</div>
+          <div class="k">image mime</div>  <div class="v mono">${escapeHtml(dbg.image_mime || '')}</div>
+          <div class="k">image bytes</div> <div class="v mono">${escapeHtml(dbg.image_size_bytes || 0)}</div>
+        </div>
+      </div>
+
+      <div class="console-section">
+        <h3>Recognized object</h3>
+        <div class="console-kv">
+          <div class="k">name</div>       <div class="v mono">${escapeHtml(res.name || '')}</div>
+          <div class="k">portable</div>   <div class="v mono">${res.portable ? 'true' : 'false'}</div>
+          <div class="k">rejection</div>  <div class="v">${escapeHtml(res.rejection_reason || '— none —')}</div>
+        </div>
+      </div>
+
+      <div class="console-section">
+        <h3>Joy · reaction (joy_react)</h3>
+        <ul class="console-list">${dialogList(scene.joy_react)}</ul>
+      </div>
+
+      <div class="console-section">
+        <h3>Boy · response options (boy_react_options)</h3>
+        <ul class="console-list">${dialogList(scene.boy_react_options)}</ul>
+      </div>
+
+      <div class="console-section">
+        <h3>Inner chorus · before reaction (boy_inner_pre)</h3>
+        <ul class="console-list">${dialogList(scene.boy_inner_pre, 'inner')}</ul>
+      </div>
+
+      <div class="console-section">
+        <h3>Inner chorus · after exchange (boy_inner_mid)</h3>
+        <ul class="console-list">${dialogList(scene.boy_inner_mid, 'inner')}</ul>
+      </div>
+
+      <div class="console-section">
+        <h3>Professore · closing</h3>
+        <ul class="console-list"><li><span class="voice">professore</span>${escapeHtml(scene.professor_closing || '— none —')}</li></ul>
+      </div>
+
+      <div class="console-section">
+        <h3>Raw GPT response</h3>
+        <pre class="console-pre">${escapeHtml(dbg.raw_choice || JSON.stringify(res, null, 2))}</pre>
+      </div>
+    `;
+  }
+
+  if (btnConsole) {
+    btnConsole.addEventListener('click', () => {
+      document.body.classList.toggle('console-open');
+      if (document.body.classList.contains('console-open')) renderConsole(true);
+    });
+  }
+  if (btnConsoleClose) {
+    btnConsoleClose.addEventListener('click', () => {
+      document.body.classList.remove('console-open');
+    });
+  }
+  if (btnConsoleRefresh) {
+    btnConsoleRefresh.addEventListener('click', () => renderConsole(true));
+  }
+  if (btnConsoleCopy) {
+    btnConsoleCopy.addEventListener('click', () => {
+      const ex = readGiftExchange();
+      if (!ex) return;
+      try {
+        navigator.clipboard.writeText(JSON.stringify(ex, null, 2));
+        btnConsoleCopy.textContent = '✓';
+        setTimeout(() => btnConsoleCopy.textContent = '⎘', 900);
+      } catch (e) { alert('Copy failed: ' + e); }
+    });
+  }
+  // Auto-refresh while panel is open so a new exchange shows up
+  // without the dev having to hit the refresh button.
+  setInterval(() => {
+    if (document.body.classList.contains('console-open')) renderConsole();
+  }, 1500);
+
+  let phoneW = 390;
+  let phoneH = 844;
+  const BEZEL = 20;        // 10px padding each side
+  const OUTER_MARGIN = 80; // breathing room around the phone
+
+  function applySize(w, h, labelText) {
+    phoneW = w; phoneH = h;
+    document.documentElement.style.setProperty('--phone-w', w + 'px');
+    document.documentElement.style.setProperty('--phone-h', h + 'px');
+    frame.style.width  = w + 'px';
+    frame.style.height = h + 'px';
+    sizeLabel.textContent = `${w} × ${h}${labelText ? ' · ' + labelText : ''}`;
+    fit();
+  }
+
+  function fit() {
+    if (window.innerWidth <= 500) {
+      stage.style.transform = '';
+      return;
+    }
+    const availW = window.innerWidth  - OUTER_MARGIN;
+    const availH = window.innerHeight - OUTER_MARGIN;
+    const needW = phoneW + BEZEL;
+    const needH = phoneH + BEZEL;
+    const scale = Math.min(1, availW / needW, availH / needH);
+    stage.style.transform = `scale(${scale})`;
+  }
+
+  pills.forEach(p => {
+    p.addEventListener('click', () => {
+      pills.forEach(q => q.classList.remove('active'));
+      p.classList.add('active');
+      const w = parseInt(p.dataset.w, 10);
+      const h = parseInt(p.dataset.h, 10);
+      const label = {
+        '375x812': 'iPhone SE',
+        '390x844': 'iPhone 14',
+        '430x932': 'iPhone 14 Pro Max'
+      }[`${w}x${h}`] || '';
+      applySize(w, h, label);
+    });
+  });
+
+  // External controls removed — they could trigger showIntro / iframe
+  // reload signals that flashed "Start" on slow mobile.
+
+  window.addEventListener('resize', fit);
+  applySize(390, 844, 'iPhone 14');
+</script>
+</body>
+</html>

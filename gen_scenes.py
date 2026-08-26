@@ -52,10 +52,15 @@ STYLE = ("Regency England circa 1810s, warm candlelit Netherfield ballroom, "
          "painterly romantic-illustration look, soft light, shallow depth of field, "
          "gilt and blush and deep-green palette, no text, no modern elements.")
 
+# Generalised style for the character-creation story scenes (cc_*): NOT the
+# ballroom — varied Regency settings, empty rooms with the foreground clear.
+STORY_STYLE = ("Regency England circa 1810s, painterly romantic-illustration look, warm natural light, soft shallow depth of field, muted period palette of gilt, blush, dark wood and deep green, atmospheric and cinematic, an empty setting with the foreground left clear, no text, no modern elements.")
+
 # character id -> sprite reference file
 CHARS = {c: f"{WORLD}/characters/{c}/appearances/pride.png" for c in [
     "arabella_frost", "mr_darcy", "mr_wickham", "mr_bingley",
-    "miss_bingley", "mrs_bennet", "charlotte_lucas", "lydia_bennet", "mr_collins"]}
+    "miss_bingley", "mrs_bennet", "charlotte_lucas", "lydia_bennet", "mr_collins",
+    "julian_vane", "mr_ashford", "mr_ashford_worn", "mr_coyle", "miss_vere", "miss_vere_ruined", "the_father"]}
 
 # location id -> background/scene reference file
 LOCS = {
@@ -140,6 +145,47 @@ SCENES = {
    "Across an emptying ballroom, candles guttering and footmen snuffing them, Arabella and Darcy's eyes meeting one last time over the wreckage of the evening; taut, unspoken."),
  "s6c_carriage_window": (PORTRAIT, ["mr_darcy"], "carriage",
    "View from inside a dark night carriage: a single bright lit window of Netherfield shrinking in the distance, a still dark figure (Darcy) watching the carriage lamps go; deep night blues vs one warm window."),
+
+
+ # ===== CHARACTER-CREATION STORY — hybrid: _a = cinematic (character in scene,
+ # the protagonist only ever a hidden figure seen from behind); _b = atmospheric
+ # empty setting (the speaker is composited separately as a bust in the dialogue). =====
+ # Beat 1 — The Will
+ "cc_will_a": (PORTRAIT, ["julian_vane"], None,
+   "Cinematic over-the-shoulder shot in a candlelit late-Regency study at night: Julian Vane, a young gentleman comfortable in his new inheritance, stands easily by the desk addressing a woman seen only from behind in the shadowed foreground, her face fully hidden; scattered legal papers and a broken red wax seal on the desk, rain streaking the tall window. Dramatic, painterly."),
+ "cc_will_b": (PORTRAIT, [], None,
+   "A late Regency gentleman's candlelit study at night, empty: dark wood shelves of books, a broad desk strewn with legal papers and a broken red wax seal, a single guttering candle, rain streaking the tall window, one empty chair pushed back. Grief and money in the same cold room. No people."),
+ # Beat 2 — The Vow (the protagonist alone, hidden)
+ "cc_vow_a": (PORTRAIT, [], None,
+   "Cinematic night scene in a modest Regency bedchamber: a young woman seen only from behind, a dark silhouette before a small candlelit looking-glass, her face hidden, the single flame doubled in the dark glass; a private moment of resolve. Painterly, moody."),
+ "cc_vow_b": (PORTRAIT, [], None,
+   "A modest Regency bedchamber late at night, a single candle burning low on a dressing table before a small oval looking-glass, a plain neat bed, cool moonlight at the window; quiet and private. No people."),
+ # Beat 3 — The Betrayal
+ "cc_terrace_a": (PORTRAIT, ["mr_ashford"], None,
+   "Cinematic over-the-shoulder shot on a candlelit stone terrace at night strung with paper lanterns: Mr Ashford, handsome and finely dressed, stands mid-confession facing a woman seen only from behind in the shadowed foreground, her face hidden; tall glowing ballroom windows behind. Beautiful, cold, painterly."),
+ "cc_terrace_b": (PORTRAIT, [], None,
+   "A candlelit stone garden terrace outside a grand country house at night, paper lanterns overhead, tall bright windows spilling gold from within, a stone balustrade, an autumn night beyond; beautiful with a chill beneath it. No people."),
+ # Beat 4 — The Venture
+ "cc_venture_a": (PORTRAIT, ["mr_coyle"], None,
+   "Cinematic over-the-shoulder shot in a merchant's counting-house by daylight: Mr Coyle, a plain shrewd man of business, stands across a table of ledgers, brass coin-scales and a folded contract, addressing a woman seen only from behind in the foreground, her face hidden; a window onto a busy trade street beyond. Grounded, painterly."),
+ "cc_venture_b": (PORTRAIT, [], None,
+   "A merchant's counting-house by daylight: a plain sturdy table of leather ledgers, brass coin-scales, an inkwell and a folded contract, shelves of tin deed-boxes, a window onto a busy trade street. No people."),
+ # Beat 5 — The Sentence (the protagonist entering, hidden)
+ "cc_sentence_a": (PORTRAIT, [], None,
+   "Cinematic shot from behind a woman, seen only from behind with her face hidden, pausing in the doorway of a fashionable candlelit Regency drawing room; beyond her a knot of elegant guests are turned together in murmured gossip, fans half-raised, softly blurred; the room in the act of forming an opinion of her. Painterly."),
+ "cc_sentence_b": (PORTRAIT, [], None,
+   "The centre of a fashionable candlelit Regency drawing room, warm gilt and glow, a knot of elegant guests turned in gossip softly out of focus at the edges; only distant blurred figures, no clear faces, foreground clear. No named people."),
+ # Beat 6 — Rival at Her Mercy
+ "cc_mercy_a": (PORTRAIT, ["miss_vere_ruined"], None,
+   "Cinematic over-the-shoulder shot in a handsome Regency drawing room by soft daylight: Mrs Ashford, once an heiress and now in plain dark half-mourning, sits humbled and asking, facing a woman seen only from behind in the foreground, her face hidden, who holds the power in the room. Quiet tension, painterly."),
+ "cc_mercy_b": (PORTRAIT, [], None,
+   "A handsome, well-appointed Regency drawing room in soft daylight, warm and prosperous: silk chairs, a good carpet, fresh flowers, a bright window; two chairs drawn near a low fire with a tea-service between them. No people."),
+ # Beat 7 — The Reckoning
+ "cc_reckon_a": (PORTRAIT, ["mr_ashford_worn"], None,
+   "Cinematic shot in a fine Regency drawing room at night, a single lamp lit: a fallen, threadbare Mr Ashford stands hat-in-hand at the shadowed threshold, humbled, facing a woman seen only from behind in the foreground, her face hidden, who stands by the low fire; the whole story folded into one room. Charged, painterly."),
+ "cc_reckon_b": (PORTRAIT, [], None,
+   "A fine Regency drawing room by night, a single warm lamp and a low fire, long shadows, the door to the hall standing part-open onto darkness, two chairs by the fireside; still and waiting. No people."),
+
 }
 
 
@@ -177,7 +223,8 @@ def multipart(fields, files):
 
 def generate(scene_id, key, out_dir, use_refs):
     size, chars, loc, subject = SCENES[scene_id]
-    prompt = f"{subject} {STYLE}"
+    style = STORY_STYLE if scene_id.startswith("cc_") else STYLE
+    prompt = f"{subject} {style}"
     refs = refs_for(chars, loc, use_refs)
 
     if refs:  # reference-guided via the edits endpoint

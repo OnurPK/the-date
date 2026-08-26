@@ -1,0 +1,320 @@
+// =============================================================
+// Pride & Prejudice — EPISODE 1 · "A Caller at the House"
+// The first suitor. At home, Arabella's mother presents Sir Henry
+// Ashbourne — a baronet, the safe and sensible match. Arabella,
+// her ambitious mother and her scholar father hold the day between
+// comfort and a meeting of minds.
+//
+// Arc: Meeting → Events (1 mother's over-reach · 2 the pianoforte ·
+//      4 a small crisis) → Closing → Farewell.  No explore.
+// Density: ~70% multi-figure cast-large (cast2/cast3); discovery &
+// post-choice consequence beats use bubble / cast-small.
+//
+// Cast ids (folder = id):
+//   arabella_frost (PC) · sir_ashbourne · mrs_frost (mother) ·
+//   mr_frost (scholar father)
+// Backdrops are placeholders (existing room art) until home art is made.
+// =============================================================
+
+
+// ═══════════════════════════════════════════════════════════
+// CAST LAYOUT PRESETS  (managed like CSS — extend freely)
+// ═══════════════════════════════════════════════════════════
+[layouts]
+[layout: parlour_two]
+bg: move=drift
+slot1: pos=28%,103% size=86% enter=slide-l dur=0.5s ease=out
+slot2: pos=74%,103% size=86% enter=slide-r dur=0.5s ease=out
+[/layout]
+[layout: parlour_three]
+bg: move=pan-right
+slot1: pos=16%,104% size=80% enter=slide-l dur=0.5s ease=out
+slot2: pos=50%,101% size=90% enter=rise   dur=0.6s ease=out
+slot3: pos=84%,104% size=80% enter=slide-r dur=0.5s ease=out
+[/layout]
+[layout: study_two]
+bg: move=zoom-in
+slot1: pos=30%,103% size=88% enter=fade
+slot2: pos=73%,104% size=84% enter=slide-r
+[/layout]
+[layout: garden_two]
+bg: move=pan-left
+slot1: pos=30%,103% size=84% enter=slide-l
+slot2: pos=72%,103% size=86% enter=slide-r
+[/layout]
+[layout: convo_two]
+bg: mode=convo
+left:  pos=17%,109% size=112% drop=200 enter=slide-l turn=18  dur=0.55s ease=out
+right: pos=83%,109% size=112% drop=200 enter=slide-r turn=-18 dur=0.55s ease=out
+[/layout]
+[layout: convo_three]
+bg: mode=convo
+left:   pos=17%,109% size=112% drop=200 enter=slide-l turn=18  dur=0.55s ease=out
+center: pos=17%,109% size=112% drop=200 enter=slide-l turn=18  dur=0.55s ease=out
+right:  pos=83%,109% size=112% drop=200 enter=slide-r turn=-18 dur=0.55s ease=out
+[/layout]
+[/layouts]
+
+
+// ═══════════════════════════════════════════════════════════
+// INTRO  (cutscene)
+// ═══════════════════════════════════════════════════════════
+(Situation: intro | A Caller Expected | Morning at the house — and a carriage on the way.)
+[bg:cutscene=arrival.png] [ui:narrative]
+Narrative: You are new money in an old county — welcomed for your fortune, watched for your want of a name. This morning, a carriage is coming.
+[ui:bubble]
+Arabella: One caller, and the whole house holds its breath. Let us see what the tide brings in.
+(Quest: Receive Sir Henry — and decide what he is worth to you.)
+
+
+// ═══════════════════════════════════════════════════════════
+// TANIŞMA · THE CALLER   (parlour — first encounter)
+// ═══════════════════════════════════════════════════════════
+(Situation: the_caller | The Caller | Your mother presents Sir Henry Ashbourne. First blood is polite.)
+[bg:explore=parlour] [ui:cast layout=convo_three]
+[cast: left=mrs_frost center=sir_ashbourne right=arabella_frost]
+Mrs-Frost: Arabella — Sir Henry Ashbourne. A baronet, my dear, and Ashbourne Court is not to be sniffed at.
+Sir-Henry: Miss Frost. Your mother undersells the pleasure of it. I have looked forward to this call.
+Arabella: Then one of us is well prepared. Do sit, Sir Henry — the county will forgive us the informality.
+
+// first meeting → unlock him (fires the suitor intro screen)
+(Discover: sir_ashbourne)
+
+// --- Turn 1 · the opening read ---
+[ui:multi]
+(Choice:3)
+Arabella: Meet him {warmly|graciously|openly} — let him feel easily received. [trait: Reads the Room]
+Arabella: Answer him {archly|wickedly|drily}, and see whether he can take a jest. [trait: Sharpest Wit]
+Arabella: Hold him at a {cool|measured|civil} distance, and make him earn the room. [trait: Pride]
+
+(IfChoice:0)
+  [bg:explore=parlour] [ui:cast layout=convo_two]
+  [cast: left=sir_ashbourne right=arabella_frost]
+  Arabella: You are kind to come so far, sir. Kindness is rarer than baronets in this county.
+  (Relation: sir_ashbourne | trust | +1)
+(EndIf)
+(IfChoice:1)
+  [bg:explore=parlour] [ui:cast layout=convo_two]
+  [cast: left=sir_ashbourne right=arabella_frost]
+  Arabella: Looked forward to it? Sir, we have not yet said a clever thing between us. Do not raise your hopes.
+  (Relation: sir_ashbourne | romance | +1)
+(EndIf)
+(IfChoice:2)
+  [bg:explore=parlour] [ui:cast layout=convo_two]
+  [cast: left=sir_ashbourne right=arabella_frost]
+  Arabella: A baronet. How reassuring. I am told they are very hard to lose in a crowd.
+  (Relation: sir_ashbourne | trust | -1)
+(EndIf)
+
+// --- Turn 2 · he answers well ---
+[bg:explore=parlour] [ui:cast layout=convo_two]
+[cast: left=sir_ashbourne right=arabella_frost]
+Sir-Henry: I have no cleverness to trade, Miss Frost — only plain regard, plainly meant. I find it wears better.
+Arabella: Plain regard. You will be a novelty in this house, sir. We deal chiefly in ambition.
+
+
+// ═══════════════════════════════════════════════════════════
+// OLAY 1 · THE MOTHER'S OVER-REACH   (scandal risk)
+// ═══════════════════════════════════════════════════════════
+(Situation: mothers_reach | A Mother's Ambition | Mrs Frost gilds the family higher than the truth will bear.)
+[bg:explore=parlour] [ui:cast layout=convo_three]
+[cast: left=mrs_frost center=sir_ashbourne right=arabella_frost]
+Mrs-Frost: Of course we are quite as old a family as any — why, Arabella's grandfather all but dined with dukes.
+Sir-Henry: Indeed. And what was his line, if I may?
+Mrs-Frost: His — his line. Trade, Sir Henry, but the very finest trade —
+
+// --- the truth wobbles: cover, or hold honest ---
+[ui:multi]
+(Choice:3)
+Arabella: Step in {smoothly|lightly|deftly} and steer Mama off the cliff before she names the shop. [trait: Reads the Room]
+Arabella: Tell the {plain truth|whole truth} — we are new money, and I will not pretend otherwise. [trait: Reckless Nerve]
+Arabella: Let her {run on|dig deeper}, and enjoy the spectacle. [trait: Sharpest Wit]
+
+(IfChoice:0)
+  [bg:cutscene=the_save.png] [ui:bubble]
+  Arabella: Mama means we were taught to earn a table before we sat at one. Sir Henry values plain speaking — do we not, sir?
+  (Allure: +5 | The save was gracious)
+(EndIf)
+(IfChoice:1)
+  [bg:explore=parlour] [ui:cast layout=convo_two]
+  [cast: left=sir_ashbourne right=arabella_frost]
+  Arabella: The finest trade in the north, Sir Henry — cloth, and no shame in it. I would rather own my fortune than borrow a name.
+  (Relation: sir_ashbourne | trust | +1)
+  (Allure: +3)
+(EndIf)
+(IfChoice:2)
+  [bg:explore=parlour] [ui:cast layout=convo_two]
+  [cast: left=sir_ashbourne right=arabella_frost]
+  Arabella: Do go on, Mama. The dukes were just getting to the soup.
+  (Scandal: +8 | You let her expose the family)
+(EndIf)
+
+[bg:explore=parlour] [ui:cast layout=convo_two]
+[cast: left=sir_ashbourne right=arabella_frost]
+Sir-Henry: I did not come for a pedigree, Miss Frost. I came for the wit that has just crossed this room.
+(Discovery: Sir Henry prizes candour over rank — and noticed yours.)
+
+
+// ═══════════════════════════════════════════════════════════
+// OLAY 2 · THE PIANOFORTE   (allure ↔ pride)
+// ═══════════════════════════════════════════════════════════
+(Situation: the_pianoforte | At the Instrument | The courtship ritual: you are asked to play. What you do with it is the point.)
+[bg:explore=parlour] [ui:cast layout=convo_three]
+[cast: left=mrs_frost center=sir_ashbourne right=arabella_frost]
+Mrs-Frost: Arabella plays beautifully, Sir Henry — Arabella, do play, the good instrument is right there.
+Arabella: Nothing gives away a woman's whole hand like a song chosen for a man. Choose carefully.
+
+// --- Turn 1 · what to play, and for whom ---
+[ui:multi]
+(Choice:3)
+Arabella: Play something {lovely|tender|beguiling} — and let it land on Sir Henry alone. [trait: Sharpest Wit]
+Arabella: Play {brilliantly and coldly|flawlessly|with dazzling nerve}, for the room and no one in it. [trait: Pride]
+Arabella: Decline {sweetly|gracefully|with a smile}, and keep my hand to myself. [trait: Reads the Room]
+
+(IfChoice:0)
+  [bg:cutscene=at_the_pianoforte.png] [ui:bubble]
+  Arabella: (a low air, meant like a private word)
+  (Relation: sir_ashbourne | romance | +2)
+  (Allure: +6)
+(EndIf)
+(IfChoice:1)
+  [bg:cutscene=at_the_pianoforte.png] [ui:bubble]
+  Arabella: (a bright, faultless piece — admired by all, given to none)
+  (Trait: Pride)
+  (Allure: +4)
+(EndIf)
+(IfChoice:2)
+  [bg:explore=parlour] [ui:cast layout=convo_two]
+  [cast: left=sir_ashbourne right=arabella_frost]
+  Arabella: You will forgive me, Sir Henry — a song is a confession, and we are barely introduced.
+  (Relation: sir_ashbourne | trust | +1)
+(EndIf)
+
+[bg:explore=parlour] [ui:cast layout=convo_two]
+[cast: left=sir_ashbourne right=arabella_frost]
+Sir-Henry: I shall hear that again in my head all the ride home. You are dangerous at an instrument, Miss Frost.
+Arabella: Only at an instrument, Sir Henry? You are easily reassured.
+
+
+// ═══════════════════════════════════════════════════════════
+// OLAY 4 · A SMALL CRISIS   (his true character shows)
+// ═══════════════════════════════════════════════════════════
+(Situation: the_spill | A Small Crisis | A maid stumbles, a cup shatters — and the room shows what it is made of.)
+[bg:explore=parlour] [ui:cast layout=convo_three]
+[cast: left=mrs_frost center=sir_ashbourne right=arabella_frost]
+Narrative: A young maid, hurrying the tea, catches the tray on the table edge. China meets the floor in a bright, terrible crash.
+Mrs-Frost: You clumsy girl! Before Sir Henry — of all the — leave the room this instant!
+
+// --- how the room resolves — and what you learn of him ---
+[ui:multi]
+(Choice:3)
+Arabella: Kneel to the {frightened girl|maid} yourself, and wave the scolding away. [trait: Reckless Nerve]
+Arabella: Watch {Sir Henry|him} — say nothing — and see what the man does unprompted. [trait: Reads the Room]
+Arabella: Smooth it over {lightly|with a jest}, and spare everyone the scene. [trait: Sharpest Wit]
+
+(IfChoice:0)
+  [bg:explore=parlour] [ui:cast layout=convo_two]
+  [cast: left=sir_ashbourne right=arabella_frost]
+  Arabella: It is only china, Mama. Up you get — no harm done, and none meant. There.
+  (Relation: sir_ashbourne | trust | +1)
+(EndIf)
+(IfChoice:1)
+  [bg:cutscene=the_spill.png] [ui:bubble]
+  Sir-Henry: (already crouched, gathering shards, murmuring to the girl) Steady now — my fault, I crowded the table. No scold owed here.
+  (Discovery: Sir Henry is kind where no one is watching — he took the blame himself.)
+(EndIf)
+(IfChoice:2)
+  [bg:explore=parlour] [ui:cast layout=convo_two]
+  [cast: left=sir_ashbourne right=arabella_frost]
+  Arabella: A broken cup and a saved afternoon — a fair trade, Mama. Shall we ring for another?
+  (Allure: +3)
+(EndIf)
+
+[bg:explore=parlour] [ui:cast layout=convo_two]
+[cast: left=sir_ashbourne right=arabella_frost]
+Sir-Henry: A house is best judged by how it treats those who cannot answer back. Yours does well, Miss Frost.
+Arabella: You have a strange eye for a suitor, Sir Henry. You keep looking at the wrong people.
+
+
+// ═══════════════════════════════════════════════════════════
+// KAPANIŞ · A WORD APART   (he reveals something real)
+// ═══════════════════════════════════════════════════════════
+(Situation: a_word_apart | A Word Apart | By the window, a moment out of the mother's hearing.)
+[bg:explore=window_nook] [ui:cast layout=convo_two]
+[cast: left=sir_ashbourne right=arabella_frost]
+Sir-Henry: May I be plain, since you value it? I was married once. She died three winters past. I do not look for a girl to dazzle — I look for a mind to keep company with.
+Arabella: That is a great deal of truth for a first call, sir.
+Sir-Henry: I have no time left for the other kind.
+
+// --- how you meet his honesty ---
+[ui:multi]
+(Choice:3)
+Arabella: Meet it {gently|kindly|softly} — give him one true thing in return. [trait: Reads the Room]
+Arabella: Keep the {guard up|distance}, warm but unpromised. [trait: Pride]
+Arabella: Turn it {light|to a jest}, and step back from so much feeling. [trait: Sharpest Wit]
+
+(IfChoice:0)
+  [bg:explore=window_nook] [ui:cast layout=convo_two]
+  [cast: left=sir_ashbourne right=arabella_frost]
+  Arabella: Then we are matched in one thing at least, Sir Henry. I have never wished to be merely dazzling.
+  (Relation: sir_ashbourne | romance | +2)
+  (Relation: sir_ashbourne | trust | +1)
+(EndIf)
+(IfChoice:1)
+  [bg:explore=window_nook] [ui:cast layout=convo_two]
+  [cast: left=sir_ashbourne right=arabella_frost]
+  Arabella: You are a serious man, sir, and I am not yet a serious answer. But I do not send you away.
+  (Relation: sir_ashbourne | trust | +1)
+(EndIf)
+(IfChoice:2)
+  [bg:explore=window_nook] [ui:cast layout=convo_two]
+  [cast: left=sir_ashbourne right=arabella_frost]
+  Arabella: Company, sir? I warn you — I am poor company and excellent trouble.
+  (Relation: sir_ashbourne | romance | +1)
+(EndIf)
+
+
+// ═══════════════════════════════════════════════════════════
+// UĞURLAMA · THE VERDICT   (family debrief + your intent)
+// ═══════════════════════════════════════════════════════════
+(Situation: the_verdict | Seeing Him Off | The carriage waits. Mother pushes, father cautions, and you decide.)
+[bg:explore=parlour] [ui:cast layout=convo_three]
+[cast: left=mrs_frost center=mr_frost right=arabella_frost]
+Mrs-Frost: A baronet, Arabella! Ashbourne Court! You will write and say yes to the next call — you WILL.
+Mr-Frost: She will do as her own head tells her, my dear. Arabella — he is a good man. But a good man is not always the right one. What did your mind say, not your mother?
+
+// --- declare your intent (sets his status + the meters) ---
+[ui:multi]
+(Choice:3)
+Arabella: I mean to {encourage him|see more of him} — this one is worth the county's talk. [continue]
+Arabella: I will {keep him near|hold him in reserve}, and promise nothing yet. [trait: Pride]
+Arabella: I will {let him down kindly|close the door gently} — comfort is not enough for me. [trait: Reckless Nerve]
+
+(IfChoice:0)
+  [ui:bubble]
+  Arabella: Yes, Papa. My mind and my mother agree for once — a small miracle. I will receive him again.
+  (Relation: sir_ashbourne | romance | +1)
+  (Allure: +6)
+(EndIf)
+(IfChoice:1)
+  [ui:bubble]
+  Arabella: Near, Papa — not caught. Let the county wonder a while longer.
+  (Allure: +3)
+(EndIf)
+(IfChoice:2)
+  [ui:bubble]
+  Arabella: He deserves a wife who wants him, Papa — not one who merely approves of him. I will be kind, and clear.
+  (Relation: sir_ashbourne | trust | +1)
+  (Scandal: +4 | Refusing a baronet will be remarked upon)
+(EndIf)
+
+
+// ═══════════════════════════════════════════════════════════
+// OUTRO  (cutscene)
+// ═══════════════════════════════════════════════════════════
+(Situation: outro | One Down | The house quiets. One suitor known — and a whole county still to come.)
+[bg:cutscene=carriage_away.png] [ui:narrative]
+Narrative: The carriage lamps shrink down the lane. One caller met, one man taken his measure of — and the season has scarcely begun.
+[ui:bubble]
+Arabella: One. And the map of my future has so many more names left to fill.
+(Quest: Sir Henry is known. Return to the map — new suitors await discovery.)

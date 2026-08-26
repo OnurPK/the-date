@@ -437,6 +437,85 @@
   }
   @media (max-width: 900px) { .sit-panel { display: none; } }
 
+  /* ---------- Per-line cast tuner (below the situation panel) ---------- */
+  .cfg-panel {
+    position: fixed; top: 246px; right: 20px; width: 244px; z-index: 12;
+    padding: 0; background: none; border: none; box-shadow: none;
+    color: rgba(255,255,255,0.92); opacity: 0; transform: translateY(-8px);
+    transition: opacity .3s ease, transform .3s ease; pointer-events: none;
+    max-height: calc(100vh - 266px); overflow-y: auto;
+  }
+  .cfg-box { border:1px solid rgba(178,198,255,0.22); border-radius:12px; padding:0 0 2px; margin-top:8px;
+    background: rgba(20,16,30,0.82); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); box-shadow: 0 12px 30px -14px rgba(0,0,0,0.6); }
+  .cfg-box:first-child { margin-top:0; }
+  .cfg-box-head { display:flex; align-items:center; justify-content:space-between; gap:8px; padding:9px 11px; cursor:pointer; user-select:none; }
+  .cfg-box-title { font-size:10px; letter-spacing:.16em; text-transform:uppercase; color:rgba(178,198,255,.95); font-weight:800; }
+  .cfg-head-right { display:inline-flex; align-items:center; gap:8px; }
+  .cfg-collapse { background:none; border:none; color:rgba(178,198,255,.7); font-size:11px; line-height:1; cursor:pointer; padding:2px; transition:transform .2s ease; }
+  .cfg-box.collapsed .cfg-collapse { transform:rotate(-90deg); }
+  .cfg-box-body { padding:0 11px 11px; }
+  .cfg-box.collapsed .cfg-box-body { display:none; }
+  .cfg-box .cfg-layers-head { margin-top:10px; }
+  .cfg-pose-list { display:flex; flex-direction:column; gap:6px; }
+  .cfg-pose-idle { display:flex; align-items:center; gap:7px; font-size:10px; color:rgba(255,255,255,.8); background:rgba(138,180,255,.12); border:1px solid rgba(138,180,255,.35); border-radius:8px; padding:5px 8px; }
+  .cfg-pose-idle .dot { width:8px; height:8px; border-radius:50%; background:#8ab4ff; flex:none; }
+  .cfg-pose { border:1px solid rgba(255,255,255,.12); border-radius:8px; padding:6px 7px; background:rgba(255,255,255,.04); }
+  .cfg-pose .pp-top { display:flex; align-items:center; gap:6px; margin-bottom:5px; }
+  .cfg-pose .pp-word { font:700 9px/1 Inter,system-ui,sans-serif; letter-spacing:.05em; text-transform:uppercase; color:#e0a0c0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:120px; }
+  .cfg-pose .pp-edit { font:600 9px/1 Inter,system-ui,sans-serif; color:#8ab4ff; cursor:pointer; text-decoration:underline; margin-left:6px; opacity:0; transition:opacity .12s ease; background:none; border:none; padding:0; }
+  .cfg-pose:hover .pp-edit { opacity:1; }
+  .cfg-pose .pp-spacer { flex:1; }
+  .cfg-pose.editing { outline:1px solid rgba(138,180,255,.5); }
+  .cfg-pose .pp-play { background:rgba(138,180,255,.18); border:1px solid rgba(138,180,255,.4); color:#cfe0ff; cursor:pointer; font-size:9px; padding:2px 6px; border-radius:6px; }
+  .cfg-pose .pp-x { background:none; border:none; color:rgba(255,255,255,.5); cursor:pointer; font-size:13px; padding:0 2px; }
+  .cfg-pose .pp-row { display:flex; gap:5px; }
+  .cfg-pose select { flex:1; background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.16); border-radius:6px; color:#fff; font-size:10px; padding:3px 4px; }
+  .cfg-pose-add { margin-top:8px; }
+  .cfg-words { display:flex; flex-wrap:wrap; gap:4px; margin-top:8px; padding:0; }
+  .cfg-word { font:600 10px/1.1 Inter,system-ui,sans-serif; color:#cfe0ff; background:rgba(138,180,255,.08); border:1px solid rgba(138,180,255,.2); border-radius:6px; padding:3px 6px; cursor:pointer; transition:background .12s ease, transform .12s ease; }
+  .cfg-word:hover { background:linear-gradient(120deg,#8b7bd8,#e0668a); color:#fff; border-color:transparent; transform:translateY(-1px); }
+  .cfg-word.used { opacity:.4; }
+  .cfg-panel.show { opacity: 1; transform: translateY(0); pointer-events: auto; }
+  .cfg-head { display:flex; align-items:center; justify-content:space-between; margin-bottom: 4px; }
+  .cfg-eyebrow { font-size:10px; letter-spacing:.18em; text-transform:uppercase; color:rgba(178,198,255,.9); font-weight:700; }
+  .cfg-nav { display:inline-flex; align-items:center; gap:6px; }
+  .cfg-arrow { width:20px; height:20px; border-radius:6px; border:1px solid rgba(255,255,255,.2); background:rgba(255,255,255,.08); color:#fff; font-size:13px; line-height:1; cursor:pointer; padding:0; }
+  .cfg-arrow:active { transform:scale(.9); }
+  .cfg-line { font:700 10px/1 ui-monospace,Menlo,monospace; color:rgba(255,255,255,.55); min-width:44px; text-align:center; }
+  .cfg-sel { background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.16); border-radius:6px; color:#fff; font-size:10px; padding:3px 4px; }
+  .cfg-preview { background:linear-gradient(120deg,#8b7bd8,#e0668a); border:none; }
+  .cfg-layers-head { display:flex; align-items:center; justify-content:space-between; margin:12px 0 6px; font-size:10px; letter-spacing:.12em; text-transform:uppercase; color:rgba(178,198,255,.9); font-weight:700; }
+  .cfg-addbtn { font-size:10px; font-weight:700; color:#fff; background:rgba(138,180,255,.18); border:1px solid rgba(138,180,255,.4); border-radius:7px; padding:4px 8px; cursor:pointer; }
+  .cfg-addmenu { display:none; position:absolute; right:0; top:24px; z-index:20; background:rgba(28,24,40,.98); border:1px solid rgba(255,255,255,.16); border-radius:10px; padding:5px; box-shadow:0 12px 30px rgba(0,0,0,.6); min-width:150px; }
+  .cfg-addmenu.on { display:block; }
+  .cfg-addmenu.up { top:auto; bottom:26px; }
+  .cfg-addmenu button { display:block; width:100%; text-align:left; background:none; border:none; color:#fff; font-size:11px; padding:6px 9px; border-radius:6px; cursor:pointer; }
+  .cfg-addmenu button:hover { background:rgba(255,255,255,.1); }
+  .cfg-layers { display:flex; flex-direction:column; gap:6px; }
+  .cfg-layer { background:rgba(255,255,255,.05); border:1px solid rgba(255,255,255,.12); border-radius:9px; padding:7px 8px; }
+  .cfg-layer .cl-top { display:flex; align-items:center; gap:6px; margin-bottom:5px; }
+  .cfg-layer .cl-type { font:800 8.5px/1 Inter,system-ui,sans-serif; letter-spacing:.08em; text-transform:uppercase; color:#8ab4ff; flex:1; }
+  .cfg-layer .cl-play { background:rgba(138,180,255,.18); border:1px solid rgba(138,180,255,.4); color:#cfe0ff; cursor:pointer; font-size:9px; padding:2px 6px; border-radius:6px; }
+  .cfg-layer .cl-play:active { transform:scale(.92); }
+  .cfg-layer .cl-x { background:none; border:none; color:rgba(255,255,255,.5); cursor:pointer; font-size:13px; padding:0 2px; }
+  .cfg-layer .cl-grid { display:grid; grid-template-columns:1fr 1fr; gap:5px; }
+  .cfg-layer select, .cfg-layer input { background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.16); border-radius:6px; color:#fff; font-size:10px; padding:3px 4px; width:100%; transition:opacity .15s ease; }
+  .cfg-layer select.cl-off, .cfg-layer input.cl-off { opacity:.28; pointer-events:none; }
+  .cfg-speaker { font-family:"Playfair Display",Georgia,serif; font-style:italic; font-size:15px; color:#fff; margin-bottom:9px; }
+  .cfg-rows { display:flex; flex-direction:column; gap:7px; }
+  .cfg-row { display:grid; grid-template-columns: 74px 1fr 44px; align-items:center; gap:7px; font-size:10.5px; color:rgba(255,255,255,.72); }
+  .cfg-row input[type=range]{ width:100%; accent-color:#8ab4ff; }
+  .cfg-row .cfg-num{ width:44px; background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.16); border-radius:6px; color:#fff; font-size:10.5px; padding:3px 4px; }
+  .cfg-row.cfg-flip{ grid-template-columns: 74px auto; }
+  .cfg-actions { display:flex; align-items:center; justify-content:space-between; margin-top:11px; }
+  .cfg-btn { font-size:10.5px; font-weight:700; color:#fff; background:rgba(255,255,255,.1); border:1px solid rgba(255,255,255,.2); border-radius:8px; padding:6px 10px; cursor:pointer; }
+  .cfg-btn:active{ transform:scale(.97); }
+  .cfg-saved { font-size:10px; color:#6fe3c8; opacity:0; transition:opacity .2s; }
+  .cfg-saved.on{ opacity:1; }
+  .cfg-hint { margin-top:9px; font-size:9.5px; line-height:1.4; color:rgba(255,255,255,.4); }
+  .cfg-hint code{ color:rgba(178,198,255,.8); }
+  @media (max-width: 900px) { .cfg-panel { display: none; } }
+
   /* --- On actual mobile: drop the frame, full-screen --- */
   @media (max-width: 500px) {
     html, body { background: #000; }
@@ -511,6 +590,104 @@
   <div class="sit-id" id="sitId"></div>
 </aside>
 
+<!-- Per-line cast tuner — edits the current dialogue line's narrative-mode
+     params live and auto-saves them to the episode's overrides sidecar. -->
+<aside class="cfg-panel" id="cfgPanel">
+
+  <!-- ============ LINE TUNER ============ -->
+  <div class="cfg-box" data-box="tuner">
+    <div class="cfg-box-head">
+      <span class="cfg-box-title">Line Tuner</span>
+      <span class="cfg-head-right">
+        <span class="cfg-saved" id="cfgSaved"></span>
+        <button class="cfg-collapse" type="button" aria-label="collapse">▾</button>
+      </span>
+    </div>
+    <div class="cfg-box-body">
+      <div class="cfg-head">
+        <span class="cfg-nav">
+          <button class="cfg-arrow" id="cfgPrev" type="button" title="Previous line">‹</button>
+          <span class="cfg-line" id="cfgLine">—</span>
+          <button class="cfg-arrow" id="cfgNext" type="button" title="Next line">›</button>
+        </span>
+        <span class="cfg-speaker" id="cfgSpeaker"></span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ POSES (per-word sprite/pose changes) ============ -->
+  <div class="cfg-box" data-box="poses">
+    <div class="cfg-box-head">
+      <span class="cfg-box-title">Poses</span>
+      <button class="cfg-collapse" type="button" aria-label="collapse">▾</button>
+    </div>
+    <div class="cfg-box-body">
+      <div class="cfg-pose-list" id="cfgPoseList"></div>
+      <button class="cfg-addbtn cfg-pose-add" id="cfgPoseAdd" type="button">+ Ekle</button>
+      <div class="cfg-words" id="cfgWords" style="display:none;"></div>
+    </div>
+  </div>
+
+  <!-- ============ CHARACTER ============ -->
+  <div class="cfg-box" data-box="char">
+    <div class="cfg-box-head">
+      <span class="cfg-box-title">Character</span>
+      <button class="cfg-collapse" type="button" aria-label="collapse">▾</button>
+    </div>
+    <div class="cfg-box-body">
+      <div class="cfg-rows" id="cfgRows">
+        <label class="cfg-row"><span>X (horizontal %)</span><input type="range" id="cX" min="0" max="100" step="1"><input type="number" id="cXn" class="cfg-num"></label>
+        <label class="cfg-row"><span>Y (vertical %)</span><input type="range" id="cY" min="80" max="130" step="1"><input type="number" id="cYn" class="cfg-num"></label>
+        <label class="cfg-row"><span>Size (%)</span><input type="range" id="cS" min="60" max="160" step="1"><input type="number" id="cSn" class="cfg-num"></label>
+        <label class="cfg-row"><span>Drop (px)</span><input type="range" id="cD" min="-100" max="500" step="10"><input type="number" id="cDn" class="cfg-num"></label>
+        <label class="cfg-row"><span>Turn (° inward)</span><input type="range" id="cT" min="-45" max="45" step="1"><input type="number" id="cTn" class="cfg-num"></label>
+        <label class="cfg-row cfg-flip"><span>Mirror (flip)</span><input type="checkbox" id="cF"></label>
+      </div>
+      <div class="cfg-layers-head">
+        <span>Animation layers</span>
+        <span style="position:relative;">
+          <button class="cfg-addbtn" id="cfgAdd" type="button">+ Layer</button>
+          <div class="cfg-addmenu" id="cfgAddMenu">
+            <button type="button" data-t="enter">Enter</button>
+            <button type="button" data-t="exit">Exit</button>
+            <button type="button" data-t="idle">Idle</button>
+            <button type="button" data-t="emphasis">Emphasis</button>
+            <button type="button" data-t="cfilter">Color / Filter</button>
+          </div>
+        </span>
+      </div>
+      <div class="cfg-layers" id="cfgLayers"></div>
+    </div>
+  </div>
+
+  <!-- ============ CAMERA & BACKGROUND ============ -->
+  <div class="cfg-box" data-box="cambg">
+    <div class="cfg-box-head">
+      <span class="cfg-box-title">Camera &amp; Background</span>
+      <button class="cfg-collapse" type="button" aria-label="collapse">▾</button>
+    </div>
+    <div class="cfg-box-body">
+      <div class="cfg-rows">
+        <label class="cfg-row"><span>Camera pan (%)</span><input type="range" id="cP" min="0" max="100" step="1"><input type="number" id="cPn" class="cfg-num"></label>
+      </div>
+      <div class="cfg-layers-head">
+        <span>Movement layers</span>
+        <span style="position:relative;">
+          <button class="cfg-addbtn" id="cfgAddCam" type="button">+ Layer</button>
+          <div class="cfg-addmenu" id="cfgAddCamMenu">
+            <button type="button" data-t="camera">Camera</button>
+            <button type="button" data-t="bg">Background</button>
+            <button type="button" data-t="filter">Color / Filter</button>
+            <button type="button" data-t="transition">Transition</button>
+          </div>
+        </span>
+      </div>
+      <div class="cfg-layers" id="cfgCamLayers"></div>
+    </div>
+  </div>
+
+</aside>
+
 <div class="center">
   <div class="stage" id="stage">
     <div class="phone">
@@ -544,6 +721,8 @@
   <button class="act-btn" id="btnObjDone" type="button">✓ Complete Obj</button>
   <button class="act-btn" id="btnCouch" type="button">⊜ Couch</button>
   <button class="act-btn" id="btnWriteChoice" type="button">✎ Write Choice</button>
+  <button class="act-btn" id="btnEp1" type="button">▶ Episode 1 (v2)</button>
+  <button class="act-btn" id="btnSuitors" type="button">♥ Suitors (v2)</button>
   <button class="act-btn" id="btnScreenshot" type="button">📷 Screenshot</button>
 </div>
 
@@ -572,6 +751,241 @@
     if (sitId)    sitId.textContent    = d.id ? ('situation: ' + d.id) : '';
     if (sitPanel) sitPanel.classList.add('show');
   });
+
+  // ----- Per-line cast tuner: edits the current line's narrative-mode params
+  // live (postMessage to the game) and auto-saves to the overrides sidecar.
+  (function lineTuner(){
+    const panel=document.getElementById('cfgPanel'); if(!panel) return;
+    const gid=id=>document.getElementById(id);
+    const cfgLine=gid('cfgLine'), cfgSpeaker=gid('cfgSpeaker'), cfgSaved=gid('cfgSaved');
+    const ctl={ x:{r:gid('cX'),n:gid('cXn'),unit:'%'}, y:{r:gid('cY'),n:gid('cYn'),unit:''},
+      size:{r:gid('cS'),n:gid('cSn'),unit:'%'}, drop:{r:gid('cD'),n:gid('cDn'),unit:''},
+      turn:{r:gid('cT'),n:gid('cTn'),unit:''}, pan:{r:gid('cP'),n:gid('cPn'),unit:''} };
+    const flip=gid('cF');
+    const layersEl=gid('cfgLayers'), addBtn=gid('cfgAdd'), addMenu=gid('cfgAddMenu');
+    const camLayersEl=gid('cfgCamLayers');
+    // which box each layer type lives in (Camera & Background share one box)
+    const boxFor=(t)=> (t==='camera'||t==='bg'||t==='transition'||t==='filter') ? camLayersEl : layersEl;
+    const allLayerEls=[layersEl, camLayersEl];
+    const poseListEl=gid('cfgPoseList'), poseAddBtn=gid('cfgPoseAdd'), wordsEl=gid('cfgWords');
+    let curLine=null, saveFlash=null, saveT=null;
+    let curWords=[], curPoses=[], curFolder='', editingPose=null;
+    const POSE_TRANS=['cut','crossfade'];
+    const appCache={};
+
+    // pull the list of appearance images for a character folder from the dev-server
+    function loadAppearances(folder){
+      if(!folder) return;
+      if(appCache[folder]){ renderPoseList(); return; }
+      fetch('/api/list-appearances?char='+encodeURIComponent(folder)).then(r=>r.ok?r.json():{images:[]})
+        .then(j=>{ appCache[folder]=(j.images&&j.images.length)?j.images:['pride']; renderPoseList(); })
+        .catch(()=>{ appCache[folder]=['pride']; renderPoseList(); });
+    }
+    function imagesFor(){ return appCache[curFolder] || ['pride']; }
+
+    function renderPoseList(){
+      if(!poseListEl) return; poseListEl.innerHTML='';
+      // idle (default) pose card — the line's base sprite
+      const imgs=imagesFor();
+      const idles=imgs.filter(n=>/^pride\d*$/i.test(n));
+      const idle=document.createElement('div'); idle.className='cfg-pose-idle';
+      idle.innerHTML='<span class="dot"></span><span>idle · '+(idles.length>1?('random ('+idles.join(', ')+')'):'pride')+'</span>';
+      poseListEl.appendChild(idle);
+      curPoses.forEach(p=>{
+        const row=document.createElement('div'); row.className='cfg-pose'+(editingPose===p?' editing':'');
+        const top=document.createElement('div'); top.className='pp-top';
+        const w=document.createElement('span'); w.className='pp-word'; w.textContent='@ '+((curWords[p.w]||('#'+p.w)).replace(/[^\wçğıöşüÇĞİÖŞÜ'’-]/g,'')||('#'+p.w));
+        const ed=document.createElement('button'); ed.type='button'; ed.className='pp-edit'; ed.textContent=(editingPose===p?'pick a word…':'Edit');
+        ed.addEventListener('click',(e)=>{ e.stopPropagation(); startEditWord(p); });
+        const spacer=document.createElement('span'); spacer.className='pp-spacer';
+        const play=document.createElement('button'); play.type='button'; play.className='pp-play'; play.textContent='▶';
+        play.addEventListener('click',()=>{ if(curLine==null)return; try{ frame.contentWindow.postMessage({type:'linePreviewPose', line:curLine, pose:{image:p.image,transition:p.transition}}, '*'); }catch(e){} });
+        const x=document.createElement('button'); x.type='button'; x.className='pp-x'; x.textContent='×';
+        x.addEventListener('click',()=>{ const at=curPoses.indexOf(p); if(at>=0)curPoses.splice(at,1); if(editingPose===p) editingPose=null; renderPoseList(); push(false); saveSoon(); });
+        top.append(w,ed,spacer,play,x);
+        const rw=document.createElement('div'); rw.className='pp-row';
+        const tr=document.createElement('select'); tr.innerHTML=POSE_TRANS.map(t=>'<option value="'+t+'"'+(p.transition===t?' selected':'')+'>'+t+'</option>').join('');
+        tr.addEventListener('change',()=>{ p.transition=tr.value; push(false); saveSoon(); });
+        const im=document.createElement('select'); im.innerHTML=imgs.map(n=>'<option value="'+n+'"'+(p.image===n?' selected':'')+'>'+n+'</option>').join('');
+        im.addEventListener('change',()=>{ p.image=im.value; push(false); saveSoon(); });
+        rw.append(tr,im);
+        row.append(top,rw);
+        // when editing THIS pose, show the word chips right under it (inline)
+        if(editingPose===p){ const wp=document.createElement('div'); wp.className='cfg-words pp-words'; fillWordPicker(wp); row.appendChild(wp); }
+        poseListEl.appendChild(row);
+      });
+    }
+    // fill a container with clickable word chips; current word highlighted, other
+    // poses' words dimmed/locked
+    function fillWordPicker(container){
+      container.innerHTML='';
+      curWords.forEach((w,i)=>{ const b=document.createElement('button'); b.type='button';
+        const usedByOther = curPoses.some(p=>p.w===i && p!==editingPose);
+        b.className='cfg-word'+(usedByOther?' used':'')+((editingPose&&editingPose.w===i)?' on':'');
+        b.textContent=w.replace(/[^\wçğıöşüÇĞİÖŞÜ'’-]/g,'')||w; b.addEventListener('click',()=>pickWord(i)); container.appendChild(b); });
+    }
+    function renderWords(){ if(wordsEl) fillWordPicker(wordsEl); }
+    function pickWord(i){
+      if(editingPose){ // re-assign an existing pose to a new word
+        if(curPoses.some(p=>p.w===i && p!==editingPose)) return;   // word taken
+        editingPose.w=i; editingPose=null; curPoses.sort((a,b)=>a.w-b.w);
+        wordsEl.style.display='none'; renderPoseList(); push(false); saveSoon(); return;
+      }
+      addPose(i);
+    }
+    function addPose(i){
+      if(curPoses.some(p=>p.w===i)) return;
+      const imgs=imagesFor(); const def=imgs.find(n=>n!=='pride')||imgs[0]||'pride';
+      curPoses.push({w:i, image:def, transition:'cut'}); curPoses.sort((a,b)=>a.w-b.w);
+      wordsEl.style.display='none'; renderPoseList(); push(false); saveSoon();
+    }
+    function startEditWord(p){ editingPose=(editingPose===p?null:p); if(wordsEl) wordsEl.style.display='none'; renderPoseList(); }
+    if(poseAddBtn) poseAddBtn.addEventListener('click',()=>{ editingPose=null; const open=wordsEl.style.display==='none'; wordsEl.style.display=open?'flex':'none'; if(open) renderWords(); });
+
+    // ---- animation layers ----
+    const MODES = {
+      enter:['slide','zoom','fade','pop','none'],
+      exit:['slide','zoom','fade','pop','none'],
+      idle:['breathe','sway','float'],
+      emphasis:['pulse','shake','zoom','tilt'],
+      camera:['follow','a2b','dolly'],
+      bg:['ken-burns','drift','none'],
+      transition:['crossfade','dissolve','cut'],
+      filter:['grayscale','sepia','contrast','vivid','warm','cool','dim','noir','none'],
+      cfilter:['grayscale','sepia','contrast','vivid','warm','cool','dim','noir','none'],
+    };
+    const EASES=['out','in','inout','linear','spring'];
+    const needsDir = t => (t==='enter'||t==='exit');
+    function opt(v,sel){ return '<option value="'+v+'"'+(v===sel?' selected':'')+'>'+v+'</option>'; }
+    function buildRow(L){
+      L=L||{}; const t=L.type; const row=document.createElement('div'); row.className='cfg-layer'; row.dataset.type=t;
+      const modes=(MODES[t]||[]).map(m=>opt(m,L.mode)).join('');
+      const canPreview = ['enter','exit','idle','emphasis','transition'].includes(t);   // ambient (camera/bg/filter) apply live → no preview needed
+      row.innerHTML='<div class="cl-top"><span class="cl-type">'+t+'</span>'+(canPreview?'<button class="cl-play" title="preview">▶</button>':'')+'<button class="cl-x" title="remove">×</button></div>'
+        +'<div class="cl-grid">'
+        +'<select class="cl-mode">'+modes+'</select>'
+        +(needsDir(t)?'<select class="cl-dir">'+opt('left',L.dir)+opt('right',L.dir)+opt('up',L.dir)+opt('down',L.dir)+'</select>':'<input class="cl-amt" type="number" placeholder="amount" value="'+(L.amount!=null?L.amount:'')+'">')
+        +(needsDir(t)?'<input class="cl-amt" type="number" placeholder="amount" value="'+(L.amount!=null?L.amount:'')+'">':'<input class="cl-dur" type="number" step="0.05" placeholder="duration s" value="'+(L.dur!=null?L.dur:'')+'">')
+        +(needsDir(t)?'<input class="cl-dur" type="number" step="0.05" placeholder="duration s" value="'+(L.dur!=null?L.dur:'')+'">':'<select class="cl-ease">'+EASES.map(e=>opt(e,L.ease)).join('')+'</select>')
+        +(needsDir(t)?'<select class="cl-ease">'+EASES.map(e=>opt(e,L.ease)).join('')+'</select>':'')
+        +'</div>';
+      row.querySelector('.cl-x').addEventListener('click',()=>{ row.remove(); push(false); saveSoon(); });
+      { const pb=row.querySelector('.cl-play'); if(pb) pb.addEventListener('click',()=>previewLayer(row)); }
+      row.querySelectorAll('select,input').forEach(el=>{ const ev=el.tagName==='SELECT'?'change':'input'; el.addEventListener(ev,()=>{ push(false); saveSoon(); }); });
+      const md=row.querySelector('.cl-mode'); if(md) md.addEventListener('change',()=>syncRow(row));
+      syncRow(row);
+      return row;
+    }
+    // grey-out fields the selected mode doesn't use, so the row self-explains
+    function syncRow(row){
+      const t=row.dataset.type, mode=(row.querySelector('.cl-mode')||{}).value||'';
+      const dir=row.querySelector('.cl-dir'), amt=row.querySelector('.cl-amt'),
+            dur=row.querySelector('.cl-dur'), ease=row.querySelector('.cl-ease');
+      const set=(el,on)=>{ if(el) el.classList.toggle('cl-off',!on); };
+      if(t==='enter'||t==='exit'){
+        const useDir = mode==='slide';
+        const useAmt = (mode==='slide'||mode==='zoom'||mode==='pop'||mode==='fade');
+        const useTime = mode!=='none';
+        set(dir,useDir); set(amt,useAmt); set(dur,useTime); set(ease,useTime);
+        if(amt) amt.placeholder = mode==='slide'?'distance (vw/vh)'
+          : mode==='zoom'?'start scale %'
+          : mode==='pop'?'pop %'
+          : mode==='fade'?'start opacity %':'—';
+      } else if(t==='idle'||t==='emphasis'){
+        set(amt,true); set(dur,true); set(ease,false);          // ease unused (keyframe)
+        if(amt) amt.placeholder='amount';
+      } else if(t==='camera'){
+        const useAmt = (mode==='dolly');
+        set(amt,useAmt); set(dur, mode!=='follow'); set(ease,false);
+        if(amt) amt.placeholder = mode==='dolly'?'zoom %':'—';
+      } else if(t==='bg'){
+        set(amt,false); set(dur,false); set(ease,false);        // preset movements, no params
+      } else if(t==='transition'){
+        set(amt,false); set(dur,mode!=='cut'); set(ease,false);
+      } else if(t==='filter'||t==='cfilter'){
+        const useAmt = (mode!=='noir'&&mode!=='none');   // noir/none are fixed
+        set(amt,useAmt); set(dur,true); set(ease,false);
+        if(amt) amt.placeholder='intensity %';
+      }
+    }
+    function rowLayer(r){ const g=s=>{const e=r.querySelector(s);return e?e.value:'';};
+      const o={type:r.dataset.type, mode:g('.cl-mode'), amount:g('.cl-amt'), dur:g('.cl-dur'), ease:g('.cl-ease')};
+      const d=r.querySelector('.cl-dir'); if(d)o.dir=d.value; return o; }
+    function previewLayer(r){ if(curLine==null)return; try{ frame.contentWindow.postMessage({type:'linePreviewLayer', line:curLine, layer:rowLayer(r)}, '*'); }catch(e){} }
+    function addLayer(t){ boxFor(t).appendChild(buildRow({type:t, mode:(MODES[t]||[])[0]})); push(false); saveSoon(); }
+    function gatherLayers(){ const out=[]; allLayerEls.forEach(box=>{ [...box.querySelectorAll('.cfg-layer')].forEach(r=>{
+      const g=s=>{ const e=r.querySelector(s); return e?e.value:''; };
+      const o={ type:r.dataset.type, mode:g('.cl-mode'), amount:g('.cl-amt'), dur:g('.cl-dur'), ease:g('.cl-ease') };
+      const d=r.querySelector('.cl-dir'); if(d) o.dir=d.value; out.push(o); }); }); return out; }
+    function rebuildLayers(arr){ allLayerEls.forEach(b=>b.innerHTML=''); (arr||[]).forEach(L=>boxFor(L.type).appendChild(buildRow(L))); }
+    // wire each box's own "+ Layer" menu
+    [['cfgAdd','cfgAddMenu'],['cfgAddCam','cfgAddCamMenu']].forEach(([btnId,menuId])=>{
+      const btn=gid(btnId), menu=gid(menuId); if(!btn||!menu) return;
+      btn.addEventListener('click',(e)=>{ e.stopPropagation(); document.querySelectorAll('.cfg-addmenu.on').forEach(m=>{ if(m!==menu) m.classList.remove('on'); }); menu.classList.toggle('on');
+        if(menu.classList.contains('on')){ menu.classList.remove('up'); const p=gid('cfgPanel'); const mR=menu.getBoundingClientRect(), pR=p.getBoundingClientRect(); if(mR.bottom>pR.bottom-4) menu.classList.add('up'); } });
+      menu.querySelectorAll('button').forEach(b=>b.addEventListener('click',()=>{ addLayer(b.dataset.t); menu.classList.remove('on'); }));
+    });
+    document.addEventListener('click',()=>document.querySelectorAll('.cfg-addmenu.on').forEach(m=>m.classList.remove('on')));
+    // collapse / expand each box (click the header, but not the nav arrows)
+    document.querySelectorAll('#cfgPanel .cfg-box-head').forEach(head=>{
+      head.addEventListener('click',(e)=>{ if(e.target.closest('.cfg-arrow, .cfg-addbtn')) return; head.parentElement.classList.toggle('collapsed'); });
+    });
+    const strip=v=>(''+(v==null?'':v)).replace(/[%pxdeg\s]/g,'');
+    function setVal(key,v){ const o=ctl[key]; if(!o||v===''||v==null)return; o.r.value=v; o.n.value=v; }
+    function fill(d){
+      const sameLine = (d.line===curLine);
+      curLine=d.line;
+      cfgLine.textContent = d.line!=null?('line '+d.line):'—';
+      cfgSpeaker.textContent = d.speaker||'';
+      // Re-renders of the SAME line (typing, preview, pose fires) must not rebuild
+      // the panel — that would wipe in-progress edits (e.g. picking a new word).
+      if(sameLine) return;
+      curWords = (d.text||'').split(/\s+/).filter(Boolean);
+      curFolder = d.folder||'';
+      curPoses = (d.cfg&&Array.isArray(d.cfg.poses)) ? JSON.parse(JSON.stringify(d.cfg.poses)) : [];
+      if(wordsEl) wordsEl.style.display='none';
+      renderPoseList(); loadAppearances(curFolder);
+      const c=Object.assign({}, d.cur||{}, d.cfg||{});
+      setVal('x', strip(c.x)); setVal('size', strip(c.size)); setVal('turn', strip(c.turn)); setVal('pan', strip(c.pan));
+      setVal('y', c.y!=null&&c.y!==''?strip(c.y):109);
+      setVal('drop', c.drop!=null&&c.drop!==''?strip(c.drop):200);
+      flip.checked = (c.flip==='-1'||c.flip===-1);
+      // default behaviour: every line comes with an Enter + Exit layer pre-filled
+      let anim=(d.cfg&&d.cfg.anim);
+      if(!anim || !anim.length){
+        const side = (parseFloat(strip((d.cur&&d.cur.x)||'50'))<50)?'left':'right';
+        anim=[ {type:'enter',mode:'slide',dir:side,amount:70,dur:0.55,ease:'out'},
+               {type:'exit',mode:'fade',dur:0.4,ease:'out'} ];
+      }
+      // normalize layer order so the panel is always consistent (enter first,
+      // exit last) — avoids the "which row am I previewing?" confusion.
+      const ORD={enter:0, transition:1, camera:2, bg:3, idle:4, emphasis:5, exit:6};
+      anim=[...anim].sort((a,b)=>((ORD[a.type]!=null?ORD[a.type]:9)-(ORD[b.type]!=null?ORD[b.type]:9)));
+      rebuildLayers(anim);
+      panel.classList.add('show');
+    }
+    function gather(){
+      const g=(k)=>ctl[k].n.value;
+      return { x:g('x')!==''?g('x')+'%':'', y:g('y'), size:g('size')!==''?g('size')+'%':'',
+        drop:g('drop'), turn:g('turn'), pan:g('pan'), flip:flip.checked?'-1':'1',
+        anim:gatherLayers(), poses:curPoses };
+    }
+    function push(save){ if(curLine==null)return; try{ frame.contentWindow.postMessage({type:'lineCfgSet', line:curLine, cfg:gather(), save:!!save}, '*'); }catch(e){}
+      if(save){ cfgSaved.textContent='saved ✓'; cfgSaved.classList.add('on'); clearTimeout(saveFlash); saveFlash=setTimeout(()=>cfgSaved.classList.remove('on'),900); } }
+    function saveSoon(){ clearTimeout(saveT); saveT=setTimeout(()=>push(true),400); }
+    Object.keys(ctl).forEach(key=>{ const o=ctl[key];
+      o.r.addEventListener('input',()=>{ o.n.value=o.r.value; push(false); saveSoon(); });
+      o.n.addEventListener('input',()=>{ o.r.value=o.n.value; push(false); saveSoon(); });
+      // Shift + ↑/↓ → step by 5
+      o.n.addEventListener('keydown',(ev)=>{ if(!ev.shiftKey||(ev.key!=='ArrowUp'&&ev.key!=='ArrowDown'))return;
+        ev.preventDefault(); const cur=parseFloat(o.n.value)||0; o.n.value=cur+(ev.key==='ArrowUp'?5:-5);
+        o.r.value=o.n.value; push(false); saveSoon(); }); });
+    flip.addEventListener('change',()=>push(true));
+    gid('cfgPrev').addEventListener('click',()=>{ try{ frame.contentWindow.postMessage({type:'lineStep',dir:-1},'*'); }catch(e){} });
+    gid('cfgNext').addEventListener('click',()=>{ try{ frame.contentWindow.postMessage({type:'lineStep',dir:1},'*'); }catch(e){} });
+    window.addEventListener('message',(e)=>{ const d=e&&e.data; if(!d||d.type!=='lineCtx')return;
+      if(!d.castOn){ panel.classList.remove('show'); return; } fill(d); });
+  })();
 
   // Forward the wrapper's URL params into the iframe so flags like
   // ?dev=keys and ?edit=paths reach the game. We strip ?embed=1
@@ -604,12 +1018,19 @@
       }, 400);
     }
   })();
-  // Shortcuts dock: toggle the collapsible left panel.
+  // Shortcuts dock: toggle the collapsible left panel, remembering the
+  // open/closed state across reloads (localStorage).
   (function wireDock(){
     const t = document.getElementById('dockToggle');
-    if (t) t.addEventListener('click', function(){
-      const open = document.body.classList.toggle('dock-open');
-      t.textContent = open ? '✕' : '☰';
+    if (!t) return;
+    const KEY='rai.dockOpen';
+    const apply = (open)=>{ document.body.classList.toggle('dock-open', open); t.textContent = open ? '✕' : '☰'; };
+    let saved; try{ saved = localStorage.getItem(KEY); }catch(e){}
+    apply(saved==='1');                          // restore last state (default: closed)
+    t.addEventListener('click', function(){
+      const open = !document.body.classList.contains('dock-open');
+      apply(open);
+      try{ localStorage.setItem(KEY, open ? '1' : '0'); }catch(e){}
     });
   })();
   // "Open Editor" is a real <a> link — no JS handler needed.
@@ -790,6 +1211,27 @@
   // ----- Screenshot — rasterize the iframe's current frame to PNG.
   // Captures only the iframe content (not the phone bezel). Saves
   // with a timestamp so multiple shots don't overwrite each other.
+  const btnEp1 = document.getElementById('btnEp1');
+  if (btnEp1) {
+    btnEp1.addEventListener('click', () => {
+      try {
+        const w = frame.contentWindow;
+        if (w && typeof w.startCaller === 'function') { w.startCaller(); return; }
+        // iframe is still v1 (dialog.html) — swap to v2 then launch once loaded
+        frame.addEventListener('load', function once(){ frame.removeEventListener('load', once);
+          setTimeout(()=>{ try{ frame.contentWindow.startCaller(); }catch(e){} }, 400); });
+        frame.src = 'dialog2.html';
+      } catch (e) { console.warn('[ep1]', e); }
+    });
+  }
+  const btnSuitors = document.getElementById('btnSuitors');
+  if (btnSuitors) {
+    btnSuitors.addEventListener('click', () => {
+      try { const w = frame.contentWindow;
+        if (typeof w.prideOpenSuitors === 'function') w.prideOpenSuitors();
+        else console.warn('[suitors] prideOpenSuitors not available'); } catch (e) { console.warn('[suitors]', e); }
+    });
+  }
   const btnScreenshot = document.getElementById('btnScreenshot');
   if (btnScreenshot) {
     btnScreenshot.addEventListener('click', async () => {

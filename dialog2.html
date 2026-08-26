@@ -14026,12 +14026,18 @@ const PRIDE_ACTORS = {
   jane:          'jane_bennet',
   elizabeth:     'elizabeth_bennet',
   'sir-william': 'sir_william',
+  // Episode 1 "A Caller at the House"
+  'sir-henry':   'sir_ashbourne',
+  'mrs-frost':   'mrs_frost',
+  'mr-frost':    'mr_frost',
+  maid:          'the_maid',
 };
 const PRIDE_LABELS = {
   arabella: 'Arabella',    bingley: 'Mr Bingley',   darcy: 'Mr Darcy',
   wickham: 'Mr Wickham',   caroline: 'Miss Bingley','mrs-bennet': 'Mrs Bennet',
   charlotte: 'Charlotte',  lydia: 'Lydia',          jane: 'Jane',
   elizabeth: 'Elizabeth',  'sir-william': 'Sir William',
+  'sir-henry': 'Sir Henry', 'mrs-frost': 'Mrs Frost', 'mr-frost': 'Mr Frost', maid: 'The Maid',
 };
 const PRIDE_WORLD_BASE = 'worlds/pride-and-prejudice';
 function prideSpritePath(speaker) {
@@ -14066,6 +14072,7 @@ Object.keys(PRIDE_ACTORS).forEach(function (k) {
       arabella: '#e0668a', darcy: '#5d6b8a', bingley: '#c98a5a', wickham: '#7a8d6a',
       caroline: '#b06a9a', 'mrs-bennet': '#c07a7a', charlotte: '#8a7ab0', lydia: '#d68aa0',
       jane: '#c98aa8', elizabeth: '#b07a9a', 'sir-william': '#8a7a6a',
+      'sir-henry': '#5f7a5a', 'mrs-frost': '#b07a9a', 'mr-frost': '#7a6f8a', maid: '#9a8a7a',
     };
     Object.keys(PRIDE_ACTORS).forEach(function (k) {
       const url = PRIDE_WORLD_BASE + '/characters/' + PRIDE_ACTORS[k] + '/appearances/pride.png';
@@ -14380,7 +14387,23 @@ function applyDialogState(updates) {
   }
   if ('ui' in updates) {
     currentDialogState.ui = updates.ui || null;
-    applyUiState(currentDialogState.ui);
+    const uiv = (updates.ui || '').trim();
+    if (/^cast\b/i.test(uiv)) {
+      // multi-figure cast-large: "cast layout=NAME" (or cast2/cast3 shorthand)
+      const lm = uiv.match(/layout\s*=\s*([a-z0-9_]+)/i);
+      currentDialogState.castLayout = lm ? lm[1] : (uiv.replace(/\s+/g,'') || 'cast2');
+      applyUiState('cast-large'); // reuse cast-large dialog styling for the box
+    } else {
+      if (typeof window.castClear === 'function') window.castClear();
+      currentDialogState.castLayout = null;
+      applyUiState(currentDialogState.ui);
+    }
+  }
+  if ('cast' in updates) {
+    // slot→character map, e.g. "slot1=mrs_bennet slot2=arabella_frost"
+    const map = {};
+    (updates.cast || '').trim().split(/\s+/).forEach(tok => { const i = tok.indexOf('='); if (i > 0) map[tok.slice(0, i)] = tok.slice(i + 1); });
+    if (typeof window.castApply === 'function' && currentDialogState.castLayout) window.castApply(currentDialogState.castLayout, map);
   }
 }
 
@@ -15153,6 +15176,15 @@ function parseScript(text) {
   // Track origin line numbers (1-based, into the original text) so the
   // editor can ask "render the script at line N" and we know which
   // parsed event corresponds.
+  // Pre-pass: pull the [layouts] … [/layouts] cast-preset block out of the
+  // script and register it (used by the multi-figure cast-large renderer).
+  try {
+    if (typeof window.parseCastLayouts === 'function') {
+      const _cl = window.parseCastLayouts(text);
+      window.CAST_LAYOUTS = _cl.presets || {};
+      text = _cl.cleaned;
+    }
+  } catch (e) { console.warn('[cast] layout parse failed', e); }
   const allLines = text.split('\n');
   const raws = [];
   const rawOriginLines = [];
@@ -15263,7 +15295,7 @@ function parseScript(text) {
     // auto-dismisses. Payload fields are pipe-separated. Fire-and-continue
     // (auto-advances), so they attach to whatever dialog/narrative beat
     // they're authored next to.
-    const mechMatch = s.match(/^\(\s*(Trait|Relation|Memory|Discovery|Quest|Combat)\s*:\s*(.+)\)$/i);
+    const mechMatch = s.match(/^\(\s*(Trait|Relation|Memory|Discovery|Quest|Combat|Scandal|Allure|Discover)\s*:\s*(.+)\)$/i);
     if (mechMatch) {
       const kind = mechMatch[1].toLowerCase();
       const parts = mechMatch[2].split('|').map(x => x.trim());
@@ -15581,9 +15613,9 @@ function parseScript(text) {
     if (currentAction) {
       // First line of the action block is its prompt; rest is the scene.
       if (!currentAction.prompt) currentAction.prompt = parsed;
-      else currentAction.lines.push({ type: 'line', ...parsed });
+      else currentAction.lines.push(stampOrigin({ type: 'line', ...parsed }, __originAt(i)));
     } else {
-      currentArr.push({ type: 'line', ...parsed });
+      currentArr.push(stampOrigin({ type: 'line', ...parsed }, __originAt(i)));
     }
   }
   return { main, objects };
@@ -15594,6 +15626,12 @@ function parseScript(text) {
 // ============================================================
 function applyStage(speaker) {
   // Pride & Prejudice drives its own single reusable stage sprite.
+  if (activePack === 'pride' && typeof window.castActive === 'function' && window.castActive()) {
+    // multi-figure cast: highlight the speaking slot, keep the single sprite clear
+    const _sa = document.getElementById('prideActor'); if (_sa) _sa.classList.remove('active');
+    if (typeof window.castSpeak === 'function') window.castSpeak(speaker);
+    return;
+  }
   if (activePack === 'pride') { pridePaintStage(speaker); return; }
   // Reset (some chars may be null if their DIVs aren't in the DOM yet)
   Object.values(el.chars).forEach(c => c && c.classList.remove('active','exit-left','exit-right'));
@@ -15642,6 +15680,7 @@ function typeText(text) {
     i++;
     el.dialogText.innerHTML = applyHighlights(text.slice(0, i)) +
       (i < text.length ? '<span class="cursor"></span>' : '');
+    if (activePack==='pride' && window.__prideBeatCheck) { try{ window.__prideBeatCheck(i); }catch(e){} }
     if (i >= text.length) { clearInterval(typeTimer); typeTimer = null; }
   }, 22);
 }
@@ -15735,6 +15774,21 @@ function renderLine() {
       showMechToast(line.kind, line.parts);
       pridePaintDiscovery((line.parts && line.parts[0]) || '');
       return;   // next tap → next() does idx++/renderLine() past this marker
+    }
+    // Meta meters: (Scandal:+N) / (Allure:+N) — nudge the world meters + toast.
+    if (line.kind === 'scandal' || line.kind === 'allure') {
+      const n = parseInt((line.parts && line.parts[0]) || '0', 10) || 0;
+      try { if (typeof window.prideMetaAdd === 'function') window.prideMetaAdd(line.kind, n); } catch (e) {}
+      showMechToast(line.kind, line.parts);
+      idx++; renderLine(); return;
+    }
+    // Discover a suitor: (Discover: suitor_id) — unlock + (later) first-encounter intro.
+    if (line.kind === 'discover') {
+      const sid = ((line.parts && line.parts[0]) || '').trim();
+      try { if (typeof window.prideDiscover === 'function') window.prideDiscover(sid); } catch (e) {}
+      if (typeof window.prideSuitorIntro === 'function') { window.prideSuitorIntro(sid, function () { idx++; renderLine(); }); return; }
+      showMechToast('discovery', ['New suitor discovered']);
+      idx++; renderLine(); return;
     }
     showMechToast(line.kind, line.parts);
     idx++;
@@ -15985,6 +16039,9 @@ function renderLine() {
 
   el.continueHint.style.display = 'block';
   applyStage(speaker);
+  // Per-line cast tuner (dev): apply any saved override for this line + tell the
+  // dev panel which line is on screen so it can edit it live.
+  try { if (activePack === 'pride' && typeof window.prideLineCtx === 'function') window.prideLineCtx(line, speaker); } catch (e) {}
   typeText(renderText(line.text));
   // Swap in the cutscene image if this line triggers one
   if (line.cutscene === '__clear__') clearCutscene();
@@ -27502,6 +27559,29 @@ window.startPride = function () {
   } catch (e) { console.error('[pride] startPride failed', e); }
 };
 console.log('%c[pride] ready — run startPride() or click the launcher', 'color:#e0668a');
+
+/* Episode 1 "A Caller at the House" — placeholder launch (run startCaller()).
+   Points the pride episode base at the new episode so loadActiveScript +
+   setCutscene resolve there; keeps location = netherfield-ball so the
+   [bg:explore=…] room placeholders still load. */
+window.startCaller = function () {
+  try {
+    activePack = 'pride';
+    document.body.setAttribute('data-pack', 'pride');
+    if (typeof profilesForPack === 'function' && typeof PROFILES !== 'undefined') { try { PROFILES = profilesForPack('pride'); } catch (e) {} }
+    if (typeof PACK_LOCATION !== 'undefined' && PACK_LOCATION.pride) {
+      PACK_LOCATION.pride.episode = 'episodes/the-newcomer/a-caller-at-the-house';
+      PACK_LOCATION.pride.location = 'longbourn';       // [bg:explore=parlour|study|window_nook]
+    }
+    if (typeof window.prideLoadOverrides === 'function') window.prideLoadOverrides();
+    currentVenue = 'netherfield-ball';                 // startable venue (start gate only)
+    if (!window.__pridePC) window.__pridePC = { id:'arabella_frost', name:'Arabella', portrait:'arabella_frost', epithet:'The Wit' };
+    if (typeof window.pcHudHide === 'function') window.pcHudHide();
+    if (typeof startDateHere === 'function') { return startDateHere(); }
+    console.warn('[caller] startDateHere missing');
+  } catch (e) { console.error('[caller] startCaller failed', e); }
+};
+console.log('%c[caller] Episode 1 ready — run startCaller()', 'color:#e7b24c');
 /* The on-screen dev launcher pill was removed \u2014 P&P now launches from the
    home world list, the map's Netherfield pin, and the index.html button.
    window.startPride() above still works from the console for quick tests. */
@@ -27992,7 +28072,8 @@ console.log('%c[pride] ready — run startPride() or click the launcher', 'color
     document.body.appendChild(hudEl);
     hudEl.querySelector('#pphArrow').addEventListener('click', ()=>{ window.pcSelectSwitch(); });
     return hudEl; }
-  function updateHud(c){ if(!c) return; buildHud(); $('pphAv').style.backgroundImage=AURL('fig_'+c.portrait+'.webp'); $('pphNm').textContent=c.name; $('pphEpi').textContent=c.epithet||''; }
+  function updateHud(c){ if(!c) return; buildHud(); $('pphAv').style.backgroundImage=AURL('fig_'+c.portrait+'.webp'); $('pphNm').textContent=c.name; $('pphEpi').textContent=c.epithet||'';
+    const mr=document.getElementById('mrAv'); if(mr) mr.style.backgroundImage=AURL('fig_'+c.portrait+'.webp'); }
   function showHud(c){ updateHud(c); buildHud().classList.add('on'); document.body.classList.add('pride-hud-on'); }
   function hideHud(){ if(hudEl) hudEl.classList.remove('on'); document.body.classList.remove('pride-hud-on'); }
   function switchTo(c){ setPridePC(c); hide(); $('pcsel').classList.remove('switch'); switchMode=false; showHud(c); const cb=resumeCb; if(typeof cb==='function') cb(); }
@@ -28992,7 +29073,7 @@ body.poi-open #pridePcHud{ opacity:0 !important; pointer-events:none !important 
 #pmcClose:active{ transform:scale(.94) }
 
 /* active missions, under the profile — round-rectangle, single line, text only, spaced from the profile */
-#pmcObjectives{ top:calc(env(safe-area-inset-top,0px) + 100px); left:14px; display:flex; flex-direction:column; gap:7px; align-items:flex-start }
+#pmcObjectives{ top:calc(env(safe-area-inset-top,0px) + 52px); left:14px; display:flex; flex-direction:column; gap:7px; align-items:flex-start }
 .pmc-obj{ background:rgba(8,5,12,.82); border:1px solid rgba(255,255,255,.14); max-width:calc(100vw - 28px);
   border-radius:11px; padding:5px 11px; cursor:pointer; box-shadow:0 5px 14px rgba(0,0,0,.4) }
 .pmc-obj:active{ transform:scale(.98) }
@@ -29067,10 +29148,33 @@ body.poi-open #pridePcHud{ opacity:0 !important; pointer-events:none !important 
 #prideEpSim .pes-sub{ color:rgba(255,255,255,.55); font:500 12.5px/1.5 "Inter",system-ui,sans-serif; margin-top:-16px }
 #prideEpSim .pes-btn{ padding:15px 28px; border:none; border-radius:16px; background:linear-gradient(120deg,#e0668a,#8b7bd8); color:#fff; font:700 15px/1 "Inter",system-ui,sans-serif; cursor:pointer; box-shadow:0 12px 26px rgba(139,123,216,.4); -webkit-tap-highlight-color:transparent }
 #prideEpSim .pes-btn:active{ transform:scale(.98) }
+
+/* ===== map HUD reformatted to mirror the in-episode HUD ===== */
+/* drop the left profile HUD and the top-right X on the map */
+body.pride-hud-on #pridePcHud{ display:none !important; }
+#pmcClose{ display:none !important; }
+
+/* top-right rail: oval-square avatar + Suitors + Map (mirrors #peIcons) */
+#prideMapRail{ top:calc(env(safe-area-inset-top,0px) + 12px); right:14px; display:flex; flex-direction:column; gap:11px; align-items:center; z-index:7995; }
+#prideMapRail .mr-av{ width:52px; height:52px; border-radius:15px; background-size:cover; background-position:50% 6%; background-repeat:no-repeat;
+  background-color:#2a2233; border:2px solid rgba(255,255,255,.6); box-shadow:0 6px 16px rgba(0,0,0,.4); }
+#prideMapRail .mr-ic{ position:relative; width:44px; height:44px; border-radius:50%; display:grid; place-items:center; cursor:pointer; flex:none;
+  background:rgba(20,12,26,.55); border:1px solid rgba(255,255,255,.22); color:#fff;
+  -webkit-backdrop-filter:blur(10px); backdrop-filter:blur(10px); box-shadow:0 6px 16px rgba(0,0,0,.4);
+  transition:transform .15s, border-color .3s, box-shadow .3s, background .3s; }
+#prideMapRail .mr-ic:active{ transform:scale(.93); }
+#prideMapRail .mr-suit{ color:#f4a6c0; }
+
+/* objective chip: clipboard icon instead of the "Objective :" label (mirrors episode) */
+.pmc-obj .ob-ic{ display:inline-flex; align-items:center; margin-right:7px; flex:none; }
 </style>
 <div id="prideMapChrome">
-  <button id="pmcClose" aria-label="Close">&#10005;</button>
   <div id="pmcObjectives"></div>
+  <div id="prideMapRail">
+    <div class="mr-av" id="mrAv" title="Profile"></div>
+    <button class="mr-ic mr-suit" id="mrSuitors" title="Suitors" aria-label="Suitors"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.8 5.1a5.4 5.4 0 0 0-7.7 0L12 6.2l-1.1-1.1a5.4 5.4 0 1 0-7.7 7.7l1.1 1.1L12 21l7.7-7.1 1.1-1.1a5.4 5.4 0 0 0 0-7.7z"/></svg></button>
+    <button class="mr-ic mr-map" id="mrMap" title="Map" aria-label="Map"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M9 4L3 6.5v13L9 17l6 2.5 6-2.5v-13L15 6.5 9 4z"/><path d="M9 4v13M15 6.5v13"/></svg></button>
+  </div>
   <div id="pmcShorts"><span class="lbl">Short Stories</span><div class="stack" id="pmcShortsAvs"></div><span class="pmc-lock" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg></span></div>
   <button id="pmcStore" aria-label="Store"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9h18l-1.6 9.2A2 2 0 0 1 17.4 20H6.6a2 2 0 0 1-2-1.8L3 9z"/><path d="M8 9V6a4 4 0 0 1 8 0v3"/></svg></button>
 </div>
@@ -29135,8 +29239,9 @@ body.poi-open #pridePcHud{ opacity:0 !important; pointer-events:none !important 
 
   function fill(){
     // objectives
+    const OBJ_IC='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#6fe3c8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 2.5v3.5h6"/><path d="M9 11.5h6M9 15.5h4"/></svg>';
     const ob=document.getElementById('pmcObjectives'); if(ob){ ob.innerHTML=OBJ.map(o=>
-      '<div class="pmc-obj"><span class="ob-k">Objective :</span><span class="ob-txt">'+o.t+'</span></div>').join('');
+      '<div class="pmc-obj"><span class="ob-ic">'+OBJ_IC+'</span><span class="ob-txt">'+o.t+'</span></div>').join('');
       ob.querySelectorAll('.pmc-obj').forEach(el=>el.addEventListener('click',()=>{ if(typeof window.pcCardStrip==='function') window.pcCardStrip(EPCARDS); }));
     }
     // shorts widget avatars
@@ -29158,7 +29263,13 @@ body.poi-open #pridePcHud{ opacity:0 !important; pointer-events:none !important 
 
   document.addEventListener('DOMContentLoaded', ()=>{
     fill();
-    const close=document.getElementById('pmcClose'); if(close) close.addEventListener('click', ()=>{ if(typeof showWorldList==='function') showWorldList(); });
+    // right rail: Suitors → suitors screen, Map → close any overlay & return to map
+    const mrS=document.getElementById('mrSuitors'); if(mrS) mrS.addEventListener('click', ()=>{ if(typeof window.prideOpenSuitors==='function') window.prideOpenSuitors(); });
+    const mrM=document.getElementById('mrMap'); if(mrM) mrM.addEventListener('click', ()=>{
+      ['suitorsScreen','suitorDetail'].forEach(id=>{ const e=document.getElementById(id); if(e) e.classList.remove('on'); });
+    });
+    const mrAv=document.getElementById('mrAv'); if(mrAv){ mrAv.addEventListener('click', ()=>{ if(typeof window.pcSelectSwitch==='function') window.pcSelectSwitch(); });
+      const c=window.__pridePC; if(c&&c.portrait) mrAv.style.backgroundImage="url('worlds/pride-and-prejudice/pc-select/fig_"+c.portrait+".webp')"; }
     const store=document.getElementById('pmcStore'); if(store) store.addEventListener('click', ()=>{ if(typeof openStore==='function') openStore('worlds'); });
     const shorts=document.getElementById('pmcShorts'); if(shorts) shorts.addEventListener('click', ()=>{ if(document.body.classList.contains('pride-ep1')){ prideLockTip('Play the first episode to unlock Short Stories'); } else { openShorts(); } });
     const spb=document.getElementById('spClose'); if(spb) spb.addEventListener('click', closeShorts);
@@ -29180,8 +29291,8 @@ body.poi-open #pridePcHud{ opacity:0 !important; pointer-events:none !important 
   #prideOnb .onb-card{ position:relative; z-index:2; width:min(84%,326px); background:#171019; border:1px solid rgba(255,255,255,.12); border-radius:22px; overflow:hidden; box-shadow:0 26px 64px rgba(0,0,0,.62); opacity:0; transform:translateY(10px) scale(.98); transition:opacity .34s ease, transform .34s cubic-bezier(.22,1,.36,1); }
   #prideOnb.on .onb-card{ opacity:1; transform:none; }
   /* while onboarding is up, clear the map chrome; fade back in when it ends */
-  #pridePcHud, #pmcClose, #pmcObjectives, #pmcShorts, #pmcStore{ transition:opacity .45s ease; }
-  body.pride-onb #pridePcHud, body.pride-onb #pmcClose, body.pride-onb #pmcObjectives, body.pride-onb #pmcShorts, body.pride-onb #pmcStore{ opacity:0 !important; pointer-events:none !important; }
+  #pridePcHud, #pmcClose, #pmcObjectives, #pmcShorts, #pmcStore, #prideMapRail{ transition:opacity .45s ease; }
+  body.pride-onb #pridePcHud, body.pride-onb #pmcClose, body.pride-onb #pmcObjectives, body.pride-onb #pmcShorts, body.pride-onb #pmcStore, body.pride-onb #prideMapRail{ opacity:0 !important; pointer-events:none !important; }
   /* also thin out the map pins behind the panel, then fade them back */
   body.pride-ep2 #mapScreen .map-hotspot, body.pride-ep3 #mapScreen .map-hotspot{ transition:opacity .45s ease; }
   body.pride-onb #mapScreen .map-hotspot, body.pride-onb #mapScreen .map-avatar{ opacity:0 !important; pointer-events:none; }
@@ -29674,6 +29785,1020 @@ body.poi-open #pridePcHud{ opacity:0 !important; pointer-events:none !important 
 })();
 </script>
 <!-- ===== /PRIDE LOCATION PANEL + CHARACTER CHAT ===== -->
+
+<!-- ===== PRIDE META METERS (Scandal / Allure) + world state ===== -->
+<style id="pride-meta-css">
+  #prideMeters{ position:fixed; top:calc(env(safe-area-inset-top,0px) + 12px); left:14px; z-index:8050; display:none; gap:8px; }
+  body.flow-map.pride-hud-on #prideMeters{ display:flex; }   /* whenever the pride map is up */
+  body.pride-onb #prideMeters, body.pc-firststate #prideMeters{ opacity:0 !important; pointer-events:none; }
+  #prideMeters .pm-meter{ display:flex; align-items:center; gap:6px; padding:5px 10px 5px 8px; border-radius:20px;
+    background:rgba(12,8,18,.62); border:1px solid rgba(255,255,255,.18); -webkit-backdrop-filter:blur(8px); backdrop-filter:blur(8px); box-shadow:0 3px 10px rgba(0,0,0,.4); }
+  #prideMeters .pm-ico{ font-size:12px; line-height:1; }
+  #prideMeters .pm-label{ font:800 8.5px/1 "Inter",system-ui,sans-serif; letter-spacing:.1em; text-transform:uppercase; color:rgba(255,255,255,.85); }
+  #prideMeters .pm-bar{ width:38px; height:5px; border-radius:3px; background:rgba(255,255,255,.16); overflow:hidden; }
+  #prideMeters .pm-fill{ display:block; height:100%; border-radius:3px; transition:width .35s ease; }
+  #prideMeters .pm-scandal .pm-fill{ background:linear-gradient(90deg,#e0668a,#c0392b); }
+  #prideMeters .pm-allure  .pm-fill{ background:linear-gradient(90deg,#8b7bd8,#e7b24c); }
+  #prideMeters .pm-btn{ cursor:pointer; font-family:inherit; }
+  #prideMeters .pm-btn .pm-ico{ color:#f4a6c0; }
+  #prideMeters .pm-btn:active{ transform:scale(.96); }
+</style>
+<div id="prideMeters">
+  <div class="pm-meter pm-scandal"><span class="pm-ico">🔥</span><span class="pm-label">Scandal</span><span class="pm-bar"><span class="pm-fill" id="pmScandal"></span></span></div>
+  <div class="pm-meter pm-allure"><span class="pm-ico">✦</span><span class="pm-label">Allure</span><span class="pm-bar"><span class="pm-fill" id="pmAllure"></span></span></div>
+</div>
+<script>
+(function setupPrideMeta(){
+  const LS='cowork.room.prideMeta.v1';
+  const DEF={ scandal:10, allure:45, suitors:{} };
+  function load(){ try{ const s=JSON.parse(localStorage.getItem(LS)||'null'); return s?Object.assign({},DEF,s):Object.assign({},DEF); }catch(_){ return Object.assign({},DEF); } }
+  const meta = load();
+  window.prideMeta = meta;
+  const clamp = v => Math.max(0, Math.min(100, v));
+  function save(){ try{ localStorage.setItem(LS, JSON.stringify(meta)); }catch(_){ } }
+  function render(){ const s=document.getElementById('pmScandal'), a=document.getElementById('pmAllure');
+    if(s) s.style.width = clamp(meta.scandal||0)+'%';
+    if(a) a.style.width = clamp(meta.allure||0)+'%'; }
+  window.prideMetersRender = render;
+  window.prideMetaSet = function(key, val){ if(key==='scandal'||key==='allure'){ meta[key]=clamp(val); save(); render(); } };
+  window.prideMetaAdd = function(key, delta){ if(key==='scandal'||key==='allure'){ window.prideMetaSet(key,(meta[key]||0)+(+delta||0)); } };
+  // suitor helpers (data model — screens read these)
+  window.prideDiscover = function(id){ if(!meta.suitors[id]) meta.suitors[id]={}; meta.suitors[id].discovered=true; save(); };
+  window.prideRelate = function(id, delta){ if(!meta.suitors[id]) meta.suitors[id]={}; const s=meta.suitors[id]; s.rel=Math.max(0,Math.min(100,(s.rel||0)+(+delta||0))); save(); };
+  document.addEventListener('DOMContentLoaded', render); render();
+})();
+</script>
+<!-- ===== /PRIDE META METERS ===== -->
+
+<!-- ===== PRIDE SUITORS (card list) + SUITOR DETAIL ===== -->
+<style id="suitors-css">
+  #suitorsScreen, #suitorDetail{ position:fixed; inset:0; z-index:9720; display:none; overflow-y:auto; }
+  #suitorDetail{ background:linear-gradient(180deg,#150f1e 0%,#0c0812 100%); }
+  /* suitors list opens OVER the map — translucent panel + blurred map behind */
+  #suitorsScreen{ background:rgba(11,8,18,.62); -webkit-backdrop-filter:blur(20px) saturate(120%); backdrop-filter:blur(20px) saturate(120%); }
+  #suitorsScreen.on, #suitorDetail.on{ display:block; }
+  #suitorsScreen::-webkit-scrollbar, #suitorDetail::-webkit-scrollbar{ display:none; }
+  .su-top{ position:sticky; top:0; z-index:2; display:flex; align-items:center; gap:10px; padding:calc(env(safe-area-inset-top,0px) + 16px) 16px 14px; background:linear-gradient(180deg,rgba(11,8,18,.85),rgba(11,8,18,0)); }
+  .su-top .su-titles{ display:flex; flex-direction:column; gap:3px; }
+  .su-top .su-close{ margin-left:auto; width:36px;height:36px;border-radius:50%;border:1px solid rgba(255,255,255,.28);background:rgba(20,12,26,.6);color:#fff;font-size:15px;cursor:pointer; }
+  .su-top .su-h{ font-family:"Playfair Display",Georgia,serif; font-weight:700; font-size:24px; color:#fff; line-height:1; }
+  .su-top .su-sub{ font:700 10px/1 Inter,system-ui,sans-serif; letter-spacing:.12em; text-transform:uppercase; color:rgba(244,166,192,.85); }
+  /* ---- card grid ---- */
+  .su-grid{ display:grid; grid-template-columns:1fr 1fr; gap:12px; padding:4px 16px calc(env(safe-area-inset-bottom,0px) + 24px); }
+  .su-card{ position:relative; border-radius:18px; overflow:hidden; aspect-ratio:2/3; background:#241a38; border:1px solid rgba(255,255,255,.12); cursor:pointer; box-shadow:0 8px 22px rgba(0,0,0,.45); }
+  .su-card:active{ transform:scale(.985); }
+  /* location image behind the character */
+  .su-loc{ position:absolute; inset:0; background-size:cover; background-position:center; filter:brightness(.72) saturate(1.05); }
+  /* character figure — larger, waist-up, faces inward, anchored to the left */
+  .su-fig{ position:absolute; inset:0; background-size:auto 190%; background-position:16% top; background-repeat:no-repeat; transform:scaleX(-1); }
+  .su-card::after{ content:''; position:absolute; inset:0; background:linear-gradient(180deg,rgba(12,8,18,.05) 0%,rgba(12,8,18,0) 34%,rgba(12,8,18,.72) 74%,rgba(12,8,18,.96) 100%); }
+  /* two round progress rings — top-right, stacked */
+  .su-rings{ position:absolute; top:9px; right:9px; z-index:3; display:flex; flex-direction:column; gap:7px; }
+  .su-ring{ width:42px; height:42px; border-radius:50%; position:relative; display:grid; place-items:center;
+    background:conic-gradient(var(--c) calc(var(--p,0)*1%), rgba(255,255,255,.18) 0); box-shadow:0 3px 9px rgba(0,0,0,.5); }
+  .su-ring::before{ content:''; position:absolute; inset:3px; border-radius:50%; background:rgba(12,8,18,.9); }
+  .su-ring .rl{ position:relative; z-index:1; display:flex; flex-direction:column; align-items:center; line-height:1; color:#fff; }
+  .su-ring .rl .rt{ font:800 11px/1 Inter,system-ui,sans-serif; }
+  .su-ring .rl .rc{ font:800 8.5px/1 Inter,system-ui,sans-serif; margin-top:1.5px; }
+  .su-ring .rl .rk{ font:800 6.5px/1 Inter,system-ui,sans-serif; letter-spacing:.06em; opacity:.7; margin-bottom:1.5px; }
+  .su-ring.bond{ --c:#e7b24c; }
+  .su-ring.disc{ --c:#8fe3f5; }
+  .su-ring.disc .rl .rc{ color:#8fe3f5; }
+  /* status badge (top-right) */
+  .su-badge{ position:absolute; top:11px; right:9px; z-index:3; font:800 8px/1 Inter,system-ui,sans-serif; letter-spacing:.08em; text-transform:uppercase; padding:5px 8px; border-radius:20px; color:#fff; background:rgba(12,8,18,.7); border:1px solid rgba(255,255,255,.25); }
+  /* card footer text */
+  .su-body{ position:absolute; left:0; right:0; bottom:0; z-index:3; padding:0 12px 12px; }
+  .su-name{ font-family:"Playfair Display",Georgia,serif; font-weight:700; font-size:16px; color:#fff; line-height:1.08; text-shadow:0 2px 10px rgba(0,0,0,.8); }
+  .su-tags{ display:flex; flex-wrap:wrap; gap:5px; margin-top:7px; }
+  .su-tag{ display:inline-flex; align-items:center; gap:3px; font:700 8.5px/1 Inter,system-ui,sans-serif; letter-spacing:.03em; padding:4px 8px; border-radius:20px; color:#fff; background:rgba(12,8,18,.6); border:1px solid rgba(255,255,255,.22); }
+  .su-tag.st-available{ color:#9fe3b0; border-color:rgba(123,216,143,.5); }
+  .su-tag.st-courting{ color:#f4a6c0; border-color:rgba(244,166,192,.5); }
+  .su-tag.st-cooled{ color:#e7b24c; border-color:rgba(231,178,76,.5); }
+  .su-tag.st-crossed{ color:#e06a6a; border-color:rgba(224,106,106,.5); }
+  .su-tag .pin{ flex:none; }
+  /* locked: lightly grayed location + clear dark silhouette (with a soft rim) */
+  .su-card.locked .su-loc{ filter:grayscale(1) brightness(.6) contrast(.9); }
+  .su-card.locked .su-fig{ filter:brightness(0) opacity(.96) drop-shadow(0 0 3px rgba(255,255,255,.35)); }
+  .su-card.locked .su-name{ color:rgba(255,255,255,.55); letter-spacing:.08em; }
+  .su-lock{ position:absolute; top:9px; right:9px; z-index:3; width:42px; height:42px; border-radius:50%;
+    display:grid; place-items:center; background:rgba(12,8,18,.72); border:1px solid rgba(255,255,255,.28);
+    box-shadow:0 3px 9px rgba(0,0,0,.5); }
+  .su-card.crossed{ opacity:.6; }
+  .su-card.crossed .su-name{ text-decoration:line-through; }
+  /* ---- detail (redesigned) ---- */
+  #suitorDetail .sd-hero{ position:relative; height:430px; overflow:hidden; background-color:#241a38; }
+  #suitorDetail .sd-loc{ position:absolute; inset:0; background-size:cover; background-position:center; filter:brightness(.7) saturate(1.05); }
+  #suitorDetail .sd-fig{ position:absolute; inset:0; background-size:auto 150%; background-position:center top; background-repeat:no-repeat; }
+  #suitorDetail .sd-hero::after{ content:''; position:absolute; inset:0; background:linear-gradient(180deg,rgba(12,8,18,.12) 0%,rgba(12,8,18,0) 38%,rgba(12,8,18,.55) 76%,#0c0812 100%); }
+  #suitorDetail .sd-back{ position:absolute; top:calc(env(safe-area-inset-top,0px) + 12px); left:12px; z-index:4; width:38px;height:38px;border-radius:50%;border:1px solid rgba(255,255,255,.3);background:rgba(20,12,26,.6);color:#fff;font-size:16px;cursor:pointer; }
+  #suitorDetail .sd-badge{ position:absolute; top:calc(env(safe-area-inset-top,0px) + 14px); right:12px; z-index:4; }
+  #suitorDetail .sd-loctag{ position:absolute; top:calc(env(safe-area-inset-top,0px) + 46px); right:12px; z-index:4; display:none; align-items:center; gap:4px;
+    font:700 9px/1 Inter,system-ui,sans-serif; letter-spacing:.04em; padding:5px 9px; border-radius:20px; color:#fff; background:rgba(12,8,18,.62); border:1px solid rgba(255,255,255,.25); }
+  #suitorDetail .sd-loctag.on{ display:inline-flex; }
+  #suitorDetail .sd-body{ position:relative; margin-top:-52px; z-index:2; padding:0 18px calc(env(safe-area-inset-bottom,0px) + 30px); }
+  #suitorDetail .sd-name{ font-family:"Playfair Display",Georgia,serif; font-weight:700; font-size:27px; line-height:1.05; color:#fff; text-shadow:0 2px 12px rgba(0,0,0,.7); }
+  /* info rows: Family + Rank side by side, Wealth full-width below */
+  .sd-info{ display:flex; flex-wrap:wrap; gap:8px 16px; margin-top:11px; }
+  .sd-info .sd-i{ display:flex; align-items:flex-start; gap:7px; min-width:0; }
+  .sd-info .sd-i.pair{ flex:1 1 40%; }
+  .sd-info .sd-i.full{ flex:1 1 100%; }
+  .sd-info .sd-i svg{ flex:none; margin-top:2px; color:#a78bd8; opacity:.9; }
+  .sd-info .sd-i .k{ display:block; font:800 8px/1 Inter,system-ui,sans-serif; letter-spacing:.12em; text-transform:uppercase; color:rgba(255,255,255,.42); margin-bottom:3px; }
+  .sd-info .sd-i .v{ display:block; font:600 12px/1.34 Inter,system-ui,sans-serif; color:#d9cbf0; }
+  /* traits */
+  #suitorDetail .sd-traits{ display:flex; gap:7px; margin-top:13px; }
+  #suitorDetail .sd-traits .su-trait{ font:800 10.5px/1 Inter,system-ui,sans-serif; letter-spacing:.03em; padding:6px 13px; border-radius:20px; color:#e3d8f7; background:rgba(139,123,216,.26); border:1px solid rgba(139,123,216,.55); }
+  /* bio + more */
+  #suitorDetail .sd-bio{ margin-top:14px; color:rgba(255,255,255,.82); font:400 13.5px/1.56 Inter,system-ui,sans-serif; }
+  #suitorDetail .sd-bio.clamp3{ display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical; overflow:hidden; }
+  #suitorDetail .sd-bio.clamp10{ display:-webkit-box; -webkit-line-clamp:10; -webkit-box-orient:vertical; overflow:hidden; }
+  #suitorDetail .sd-more{ display:inline-block; margin-top:6px; color:#f4a6c0; font:700 12px/1 Inter,system-ui,sans-serif; cursor:pointer; -webkit-tap-highlight-color:transparent; }
+  #suitorDetail .sd-more:active{ opacity:.7; }
+  /* 3 meter boxes side by side — icon + name + delta + label (no bar) */
+  .sd-meters3{ display:flex; gap:9px; margin-top:18px; }
+  .sd-m3{ flex:1; min-width:0; border-radius:13px; padding:12px 11px; background:rgba(255,255,255,.05); border:1px solid rgba(255,255,255,.1); }
+  .sd-m3 .m3-top{ display:flex; align-items:center; gap:6px; }
+  .sd-m3 .m3-ico{ flex:none; display:inline-flex; }
+  .sd-m3 .m3-name{ flex:1; min-width:0; font:800 8.5px/1 Inter,system-ui,sans-serif; letter-spacing:.06em; text-transform:uppercase; color:rgba(255,255,255,.58); }
+  .sd-m3 .m3-delta{ font:800 11px/1 Inter,system-ui,sans-serif; white-space:nowrap; }
+  .sd-m3 .m3-delta.up{ color:#6fe3c8; } .sd-m3 .m3-delta.down{ color:#ff7ea1; } .sd-m3 .m3-delta.flat{ color:rgba(255,255,255,.4); }
+  .sd-m3 .m3-label{ font:700 15px/1.05 "Playfair Display",Georgia,serif; color:#fff; margin-top:11px; }
+  .sd-m3.desire .m3-ico{ color:#ff6b8f; } .sd-m3.trust .m3-ico{ color:#4bc0d9; } .sd-m3.affection .m3-ico{ color:#b892e6; }
+  /* section header */
+  #suitorDetail .sd-h4{ margin:20px 0 10px; font:800 10px/1 Inter,system-ui,sans-serif; letter-spacing:.14em; text-transform:uppercase; color:rgba(255,255,255,.45); }
+  /* horizontal swipe rail: first box aligned to content (no left bleed); peek of 3rd on the right */
+  .sd-rail{ display:flex; gap:10px; overflow-x:auto; scroll-snap-type:x mandatory; -webkit-overflow-scrolling:touch; margin:0; padding:2px 0 6px; }
+  .sd-rail::-webkit-scrollbar{ display:none; }
+  .sd-box{ flex:0 0 43%; scroll-snap-align:start; border-radius:14px; overflow:hidden; position:relative;
+    background:rgba(255,255,255,.05); border:1px solid rgba(255,255,255,.1); min-height:150px; display:flex; flex-direction:column; }
+  /* bonding / discovery lead boxes — round (radial) progress */
+  .sd-box.lead-bond, .sd-box.lead-disc{ align-items:center; justify-content:center; gap:9px; padding:13px 10px; }
+  .sd-box.lead-bond{ background:linear-gradient(150deg,rgba(231,178,76,.2),rgba(255,255,255,.04)); border-color:rgba(231,178,76,.3); }
+  .sd-box.lead-disc{ background:linear-gradient(150deg,rgba(143,227,245,.18),rgba(255,255,255,.04)); border-color:rgba(143,227,245,.3); }
+  .lb-k{ font:800 8.5px/1 Inter,system-ui,sans-serif; letter-spacing:.12em; text-transform:uppercase; }
+  .lead-bond .lb-k{ color:rgba(231,178,76,.95); } .lead-disc .lb-k{ color:rgba(143,227,245,.95); }
+  .ringp{ width:88px; height:88px; border-radius:50%; position:relative; display:grid; place-items:center;
+    background:conic-gradient(var(--c) calc(var(--p,0)*1%), rgba(255,255,255,.14) 0); }
+  .ringp::before{ content:''; position:absolute; inset:8px; border-radius:50%; background:#141019; }
+  .ringp .rc{ position:relative; z-index:1; text-align:center; color:#fff; line-height:1; }
+  .ringp .rc b{ font:800 19px/1 "Playfair Display",Georgia,serif; }
+  .ringp .rc small{ font:700 11px/1 Inter,system-ui,sans-serif; color:rgba(255,255,255,.55); }
+  .ringp.bond{ --c:#e7b24c; } .ringp.disc{ --c:#8fe3f5; }
+  .lb-xp{ font:600 9.5px/1 Inter,system-ui,sans-serif; color:rgba(255,255,255,.6); }
+  /* quest box — full-bleed thumbnail with text overlaid */
+  .sd-qbox .q-th{ position:absolute; inset:0; background-size:cover; background-position:center; background-color:#1a1328; }
+  .sd-qbox .q-th::after{ content:''; position:absolute; inset:0; background:linear-gradient(180deg,rgba(12,8,18,.15) 0%,rgba(12,8,18,0) 38%,rgba(12,8,18,.88) 100%); }
+  .sd-qbox .q-ov{ position:relative; z-index:2; margin-top:auto; padding:11px 12px 12px; display:flex; flex-direction:column; gap:5px; }
+  .sd-qbox .q-t{ font:700 12.5px/1.24 Inter,system-ui,sans-serif; color:#fff; text-shadow:0 1px 6px rgba(0,0,0,.75); }
+  .sd-qbox .q-s{ font:800 8px/1 Inter,system-ui,sans-serif; letter-spacing:.08em; text-transform:uppercase; color:#f4a6c0; }
+  .sd-qbox.locked .q-th{ filter:grayscale(1) brightness(.42); }
+  .sd-qbox.locked .q-s{ color:rgba(255,255,255,.5); }
+  .sd-qbox .q-lock{ position:absolute; inset:0; display:grid; place-items:center; z-index:3; }
+  /* fact box (text) — centered serif */
+  .sd-fbox{ padding:14px 13px; align-items:center; justify-content:center; text-align:center; }
+  .sd-fbox .f-t{ font:500 14px/1.42 "Lora","Playfair Display",Georgia,serif; color:rgba(255,255,255,.9); }
+  .sd-fbox.locked{ gap:9px; }
+  .sd-fbox.locked .f-t{ color:rgba(255,255,255,.5); font-weight:600; }
+  /* ---- first-encounter suitor intro (fires on Discover) ---- */
+  #suitorIntro{ position:fixed; inset:0; z-index:9900; display:none; overflow:hidden; background:#0c0812; }
+  #suitorIntro.on{ display:block; }
+  #suitorIntro .si-loc{ position:absolute; inset:0; background-size:cover; background-position:center; filter:brightness(.5) saturate(1.05); transform:scale(1.08); transition:transform 6s ease-out; }
+  #suitorIntro.on .si-loc{ transform:scale(1); }
+  #suitorIntro .si-fig{ position:absolute; inset:0; background-size:auto 150%; background-position:center top; background-repeat:no-repeat;
+    opacity:0; transform:translateY(24px) scale(1.02); transition:opacity .7s ease .15s, transform .9s cubic-bezier(.22,1,.36,1) .15s; }
+  #suitorIntro.on .si-fig{ opacity:1; transform:none; }
+  #suitorIntro .si-veil{ position:absolute; inset:0; background:linear-gradient(180deg,rgba(12,8,18,.35) 0%,rgba(12,8,18,0) 30%,rgba(12,8,18,.55) 66%,#0c0812 100%); }
+  #suitorIntro .si-content{ position:absolute; left:0; right:0; bottom:0; z-index:2; padding:0 26px calc(env(safe-area-inset-bottom,0px) + 34px); text-align:center; }
+  #suitorIntro .si-kick{ display:inline-flex; align-items:center; gap:7px; font:800 10px/1 Inter,system-ui,sans-serif; letter-spacing:.24em; text-transform:uppercase; color:#f2c66a;
+    padding:7px 14px; border:1px solid rgba(242,198,106,.5); border-radius:20px; background:rgba(242,198,106,.1);
+    opacity:0; transform:translateY(12px); transition:opacity .5s ease .5s, transform .5s ease .5s; }
+  #suitorIntro.on .si-kick{ opacity:1; transform:none; }
+  #suitorIntro .si-name{ margin-top:14px; font-family:"Playfair Display",Georgia,serif; font-weight:700; font-size:34px; line-height:1.02; color:#fff; text-shadow:0 3px 18px rgba(0,0,0,.7);
+    opacity:0; transform:translateY(14px); transition:opacity .55s ease .62s, transform .55s ease .62s; }
+  #suitorIntro.on .si-name{ opacity:1; transform:none; }
+  #suitorIntro .si-meta{ margin-top:8px; color:#d9cbf0; font:600 13px/1.5 Inter,system-ui,sans-serif;
+    opacity:0; transition:opacity .55s ease .76s; }
+  #suitorIntro.on .si-meta{ opacity:1; }
+  #suitorIntro .si-traits{ display:flex; gap:8px; justify-content:center; margin-top:14px; opacity:0; transition:opacity .55s ease .88s; }
+  #suitorIntro.on .si-traits{ opacity:1; }
+  #suitorIntro .si-traits .su-trait{ font:800 10.5px/1 Inter,system-ui,sans-serif; letter-spacing:.03em; padding:6px 13px; border-radius:20px; color:#e3d8f7; background:rgba(139,123,216,.26); border:1px solid rgba(139,123,216,.55); }
+  #suitorIntro .si-go{ margin-top:26px; display:inline-block; padding:15px 34px; border:none; border-radius:16px; cursor:pointer;
+    background:linear-gradient(120deg,#e0668a,#8b7bd8); color:#fff; font:700 15px/1 Inter,system-ui,sans-serif; box-shadow:0 12px 30px rgba(139,123,216,.4);
+    opacity:0; transform:translateY(12px); transition:opacity .5s ease 1s, transform .5s ease 1s; -webkit-tap-highlight-color:transparent; }
+  #suitorIntro.on .si-go{ opacity:1; transform:none; }
+  #suitorIntro .si-go:active{ transform:scale(.97); }
+</style>
+<div id="suitorIntro">
+  <div class="si-loc" id="siLoc"></div>
+  <div class="si-fig" id="siFig"></div>
+  <div class="si-veil"></div>
+  <div class="si-content">
+    <span class="si-kick">✦ A New Suitor</span>
+    <div class="si-name" id="siName"></div>
+    <div class="si-meta" id="siMeta"></div>
+    <div class="si-traits" id="siTraits"></div>
+    <button class="si-go" id="siGo" type="button">Make his acquaintance</button>
+  </div>
+</div>
+<div id="suitorsScreen">
+  <div class="su-top"><div class="su-titles"><span class="su-h">Suitors</span><span class="su-sub" id="suCount"></span></div><button class="su-close" id="suClose" type="button">&#10005;</button></div>
+  <div class="su-grid" id="suGrid"></div>
+</div>
+<div id="suitorDetail">
+  <div class="sd-hero" id="sdHero"><div class="sd-loc" id="sdLoc"></div><div class="sd-fig" id="sdFig"></div><button class="sd-back" id="sdBack" type="button">&#8592;</button><span class="su-badge sd-badge" id="sdBadge"></span><span class="sd-loctag" id="sdLocTag"></span></div>
+  <div class="sd-body" id="sdBody"></div>
+</div>
+<script>
+(function setupSuitors(){
+  const B='worlds/pride-and-prejudice/characters/';
+  const LOC='worlds/pride-and-prejudice/locations/';
+  const FIG=id=>"url('"+B+id+"/appearances/pride.png')";
+  const BG=path=>"url('"+LOC+path+"')";
+  const WORLD_TOTAL=12; // planned suitors across the world
+  // ---- placeholder catalog (static) — real künye/portre gelince değişir ----
+  const DB={
+    mr_darcy:{ name:'Mr Fitzwilliam Darcy', traits:['Proud','Constant'], bg:'netherfield-ball/explore/ballroom.png', family:'Of Pemberley, Derbyshire — old blood, wide lands, ten thousand a year in whispers.', bio:'Reserved to the point of insult, yet they say still waters run deep. Watches more than he speaks.', total:23,
+      quests:[{t:'Withstand his first slight',lvl:1,type:'mission'},{t:'A turn about the room',lvl:2,type:'activity'},{t:'The letter he never sent',lvl:3,type:'story'}] },
+    mr_bingley:{ name:'Mr Charles Bingley', traits:['Amiable','Yielding'], bg:'netherfield-ball/backgrounds/thinning-ball.jpg', family:'Newly of Netherfield Park — new money, warmly spent, no ancient seat.', bio:'Sunny, open-handed, adored by all — and rather too easily led by cooler heads.', total:18,
+      quests:[{t:'Secure the first dance',lvl:1,type:'activity'},{t:'Dine at Netherfield',lvl:2,type:'activity'}] },
+    mr_wickham:{ name:'Mr George Wickham', traits:['Charming','Slippery'], bg:'netherfield-ball/backgrounds/officers-corner.jpg', family:'A militia officer, no land to his name — and debts that travel faster than he does.', bio:'All ease and flattery. A delightful telling of tales in which he is always the wronged party.', total:20,
+      quests:[{t:'Hear his side of it',lvl:1,type:'story'},{t:'A walk to Meryton',lvl:2,type:'activity'}] },
+    mr_collins:{ name:'Mr William Collins', traits:['Obsequious','Pompous'], bg:'netherfield-ball/backgrounds/alcove-shadow.jpg', family:'Of Hunsford Parsonage, under the wing of Lady Catherine de Bourgh.', bio:'Ceaseless in compliment and self-regard. Means to marry, practically and soon.', total:14, quests:[{t:'Endure the proposal',lvl:1,type:'mission'}] },
+    lord_ravenscar:{ name:'Lord Sebastian Ravenscar', traits:['Magnetic','Reckless'], bg:'netherfield-ball/backgrounds/alcove-shadow.jpg', family:'A viscount of a vast northern estate — old title, darker fortune; wealth that whispers of gaming tables and duels.', bio:'All danger and beautiful manners. To be seen on his arm is a triumph — and a scandal waiting to happen.', total:22,
+      quests:[{t:'Survive his attention',lvl:1,type:'mission'},{t:'A midnight ride',lvl:2,type:'activity'},{t:'What he hides at Ravenscar',lvl:3,type:'story'}] },
+    sir_ashbourne:{ name:'Sir Henry Ashbourne', traits:['Steady','Kind'], bg:'ashbourne-court/cover.png', family:'A baronet of a well-kept country seat — comfortable, unencumbered, respectable to the bone.', bio:'A widower in his prime; sensible, generous, a little grave. The match every sensible mother prays for.', total:16,
+      quests:[{t:'Earn his quiet regard',lvl:1,type:'mission'},{t:'Tea at Ashbourne',lvl:2,type:'activity'}] },
+    capt_vane:{ name:'Captain Frederick Vane', traits:['Bold','Proud'], bg:'netherfield-ball/explore/terrace.png', family:'A naval captain returned from the wars rich on prize-money — no old name, but a fortune won by his own hand.', bio:'Sun-weathered, quick to laugh, quicker to act. New money and no shame in it — which the drawing rooms have not forgiven.', total:19,
+      quests:[{t:'Match his boldness',lvl:1,type:'mission'},{t:'A turn on the water',lvl:2,type:'activity'}] },
+    mr_devereux:{ name:'Monsieur Rafael Devereux', traits:['Charming','Enigmatic'], bg:'netherfield-ball/explore/ballroom.png', family:'A French aristocrat in exile — a comte without his lands, living on a rescued fortune and impeccable charm.', bio:'Cosmopolitan, cultured, dangerously fluent in flattery. No one is quite sure how much of him is true.', total:21,
+      quests:[{t:'See past the charm',lvl:1,type:'story'},{t:'A private recital',lvl:2,type:'activity'}] },
+    mr_hale:{ name:'Mr Augustus Hale', traits:['Ambitious','Blunt'], bg:'netherfield-ball/backgrounds/thinning-ball.jpg', family:'Heir to a great manufacturing fortune from the north — no coat of arms, but more ready money than half the peerage.', bio:'Modern, restless, unimpressed by titles. Buys what old families merely inherit — and knows it grates on them.', total:17,
+      quests:[{t:'Meet him as an equal',lvl:1,type:'mission'},{t:'Tour the new works',lvl:2,type:'activity'}] },
+    mr_fenwick:{ name:'Mr Thomas Fenwick', traits:['Devoted','Earnest'], bg:'netherfield-ball/explore/supper.png', family:"A country curate's son — no land, no fortune, only a modest living and an old, old promise.", bio:'The boy from next door, grown gentle and true. He has nothing to offer but a whole heart — and the memory of who you were.', total:15,
+      quests:[{t:'Remember what was',lvl:1,type:'story'},{t:'A walk by the old brook',lvl:2,type:'activity'},{t:'The promise you made at twelve',lvl:3,type:'story'}] },
+    ens_pryce:{ name:'Ensign Edward Pryce', traits:['Brave','Naïve'], bg:'netherfield-ball/backgrounds/officers-corner.jpg', family:"A junior militia ensign of good manners but no money — his commission bought on hope and a widowed mother's savings.", bio:'Young, ardent, full of honour and empty of pounds. He would fight a duel for your glove and starve for your smile.', total:13,
+      quests:[{t:'Accept his devotion',lvl:1,type:'mission'},{t:'A dance he cannot afford',lvl:2,type:'activity'}] },
+    mr_quill:{ name:'Mr Jasper Quill', traits:['Passionate','Impractical'], bg:'netherfield-ball/backgrounds/alcove-shadow.jpg', family:'A gentleman by birth, a pauper by choice — traded an inheritance for ink, verse, and a garret.', bio:'Beautiful, brilliant, and utterly broke. He will write you into immortality and forget to pay the rent.', total:18,
+      quests:[{t:'Be his muse',lvl:1,type:'story'},{t:'A verse written for you',lvl:2,type:'story'}] }
+  };
+  // ---- extra detail info: house / rank / wealth-narrative / discovery facts ----
+  const INFO={
+    mr_darcy:{ house:'Of Pemberley, Derbyshire', rank:'Landed gentleman', wealth:'Ten thousand a year, in whispers',
+      facts:['Dances rarely, and never to be agreeable.','His sister Georgiana is barely sixteen.','Keeps his warmth for a chosen few.','Reads more than he speaks.','A steward-family pride in Pemberley.','Once did Wickham a wrong — or so it is said.'] },
+    mr_bingley:{ house:'Netherfield Park (leased)', rank:'Gentleman, new money', wealth:'Five thousand a year, warmly spent',
+      facts:['Falls in love at every ball.','Lets Darcy think for him.','No ancient seat to his name.','Adored by the whole neighbourhood.','His sisters guard him closely.','Would marry tomorrow if let.'] },
+    mr_wickham:{ house:'No seat — the militia', rank:'Lieutenant of militia', wealth:'Debts that travel faster than he does',
+      facts:['A charming teller of tales.','Says Darcy cheated him.','Popular with every young lady.'] },
+    mr_collins:{ house:'Hunsford Parsonage', rank:'Clergyman', wealth:'A snug living, under Lady Catherine',
+      facts:['Quotes his patroness hourly.','Means to marry, and soon.','Heir to Longbourn by entail.'] },
+    lord_ravenscar:{ house:'Ravenscar, in the north', rank:'Viscount', wealth:'Vast — and half-mortgaged to his vices',
+      facts:['Wins and loses fortunes at cards.','Has fought at least one duel.','No one refuses his invitations.','Something at Ravenscar he never speaks of.'] },
+    sir_ashbourne:{ house:'Ashbourne Court', rank:'Baronet', wealth:'Solid, unencumbered — land that pays',
+      facts:['A widower these three years.','Kind to his tenants.','Reads sermons for pleasure.'] },
+    capt_vane:{ house:'No estate — a ship', rank:'Naval Captain', wealth:'Newly, dazzlingly rich on prize-money',
+      facts:['Made his fortune at sea.','Says exactly what he thinks.','The drawing rooms find him vulgar.','Sun-weathered and quick to laugh.'] },
+    mr_devereux:{ house:'Exiled from France', rank:'Comte (in exile)', wealth:'A rescued fortune, smaller than it dazzles',
+      facts:['Plays the harpsichord beautifully.','His title may outshine his purse.','Fluent in three languages of flattery.'] },
+    mr_hale:{ house:'The northern mills', rank:'Gentleman of trade', wealth:'More ready money than half the peerage',
+      facts:['Owns three manufactories.','Unimpressed by old titles.','Buys what others inherit.'] },
+    mr_fenwick:{ house:"The curate's cottage", rank:"Curate's son", wealth:'A modest living, a garden — and a whole heart',
+      facts:['You knew him as a child.','Would give his last shilling away.','Blushes when you catch his eye.','Kept something you gave him long ago.'] },
+    ens_pryce:{ house:'No seat — the militia', rank:'Ensign', wealth:"An ensign's pay, and no prospects yet",
+      facts:['His commission was his mother’s savings.','Would duel for your glove.','Green, gallant, and poor.'] },
+    mr_quill:{ house:'A rented garret', rank:'Gentleman by birth', wealth:'Penniless — he traded it for verse',
+      facts:['Traded an inheritance for ink.','Beautiful, brilliant, and broke.','Forgets to pay the rent.'] },
+  };
+  const info=id=>INFO[id]||{house:'',rank:'',wealth:'',facts:[]};
+  const IC={ house:'<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-7 9 7"/><path d="M5 10v10h14V10"/><path d="M10 20v-6h4v6"/></svg>',
+    rank:'<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7l4 3 4-5 4 5 4-3-1.5 11H5.5L4 7z"/></svg>',
+    wealth:'<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8"/><path d="M12 8v8M9.5 10h3.5a1.5 1.5 0 0 1 0 3H10a1.5 1.5 0 0 0 0 3h3.5"/></svg>' };
+  // meter value -> descriptive label
+  const M_LABELS={
+    desire:[[60,'Ardor'],[38,'Interest'],[18,'Curiosity'],[0,'Indifference']],
+    trust:[[60,'Devotion'],[38,'Confidence'],[18,'Regard'],[0,'Doubt']],
+    affection:[[60,'Love'],[38,'Fondness'],[18,'Warmth'],[8,'Coolness'],[0,'Dislike']] };
+  const mLabel=(k,v)=>{ for(const [t,l] of M_LABELS[k]) if((v||0)>=t) return l; return M_LABELS[k].slice(-1)[0][1]; };
+  const delta=d=>{ d=d||0; const cls=d>0?'up':d<0?'down':'flat'; const s=d>0?('+'+d):(''+d); return '<span class="m3-delta '+cls+'">'+(d===0?'—':s)+'</span>'; };
+  // quest thumbnails by type
+  const QBG={ activity:['netherfield-ball/explore/terrace.png','netherfield-ball/explore/supper.png','netherfield-ball/explore/ballroom.png'],
+    story:['netherfield-ball/backgrounds/alcove-shadow.jpg','netherfield-ball/backgrounds/thinning-ball.jpg','netherfield-ball/explore/terrace.png'],
+    mission:['netherfield-ball/backgrounds/officers-corner.jpg','netherfield-ball/explore/ballroom.png'] };
+  const qImg=(type,i)=>{ const a=QBG[type]||QBG.activity; return "url('"+LOC+a[i%a.length]+"')"; };
+  const clamp=v=>Math.max(0,Math.min(100,v||0));
+  const levelOf=xp=> xp>=500?4:xp>=250?3:xp>=100?2:1;
+  const nextThresh=lvl=> [100,250,500,999][lvl-1]||999;
+  const prevThresh=lvl=> [0,100,250,500][lvl-1]||0;
+  // seed runtime state on first open
+  function state(id){ const m=window.prideMeta; m.suitors=m.suitors||{}; if(!m.suitors[id]) m.suitors[id]={}; return m.suitors[id]; }
+  function seed(){
+    const seeds={
+      // ---- 5 unlocked ----
+      mr_darcy:{discovered:true,status:'available',xp:120,desire:35,trust:20,affection:28,dDesire:2,dTrust:1,dAffection:-2,known:6,loc:'Netherfield'},
+      mr_bingley:{discovered:true,status:'courting',xp:60,desire:40,trust:55,affection:50,dDesire:1,dTrust:2,dAffection:3,known:9,loc:'Netherfield'},
+      lord_ravenscar:{discovered:true,status:'available',xp:45,desire:60,trust:12,affection:22,dDesire:4,dTrust:-1,dAffection:1,known:3,loc:'The Assembly'},
+      capt_vane:{discovered:true,status:'available',xp:30,desire:38,trust:30,affection:26,dDesire:2,dTrust:2,dAffection:0,known:4,loc:'Meryton'},
+      mr_fenwick:{discovered:true,status:'available',xp:90,desire:20,trust:50,affection:62,dDesire:0,dTrust:1,dAffection:2,known:8,loc:'Longbourn'},
+      // ---- 7 locked ----
+      mr_wickham:{discovered:false}, mr_collins:{discovered:false},
+      sir_ashbourne:{discovered:false}, mr_devereux:{discovered:false},
+      mr_hale:{discovered:false}, ens_pryce:{discovered:false}, mr_quill:{discovered:false} };
+    Object.keys(seeds).forEach(id=>{ const s=state(id); Object.keys(seeds[id]).forEach(k=>{ if(s[k]===undefined) s[k]=seeds[id][k]; }); });
+  }
+  const BADGE={available:'Available',courting:'Courting',cooled:'Cooled',crossed:'Struck off',betrothed:'Betrothed'};
+  const PIN='<svg class="pin" width="9" height="9" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a7 7 0 0 0-7 7c0 5.2 7 13 7 13s7-7.8 7-13a7 7 0 0 0-7-7zm0 9.6A2.6 2.6 0 1 1 12 6.4a2.6 2.6 0 0 1 0 5.2z"/></svg>';
+  const DISC_IC='<svg width="9" height="9" viewBox="0 0 24 24" fill="#8fe3f5"><path d="M12 2l2.7 6.6L22 9.2l-5.2 4.6L18.4 21 12 17.3 5.6 21l1.6-7.2L2 9.2l7.3-.6z"/></svg>';
+  function card(id){
+    const db=DB[id], s=state(id); const disc=!!s.discovered;
+    const el=document.createElement('div'); el.className='su-card'+(disc?'':' locked')+(s.status==='crossed'?' crossed':'');
+    if(!disc){
+      const loc=db.bg?('<div class="su-loc" style="background-image:'+BG(db.bg)+'"></div>'):'<div class="su-loc"></div>';
+      const lockIco='<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>';
+      el.innerHTML=loc+'<div class="su-fig" style="background-image:'+FIG(id)+'"></div>'
+        +'<div class="su-lock">'+lockIco+'</div>'
+        +'<div class="su-body"><div class="su-name">???</div></div>';
+      return el;
+    }
+    const lvl=levelOf(s.xp);
+    const xpInto=(s.xp||0)-prevThresh(lvl), xpSpan=nextThresh(lvl)-prevThresh(lvl); const xpPct=Math.round(Math.min(100,xpInto/xpSpan*100));
+    const dPct=Math.round(Math.min(100,(s.known||0)/(db.total||1)*100));
+    const loc=db.bg?('<div class="su-loc" style="background-image:'+BG(db.bg)+'"></div>'):'<div class="su-loc"></div>';
+    const rings='<div class="su-rings">'
+      +'<div class="su-ring bond" style="--p:'+xpPct+'"><span class="rl"><span class="rk">LV</span><span class="rt">'+lvl+'</span></span></div>'
+      +'<div class="su-ring disc" style="--p:'+dPct+'"><span class="rl"><span class="rk">'+DISC_IC+'</span><span class="rc">'+(s.known||0)+'/'+db.total+'</span></span></div>'
+      +'</div>';
+    const stTag=s.status?('<span class="su-tag st-'+s.status+'">'+(BADGE[s.status]||s.status)+'</span>'):'';
+    const locTag=s.loc?('<span class="su-tag">'+PIN+s.loc+'</span>'):'';
+    el.innerHTML=loc+'<div class="su-fig" style="background-image:'+FIG(id)+'"></div>'+rings
+      +'<div class="su-body"><div class="su-name">'+db.name+'</div>'
+      +'<div class="su-tags">'+stTag+locTag+'</div></div>';
+    el.addEventListener('click',()=>openDetail(id));
+    return el;
+  }
+  function openSuitors(){ seed(); const g=document.getElementById('suGrid'); g.innerHTML='';
+    const ids=Object.keys(DB); ids.forEach(id=>g.appendChild(card(id)));
+    const known=ids.filter(id=>state(id).discovered).length;
+    document.getElementById('suCount').textContent=known+'/'+WORLD_TOTAL+' Unlocked';
+    document.getElementById('suitorsScreen').classList.add('on'); }
+  function closeSuitors(){ document.getElementById('suitorsScreen').classList.remove('on'); }
+  const LOCK_SVG='<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>';
+  const M_ICO={
+    desire:'<svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M13 2c.5 3-1.4 4.6-2.8 6.3C9 10 8.2 11.4 8.2 13a3.8 3.8 0 0 0 7.6.3c.1-1.7-.8-3.1-1.7-4.3C13 7.5 12.5 5 13 2z"/></svg>',
+    trust:'<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l7 3v5c0 4-3 7-7 9-4-2-7-5-7-9V6l7-3z"/><path d="M9 12l2 2 4-4"/></svg>',
+    affection:'<svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M12 21s-7-4.5-9.5-9C1 8.4 3 4.8 6.5 4.8c2 0 3.3 1.2 5.5 3.4 2.2-2.2 3.5-3.4 5.5-3.4C21 4.8 23 8.4 21.5 12 19 16.5 12 21 12 21z"/></svg>' };
+  function meterBox(k,label,val,d){ return '<div class="sd-m3 '+k+'"><div class="m3-top"><span class="m3-ico">'+M_ICO[k]+'</span><span class="m3-name">'+label+'</span>'+delta(d)+'</div>'
+    +'<div class="m3-label">'+mLabel(k,val)+'</div></div>'; }
+  function openDetail(id){
+    const db=DB[id], s=state(id), nf=info(id); const lvl=levelOf(s.xp);
+    document.getElementById('sdLoc').style.backgroundImage=db.bg?BG(db.bg):'none';
+    document.getElementById('sdFig').style.backgroundImage=FIG(id);
+    const bd=document.getElementById('sdBadge'); bd.className='su-badge sd-badge '+(s.status||''); bd.textContent=BADGE[s.status]||'';
+    const lt=document.getElementById('sdLocTag'); if(lt){ if(s.loc){ lt.innerHTML=PIN+s.loc; lt.classList.add('on'); } else lt.classList.remove('on'); }
+    const xpInto=(s.xp||0)-prevThresh(lvl), xpSpan=nextThresh(lvl)-prevThresh(lvl); const xpPct=Math.round(Math.min(100,xpInto/xpSpan*100));
+
+    // info rows: family + rank (pair), wealth (full)
+    const infoHtml='<div class="sd-info">'
+      +'<div class="sd-i pair">'+IC.house+'<span><span class="k">Family</span><span class="v">'+(nf.house||'—')+'</span></span></div>'
+      +'<div class="sd-i pair">'+IC.rank+'<span><span class="k">Rank</span><span class="v">'+(nf.rank||'—')+'</span></span></div>'
+      +'<div class="sd-i full">'+IC.wealth+'<span><span class="k">Fortune</span><span class="v">'+(nf.wealth||'—')+'</span></span></div>'
+      +'</div>';
+
+    // quests rail: bonding lead (round progress) + full-thumbnail quest cards
+    const bondBox='<div class="sd-box lead-bond"><span class="lb-k">Bonding</span>'
+      +'<div class="ringp bond" style="--p:'+xpPct+'"><span class="rc"><b>Lv '+lvl+'</b></span></div>'
+      +'<span class="lb-xp">'+xpInto+' / '+xpSpan+' XP</span></div>';
+    const questBoxes=db.quests.map((q,i)=>{ const locked=lvl<q.lvl; const cat=(q.type==='activity')?'Activity':'Side Quest';
+      return '<div class="sd-box sd-qbox'+(locked?' locked':'')+'"><div class="q-th" style="background-image:'+qImg(q.type,i)+'"></div>'
+        +(locked?'<span class="q-lock">'+LOCK_SVG+'</span>':'')
+        +'<div class="q-ov"><span class="q-t">'+q.t+'</span><span class="q-s">'+(locked?('Locked · Lv '+q.lvl):cat)+'</span></div></div>'; }).join('');
+
+    // discovery rail: discovery lead (round progress) + known facts + lock
+    const known=Math.min(s.known||0, (nf.facts||[]).length);
+    const discPct=Math.round((s.known||0)/(db.total||1)*100);
+    const discBox='<div class="sd-box lead-disc"><span class="lb-k">Discovery</span>'
+      +'<div class="ringp disc" style="--p:'+discPct+'"><span class="rc"><b>'+(s.known||0)+'</b><small>/'+db.total+'</small></span></div></div>';
+    let factBoxes=(nf.facts||[]).slice(0,known).map(f=>'<div class="sd-box sd-fbox"><span class="f-t">'+f+'</span></div>').join('');
+    const remaining=(db.total||0)-(s.known||0);
+    if(remaining>0) factBoxes+='<div class="sd-box sd-fbox locked">'+LOCK_SVG+'<span class="f-t">'+remaining+' more to discover</span></div>';
+
+    document.getElementById('sdBody').innerHTML=
+      '<div class="sd-name">'+db.name+'</div>'+
+      '<div class="sd-traits">'+db.traits.map(t=>'<span class="su-trait">'+t+'</span>').join('')+'</div>'+
+      '<div class="sd-bio clamp3" id="sdBio">'+db.bio+'</div>'+
+      '<span class="sd-more" id="sdMore" style="display:none">Read more</span>'+
+      infoHtml+
+      '<div class="sd-meters3">'+meterBox('desire','Desire',s.desire,s.dDesire)+meterBox('trust','Trust',s.trust,s.dTrust)+meterBox('affection','Affection',s.affection,s.dAffection)+'</div>'+
+      '<div class="sd-h4">With him you can…</div><div class="sd-rail">'+bondBox+questBoxes+'</div>'+
+      '<div class="sd-h4">What you know of him</div><div class="sd-rail">'+discBox+factBoxes+'</div>';
+
+    // bio 3-line <-> 10-line toggle (only show "more" if the text actually overflows)
+    const bio=document.getElementById('sdBio'), more=document.getElementById('sdMore');
+    if(more) more.addEventListener('click',()=>{ const c=bio.classList.contains('clamp3');
+      bio.classList.toggle('clamp3',!c); bio.classList.toggle('clamp10',c); more.textContent=c?'Show less':'Read more'; });
+    document.getElementById('suitorDetail').classList.add('on');
+    document.getElementById('suitorDetail').scrollTop=0;
+    if(bio&&more){ requestAnimationFrame(()=>{ if(bio.scrollHeight-bio.clientHeight>4) more.style.display='inline-block'; }); }
+  }
+  function closeDetail(){ document.getElementById('suitorDetail').classList.remove('on'); }
+
+  // ---- first-encounter intro (fired by (Discover: id) in a script) ----
+  let _introDone=null;
+  window.prideSuitorIntro=function(id, done){
+    seed(); if(typeof window.prideDiscover==='function') window.prideDiscover(id);
+    const db=DB[id]||{name:'???',traits:[]}, nf=info(id);
+    document.getElementById('siLoc').style.backgroundImage=db.bg?BG(db.bg):'none';
+    document.getElementById('siFig').style.backgroundImage=FIG(id);
+    document.getElementById('siName').textContent=db.name||'';
+    const meta=[nf.rank,nf.house].filter(Boolean).join(' · ');
+    document.getElementById('siMeta').textContent=meta;
+    document.getElementById('siTraits').innerHTML=(db.traits||[]).map(t=>'<span class="su-trait">'+t+'</span>').join('');
+    _introDone=done||null;
+    const ov=document.getElementById('suitorIntro'); ov.classList.remove('on'); void ov.offsetWidth; ov.classList.add('on');
+  };
+  function closeIntro(){ const ov=document.getElementById('suitorIntro'); if(ov) ov.classList.remove('on'); const cb=_introDone; _introDone=null; if(typeof cb==='function') cb(); }
+
+  window.prideOpenSuitors=openSuitors; window.prideOpenSuitor=openDetail;
+  document.addEventListener('DOMContentLoaded',()=>{
+    const c=document.getElementById('suClose'); if(c) c.addEventListener('click',closeSuitors);
+    const b=document.getElementById('sdBack'); if(b) b.addEventListener('click',closeDetail);
+    const sb=document.getElementById('pmSuitors'); if(sb) sb.addEventListener('click',openSuitors);
+    const g=document.getElementById('siGo'); if(g) g.addEventListener('click',closeIntro);
+  });
+})();
+</script>
+<!-- ===== /PRIDE SUITORS ===== -->
+
+<!-- ===== PRIDE CAST STAGE (multi-figure cast-large: cast2 / cast3 via layout presets) ===== -->
+<style id="caststage-css">
+  #castStage{ position:fixed; inset:0; z-index:42; display:none; overflow:hidden; pointer-events:none; }
+  body.cast-on #castStage{ display:block; }
+  /* OUTER: position + enter/turn/flip transform (transitioned) */
+  #castStage .cast-fig{ position:absolute; left:50%; bottom:0; height:80%; aspect-ratio:1440/2560;
+    transform:translateX(-50%) translate(var(--dx,0px),var(--dy,0px)) perspective(1800px) rotateY(var(--ry,0deg)) scaleX(var(--flip,1)) scale(var(--sc,1));
+    opacity:var(--op,1); filter:brightness(.85) saturate(.95) drop-shadow(0 8px 20px rgba(0,0,0,.5));
+    transition:opacity .4s ease, filter .4s ease, transform var(--dur,.5s) var(--ease,cubic-bezier(.22,1,.36,1)); }
+  #castStage .cast-fig.speaking{ filter:brightness(1.03) saturate(1) drop-shadow(0 8px 22px rgba(0,0,0,.55)); z-index:4; }
+  #castStage .cast-fig.dim{ filter:brightness(.62) saturate(.8) drop-shadow(0 8px 20px rgba(0,0,0,.5)); }
+  /* INNER: the artwork; carries idle (loop) + emphasis (one-shot) animations */
+  #castStage .cf-inner{ position:absolute; inset:0; background-repeat:no-repeat; background-position:bottom center; background-size:contain; transform-origin:bottom center; }
+  /* idle loops (--amt = strength, --idur = seconds) */
+  #castStage .cf-inner.idle-breathe{ animation:cfBreathe var(--idur,3.5s) ease-in-out infinite; }
+  #castStage .cf-inner.idle-sway{ animation:cfSway var(--idur,4s) ease-in-out infinite; }
+  #castStage .cf-inner.idle-float{ animation:cfFloat var(--idur,4s) ease-in-out infinite; }
+  @keyframes cfBreathe{ 0%,100%{ transform:scale(1) } 50%{ transform:scale(calc(1 + var(--amt,3)/100)) } }
+  @keyframes cfSway{ 0%,100%{ transform:rotate(calc(var(--amt,2)*-1deg)) } 50%{ transform:rotate(calc(var(--amt,2)*1deg)) } }
+  @keyframes cfFloat{ 0%,100%{ transform:translateY(0) } 50%{ transform:translateY(calc(var(--amt,10)*-1px)) } }
+  /* one-shot emphasis (retrigger by re-adding the class) */
+  #castStage .cf-inner.emph-pulse{ animation:cfPulse var(--edur,.4s) ease-out; }
+  #castStage .cf-inner.emph-shake{ animation:cfShake var(--edur,.4s) ease-in-out; }
+  #castStage .cf-inner.emph-zoom{ animation:cfZoom var(--edur,.4s) ease-out; }
+  #castStage .cf-inner.emph-tilt{ animation:cfTilt var(--edur,.5s) ease-out; }
+  @keyframes cfPulse{ 0%,100%{ transform:scale(1) } 40%{ transform:scale(calc(1 + var(--amt,8)/100)) } }
+  @keyframes cfShake{ 0%,100%{ transform:translateX(0) } 20%{ transform:translateX(calc(var(--amt,8)*-1px)) } 60%{ transform:translateX(calc(var(--amt,8)*1px)) } }
+  @keyframes cfZoom{ 0%{ transform:scale(1) } 50%{ transform:scale(calc(1 + var(--amt,12)/100)) } 100%{ transform:scale(1) } }
+  @keyframes cfTilt{ 0%,100%{ transform:rotate(0) } 50%{ transform:rotate(calc(var(--amt,6)*1deg)) } }
+  /* background movement presets (best-effort; applied to the room backdrop) */
+  @keyframes castPanR{ from{ background-position:38% center } to{ background-position:62% center } }
+  @keyframes castPanL{ from{ background-position:62% center } to{ background-position:38% center } }
+  @keyframes castPanLR{ from{ background-position:28% center } to{ background-position:72% center } }
+  @keyframes castZoomIn{ from{ background-size:auto 108% } to{ background-size:auto 122% } }
+  @keyframes castDrift{ 0%{ background-position:46% 50% } 100%{ background-position:54% 51% } }
+  /* backdrop wider than the frame so panning reveals new area; convo pans the
+     camera toward the current speaker with a smooth eased transition. */
+  body.cast-on #backdrop{ background-size:cover; transition:background-position 1s cubic-bezier(.4,0,.2,1); }
+  body.castmv-pan-right #backdrop{ animation:castPanR 16s ease-in-out infinite alternate; }
+  body.castmv-pan-left  #backdrop{ animation:castPanL 16s ease-in-out infinite alternate; }
+  body.castmv-pan-lr    #backdrop{ animation:castPanLR 15s ease-in-out infinite alternate; }
+  body.castmv-zoom-in   #backdrop{ animation:castZoomIn 22s ease-in-out infinite alternate; }
+  body.castmv-drift     #backdrop{ animation:castDrift 18s ease-in-out infinite alternate; }
+</style>
+<div id="castStage"></div>
+<script>
+(function setupCastStage(){
+  const CHAR='worlds/pride-and-prejudice/characters/';
+  window.CAST_LAYOUTS = window.CAST_LAYOUTS || {};
+  let curLayout=null, curMap=null, curConvo=false, curConvoStyles=null, curConvoSide=null;
+
+  // ---- parse the [layouts] … [/layouts] preset block out of a script ----
+  // Each preset is CSS-like and fully extensible: every `key=value` on a
+  // slot/bg line is stored verbatim, so new params need no parser change.
+  function parseKV(str){ const o={}; (str||'').trim().split(/\s+/).forEach(tok=>{ const i=tok.indexOf('='); if(i>0) o[tok.slice(0,i)]=tok.slice(i+1); }); return o; }
+  window.parseCastLayouts=function(text){
+    const lines=String(text).split('\n');
+    const presets={}; const keep=[]; let inBlock=false, cur=null;
+    for(const raw of lines){
+      const t=raw.trim();
+      if(/^\[layouts\]$/i.test(t)){ inBlock=true; continue; }
+      if(/^\[\/layouts\]$/i.test(t)){ inBlock=false; continue; }
+      if(!inBlock){ keep.push(raw); continue; }
+      let m=t.match(/^\[layout:\s*([a-z0-9_]+)\s*\]$/i);
+      if(m){ cur=m[1]; presets[cur]={slots:{},bg:{}}; continue; }
+      if(/^\[\/layout\]$/i.test(t)){ cur=null; continue; }
+      if(cur){ const c=t.indexOf(':'); if(c>0){ const key=t.slice(0,c).trim(); const kv=parseKV(t.slice(c+1));
+        if(/^bg$/i.test(key)) presets[cur].bg=kv; else presets[cur].slots[key]=kv; } }
+    }
+    return { presets, cleaned:keep.join('\n') };
+  };
+
+  function figKey(id){ return String(id||'').toLowerCase().replace(/[^a-z0-9]+/g,'_').replace(/^_|_$/g,''); }
+  function bottomPct(y){ const v=parseFloat(y); return isNaN(v)?0:(100-v); }
+
+  // Pick a RANDOM idle sprite for a character: any appearance named pride / pride1 /
+  // pride2 … . Lists are fetched from the dev-server (cached). Until the list loads
+  // we fall back to plain "pride".
+  window.__prideAppear = window.__prideAppear || {};
+  window.prideIdleSprite = function(folder){
+    const list = window.__prideAppear[folder];
+    if(!list){
+      fetch('/api/list-appearances?char='+encodeURIComponent(folder)).then(r=>r.ok?r.json():{images:[]})
+        .then(j=>{ window.__prideAppear[folder]=(j.images&&j.images.length)?j.images:['pride']; }).catch(()=>{ window.__prideAppear[folder]=['pride']; });
+      return 'pride';
+    }
+    const idles = list.filter(n=>/^pride\d*$/i.test(n));
+    return idles.length ? idles[Math.floor(Math.random()*idles.length)] : (list[0]||'pride');
+  };
+
+  // ---- render a cast layout with a slot→character map ----
+  window.castApply=function(layoutName, slotMap){
+    const st=document.getElementById('castStage'); if(!st) return;
+    const L=window.CAST_LAYOUTS[layoutName]; if(!L){ console.warn('[cast] unknown layout',layoutName); }
+    curLayout=layoutName; curMap=slotMap||{};
+    st.innerHTML='';
+    // clear any lingering speech bubbles from a previous bubble/cutscene beat
+    try{ document.querySelectorAll('.scene-bubble.active').forEach(b=>b.classList.remove('active')); }catch(e){}
+    // background movement
+    document.body.className=document.body.className.replace(/\bcastmv-[a-z-]+/g,'').trim();
+    const mv=(L&&L.bg&&L.bg.move)||'none';
+    if(mv&&mv!=='none') document.body.classList.add('castmv-'+mv);
+    const convo = !!(L && L.bg && L.bg.mode==='convo');
+    curConvo = convo;
+
+    // ---- CONVO (shot/reverse-shot): only ONE figure shows at a time and the
+    // side ALTERNATES each speaker (right, left, right…). Character→side is not
+    // fixed; the engine flips sides every line so it always reads as a
+    // back-and-forth. left/right in the layout are just POSITION styles. ----
+    if(convo){
+      curConvoStyles = { left:(L&&L.slots&&L.slots.left)||{}, right:(L&&L.slots&&L.slots.right)||{} };
+      curConvoSide = null;
+      Object.keys(slotMap||{}).forEach(slot=>{
+        const id=slotMap[slot];
+        const fig=document.createElement('div'); fig.className='cast-fig dim'; fig.dataset.key=figKey(id);
+        const idleImg=window.prideIdleSprite(id); fig.dataset.idleImg=idleImg;
+        const inner=document.createElement('div'); inner.className='cf-inner'; inner.style.backgroundImage="url('"+CHAR+id+"/appearances/"+idleImg+".png')"; fig.appendChild(inner);
+        fig.style.setProperty('--op','0');
+        st.appendChild(fig);
+      });
+      document.body.classList.add('cast-on');
+      return;   // castSpeak pans the camera + reveals each speaker
+    }
+
+    // ---- NORMAL multi-figure cast (all slots visible at their positions) ----
+    Object.keys(slotMap||{}).forEach(slot=>{
+      const id=slotMap[slot]; const cfg=(L&&L.slots&&L.slots[slot])||{};
+      const fig=document.createElement('div'); fig.className='cast-fig'; fig.dataset.key=figKey(id); fig.dataset.slot=slot;
+      const idleImg=window.prideIdleSprite(id); fig.dataset.idleImg=idleImg;
+      const inner=document.createElement('div'); inner.className='cf-inner'; inner.style.backgroundImage="url('"+CHAR+id+"/appearances/"+idleImg+".png')"; fig.appendChild(inner);
+      const pos=(cfg.pos||'50%,100%').split(','); const x=(pos[0]||'50%').trim(); const y=(pos[1]||'100%').trim();
+      fig.style.left=x; fig.style.bottom='calc('+bottomPct(y)+'% - '+(parseFloat(cfg.drop)||0)+'px)';
+      fig.style.height=(cfg.size||'80%');
+      if(cfg.dur) fig.style.setProperty('--dur',(/s$/.test(cfg.dur)?cfg.dur:cfg.dur+'s'));
+      if(cfg.ease) fig.style.setProperty('--ease', cfg.ease==='out'?'cubic-bezier(.22,1,.36,1)':cfg.ease);
+      if(cfg.face==='left') fig.style.setProperty('--flip','-1'); else if(cfg.face==='right') fig.style.setProperty('--flip','1');
+      if(cfg.turn) fig.style.setProperty('--ry',(parseFloat(cfg.turn)||0)+'deg');
+      const en=(cfg.enter||'fade'); let edx='0px', edy='0px';
+      if(en==='slide-l') edx='-70vw'; else if(en==='slide-r') edx='70vw'; else if(en==='rise') edy='45vh';
+      fig.dataset.edx=edx; fig.dataset.edy=edy;
+      fig.style.setProperty('--dx',edx); fig.style.setProperty('--dy',edy); fig.style.setProperty('--op','0');
+      st.appendChild(fig);
+    });
+    document.body.classList.add('cast-on');
+    requestAnimationFrame(()=>requestAnimationFrame(()=>{
+      st.querySelectorAll('.cast-fig').forEach(f=>{ f.style.setProperty('--dx','0px'); f.style.setProperty('--dy','0px'); f.style.setProperty('--op','1'); });
+    }));
+  };
+
+  // ---- highlight / reveal the speaking figure ----
+  window.castSpeak=function(speaker){
+    const st=document.getElementById('castStage'); if(!st||!document.body.classList.contains('cast-on')) return;
+    const k=figKey(speaker); const kt=k.split('_')[0];
+    const figs=[...st.querySelectorAll('.cast-fig')];
+    const isMatch=f=>{ const fk=f.dataset.key||''; return (fk===k)||(kt.length>2&&fk.split('_')[0]===kt); };
+    const anyMatch=figs.some(isMatch);
+
+    if(curConvo){
+      if(!anyMatch) return;                       // narrative beat → keep the current speaker on screen
+      // alternate side every speaker: right, left, right… (always one-vs-one)
+      const side = (curConvoSide==='right') ? 'left' : 'right';
+      curConvoSide = side;
+      const cfg = (curConvoStyles && curConvoStyles[side]) || {};
+      const pos=(cfg.pos||(side==='left'?'10%,102%':'90%,102%')).split(',');
+      const edx = side==='left' ? '-70vw' : '70vw';
+      const turn = (cfg.turn!=null && cfg.turn!=='') ? cfg.turn : (side==='left'?18:-18);
+      figs.forEach(f=>{
+        const m=isMatch(f);
+        if(m){
+          f.style.left=(pos[0]||'').trim(); f.style.bottom='calc('+bottomPct((pos[1]||'102%').trim())+'% - '+(parseFloat(cfg.drop)||0)+'px)';
+          f.style.height=cfg.size||'96%';
+          f.style.setProperty('--ry',(parseFloat(turn)||0)+'deg');
+          f.style.setProperty('--flip', cfg.face==='left'?'-1':'1');
+          f.dataset.edx=edx; f.dataset.side=side;
+          f.classList.remove('dim'); f.classList.add('speaking');
+          // SNAP to rest-but-HIDDEN with transitions OFF, so a figure that had
+          // previously exited (e.g. slid off-screen) doesn't animate back from
+          // its exit pose when we revisit the line. The entrance is then driven
+          // by the per-line Enter layer in prideLineCtx.
+          f.style.transition='none';
+          f.style.setProperty('--dx','0px'); f.style.setProperty('--dy','0px'); f.style.setProperty('--op','0'); f.style.setProperty('--sc','1');
+          void f.offsetWidth; f.style.transition='';
+        } else {
+          // leaving figure: just mark it — the EXIT is driven by prideLineCtx
+          // (saved exit layer, or a default fade-out) so it matches the panel
+          // instead of castSpeak forcing a slide-off to the side.
+          f.classList.remove('speaking'); f.classList.add('dim');
+        }
+      });
+      // pan the "camera" toward the current speaker (smooth eased transition)
+      const bd=document.getElementById('backdrop');
+      if(bd) bd.style.backgroundPosition = (side==='left' ? '30%' : '70%') + ' 50%';
+      return;
+    }
+
+    figs.forEach(f=>{
+      if(!anyMatch){ f.classList.remove('speaking','dim'); f.style.setProperty('--sc','1'); return; }
+      const m=isMatch(f);
+      f.classList.toggle('speaking',m); f.classList.toggle('dim',!m);
+      f.style.setProperty('--sc', m?'1.03':'0.98');
+    });
+  };
+
+  window.castClear=function(){ const st=document.getElementById('castStage'); if(st) st.innerHTML='';
+    document.body.classList.remove('cast-on'); document.body.className=document.body.className.replace(/\bcastmv-[a-z-]+/g,'').trim();
+    curLayout=null; curMap=null; curConvo=false; curConvoStyles=null; curConvoSide=null; };
+  window.castActive=function(){ return document.body.classList.contains('cast-on'); };
+})();
+</script>
+<!-- ===== /PRIDE CAST STAGE ===== -->
+
+<!-- ===== PER-LINE CAST TUNER (dev) — live per-line narrative-mode overrides ===== -->
+<script>
+(function setupLineTuner(){
+  window.LINE_CFG = window.LINE_CFG || {};   // { <originLine>: {x,y,size,drop,turn,flip,pan} }
+  const st = ()=>document.getElementById('castStage');
+  const bd = ()=>document.getElementById('backdrop');
+  function overridesPath(){ try{ return currentEpisodeBase()+'/scripts/main.overrides.json'; }catch(e){ return null; } }
+
+  window.prideLoadOverrides = function(){
+    const p=overridesPath(); if(!p) return;
+    fetch(p+'?cb='+Date.now(),{cache:'no-store'}).then(r=>r.ok?r.json():{}).then(j=>{ window.LINE_CFG=j||{}; }).catch(()=>{});
+  };
+
+  // apply a per-line cfg onto the current speaking cast figure + backdrop.
+  // runAnim=false → apply STATIC props only (position/pan) without re-playing the
+  // enter/exit/etc animation layers. Used for live panel tuning so nudging X or
+  // Kamera-pan doesn't re-trigger the character's entrance animation every time.
+  window.prideLineApply = function(cfg, runAnim){
+    cfg=cfg||{}; const s=st(); const f=s&&s.querySelector('.cast-fig.speaking');
+    if(f){
+      if(cfg.x!=null && cfg.x!=='')    f.style.left=cfg.x;
+      if(cfg.size!=null && cfg.size!=='') f.style.height=cfg.size;
+      if((cfg.y!=null&&cfg.y!=='')||(cfg.drop!=null&&cfg.drop!=='')){
+        const y=(cfg.y!=null&&cfg.y!=='')?parseFloat(cfg.y):109;
+        const d=(cfg.drop!=null&&cfg.drop!=='')?parseFloat(cfg.drop):0;
+        f.style.bottom='calc('+(100-y)+'% - '+d+'px)';
+      }
+      if(cfg.turn!=null && cfg.turn!=='') f.style.setProperty('--ry',(parseFloat(cfg.turn)||0)+'deg');
+      if(cfg.flip!=null && cfg.flip!=='') f.style.setProperty('--flip', (cfg.flip==='-1'||cfg.flip===-1||cfg.flip==='left')?'-1':'1');
+      // entrance animation (replays it): slide-l / slide-r / rise / fade / none
+      if(cfg.enter!=null && cfg.enter!==''){
+        if(cfg.dur!=null && cfg.dur!=='') f.style.setProperty('--dur',(/s$/.test(cfg.dur)?cfg.dur:cfg.dur+'s'));
+        const en=cfg.enter;
+        if(en==='none'){ f.style.setProperty('--dx','0px'); f.style.setProperty('--dy','0px'); f.style.setProperty('--op','1'); }
+        else {
+          let dx='0px',dy='0px';
+          if(en==='slide-l') dx='-70vw'; else if(en==='slide-r') dx='70vw'; else if(en==='rise') dy='45vh';
+          f.style.setProperty('--dx',dx); f.style.setProperty('--dy',dy); f.style.setProperty('--op','0');
+          requestAnimationFrame(()=>requestAnimationFrame(()=>{ f.style.setProperty('--dx','0px'); f.style.setProperty('--dy','0px'); f.style.setProperty('--op','1'); }));
+        }
+      }
+    }
+    if(bd() && cfg.pan!=null && cfg.pan!=='') bd().style.backgroundPosition = cfg.pan+'% 50%';
+    if(runAnim!==false && Array.isArray(cfg.anim)) prideAnimApply(cfg.anim);
+  };
+
+  function easeVal(e){ return e==='linear'?'linear':e==='in'?'cubic-bezier(.6,0,.9,.4)':e==='inout'?'cubic-bezier(.4,0,.2,1)':e==='spring'?'cubic-bezier(.2,1.5,.3,1)':'cubic-bezier(.22,1,.36,1)'; }
+  // multi-layer animation applier — layers stack on the speaking figure / backdrop
+  window.prideAnimApply = function(layers){
+    if(!Array.isArray(layers)) return;
+    const s=st(); const f=s&&s.querySelector('.cast-fig.speaking'); const inner=f&&f.querySelector('.cf-inner'); const b=bd();
+    if(inner && layers.some(l=>l&&(l.type==='idle'||l.type==='emphasis'))) inner.className='cf-inner';   // reset idle/emphasis only when re-applying them
+    layers.forEach(L=>{
+      const t=L.type, m=L.mode, amt=(L.amount!=null&&L.amount!=='')?parseFloat(L.amount):null, dur=(L.dur!=null&&L.dur!=='')?parseFloat(L.dur):null, dir=L.dir, ez=L.ease;
+      if(t==='enter' && f){
+        if(ez) f.style.setProperty('--ease',easeVal(ez));
+        let dx='0px',dy='0px',op='1',sc=null;
+        if(m==='slide'){ const d=amt!=null?amt:70;
+          if(dir==='up'||dir==='down') dy=(dir==='down'?d:-d)+'vh'; else dx=(dir==='right'?d:-d)+'vw';
+          op='0'; }
+        else if(m==='rise'){ dy=(amt!=null?amt:45)+'vh'; op='0'; }
+        else if(m==='zoom'){ sc=(amt!=null?amt/100:0.6)+''; op='0'; }
+        else if(m==='pop'){ sc=(1+(amt!=null?amt:15)/100)+''; op='0'; }
+        else if(m==='fade'){ op=(amt!=null?amt/100:0)+''; }
+        if(m==='none'){ f.style.setProperty('--dx','0px'); f.style.setProperty('--dy','0px'); f.style.setProperty('--op','1'); }
+        else {
+          // SNAP to the start state with transitions OFF so scale/opacity/offset
+          // actually REACH their starting value (pop 1.15, zoom 0.6, slide offset)
+          // instead of being cancelled by the reveal 30ms later. Then animate to rest.
+          f.style.transition='none';
+          f.style.setProperty('--dx',dx); f.style.setProperty('--dy',dy); f.style.setProperty('--op',op); if(sc!=null) f.style.setProperty('--sc',sc);
+          void f.offsetWidth; f.style.transition='';
+          if(dur!=null) f.style.setProperty('--dur',dur+'s');
+          setTimeout(()=>{ f.style.setProperty('--dx','0px'); f.style.setProperty('--dy','0px'); f.style.setProperty('--op','1'); if(sc!=null) f.style.setProperty('--sc','1'); }, 30);
+        }
+      }
+      else if(t==='exit'){ /* handled per-departing-figure in prideLineCtx so a line's
+        exit describes how THAT line's speaker leaves (not the previous one) */ }
+      else if(t==='idle' && inner){ if(amt!=null) inner.style.setProperty('--amt',amt); if(dur!=null) inner.style.setProperty('--idur',dur+'s'); inner.classList.add('idle-'+(m||'breathe')); }
+      else if(t==='emphasis' && inner){ if(amt!=null) inner.style.setProperty('--amt',amt); if(dur!=null) inner.style.setProperty('--edur',dur+'s'); const c='emph-'+(m||'pulse'); inner.classList.remove(c); void inner.offsetWidth; inner.classList.add(c); }
+      else if(t==='camera' && b){
+        // pan (in prideLineApply) sets the BASE camera position. Camera layers add
+        // MOVEMENT on top of it — they don't silently sit next to pan:
+        //   follow → track the speaker (overrides pan toward the speaker's side)
+        //   a2b    → sweep from A to B
+        //   dolly  → zoom in (changes size only → stacks WITH pan position)
+        if(m==='dolly'){
+          // smooth zoom via transform:scale (interpolatable, unlike background-size)
+          const sc=1+((amt!=null?amt:15)/100), dd=(dur!=null?dur:1.2);
+          b.style.transformOrigin='center center';
+          b.style.transition='transform '+dd+'s '+easeVal(ez||'out')+', background-position 1s ease';
+          setTimeout(()=>{ b.style.transform='scale('+sc+')'; }, 30);
+        }
+        else if(m==='a2b'){ b.style.animation='none'; b.style.backgroundPosition=((L.from!=null?L.from:30))+'% 50%'; requestAnimationFrame(()=>requestAnimationFrame(()=>{ b.style.backgroundPosition=((L.to!=null?L.to:70))+'% 50%'; })); }
+        else { /* follow (default): move the camera toward the current speaker */
+          b.style.animation='none';
+          const spk=s&&s.querySelector('.cast-fig.speaking'); const side=spk&&spk.dataset.side;
+          b.style.backgroundPosition=(side==='left'?'30%':'70%')+' 50%';
+        }
+      }
+      else if(t==='bg'){ document.body.className=document.body.className.replace(/\bcastmv-[a-z-]+/g,'').trim();
+        if(m==='ken-burns') document.body.classList.add('castmv-zoom-in'); else if(m==='drift') document.body.classList.add('castmv-drift'); }
+      else if(t==='transition' && f && (m==='crossfade'||m==='dissolve')){ f.style.setProperty('--op','0'); f.style.transition='opacity '+((dur!=null?dur:.5))+'s ease';
+        requestAnimationFrame(()=>requestAnimationFrame(()=>{ f.style.setProperty('--op','1'); })); }
+      else if(t==='filter'){
+        // color / tone effect on the BACKGROUND only. We can't use #backdrop's own
+        // `filter` (the engine drives its brightness/blur for depth-of-field), so we
+        // put a backdrop-filter on an overlay layered BETWEEN the backdrop and the
+        // cast figures — it tints everything behind it (the scene) but not the figures.
+        const o=fxOverlay(); const css=filterCss(m, amt);
+        o.style.transitionDuration=(dur!=null?dur:0.6)+'s';
+        o.style.backdropFilter = css; o.style.webkitBackdropFilter = css;
+      }
+      else if(t==='cfilter' && inner){
+        // colour / tone effect on the CHARACTER sprite itself
+        inner.style.transition=(inner.style.transition?inner.style.transition+', ':'')+'filter '+(dur!=null?dur:0.6)+'s ease';
+        inner.style.filter = filterCss(m, amt);
+      }
+    });
+  };
+  // Apply just the AMBIENT layers (camera / background movement / colour filter)
+  // live, resetting them first so removing a layer clears its effect. Used for
+  // live panel tuning so filter/bg/camera changes show the instant you make them,
+  // WITHOUT re-firing one-shot enter/exit/emphasis animations on every keystroke.
+  window.prideApplyAmbient = function(anim){
+    const b=bd(), s0=st();
+    const o=document.getElementById('castFx'); if(o){ o.style.backdropFilter='none'; o.style.webkitBackdropFilter='none'; }
+    if(b){ b.style.transform=''; b.style.backgroundSize=''; }
+    if(s0) s0.querySelectorAll('.cf-inner').forEach(ci=>ci.style.filter='');
+    document.body.className = document.body.className.replace(/\bcastmv-[a-z-]+/g,'').trim();
+    if(Array.isArray(anim)) prideAnimApply(anim.filter(l=>l&&(l.type==='camera'||l.type==='bg'||l.type==='filter'||l.type==='cfilter')));
+  };
+
+  // overlay that sits above the backdrop but below the cast figures; its
+  // backdrop-filter recolours only the scene behind it.
+  function fxOverlay(){
+    let o=document.getElementById('castFx');
+    if(!o){ o=document.createElement('div'); o.id='castFx';
+      o.style.cssText='position:fixed;inset:0;pointer-events:none;z-index:5;transition:backdrop-filter .6s ease,-webkit-backdrop-filter .6s ease;';
+      const bdp=document.getElementById('backdrop');
+      (bdp&&bdp.parentNode?bdp.parentNode:document.body).appendChild(o); }
+    return o;
+  }
+  // map a filter mode (+ optional intensity %) to a CSS filter string
+  function filterCss(mode, amt){
+    const a = (amt!=null) ? amt/100 : null;
+    switch(mode){
+      case 'grayscale': return 'grayscale('+(a!=null?a:1)+')';
+      case 'sepia':     return 'sepia('+(a!=null?a:0.7)+')';
+      case 'contrast':  return 'contrast('+(a!=null?(1+a):1.4)+')';
+      case 'vivid':     return 'saturate('+(a!=null?(1+a):1.7)+')';
+      case 'warm':      return 'sepia('+(a!=null?a:0.4)+') saturate(1.3) hue-rotate(-12deg)';
+      case 'cool':      return 'hue-rotate('+(a!=null?(a*120):40)+'deg) saturate(1.15) brightness(1.02)';
+      case 'dim':       return 'brightness('+(a!=null?a:0.6)+')';
+      case 'noir':      return 'grayscale(1) contrast(1.5) brightness(0.92)';
+      default:          return 'none';
+    }
+  }
+
+  // dev: preview a SINGLE layer once, then revert to the prior state
+  window.prideAnimPreview = function(L){
+    if(!L) return; const s=st(); const f=s&&s.querySelector('.cast-fig.speaking'); const inner=f&&f.querySelector('.cf-inner'); const b=bd();
+    const t=L.type, m=L.mode, amt=(L.amount!=null&&L.amount!=='')?parseFloat(L.amount):null, dur=(L.dur!=null&&L.dur!=='')?parseFloat(L.dur):null;
+    if(t==='idle' && inner){ if(amt!=null)inner.style.setProperty('--amt',amt); if(dur!=null)inner.style.setProperty('--idur',dur+'s'); const c='idle-'+(m||'breathe'); inner.classList.remove(c); void inner.offsetWidth; inner.classList.add(c); setTimeout(()=>inner.classList.remove(c), (dur||3.5)*1000); return; }
+    if(t==='emphasis' && inner){ if(amt!=null)inner.style.setProperty('--amt',amt); if(dur!=null)inner.style.setProperty('--edur',dur+'s'); const c='emph-'+(m||'pulse'); inner.classList.remove(c); void inner.offsetWidth; inner.classList.add(c); setTimeout(()=>inner.classList.remove(c), (dur||.5)*1000+120); return; }
+    if(t==='camera' && b){ const pp=b.style.backgroundPosition, ps=b.style.backgroundSize, pa=b.style.animation, ptr=b.style.transform; prideAnimApply([L]); setTimeout(()=>{ b.style.animation=pa; b.style.backgroundPosition=pp; b.style.backgroundSize=ps; b.style.transform=ptr; }, (dur||1.2)*1000+500); return; }
+    if(t==='filter'){ const o=fxOverlay(); const prev=o.style.backdropFilter; prideAnimApply([L]); setTimeout(()=>{ o.style.backdropFilter=prev||'none'; o.style.webkitBackdropFilter=prev||'none'; }, (dur||0.6)*1000+1200); return; }
+    if(t==='cfilter' && inner){ const prev=inner.style.filter; prideAnimApply([L]); setTimeout(()=>{ inner.style.filter=prev||''; }, (dur||0.6)*1000+1200); return; }
+    if(t==='bg'){ prideAnimApply([L]); setTimeout(()=>{ document.body.className=document.body.className.replace(/\bcastmv-[a-z-]+/g,'').trim(); }, 2600); return; }
+    if((t==='exit') && f){
+      applyExitToFig(f, L);   // same logic as the real departing-figure exit
+      // after it plays once, SNAP back to the default pose (no reverse animation)
+      setTimeout(()=>{ f.style.transition='none'; f.style.setProperty('--dx','0px'); f.style.setProperty('--dy','0px'); f.style.setProperty('--op','1'); f.style.setProperty('--sc','1'); void f.offsetWidth; f.style.transition=''; }, (dur||.5)*1000+300); return; }
+    if((t==='enter'||t==='transition') && f){
+      // The fig is already at rest & VISIBLE, so we can't just re-run prideAnimApply
+      // (its move-to-offset would be transitioned and instantly cancelled → no visible
+      // motion). Instead: SNAP to the entrance offset with transitions OFF, force a
+      // reflow, then animate back to rest so the entrance actually plays once.
+      const dir=L.dir, d=(amt!=null?amt:70);
+      let dx='0px',dy='0px',op='0',sc=null;
+      if(t==='transition'){ /* crossfade/dissolve → fade in */ }
+      else if(m==='none'){ prideAnimApply([L]); return; }
+      else if(m==='slide'){ if(dir==='up'||dir==='down') dy=(dir==='down'?d:-d)+'vh'; else dx=(dir==='right'?d:-d)+'vw'; }
+      else if(m==='rise'){ dy=(amt!=null?amt:45)+'vh'; }
+      else if(m==='zoom'){ sc=(amt!=null?amt/100:0.6)+''; }
+      else if(m==='pop'){ sc=(1+(amt!=null?amt:15)/100)+''; }
+      else if(m==='fade'){ if(amt!=null) op=(amt/100)+''; }
+      /* fade → offset stays 0, only op animates */
+      f.style.transition='none';
+      f.style.setProperty('--dx',dx); f.style.setProperty('--dy',dy); f.style.setProperty('--op',op); if(sc!=null) f.style.setProperty('--sc',sc);
+      void f.offsetWidth;                              // commit the snap
+      f.style.transition='';                           // back to the CSS transition
+      if(dur!=null) f.style.setProperty('--dur',dur+'s'); if(L.ease) f.style.setProperty('--ease',easeVal(L.ease));
+      setTimeout(()=>{ f.style.setProperty('--dx','0px'); f.style.setProperty('--dy','0px'); f.style.setProperty('--op','1'); if(sc!=null) f.style.setProperty('--sc','1'); }, 30);
+      return;
+    }
+    prideAnimApply([L]);   // fallback one-shot replay
+  };
+
+  // dev: step to the next/prev line (panel arrows)
+  window.prideStep = function(dir){
+    try{
+      if(dir>0){ idx++; }
+      else { idx--; while(idx>0 && lines[idx] && lines[idx].type!=='line') idx--; }
+      if(idx<0) idx=0; if(idx>=lines.length) idx=lines.length-1;
+      window.__pvBack = (dir<0);      // suppress exit anim when stepping backward
+      renderLine();
+      window.__pvBack = false;
+    }catch(e){ window.__pvBack=false; }
+  };
+
+  // play a departing figure's own exit (slide/rise/fade/default) once
+  function applyExitToFig(pf, ex){
+    if(!pf) return; const m=ex&&ex.mode, dur=ex&&ex.dur, amt=ex&&ex.amount, dir=ex&&ex.dir;
+    if(dur!=null && dur!=='') pf.style.setProperty('--dur',(/s$/.test(''+dur)?dur:dur+'s'));
+    if(ex&&ex.ease) pf.style.setProperty('--ease',easeVal(ex.ease));
+    const d=(amt!=null&&amt!=='')?parseFloat(amt):null;
+    if(m==='slide'){
+      if(dir==='up'||dir==='down') pf.style.setProperty('--dy',(dir==='down'?'':'-')+(d!=null?d:70)+'vh');
+      else pf.style.setProperty('--dx',(dir==='right'?'':'-')+(d!=null?d:70)+'vw');
+      pf.style.setProperty('--op','0'); }
+    else if(m==='rise'){ pf.style.setProperty('--dy','-'+(d!=null?d:45)+'vh'); pf.style.setProperty('--op','0'); }
+    else if(m==='zoom'){ pf.style.setProperty('--sc', (d!=null?d/100:0.6)+''); pf.style.setProperty('--op','0'); }
+    else if(m==='pop'){ pf.style.setProperty('--sc', (1+(d!=null?d:15)/100)+''); pf.style.setProperty('--op','0'); }
+    else { pf.style.setProperty('--op', (m==='fade'&&d!=null)?(d/100)+'':'0'); }   // fade / default / none / crossfade
+  }
+
+  // ── per-word POSES (beats): as the line types out, trigger a gesture / sprite
+  // change when the typewriter reaches a chosen word. ──
+  const POSE_CHAR = 'worlds/pride-and-prejudice/characters/';
+  const POSE_HOLD = 1000;   // ms a pose stays on screen before returning to idle
+  function poseSwap(inner, url, tr){
+    if(tr==='cut'){ inner.style.transition='none'; inner.style.opacity='1'; inner.style.backgroundImage=url; }
+    else { inner.style.transition='opacity .22s ease'; inner.style.opacity='0';
+      setTimeout(()=>{ inner.style.backgroundImage=url; inner.style.opacity='1'; }, 120); }
+  }
+  // swap the speaking figure to a pose IMAGE. The pose PERSISTS — it stays until a
+  // later pose on the same line replaces it, or the reader advances (next line →
+  // castApply rebuilds the idle). It does NOT auto-revert on a timer.
+  window.pridePoseFire = function(b){
+    const s=st(); const f=s&&s.querySelector('.cast-fig.speaking'); const inner=f&&f.querySelector('.cf-inner'); if(!inner) return;
+    const img=b.image||b.sprite; if(!img) return;
+    const poseUrl="url('"+POSE_CHAR+(f.dataset.key||'')+"/appearances/"+img+".png')";
+    clearTimeout(inner.__poseT);
+    poseSwap(inner, poseUrl, b.transition||'cut');
+  };
+  // reset the speaking figure back to its idle sprite (used at each line render so a
+  // pose held on the previous line doesn't linger into the next one)
+  window.pridePoseResetIdle = function(){
+    const s=st(); const f=s&&s.querySelector('.cast-fig.speaking'); const inner=f&&f.querySelector('.cf-inner'); if(!inner) return;
+    const idle=f.dataset.idleImg||'pride';
+    clearTimeout(inner.__poseT);
+    inner.style.transition='none'; inner.style.opacity='1';
+    inner.style.backgroundImage="url('"+POSE_CHAR+(f.dataset.key||'')+"/appearances/"+idle+".png')";
+  };
+  window.__prideBeatCheck = function(i){
+    const bs=window.__prideBeats; if(!bs||!bs.length) return;
+    for(const b of bs){ if(!b.fired && i>=b.charAt){ b.fired=true; pridePoseFire(b); } }
+  };
+  // build the beat list for a line from its saved poses + the line text
+  function buildBeats(line, cfg){
+    window.__prideBeats=[];
+    if(!cfg || !Array.isArray(cfg.poses) || !line || !line.text) return;
+    const words=line.text.split(/\s+/);
+    cfg.poses.forEach(p=>{ if(p.w==null) return; let off=0; for(let wi=0; wi<p.w && wi<words.length; wi++) off+=words[wi].length+1;
+      window.__prideBeats.push({charAt:off, image:p.image||p.sprite||'', transition:p.transition||'cut', fired:false}); });
+    window.__prideBeats.sort((a,b)=>a.charAt-b.charAt);
+  }
+
+  // fired on each pride line render: apply saved override + notify the dev panel
+  window.prideLineCtx = function(line, speaker){
+    const ln = line && line._originLine;
+    const cfg = (ln!=null && window.LINE_CFG[ln]) || null;
+    buildBeats(line, cfg);   // per-word poses for this line
+    const hasEnter = cfg && Array.isArray(cfg.anim) && cfg.anim.some(l=>l&&l.type==='enter');
+    // RESET ambient camera/background state each line so a dolly (zoom) or a
+    // ken-burns/drift set on ONE line doesn't leak into every following line.
+    // The line's own camera/bg layers below then re-apply what it actually wants.
+    // Snap the zoom (transform) back to none WITHOUT a transition so we don't get a
+    // reverse-zoom on the next line, but keep the background-position transition so
+    // camera pans still glide.
+    if(bd()){ bd().style.transition='background-position 1s ease'; bd().style.transform=''; bd().style.transformOrigin='center center'; bd().style.backgroundSize=''; }
+    { const o=document.getElementById('castFx'); if(o){ o.style.backdropFilter='none'; o.style.webkitBackdropFilter='none'; } }
+    { const sr=st(); if(sr) sr.querySelectorAll('.cf-inner').forEach(ci=>ci.style.filter=''); }
+    document.body.className = document.body.className.replace(/\bcastmv-[a-z-]+/g,'').trim();
+    if(cfg) prideLineApply(cfg);
+    // EXIT — a line's exit layer describes how THAT line's speaker leaves. We stash
+    // each speaker's exit config on the figure when it speaks, then replay it when the
+    // figure later departs. So editing line 42's exit = "how line 42's speaker exits".
+    const back = !!window.__pvBack;   // navigating backward (arrow) → no exit anim
+    const sx=st();
+    if(sx){
+      // 1) any figure that just became non-speaking → play ITS OWN saved exit.
+      //    Going BACKWARD we don't replay exits (that looks like a rewind) — we
+      //    just snap the departed figures hidden.
+      sx.querySelectorAll('.cast-fig:not(.speaking)').forEach(pf=>{
+        if(back){ pf.style.transition='none'; pf.style.setProperty('--dx','0px'); pf.style.setProperty('--dy','0px'); pf.style.setProperty('--sc','1'); pf.style.setProperty('--op','0'); void pf.offsetWidth; pf.style.transition=''; pf.dataset.leaving='1'; pf.dataset.wasSpeaking=''; return; }
+        if(pf.dataset.leaving==='1') return;           // already animated out
+        if(!pf.dataset.wasSpeaking) { pf.style.setProperty('--op','0'); return; } // never on stage → just hide
+        let ex=null; try{ ex=pf.dataset.exitCfg?JSON.parse(pf.dataset.exitCfg):null; }catch(e){}
+        applyExitToFig(pf, ex);
+        pf.dataset.leaving='1'; pf.dataset.wasSpeaking='';
+      });
+      // 2) remember THIS line's exit config on the new speaker for when it later leaves
+      const spk=sx.querySelector('.cast-fig.speaking');
+      if(spk){ const exL=(cfg&&Array.isArray(cfg.anim))?cfg.anim.find(l=>l&&l.type==='exit'):null;
+        spk.dataset.exitCfg = exL?JSON.stringify(exL):''; spk.dataset.wasSpeaking='1'; spk.dataset.leaving=''; }
+    }
+    // Entrance authority: castSpeak leaves the convo figure positioned-but-HIDDEN
+    // (--op:0). The entrance is driven HERE so it always matches the panel:
+    //   • saved Enter layer  → prideLineApply already ran it (hasEnter) → skip
+    //   • no Enter override   → play the default slide-from-side reveal
+    if(!hasEnter){
+      const s0=st(); const f0=s0&&s0.querySelector('.cast-fig.speaking');
+      if(f0 && f0.style.getPropertyValue('--op')==='0'){
+        const side=f0.dataset.side||((parseFloat(f0.style.left)||50)<50?'left':'right');
+        const edx=side==='left'?'-70vw':'70vw';
+        f0.style.setProperty('--dur','0.55s');
+        f0.style.setProperty('--dx',edx); f0.style.setProperty('--dy','0px'); f0.style.setProperty('--op','0');
+        setTimeout(()=>{ f0.style.setProperty('--dx','0px'); f0.style.setProperty('--op','1'); }, 30);
+      }
+    }
+    // PRELOAD this line's pose images (+ idle) so the cut swap is instant with no
+    // blank flash while the PNG decodes. Runs now; typing gives it time to finish.
+    { const sp0=st()&&st().querySelector('.cast-fig.speaking'); const folder0=sp0&&sp0.dataset.key;
+      if(folder0){ const names=new Set([sp0.dataset.idleImg||'pride']);
+        (window.__prideBeats||[]).forEach(b=>{ if(b.image) names.add(b.image); });
+        window.__preImg = window.__preImg || {};
+        names.forEach(nm=>{ const u=POSE_CHAR+folder0+'/appearances/'+nm+'.png'; if(!window.__preImg[u]){ const im=new Image(); im.src=u; window.__preImg[u]=im; } }); } }
+    // clear any pose held from the previous line so it doesn't linger
+    if(window.pridePoseResetIdle) window.pridePoseResetIdle();
+    // a pose on the FIRST word overwrites the idle sprite from the very start
+    if(window.__prideBeats && window.__prideBeats[0] && window.__prideBeats[0].charAt<=0 && window.__prideBeats[0].image){
+      const b0=window.__prideBeats[0]; b0.fired=true; window.pridePoseFire({image:b0.image, transition:'cut'});
+    }
+    // read the current figure's live values so the panel opens on the real state
+    let cur={}; const s=st(); const f=s&&s.querySelector('.cast-fig.speaking');
+    if(f){ cur.x=f.style.left||''; cur.size=f.style.height||''; cur.turn=(f.style.getPropertyValue('--ry')||'').replace('deg',''); cur.flip=f.style.getPropertyValue('--flip')||'1'; }
+    if(bd()){ cur.pan=(getComputedStyle(bd()).backgroundPosition||'').split(' ')[0]; }
+    try{ if(window.parent) window.parent.postMessage({ type:'lineCtx', line:ln, speaker:speaker,
+      castOn:(typeof window.castActive==='function'&&window.castActive()), cfg:cfg||{}, cur:cur,
+      text:(line&&line.text)||'', folder:(f&&f.dataset&&f.dataset.key)||'' }, '*'); }catch(e){}
+  };
+
+  // receive live edits from the dev panel (index.html)
+  window.addEventListener('message', function(ev){
+    const d=ev&&ev.data; if(!d) return;
+    if(d.type==='lineStep'){ if(typeof window.prideStep==='function') window.prideStep(d.dir>0?1:-1); return; }
+    if(d.type==='linePreviewLayer'){ if(typeof window.prideAnimPreview==='function') window.prideAnimPreview(d.layer); return; }
+    if(d.type==='linePreviewPose'){ if(typeof renderLine==='function'){ try{ renderLine(); }catch(e){} } return; }   // restart the dialogue streaming so poses fire in context
+    if(d.type!=='lineCfgSet'||d.line==null) return;
+    window.LINE_CFG[d.line]=d.cfg||{};
+    prideLineApply(d.cfg||{}, false);   // live tuning: static props only, don't replay one-shot anim
+    prideApplyAmbient(d.cfg&&d.cfg.anim);   // …but DO reflect filter/bg/camera live
+    if(d.save){ const p=overridesPath(); if(p) try{ fetch('/api/save-script',{method:'POST',
+      headers:{'content-type':'application/json'},
+      body:JSON.stringify({path:p, content:JSON.stringify(window.LINE_CFG,null,2)})}).catch(()=>{}); }catch(e){} }
+  });
+})();
+</script>
+<!-- ===== /PER-LINE CAST TUNER ===== -->
 
 <!-- ===== PRIDE FREE EXPLORE (supper table) — injected ===== -->
 <style id="freeexplore-css">

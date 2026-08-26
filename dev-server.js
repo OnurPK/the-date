@@ -31,6 +31,7 @@ const MIME = {
   '.png':  'image/png',
   '.jpg':  'image/jpeg',
   '.jpeg': 'image/jpeg',
+  '.webp': 'image/webp',
   '.mp4':  'video/mp4',
   '.webm': 'video/webm',
   '.mp3':  'audio/mpeg',
@@ -150,6 +151,27 @@ function handleListVenues(req, res) {
   return sendJson(res, 200, { venues: out });
 }
 
+// GET /api/list-appearances?char=<folder>[&world=<slug>]
+//   Lists appearance image names (without extension) for a character folder.
+//   Used by the Line Tuner "Poses" picker to populate the sprite dropdown.
+function handleListAppearances(req, res, parsed) {
+  const char  = String((parsed.query.char || '')).trim();
+  const world = String((parsed.query.world || 'pride-and-prejudice')).trim();
+  if (!/^[a-z0-9_-]+$/i.test(char) || !/^[a-z0-9_-]+$/i.test(world)) {
+    return sendJson(res, 400, { error: 'bad char/world' });
+  }
+  const dir = path.join(ROOT, 'worlds', world, 'characters', char, 'appearances');
+  let images = [];
+  try {
+    if (fs.existsSync(dir)) {
+      images = fs.readdirSync(dir)
+        .filter(f => /\.(png|webp|jpe?g)$/i.test(f))
+        .map(f => f.replace(/\.[^.]+$/, ''));
+    }
+  } catch (e) {}
+  return sendJson(res, 200, { images });
+}
+
 // ───────────────────────────────────────────────────────────────
 // Static file server fallback
 // ───────────────────────────────────────────────────────────────
@@ -201,6 +223,7 @@ const server = http.createServer(async (req, res) => {
     if (req.method === 'POST' && parsed.pathname === '/api/save-venue') return handleSaveVenue(req, res);
     if (req.method === 'POST' && parsed.pathname === '/api/save-script') return handleSaveScript(req, res);
     if (req.method === 'GET'  && parsed.pathname === '/api/list-venues') return handleListVenues(req, res);
+    if (req.method === 'GET'  && parsed.pathname === '/api/list-appearances') return handleListAppearances(req, res, parsed);
   } catch (e) {
     return sendJson(res, 500, { error: String(e && e.message || e) });
   }

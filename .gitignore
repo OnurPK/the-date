@@ -38,3 +38,6 @@ worlds/london/locations/deneme3/
 # Combat scratch mock + accidental cutscenes duplicate
 combat-mock.html
 **/cutscenes copy/
+**/_opaque_backup/
+**/_gen/out/
+*.bak
