@@ -41,3 +41,10 @@ combat-mock.html
 **/_opaque_backup/
 **/_gen/out/
 *.bak
+
+# Experiments, handoff packages, archives, design explorations — not part of the game
+proof-of-concept/
+proof-of-concept-*/
+worlds/pride-and-prejudice/_archive/
+docs/product-review-*.html
+docs/dialog-ui-*.html

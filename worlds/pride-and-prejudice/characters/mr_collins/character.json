@@ -1,0 +1,21 @@
+{
+  "name": "Mr. Collins",
+  "folder": "mr_collins",
+  "archetype": "The Pompous Clergyman",
+  "appearance": "A heavy, solemn young clergyman in careful black, his air a strange blend of grovelling deference and self-important gravity.",
+  "definition": "Pompous yet grovelling, utterly without self-awareness and earnest in his absurdities. Heir by entail to Longbourn and clergyman to Lady Catherine de Bourgh, he mistakes tolerance for approval and silence for admiration. He genuinely believes his obsequious attentions are a gift.",
+  "voice": "Verbose and ceremonious — flattery layered onto formality in elaborate constructions that always circle back to his patroness, his position, or his own importance.",
+  "traits": [
+    "Pomposity",
+    "Servility",
+    "Obliviousness"
+  ],
+  "brief": "",
+  "created": "2026-08-28T01:31:41.165Z",
+  "suitor": true,
+  "discoveries": [
+    "Quotes his patroness hourly.",
+    "Means to marry, and soon.",
+    "Heir to Longbourn by entail."
+  ]
+}

@@ -13,6 +13,12 @@
 // SITUATION 1 · THE BALLROOM   (3 turns)
 // ═══════════════════════════════════════════════════════════
 (Situation: the_ballroom | The Ballroom | Working the blazing room — greeting your host, taking its measure, and holding Mr Darcy's eye across the floor.)
+// --- Character intro: Mr Darcy (2-3 plain narrative beats, then the reveal video) ---
+[ui:narrative]
+Narrative: A hush runs through Netherfield — a name passed hand to hand.
+Narrative: Ten thousand a year, they whisper, and not a soul he deigns to know.
+Narrative: Then the crowd parts, and you see him for yourself.
+(Intro: mr_darcy)
 [bg:scene=s1a_arrival_doorway.png] [ui:narrative]
 Narrative: Netherfield blazes like a thing on fire. You step in — and Darcy is already looking, and does not stop.
 [ui:bubble]
@@ -535,3 +541,8 @@ Arabella: Lay the evening out like cards, and see how I shall use it.
 
 (EndScene)
 (Music)
+
+# Fork — bölüm bitince açılacaklar
+(Unlock: the-parsonage | title=The Parsonage)
+(Unlock: longbourn | title=Longbourn)
+(Unlock: rosings-park | title=Rosings Park)

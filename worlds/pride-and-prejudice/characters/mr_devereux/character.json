@@ -1,0 +1,21 @@
+{
+  "name": "Monsieur Rafael Devereux",
+  "folder": "mr_devereux",
+  "archetype": "The Émigré",
+  "appearance": "An elegant continental gentleman, olive-skinned with dark wavy hair and expressive eyes, in a beautifully tailored plum-and-silver French-cut coat with lace at the cuffs and a knowing half-smile.",
+  "definition": "A French aristocrat in exile — a comte without his lands, living on a rescued fortune and impeccable charm. Cosmopolitan, cultured and dangerously fluent in flattery; no one is quite sure how much of him is true, nor whether his wealth is as large as it dazzles.",
+  "voice": "Silken, cultivated and theatrical, flattery delivered like poetry; charming, unreadable, always a step ahead of the conversation.",
+  "traits": [
+    "Charming",
+    "Enigmatic",
+    "Cultured"
+  ],
+  "brief": "",
+  "created": "2026-08-28T01:31:41.172Z",
+  "suitor": true,
+  "discoveries": [
+    "Plays the harpsichord beautifully.",
+    "His title may outshine his purse.",
+    "Fluent in three languages of flattery."
+  ]
+}

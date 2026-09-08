@@ -1,0 +1,22 @@
+{
+  "name": "Lord Sebastian Ravenscar",
+  "folder": "lord_ravenscar",
+  "archetype": "The Dark Viscount",
+  "appearance": "Strikingly handsome and dark-haired with a sharp jaw, brooding grey eyes and a faint scar; black tailcoat, deep-wine waistcoat, a cravat loosened just enough to read as dangerous.",
+  "definition": "A viscount of a vast northern estate — old title, darker fortune, wealth that whispers of gambling tables and duels. All danger and beautiful manners: to be seen on his arm is a triumph and a scandal waiting to happen. His immense fortune is rumoured half-mortgaged to his vices.",
+  "voice": "Low, magnetic and unhurried, every courtesy edged with provocation — charm that dares you to disapprove.",
+  "traits": [
+    "Magnetic",
+    "Reckless",
+    "Dangerous"
+  ],
+  "brief": "",
+  "created": "2026-08-28T01:31:41.168Z",
+  "suitor": true,
+  "discoveries": [
+    "Wins and loses fortunes at cards.",
+    "Has fought at least one duel.",
+    "No one refuses his invitations.",
+    "Something at Ravenscar he never speaks of."
+  ]
+}

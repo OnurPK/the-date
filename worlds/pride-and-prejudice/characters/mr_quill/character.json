@@ -1,0 +1,21 @@
+{
+  "name": "Mr. Jasper Quill",
+  "folder": "mr_quill",
+  "archetype": "The Penniless Poet",
+  "appearance": "A lean romantic young poet with tousled dark curls and pale intense features, ink-stained fingers, a rumpled loosely-tied cravat and a threadbare but artful coat, a small book in hand.",
+  "definition": "A gentleman by birth and a pauper by choice, he traded an inheritance for ink, verse and a garret. Beautiful, brilliant and utterly broke, he will write you into immortality and forget to pay the rent — living on unsold verses and the kindness of friends.",
+  "voice": "Passionate and extravagant, speech tumbling into imagery and quotation; he feels everything at full pitch and budgets nothing.",
+  "traits": [
+    "Passionate",
+    "Impractical",
+    "Romantic"
+  ],
+  "brief": "",
+  "created": "2026-08-28T01:31:41.174Z",
+  "suitor": true,
+  "discoveries": [
+    "Traded an inheritance for ink.",
+    "Beautiful, brilliant, and broke.",
+    "Forgets to pay the rent."
+  ]
+}

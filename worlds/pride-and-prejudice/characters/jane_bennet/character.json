@@ -1,0 +1,15 @@
+{
+  "name": "Jane Bennet",
+  "folder": "jane_bennet",
+  "archetype": "The Gentle Beauty",
+  "appearance": "The acknowledged beauty of the county — serene, fair, and softly radiant, her composure concealing a depth of feeling.",
+  "definition": "Gentle, trusting, and always inclined to the charitable reading, she is slow to suspect ill will and slower to voice displeasure. The eldest Bennet daughter, quietly in love with Bingley, she softens rooms rather than commands them. Her goodness is a kind of blindness — she cannot reconcile her faith in others with the evidence of their failings.",
+  "voice": "Measured and mild, reluctant to assert or contradict; her sentences trail toward hopefulness or gentle demurral, understatement where others flare.",
+  "traits": [
+    "Gentleness",
+    "Forbearance",
+    "Loyalty"
+  ],
+  "brief": "",
+  "created": "2026-08-28T01:31:41.163Z"
+}

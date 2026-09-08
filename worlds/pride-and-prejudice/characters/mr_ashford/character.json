@@ -1,0 +1,15 @@
+{
+  "name": "Mr. Ashford",
+  "folder": "mr_ashford",
+  "archetype": "The Respectable Gentleman",
+  "appearance": "A composed, well-dressed gentleman of settled means, agreeable features and correct, unremarkable manners.",
+  "definition": "A gentleman of comfortable property and unimpeachable respectability — sensible, courteous, and just a little dull. The sort the neighbourhood approves of without quite remembering afterward.",
+  "voice": "Correct and even-tempered, courteous without warmth; he speaks in the safe, agreeable phrases of good society.",
+  "traits": [
+    "Respectable",
+    "Reserved",
+    "Conventional"
+  ],
+  "brief": "",
+  "created": "2026-08-28T01:31:41.179Z"
+}

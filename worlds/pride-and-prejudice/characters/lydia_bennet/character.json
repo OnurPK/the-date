@@ -1,0 +1,15 @@
+{
+  "name": "Lydia Bennet",
+  "folder": "lydia_bennet",
+  "archetype": "The Reckless Flirt",
+  "appearance": "Fifteen, stout and well-grown with a fine complexion, brought out too early and forever laughing toward the officers.",
+  "definition": "Impulsive, vain, and thoughtless, the youngest Bennet is ruled entirely by immediate gratification and an appetite for pleasure and officers that eclipses all prudence. She bursts into rooms with loud laughter and gossip. She mistakes attention for love and has no conception that her actions carry weight beyond the moment.",
+  "voice": "Breathless and exclamatory, tumbling from thought to thought in run-on bursts of girlish enthusiasm, heedless of propriety or consequence.",
+  "traits": [
+    "Impulsiveness",
+    "Vanity",
+    "Recklessness"
+  ],
+  "brief": "",
+  "created": "2026-08-28T01:31:41.166Z"
+}

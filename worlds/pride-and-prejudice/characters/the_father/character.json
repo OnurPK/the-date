@@ -1,0 +1,15 @@
+{
+  "name": "The Father",
+  "folder": "the_father",
+  "archetype": "The Stern Patriarch",
+  "appearance": "An older gentleman of grave authority, plainly and correctly dressed, with the immovable bearing of a man used to being obeyed.",
+  "definition": "A father who rules his household by expectation and duty, weighing prospects and propriety above his children's wishes. His approval is hard-won and his disappointment quietly devastating.",
+  "voice": "Grave and authoritative, sparing of praise; he speaks in judgments and expects them to settle the matter.",
+  "traits": [
+    "Authoritative",
+    "Dutiful",
+    "Exacting"
+  ],
+  "brief": "",
+  "created": "2026-08-28T01:31:41.181Z"
+}

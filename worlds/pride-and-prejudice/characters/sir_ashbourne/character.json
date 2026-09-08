@@ -1,0 +1,21 @@
+{
+  "name": "Sir Henry Ashbourne",
+  "folder": "sir_ashbourne",
+  "archetype": "The Safe Harbour",
+  "appearance": "A warm, distinguished gentleman of about forty, chestnut hair greying at the temples, gentle intelligent eyes, a well-cut bottle-green coat and a calm, assured posture.",
+  "definition": "A baronet of a well-kept country seat — comfortable, unencumbered, respectable to the bone. A widower in his prime: sensible, generous, a little grave, and solidly wealthy with land that pays. The match every sensible mother prays for.",
+  "voice": "Calm, kind and considered, plain-spoken without flourish — the steady reassurance of a man with nothing to prove.",
+  "traits": [
+    "Steady",
+    "Kind",
+    "Dependable"
+  ],
+  "brief": "",
+  "created": "2026-08-28T01:31:41.170Z",
+  "suitor": true,
+  "discoveries": [
+    "A widower these three years.",
+    "Kind to his tenants.",
+    "Reads sermons for pleasure."
+  ]
+}

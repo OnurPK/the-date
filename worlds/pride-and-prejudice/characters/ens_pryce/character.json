@@ -1,0 +1,24 @@
+{
+  "name": "Ensign Edward Pryce",
+  "folder": "ens_pryce",
+  "archetype": "The Idealist Officer",
+  "appearance": "A fresh-faced young militia officer in his early twenties, neat sandy hair and bright earnest eyes, a scarlet regimental coat that is clearly his best and only fine thing, standing straight and eager.",
+  "definition": "A junior militia ensign of good manners but no money, his commission bought on hope and a widowed mother's savings. Young, ardent, full of honour and empty of pounds — he would fight a duel for your glove and starve for your smile.",
+  "voice": "Ardent and gallant, a little formal in his eagerness to do right; honest to a fault and easily moved to noble declarations.",
+  "traits": [
+    "Brave",
+    "Naïve",
+    "Honourable"
+  ],
+  "brief": "",
+  "created": "2026-08-28T01:31:41.174Z",
+  "suitor": true,
+  "discoveries": [
+    "His commission was his mother’s savings.",
+    "Would duel for your glove.",
+    "Green, gallant, and poor.",
+    "A telling detail",
+    "Tactical insight",
+    "Brighton posting"
+  ]
+}

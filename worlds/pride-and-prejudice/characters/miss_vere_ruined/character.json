@@ -1,0 +1,15 @@
+{
+  "name": "Miss Vere (Disgraced)",
+  "folder": "miss_vere_ruined",
+  "archetype": "The Fallen Beauty",
+  "appearance": "The same fashionable beauty undone — pale and hollow-eyed, her fine dress now a reproach, the room's regard turned to whispers.",
+  "definition": "Miss Vere after scandal has done its work: the proud beauty cast out of the society she once ruled. Stripped of her standing, she is by turns brittle, defiant, and desperate — a cautionary shadow of who she was.",
+  "voice": "Brittle and defensive, old hauteur cracking into bitterness or pleading; pride and shame at war in every line.",
+  "traits": [
+    "Disgraced",
+    "Defiant",
+    "Desperate"
+  ],
+  "brief": "",
+  "created": "2026-08-28T01:31:41.179Z"
+}

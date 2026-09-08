@@ -1,0 +1,15 @@
+{
+  "name": "Mr. Coyle",
+  "folder": "mr_coyle",
+  "archetype": "The Grasping Man of Business",
+  "appearance": "A sharp, watchful man in sober but expensive dress, quick eyes forever pricing the room and its occupants.",
+  "definition": "A man of business and few scruples who has made money enough to buy his way toward gentility. Shrewd, acquisitive, and coldly polite, he treats acquaintance as investment and sentiment as weakness.",
+  "voice": "Clipped and transactional, courteous only where it profits him; he turns every exchange toward advantage.",
+  "traits": [
+    "Grasping",
+    "Shrewd",
+    "Cold"
+  ],
+  "brief": "",
+  "created": "2026-08-28T01:31:41.181Z"
+}

@@ -25,7 +25,7 @@
       var skip = qs.get('noredirect') === '1';
       if (!skip && window.innerWidth <= 700 &&
           !/[?&]embed=1/.test(window.location.search)) {
-        window.location.replace('dialog.html' + window.location.search);
+        window.location.replace('dialog2.html' + window.location.search);
       }
     } catch (e) {}
   })();
@@ -559,6 +559,9 @@
 </div>
 
 <div class="sizes">
+  <button id="authorLaunch" type="button" title="Episode & location manager">✍ Episode Manager</button>
+  <button id="newGameBtn" class="size-pill" type="button" title="Reset progress and start fresh">⟲ New game</button>
+  <button id="gotoEndBtn" class="size-pill" type="button" title="Skip to the episode's end screen" style="display:none">⏭ Go to End</button>
   <button class="size-pill" data-w="375" data-h="812">SE</button>
   <button class="size-pill active" data-w="390" data-h="844">14</button>
   <button class="size-pill" data-w="430" data-h="932">Max</button>
@@ -688,13 +691,1660 @@
 
 </aside>
 
+<!-- ============ EPISODE AUTHOR (overlay tool) — launch button lives in .sizes (top-right) ============ -->
+<div id="authorOverlay">
+  <div class="au-box">
+    <div class="au-head"><span class="au-title">Episode Author</span>
+      <div class="au-tabs"><button id="auTabEpisodes" class="au-tab on" type="button">Locations</button><button id="auTabStory" class="au-tab" type="button">Story</button><button id="auTabChars" class="au-tab" type="button">Karakterler</button><button id="auTabEnc" class="au-tab" type="button">Karşılaşmalar</button><button id="auTabCreate" class="au-tab" type="button">Create</button></div>
+      <button id="auClose" type="button">✕</button></div>
+    <div class="au-body">
+      <div id="auEpisodesView">
+        <div class="au-eps-head"><span class="au-eps-title">Harita lokasyonları <span class="au-eps-sub">— tümü · unlock koşulunu ayarla</span></span><button id="auAddPlaceholder" class="au-mini" type="button" style="margin-left:auto">+ Placeholder episode</button><span id="auEpsStatus" class="au-status"></span></div>
+        <div id="auEpsList" class="au-eps-list"></div>
+      </div>
+      <div id="auStoryView" style="display:none;">
+        <div class="au-eps-head"><span class="au-eps-title">Story map <span class="au-eps-sub">— turlar (sıra) · çizgiler (branch)</span></span><button id="auStoryAddTier" class="au-mini" type="button" style="margin-left:auto">+ Tur</button><button id="auStoryReload" class="au-mini" type="button">⟳ Yenile</button><span id="auStoryStatus" class="au-status"></span></div>
+        <div class="au-story-wrap">
+          <div id="auStoryCanvas" class="au-story-canvas"></div>
+          <div id="auStoryInspector" class="au-story-insp"><div class="au-status" style="padding:12px">Bir düğüme tıkla.</div></div>
+        </div>
+      </div>
+      <div id="auCharactersView" style="display:none;">
+        <div class="au-eps-head"><span class="au-eps-title">Karakterler <span class="au-eps-sub">— suitor keşif havuzları (Codes’ta bunlardan seçilir)</span></span><span id="auCharsStatus" class="au-status"></span></div>
+        <div id="auCharsList" class="au-chars-ref"></div>
+      </div>
+      <div id="auEncView" style="display:none;">
+        <div class="au-eps-head"><span class="au-eps-title">Karşılaşmalar <span class="au-eps-sub">— pc (bizimle) / npc (izlenen) · tip · DSL script</span></span>
+          <button id="auEncAdd" class="au-mini" type="button" style="margin-left:auto">+ Karşılaşma</button>
+          <button id="auEncSave" class="au-mini" type="button">Kaydet</button>
+          <span id="auEncStatus" class="au-status"></span></div>
+        <div id="auEncList" class="au-eps-list"></div>
+      </div>
+      <div id="auCreateView" style="display:none;">
+      <div class="au-setup">
+        <div class="au-pc">You play as <b>Arabella</b> — always the lead.</div>
+        <div class="au-field au-span">
+          <div class="au-flabel">Characters in this episode</div>
+          <div class="au-chars-wrap">
+            <button id="auCharsPrev" class="au-arrow" type="button" aria-label="prev">‹</button>
+            <div id="auChars" class="au-chars"></div>
+            <button id="auCharsNext" class="au-arrow" type="button" aria-label="next">›</button>
+          </div>
+        </div>
+        <div class="au-field">
+          <div class="au-flabel">Location (free episode spots)</div>
+          <select id="auLocation"></select>
+        </div>
+        <div class="au-field">
+          <div class="au-flabel">&nbsp;</div>
+          <button id="auAddLoc" class="au-mini" type="button">+ New location on map</button>
+        </div>
+        <label class="au-brief">Brief <textarea id="auBrief" rows="4" placeholder="Who calls, what happens, the emotional turn, 1-2 choices…"></textarea></label>
+        <button id="auGen" class="au-primary" type="button">✨ Generate script</button>
+        <span id="auGenStatus" class="au-status"></span>
+      </div>
+      </div>
+    </div>
+    <div id="auMapView">
+      <div class="au-mv-head">
+        <button id="auMvBack" class="au-mini" type="button">‹ Back</button>
+        <span class="au-mv-title">Place location & draw walking route</span>
+        <span id="auMvHint" class="au-status">1) İlk tıklama = konum pini (sabit kalır). 2) Sonraki tıklamalar = ona giden yürüme yolu.</span>
+        <span id="auMvVer" style="margin-left:auto;font:600 10px monospace;color:#7fd">map-v8</span>
+        <span id="auMvDbg" style="font:600 10px monospace;color:#fd7;margin-left:10px"></span>
+      </div>
+      <div class="au-mv-main">
+        <div class="au-mv-mapwrap" id="auMvWrap">
+          <img id="auMvImg" src="worlds/pride-and-prejudice/map.jpg" alt="map">
+          <div id="auMvStage">
+            <svg id="auMvSvg" preserveAspectRatio="none"></svg>
+            <div id="auMvPins"></div>
+          </div>
+        </div>
+        <div class="au-mv-side">
+          <div class="au-flabel">New location</div>
+          <input id="auLocTitle" type="text" placeholder="Title e.g. Rosings Park">
+          <input id="auLocId" type="text" placeholder="id e.g. rosings-park">
+          <button id="auSuggest" class="au-mini" type="button">✨ AI suggest places</button>
+          <div id="auSuggestions" class="au-suggests"></div>
+          <div class="au-mv-route">Waypoints: <b id="auWpCount">0</b> <button id="auWpUndo" class="au-mini" type="button">Undo</button> <button id="auWpClear" class="au-mini" type="button">Clear</button></div>
+          <button id="auLocSave" class="au-primary" type="button">Save location</button>
+          <span id="auLocStatus" class="au-status"></span>
+        </div>
+      </div>
+    </div>
+    <div id="auCharView">
+      <div class="au-mv-head">
+        <button id="auCvBack" class="au-mini" type="button">‹ Back</button>
+        <span class="au-mv-title">Create a new character with AI</span>
+        <span class="au-status">Describe who they are — AI invents a world-fitting Regency character.</span>
+      </div>
+      <div class="au-cv-main">
+        <div class="au-cv-form">
+          <div class="au-flabel">Öneriler <span id="auCvSugStatus" class="au-status"></span></div>
+          <div id="auCvSuggest" class="au-cv-suggest"></div>
+          <div class="au-flabel">Character brief</div>
+          <textarea id="auCvBrief" rows="5" placeholder="Bir öneriye tıkla ya da kendin yaz: e.g. A war-scarred younger son returned from the Continent, proud but penniless, drawn to Arabella's wit…"></textarea>
+          <button id="auCvGen" class="au-primary" type="button">✨ Generate character</button>
+          <span id="auCvStatus" class="au-status"></span>
+        </div>
+        <div class="au-cv-results" id="auCvResults" style="display:none;">
+          <div class="au-cv-reshead">Choose one <button id="auCvRetry" class="au-mini" type="button">↻ Try again</button></div>
+          <div class="au-cv-cards" id="auCvCards"></div>
+        </div>
+      </div>
+    </div>
+    <div id="auResultView">
+      <div id="auGenSummary" class="au-gen-summary"><div class="au-gs-card">
+        <div class="au-gs-title">Oluşturuldu ✨</div>
+        <div id="auGsBody" class="au-gs-body"></div>
+        <button id="auGsGo" class="au-gs-go" type="button">Senaryoyu aç →</button>
+      </div></div>
+      <div class="au-mv-head">
+        <button id="auResBack" class="au-mini" type="button">‹ Back</button>
+        <div class="au-tabs"><button id="auResTabScript" class="au-tab on" type="button">Script</button><button id="auResTabCodes" class="au-tab" type="button">Codes</button><button id="auResTabFork" class="au-tab" type="button">Fork</button><button id="auResTabAssets" class="au-tab" type="button">Assets</button></div>
+        <span class="au-mv-title" id="auResTitle">Episode</span>
+        <span style="margin-left:auto"></span>
+        <button id="auSave" class="au-mini" type="button">Save to episode</button>
+        <span id="auSaveStatus" class="au-status"></span>
+      </div>
+      <div id="auResScript" class="au-res-main">
+        <div class="au-res-left">
+          <div class="au-flabel" style="display:flex;align-items:center;gap:8px">Situations <button id="auRegen" class="au-cutscene-add" type="button" style="display:none">⟳ Regenerate (<span id="auStageN">0</span>)</button> <span id="auSitHint" class="au-status">tıkla → sadece o bölüm</span></div>
+          <div id="auSituations" class="au-sit-list"></div>
+        </div>
+        <div class="au-res-right">
+          <textarea id="auScript" spellcheck="false"></textarea>
+        </div>
+      </div>
+      <div id="auResCodes" class="au-res-main" style="display:none;">
+        <div id="auCodesList" class="au-codes-list"></div>
+      </div>
+      <div id="auResFork" class="au-res-main" style="display:none;">
+        <div class="au-fork-wrap">
+          <div class="au-flabel" style="display:flex;align-items:center;gap:8px">Bölüm bitince açılacaklar <button id="auForkAdd" class="au-mini" type="button">+ Unlock</button><button id="auForkNewPh" class="au-mini" type="button">+ Placeholder episode</button></div>
+          <div class="au-fork-hint au-status">Aynı <b>grup</b>u paylaşanlar birbirini dışlar (pair). Grupsuz = bağımsız açılır. Tür: ana çatal (Continue) veya süreli side (timer).</div>
+          <div id="auForkList" class="au-fork-list"></div>
+        </div>
+      </div>
+      <div id="auResAssets" class="au-res-main" style="display:none;">
+        <div class="au-res-left">
+          <div class="au-flabel">Assets <button id="auScan" class="au-mini" type="button">Rescan</button> <button id="auGenAll" class="au-mini" type="button">Generate all</button></div>
+          <div id="auAssets" class="au-assets"></div>
+        </div>
+        <div class="au-res-right au-asset-preview" id="auAssetPreview"><div class="au-status" style="margin:auto">Bir asset seç → önizleme</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+<style>
+  #authorLaunch { background:linear-gradient(120deg,#8b7bd8,#e0668a); color:#fff; border:none; border-radius:10px; padding:6px 12px; font:700 12px Inter,system-ui,sans-serif; cursor:pointer; box-shadow:0 6px 18px -6px rgba(0,0,0,.6); }
+  #authorOverlay { position:fixed; inset:0; z-index:200; background:rgba(6,4,12,.72); backdrop-filter:blur(6px); display:none; align-items:center; justify-content:center; }
+  #authorOverlay.on { display:flex; }
+  .au-box { position:relative; width:min(1100px,94vw); height:min(760px,92vh); background:rgba(20,16,30,.98); border:1px solid rgba(178,198,255,.22); border-radius:16px; display:flex; flex-direction:column; overflow:hidden; color:#eee; font-family:Inter,system-ui,sans-serif; }
+  .au-head { display:flex; align-items:center; justify-content:space-between; padding:12px 16px; border-bottom:1px solid rgba(255,255,255,.1); }
+  .au-title { font-weight:800; letter-spacing:.04em; color:#cfe0ff; }
+  .au-tabs { display:flex; gap:4px; background:rgba(0,0,0,.25); border:1px solid rgba(255,255,255,.1); border-radius:9px; padding:3px; }
+  .au-tab { background:none; border:none; color:#9fb0d0; font:600 12px Inter,system-ui,sans-serif; padding:5px 14px; border-radius:6px; cursor:pointer; }
+  .au-tab.on { background:linear-gradient(120deg,#8b7bd8,#e0668a); color:#fff; }
+  #auEpisodesView { flex:1; display:flex; flex-direction:column; gap:10px; overflow:hidden; }
+  .au-eps-head { display:flex; align-items:center; justify-content:space-between; }
+  .au-eps-title { font:700 14px Inter,system-ui,sans-serif; color:#cfe0ff; }
+  .au-eps-sub { font-weight:400; color:#8a97b5; font-size:12px; }
+  .au-eps-list { flex:1; overflow-y:auto; display:flex; flex-direction:column; gap:7px; padding-right:4px; }
+  .au-grp-head { display:flex; align-items:center; gap:8px; margin:12px 0 2px; font:700 12px Inter,system-ui,sans-serif; letter-spacing:.04em; color:#cbd8f5; text-transform:uppercase; }
+  .au-grp-head:first-child { margin-top:0; }
+  .au-grp-head .gic { color:#e0a0c0; }
+  .au-grp-head .gcount { font-weight:400; color:#7f8db0; }
+  .au-tierbadge { flex:none; font:700 9px Inter,system-ui,sans-serif; text-transform:uppercase; letter-spacing:.05em; padding:3px 7px; border-radius:6px; }
+  .au-tierbadge.episode { background:rgba(224,102,138,.2); color:#f0a8c2; }
+  .au-tierbadge.interactive { background:rgba(212,165,90,.2); color:#e6c078; }
+  .au-tierbadge.short-story { background:rgba(138,180,255,.2); color:#a8c6ff; }
+  .au-tierbadge.onboarding { background:rgba(111,227,200,.18); color:#7fe0c0; }
+  .au-ep { display:flex; align-items:center; gap:12px; background:rgba(255,255,255,.04); border:1px solid rgba(255,255,255,.12); border-radius:12px; padding:9px 12px; }
+  .au-ep.dragging { opacity:.5; }
+  .au-ep.locked { opacity:1; }
+  .au-badge.archived { background:rgba(255,255,255,.08); color:#c7b3e6; border:1px solid rgba(180,150,230,.35); }
+  .au-ep .acts button.restore { color:#8fe0b0; }
+  .au-ep .grip { color:#6b7794; cursor:grab; font-size:18px; }
+  .au-ep .ord { width:26px; height:26px; flex:none; border-radius:50%; background:rgba(138,180,255,.16); color:#bcd2ff; display:flex; align-items:center; justify-content:center; font:600 12px Inter,system-ui,sans-serif; }
+  .au-ep .thumb { width:56px; height:40px; flex:none; border-radius:6px; object-fit:cover; background:#0c0a14; border:1px solid rgba(255,255,255,.12); }
+  .au-ep .meta { flex:1; min-width:0; }
+  .au-ep .etitle { font:600 14px Inter,system-ui,sans-serif; color:#eef2fb; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .au-ep .eloc { font-size:12px; color:#93a2c4; }
+  .au-badge { font:600 11px Inter,system-ui,sans-serif; padding:3px 9px; border-radius:20px; white-space:nowrap; }
+  .au-badge.ready { background:rgba(93,202,165,.18); color:#7fe0c0; }
+  .au-badge.draft { background:rgba(239,159,39,.18); color:#f0b968; }
+  .au-badge.empty { background:rgba(255,255,255,.08); color:#9aa7c4; }
+  /* Karakterler referans sekmesi */
+  .au-chars-ref { display:flex; flex-direction:column; gap:10px; overflow:auto; padding:2px; }
+  .au-charref { background:rgba(255,255,255,.04); border:1px solid rgba(255,255,255,.08); border-radius:12px; padding:11px 13px; }
+  .au-charref-h { display:flex; align-items:center; gap:9px; margin-bottom:8px; }
+  .au-charref-name { font:600 14px Inter,system-ui,sans-serif; color:#f0ecff; }
+  .au-charref-id { font:500 11px ui-monospace,monospace; color:#9aa7c4; background:rgba(255,255,255,.06); padding:2px 7px; border-radius:6px; }
+  .au-charref-n { margin-left:auto; font:600 11px Inter,system-ui,sans-serif; color:#8fe3f5; }
+  .au-charref-chips { display:flex; flex-wrap:wrap; gap:6px; }
+  .au-charref-chip { font:500 12px Inter,system-ui,sans-serif; color:#d7d0ee; background:rgba(143,227,245,.10); border:1px solid rgba(143,227,245,.25); padding:4px 9px; border-radius:14px; }
+  /* Fork authoring tab */
+  #auResFork { overflow-y:auto; padding:12px 16px; }
+  .au-fork-hint { margin:4px 0 10px; }
+  .au-fork-list { display:flex; flex-direction:column; gap:10px; }
+  .au-fork-row { background:rgba(255,255,255,.04); border:1px solid rgba(255,255,255,.09); border-radius:12px; padding:10px 11px; display:flex; flex-direction:column; gap:7px; }
+  .au-fork-row .afr-line { display:flex; gap:7px; align-items:center; }
+  .au-fork-row select, .au-fork-row input { background:rgba(0,0,0,.25); border:1px solid rgba(255,255,255,.14); border-radius:8px; color:#eaf0ff; font:600 12px Inter,system-ui,sans-serif; padding:6px 8px; }
+  .au-fork-row .afr-ep { flex:1; min-width:0; }
+  .au-fork-row .afr-title, .au-fork-row .afr-desc { flex:1; min-width:0; }
+  .au-fork-row .afr-group { width:130px; }
+  .au-fork-row .afr-cover { flex:1; min-width:0; }
+  .au-fork-row .afr-del { background:rgba(192,50,79,.6); border:none; color:#fff; border-radius:6px; width:24px; height:24px; cursor:pointer; flex:none; font-weight:700; }
+  /* Story map (Faz A) */
+  /* Story view fills the overlay's remaining height so the canvas uses the
+     empty space below instead of a fixed 480px box. */
+  #auStoryView { flex:1; min-height:0; flex-direction:column; }
+  #auStoryView .au-eps-head { flex:none; }
+  .au-story-wrap { display:flex; gap:12px; flex:1; min-height:0; }
+  .au-story-canvas { position:relative; flex:1; height:auto; min-height:0; background:rgba(0,0,0,.18); border:0.5px solid rgba(255,255,255,.09); border-radius:12px; overflow:auto; }
+  .au-story-inner { position:relative; width:100%; }
+  .au-story-svg { position:absolute; inset:0; pointer-events:none; }
+  .au-node { position:absolute; box-sizing:border-box; padding:7px 8px; border-radius:8px; font:600 11px Inter,system-ui,sans-serif; color:#eaf0ff; text-align:center; cursor:pointer; background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.22); }
+  .au-node .au-node-t { display:block; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .au-node .au-node-su { position:absolute; left:-9px; top:-9px; width:24px; height:24px; border-radius:50%; background:#241c38 center/cover no-repeat; border:2px solid rgba(255,255,255,.55); box-shadow:0 2px 7px rgba(0,0,0,.55); z-index:3; }
+  .au-node.sel { outline:2px solid #fff; z-index:2; }
+  .au-node.r-main { background:rgba(216,90,48,.22); border-color:rgba(216,90,48,.62); }
+  .au-node.r-side { background:rgba(239,159,39,.22); border-color:rgba(239,159,39,.62); }
+  .au-node.r-solo { background:rgba(136,135,128,.22); border-color:rgba(136,135,128,.55); }
+  .au-node.ph { border-style:dashed; opacity:.72; }
+  .au-node.t-interactive { border-color:rgba(94,201,168,.55); background:rgba(94,201,168,.10); }
+  .au-node.t-short-story { border-color:rgba(240,185,104,.55); background:rgba(240,185,104,.10); }
+  .au-node .au-port { position:absolute; right:-6px; top:50%; transform:translateY(-50%); width:12px; height:12px; border-radius:50%; background:#7F77DD; border:2px solid rgba(0,0,0,.4); cursor:crosshair; opacity:0; transition:opacity .12s; }
+  .au-node:hover .au-port, .au-node.sel .au-port { opacity:1; }
+  .au-node.msel { outline:2px solid #6fe3c8; outline-offset:1px; }
+  /* Encounters editor */
+  .au-enc-card{ border:1px solid var(--line,rgba(255,255,255,.12)); border-radius:10px; padding:10px; margin-bottom:10px; background:rgba(255,255,255,.03); }
+  .au-enc-card .enc-row{ display:flex; align-items:center; gap:6px; flex-wrap:wrap; }
+  .au-enc-card input, .au-enc-card select, .au-enc-card textarea{ background:rgba(0,0,0,.28); color:#eae6f5; border:1px solid rgba(255,255,255,.14); border-radius:6px; font:600 11.5px Inter,system-ui; padding:5px 7px; }
+  .au-enc-card .enc-id{ width:120px; } .au-enc-card .enc-title{ width:100%; margin-top:6px; }
+  .au-enc-card .enc-amp{ color:#9a90b4; } .au-enc-card .enc-once{ display:inline-flex; align-items:center; gap:4px; color:#9a90b4; font:600 11px Inter; }
+  .au-enc-card .enc-del{ margin-left:auto; border:none; background:transparent; color:#f0889f; font-size:15px; cursor:pointer; }
+  .au-enc-card .enc-lines{ width:100%; height:56px; margin-top:6px; resize:vertical; font-weight:500; }
+  .au-enc-card .enc-script{ width:100%; height:200px; margin-top:6px; resize:vertical; font:500 11.5px/1.5 ui-monospace,Menlo,monospace; white-space:pre; }
+  .au-enc-card .enc-mode{ font-weight:700; }
+  .au-enc-card .enc-ch-head{ font:600 10px Inter; color:#8f86a8; margin:8px 0 5px; }
+  .au-enc-card .enc-choice{ display:flex; gap:6px; margin-bottom:5px; }
+  .au-enc-card .enc-choice .ecc-t{ flex:1; } .au-enc-card .enc-choice .ecc-fx{ flex:1.4; font-family:ui-monospace,Menlo,monospace; }
+  .au-enc-card .enc-choice .ecc-del{ border:none; background:transparent; color:#f0889f; cursor:pointer; }
+  .au-story-toolbar { position:absolute; top:8px; left:50%; transform:translateX(-50%); display:flex; align-items:center; gap:8px; background:rgba(20,16,30,.95); border:0.5px solid rgba(255,255,255,.15); border-radius:20px; padding:5px 8px 5px 12px; z-index:5; }
+  .au-story-toolbar span { font:600 11px Inter,system-ui,sans-serif; color:#c6bee0; }
+  .au-story-toolbar button { background:linear-gradient(120deg,#8b7bd8,#e0668a); border:none; color:#fff; font:700 11px Inter,system-ui,sans-serif; border-radius:14px; padding:5px 11px; cursor:pointer; }
+  .au-story-toolbar button#auUnpairBtn { background:rgba(255,255,255,.1); }
+  .au-story-insp { width:210px; flex:none; background:rgba(255,255,255,.04); border:0.5px solid rgba(255,255,255,.09); border-radius:12px; padding:10px 12px; overflow:auto; min-height:0; }
+  .au-insp-h { font:600 14px Inter,system-ui,sans-serif; color:#f0ecff; }
+  .au-insp-id { font:500 11px ui-monospace,monospace; color:#9aa7c4; margin-bottom:6px; }
+  .au-insp-sec { font:700 10px Inter,system-ui,sans-serif; letter-spacing:.1em; text-transform:uppercase; color:#8f86a8; margin:12px 0 6px; }
+  .au-insp-grp { margin-bottom:8px; }
+  .au-insp-gt { font:600 11px Inter,system-ui,sans-serif; color:#c6a8f0; margin-bottom:4px; }
+  .au-insp-chip { display:inline-block; font:500 11px Inter,system-ui,sans-serif; color:#d7d0ee; background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.16); border-radius:12px; padding:3px 8px; margin:2px 3px 2px 0; }
+  .au-srow { background:rgba(255,255,255,.04); border:0.5px solid rgba(255,255,255,.1); border-radius:8px; padding:7px 8px; margin-bottom:7px; }
+  .au-srow .sr-top { display:flex; align-items:center; gap:6px; margin-bottom:6px; }
+  .au-srow .sr-name { font:600 12px Inter,system-ui,sans-serif; color:#f0ecff; flex:1; }
+  .au-srow .sr-del { background:rgba(192,50,79,.6); border:none; color:#fff; border-radius:5px; width:20px; height:20px; cursor:pointer; flex:none; font:700 9px/1 system-ui; }
+  .au-srow .sr-line { display:flex; gap:5px; }
+  .au-srow select, .au-srow input { background:rgba(0,0,0,.25); border:1px solid rgba(255,255,255,.14); border-radius:6px; color:#eaf0ff; font:600 11px Inter,system-ui,sans-serif; padding:4px 6px; min-width:0; }
+  .au-srow .sr-kind { flex:none; } .au-srow .sr-group { flex:1; }
+  .au-req { display:flex; align-items:center; gap:5px; }
+  .au-req select { background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.16); border-radius:7px; color:#cfe0ff; font-size:11px; padding:4px 6px; max-width:140px; }
+  .au-ep .acts { display:flex; gap:4px; }
+  .au-ep .acts button { background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.16); color:#cfe0ff; border-radius:6px; width:28px; height:28px; font-size:13px; cursor:pointer; }
+  .au-ep .acts button:hover { background:rgba(224,102,138,.18); border-color:rgba(224,102,138,.5); }
+  #auClose { background:none; border:none; color:#aaa; font-size:18px; cursor:pointer; }
+  .au-body { flex:1; overflow:hidden; display:flex; flex-direction:column; padding:14px 16px; gap:12px; }
+  .au-setup { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+  .au-setup label { display:flex; flex-direction:column; gap:4px; font-size:11px; color:#9fb0d0; }
+  .au-setup .au-brief { grid-column:1 / -1; }
+  .au-setup select, .au-setup input, .au-setup textarea { background:rgba(255,255,255,.07); border:1px solid rgba(255,255,255,.16); border-radius:8px; color:#fff; font-size:13px; padding:7px 9px; font-family:inherit; }
+  .au-primary { grid-column:1 / -1; background:linear-gradient(120deg,#8b7bd8,#e0668a); color:#fff; border:none; border-radius:9px; padding:9px; font-weight:700; cursor:pointer; }
+  .au-pc { grid-column:1 / -1; font-size:12px; color:#e0a0c0; }
+  .au-field { display:flex; flex-direction:column; gap:4px; }
+  .au-field.au-span { grid-column:1 / -1; }
+  .au-flabel { font-size:11px; color:#9fb0d0; }
+  .au-chars-wrap { display:flex; align-items:center; gap:6px; }
+  .au-arrow { flex:none; width:30px; height:180px; border-radius:9px; background:rgba(138,180,255,.1); border:1px solid rgba(138,180,255,.3); color:#cfe0ff; font:400 22px/1 system-ui; cursor:pointer; transition:background .15s, opacity .15s; }
+  .au-arrow:hover { background:rgba(224,102,138,.18); border-color:rgba(224,102,138,.5); }
+  .au-arrow:disabled { opacity:.25; cursor:default; }
+  .au-chars { flex:1; display:grid; grid-auto-flow:column; grid-template-rows:repeat(2, auto); grid-auto-columns:96px; gap:10px 10px; overflow-x:auto; overflow-y:hidden; scroll-behavior:smooth; padding:4px 2px; touch-action:pan-x; }
+  .au-chars::-webkit-scrollbar { display:none; }
+  .au-chars { scrollbar-width:none; }
+  .au-chip { font-size:11px; color:#cfe0ff; background:rgba(138,180,255,.1); border:1px solid rgba(138,180,255,.3); border-radius:7px; padding:4px 9px; cursor:pointer; user-select:none; }
+  .au-chip.on { background:linear-gradient(120deg,#8b7bd8,#e0668a); color:#fff; border-color:transparent; }
+  /* character avatars (Episode Author) — compact; enlarged on hover in the tooltip */
+  .au-cav { position:relative; display:flex; flex-direction:column; align-items:center; gap:4px; width:96px; background:none; border:none; padding:0; cursor:pointer; }
+  .au-cav .av { width:78px; height:78px; border-radius:50%; object-fit:cover; object-position:top center; background:#1a1626; border:2px solid rgba(138,180,255,.35); transition:border-color .15s, box-shadow .15s, transform .15s; }
+  .au-cav:hover .av { transform:translateY(-1px); border-color:rgba(224,160,200,.7); }
+  .au-cav.on .av { border-color:#e0668a; box-shadow:0 0 0 2px rgba(224,102,138,.4), 0 0 10px rgba(224,102,138,.5); }
+  .au-cav .nm { font-size:11px; font-weight:600; color:#b9c6e6; text-align:center; line-height:1.15; max-width:96px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .au-cav.on .nm { color:#fff; }
+  .au-cav .av.initav { font-size:26px; }
+  /* hover popover: BIG avatar + 2-3 line description (shared floating element) */
+  .au-cav-tip { position:absolute; display:none; width:250px; background:#181422; border:1px solid rgba(178,198,255,.3); border-radius:12px; padding:14px; text-align:center; opacity:1; pointer-events:none; z-index:40; box-shadow:0 14px 40px -8px #000; }
+  .au-cav-tip .bigav { width:160px; height:160px; border-radius:14px; object-fit:cover; object-position:top center; background:#1a1626; margin:0 auto 10px; display:flex; align-items:center; justify-content:center; font:800 56px Inter,system-ui,sans-serif; color:#fff; }
+  .au-cav-tip .tnm { font:800 16px Inter,system-ui,sans-serif; color:#fff; }
+  .au-cav-tip .tarch { font:700 11px Inter,system-ui,sans-serif; color:#e0a0c0; letter-spacing:.03em; margin-top:2px; }
+  .au-cav-tip .tdef { font-size:12px; color:#c6d2ec; line-height:1.5; margin-top:7px; text-align:left; }
+  /* delete (× ) — only shown on hover for art-less characters */
+  .au-cav .del { position:absolute; top:-4px; right:8px; width:22px; height:22px; border-radius:50%; background:#c0324f; color:#fff; border:2px solid #1a1626; font:700 12px/1 system-ui; align-items:center; justify-content:center; cursor:pointer; display:none; z-index:21; }
+  .au-cav.noart:hover .del { display:flex; }
+  /* the "+" add-character tile */
+  .au-cav.add .av { display:flex; align-items:center; justify-content:center; font:300 34px/1 system-ui; color:#8ab4ff; border-style:dashed; }
+  .au-cav.add:hover .av { border-color:#e0668a; color:#e0668a; }
+  .au-addrow { display:none; margin-top:8px; }
+  .au-addrow.show { display:flex; }
+  .au-addrow { display:flex; gap:6px; margin-top:4px; }
+  .au-addrow input { flex:1; background:rgba(255,255,255,.07); border:1px solid rgba(255,255,255,.16); border-radius:7px; color:#fff; font-size:12px; padding:5px 8px; }
+  #auMapView, #auCharView, #auResultView { position:absolute; inset:0; background:rgba(20,16,30,.99); display:none; flex-direction:column; z-index:5; border-radius:16px; }
+  #auMapView.on, #auCharView.on, #auResultView.on { display:flex; }
+  /* result view (Script / Assets tabs, two panels) */
+  .au-res-main { flex:1; display:flex; gap:12px; padding:12px 16px; overflow:hidden; }
+  .au-res-left { width:300px; flex:none; display:flex; flex-direction:column; gap:8px; overflow:hidden; }
+  .au-res-right { flex:1; min-width:0; display:flex; }
+  #auScript { flex:1; background:rgba(0,0,0,.35); border:1px solid rgba(255,255,255,.14); border-radius:8px; color:#dfe6f2; font:12px/1.55 ui-monospace,Menlo,monospace; padding:12px; resize:none; width:100%; }
+  .au-sit-list { flex:1; overflow-y:auto; display:flex; flex-direction:column; gap:7px; padding-right:4px; }
+  .au-sit { text-align:left; background:rgba(255,255,255,.04); border:1px solid rgba(255,255,255,.12); border-radius:10px; padding:10px 112px 10px 12px; cursor:pointer; transition:border-color .15s, background .15s; }
+  .au-sit:hover { border-color:rgba(224,160,200,.5); }
+  .au-sit.on { border-color:#e0668a; background:rgba(224,102,138,.12); }
+  .au-sit .st { display:block; font:600 12.5px Inter,system-ui,sans-serif; color:#eef2fb; }
+  .au-sit .sd { display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; font-size:11px; color:#9fb0d0; line-height:1.35; margin-top:2px; }
+  .au-sit { position:relative; }
+  /* when detail is open, box + detail read as ONE continuous card */
+  .au-sit.open-detail { border-bottom-left-radius:0; border-bottom-right-radius:0; border-bottom-color:transparent; }
+  /* per-situation dialogue count (hover) */
+  .au-sit .dlg { position:absolute; top:8px; right:8px; display:none; align-items:center; gap:4px; font-size:10px; color:#9fb0d0; }
+  .au-sit:hover .dlg { display:flex; }
+  .au-sit .dlg input { width:38px; background:rgba(0,0,0,.35); border:1px solid rgba(255,255,255,.2); border-radius:5px; color:#fff; font-size:11px; padding:2px 4px; }
+  .au-sit .dlg button { background:rgba(138,180,255,.18); border:1px solid rgba(138,180,255,.4); color:#cfe0ff; border-radius:5px; width:22px; height:22px; font-size:11px; cursor:pointer; }
+  /* insert zone between situations (hover → thin line + plus) */
+  .au-ins { height:8px; position:relative; display:flex; align-items:center; justify-content:center; }
+  .au-ins::before { content:''; position:absolute; left:8px; right:8px; height:2px; background:linear-gradient(90deg,transparent,#8b7bd8,#e0668a,transparent); opacity:0; transition:opacity .15s; border-radius:2px; }
+  .au-ins:hover::before { opacity:.9; }
+  .au-ins .plus { opacity:0; width:22px; height:22px; border-radius:50%; background:linear-gradient(120deg,#8b7bd8,#e0668a); color:#fff; border:none; font:700 14px/1 system-ui; cursor:pointer; z-index:2; transition:opacity .15s, transform .15s; }
+  .au-ins:hover .plus { opacity:1; }
+  .au-ins .plus:active { transform:scale(.9); }
+  .au-ins.editing { height:auto; padding:6px 0; }
+  .au-ins .insform { display:none; gap:6px; align-items:center; background:rgba(20,16,30,.98); border:1px solid rgba(224,102,138,.5); border-radius:9px; padding:6px 8px; z-index:3; }
+  .au-ins.editing .insform { display:flex; } .au-ins.editing .plus { display:none; }
+  .au-ins .insform input { width:42px; background:rgba(0,0,0,.35); border:1px solid rgba(255,255,255,.2); border-radius:5px; color:#fff; font-size:11px; padding:3px 5px; }
+  .au-ins .insform button { background:linear-gradient(120deg,#8b7bd8,#e0668a); border:none; color:#fff; border-radius:6px; padding:4px 8px; font:700 10px Inter,system-ui; cursor:pointer; }
+  .au-ins .insform .x { background:rgba(255,255,255,.1); }
+  /* situation row: arrow + cutscene count on the right */
+  .au-sitwrap { display:flex; flex-direction:column; }
+  .au-sit .arrow { position:absolute; right:8px; top:50%; transform:translateY(-50%); display:flex; flex-flow:row nowrap; align-items:center; justify-content:flex-end; gap:6px; color:#9fb0d0; width:96px; }
+  .au-sit .arrow .stat { flex:none; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2px; min-width:34px; padding:4px 6px; border-radius:9px; background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.14); }
+  .au-sit .arrow .stat .ic { font-size:14px; line-height:1; }
+  .au-sit .arrow .stat .n { font:700 14px Inter,system-ui,sans-serif; line-height:1; color:#eef2fb; }
+  .au-sit .arrow .stat.cut { background:rgba(224,102,138,.16); border-color:rgba(224,102,138,.38); }
+  .au-sit .arrow .stat.cut .n { color:#f3b6cd; }
+  .au-sit .arrow .stat.talk { background:rgba(138,180,255,.14); border-color:rgba(138,180,255,.34); }
+  .au-sit .arrow .stat.talk .n { color:#c2d5ff; }
+  .au-sit .arrow .chev { font-size:16px; transition:transform .15s; }
+  .au-sit.open-detail .arrow .chev { transform:rotate(90deg); }
+  .au-sitdetail { display:none; background:rgba(255,255,255,.04); border:1px solid rgba(255,255,255,.12); border-top:none; border-radius:0 0 10px 10px; margin-top:0; padding:12px 11px; }
+  .au-sitdetail.on { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+  .au-sitdetail .dfield { display:flex; flex-direction:column; gap:6px; min-width:0; }
+  .au-sitdetail .dfield > label { font-size:11px; color:#9fb0d0; font-weight:600; }
+  .au-sitdetail .stepper { display:flex; align-items:stretch; }
+  .au-sitdetail .stepper .sbtn { width:36px; height:38px; flex:none; background:rgba(138,180,255,.16); border:1px solid rgba(255,255,255,.22); color:#cfe0ff; font-size:20px; line-height:1; cursor:pointer; display:flex; align-items:center; justify-content:center; user-select:none; }
+  .au-sitdetail .stepper .sbtn:hover { background:rgba(138,180,255,.28); }
+  .au-sitdetail .stepper .sbtn:first-child { border-radius:8px 0 0 8px; }
+  .au-sitdetail .stepper .sbtn:last-child { border-radius:0 8px 8px 0; }
+  .au-sitdetail input.num { flex:1; width:auto; min-width:0; height:38px; text-align:center; background:rgba(0,0,0,.35); border:1px solid rgba(255,255,255,.22); border-left:none; border-right:none; color:#fff; font:700 16px Inter,system-ui,sans-serif; padding:0; -moz-appearance:textfield; appearance:textfield; }
+  .au-sitdetail input.num::-webkit-inner-spin-button, .au-sitdetail input.num::-webkit-outer-spin-button { -webkit-appearance:none; margin:0; }
+  /* hover: highlight the WHOLE card (box + open detail) so the border never looks half-missing */
+  .au-sitwrap:hover .au-sit { border-color:rgba(224,160,200,.5); }
+  .au-sitwrap:hover .au-sitdetail { border-color:rgba(224,160,200,.5); }
+  .au-sitdetail .cslist { display:flex; flex-direction:column; gap:4px; }
+  .au-sitdetail .csrow { display:flex; align-items:center; gap:6px; font-size:11px; color:#cfe0ff; }
+  .au-sitdetail .csrow.new { color:#7fe0c0; }
+  .au-sitdetail .csrow .x { margin-left:auto; background:rgba(192,50,79,.7); border:none; color:#fff; border-radius:4px; width:18px; height:18px; font-size:10px; cursor:pointer; }
+  .au-sitdetail .csadd { display:flex; gap:5px; }
+  .au-sitdetail .csadd input { flex:1; background:rgba(0,0,0,.35); border:1px solid rgba(255,255,255,.2); border-radius:5px; color:#fff; font-size:11px; padding:3px 6px; }
+  .au-sitdetail .csadd button, .au-sit .phdel { background:rgba(138,180,255,.18); border:1px solid rgba(138,180,255,.4); color:#cfe0ff; border-radius:5px; padding:3px 8px; font-size:10px; cursor:pointer; }
+  .au-sit.placeholder { border-style:dashed; border-color:rgba(224,160,200,.5); }
+  .au-sit.placeholder .phdel { position:absolute; right:8px; top:8px; background:rgba(192,50,79,.7); }
+  .au-sit.staged { box-shadow:inset 3px 0 0 #7fe0c0; }
+  /* cutscene delete (hover) */
+  .au-asset { position:relative; }
+  .au-asset .del { display:none; background:rgba(192,50,79,.85); border:none; color:#fff; border-radius:5px; width:22px; height:22px; font:700 12px/1 system-ui; cursor:pointer; margin-left:4px; }
+  .au-asset:hover .del { display:inline-block; }
+  .au-cutscene-add { background:rgba(224,102,138,.16); border:1px solid rgba(224,102,138,.45); color:#f0b0c8; border-radius:7px; padding:3px 8px; font-size:10px; cursor:pointer; }
+  .au-asset-preview { align-items:center; justify-content:center; background:rgba(0,0,0,.3); border:1px solid rgba(255,255,255,.12); border-radius:10px; overflow:hidden; }
+  .au-asset-preview img { max-width:100%; max-height:100%; object-fit:contain; }
+  /* Post-generation summary overlay */
+  .au-gen-summary { position:absolute; inset:0; z-index:40; display:none; align-items:center; justify-content:center; background:rgba(8,6,14,.72); -webkit-backdrop-filter:blur(6px); backdrop-filter:blur(6px); }
+  .au-gen-summary.on { display:flex; }
+  .au-gs-card { width:min(460px,88%); background:linear-gradient(180deg,#1a1426,#120d1c); border:1px solid rgba(255,255,255,.14); border-radius:18px; padding:22px 22px 20px; box-shadow:0 24px 60px rgba(0,0,0,.55); }
+  .au-gs-title { font:800 20px "Playfair Display",Georgia,serif; color:#fff; margin-bottom:12px; }
+  .au-gs-body { display:flex; flex-direction:column; gap:8px; font-size:13px; color:#dfe6f2; }
+  .au-gs-row { display:flex; align-items:center; gap:9px; }
+  .au-gs-row .ic { width:20px; text-align:center; flex:none; }
+  .au-gs-row .k { color:#9fb0d0; }
+  .au-gs-sub { margin-left:29px; font-size:11.5px; color:#9fb0d0; }
+  .au-gs-go { margin-top:16px; width:100%; padding:13px; border:none; border-radius:12px; background:linear-gradient(120deg,#e0668a,#8b7bd8); color:#fff; font:800 14px Inter,system-ui,sans-serif; cursor:pointer; }
+  .au-gs-go:active { transform:scale(.98); }
+  /* Codes tab — per-choice-option consequence codes */
+  #auResCodes { overflow-y:auto; padding:12px 16px; }
+  .au-codes-list { display:flex; flex-direction:column; gap:14px; }
+  .au-choice { background:rgba(255,255,255,.03); border:1px solid rgba(255,255,255,.1); border-radius:12px; padding:10px 12px; }
+  .au-choice-h { font:700 12px Inter,system-ui,sans-serif; color:#bcd2ff; margin-bottom:8px; }
+  .au-copt { padding:9px 0; border-top:1px solid rgba(255,255,255,.06); }
+  .au-copt:first-of-type { border-top:none; }
+  .au-copt-txt { font-size:12.5px; color:#eef2fb; margin-bottom:7px; }
+  .au-copt-head { display:flex; align-items:center; gap:8px; }
+  .au-main-dot { width:12px; height:12px; border-radius:50%; flex:none; cursor:pointer; padding:0; border:1.5px solid rgba(255,255,255,.35); background:transparent; }
+  .au-main-dot.on { background:#6fe3c8; border-color:#6fe3c8; box-shadow:0 0 6px rgba(111,227,200,.5); }
+  .au-cline { padding:6px 0 6px 12px; border-left:2px solid rgba(138,180,255,.25); margin:4px 0 4px 4px; }
+  .au-cline-lab { font-size:11.5px; color:#b9c6e6; margin-bottom:5px; }
+  .au-chips { display:flex; flex-wrap:wrap; gap:6px; align-items:center; }
+  .au-chip { display:inline-flex; align-items:center; gap:4px; background:rgba(138,180,255,.14); border:1px solid rgba(138,180,255,.34); border-radius:8px; padding:2px 4px 2px 6px; }
+  .au-chip input { width:158px; background:transparent; border:none; outline:none; color:#eaf0ff; font:600 11px Inter,system-ui,sans-serif; }
+  .au-chip button { background:rgba(192,50,79,.65); border:none; color:#fff; border-radius:4px; width:16px; height:16px; font:700 9px/1 system-ui; cursor:pointer; flex:none; }
+  /* consequence-code color coding (matches in-game toast accents) */
+  .au-chip .k-ic { font-size:11px; flex:none; line-height:1; }
+  .au-chip.k-xp        { background:rgba(160,111,227,.14); border-color:rgba(160,111,227,.4); }
+  .au-chip.k-relation, .au-chip.k-discover { background:rgba(94,201,168,.14); border-color:rgba(94,201,168,.4); }
+  .au-chip.k-discovery { background:rgba(111,211,227,.14); border-color:rgba(111,211,227,.4); }
+  .au-chip.k-scandal   { background:rgba(224,102,138,.14); border-color:rgba(224,102,138,.42); }
+  .au-chip.k-allure    { background:rgba(240,185,104,.15); border-color:rgba(240,185,104,.42); }
+  .au-chip.k-item      { background:rgba(231,178,92,.15); border-color:rgba(231,178,92,.42); }
+  .au-chip.k-trait     { background:rgba(183,156,240,.14); border-color:rgba(183,156,240,.4); }
+  .au-code-add { background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.2); color:#cfe0ff; border-radius:8px; font-size:11px; padding:3px 6px; cursor:pointer; }
+  /* preview image + info overlay */
+  .au-pvwrap { position:relative; width:100%; height:100%; display:flex; align-items:center; justify-content:center; }
+  .au-pvwrap > img.main { max-width:100%; max-height:100%; object-fit:contain; }
+  .au-pvinfo { position:absolute; left:0; right:0; bottom:0; padding:14px 12px 11px; background:linear-gradient(to top, rgba(6,8,16,.94), rgba(6,8,16,.75) 55%, rgba(6,8,16,0)); color:#eef2fb; }
+  .au-pvinfo .pvdesc { font-size:12.5px; line-height:1.45; }
+  .au-pvinfo .pvquote { font-style:italic; font-size:11.5px; color:#c8d3ea; margin-top:5px; opacity:.9; }
+  .au-pvinfo .pvwho { display:flex; flex-wrap:wrap; align-items:center; gap:6px; margin-top:9px; }
+  .au-pvinfo .pvwho-l { font-size:11px; color:#9fb0d0; margin-right:2px; width:100%; }
+  .pcast { position:relative; display:inline-flex; align-items:center; gap:5px; background:rgba(255,255,255,.09); border:1px solid rgba(255,255,255,.16); border-radius:20px; padding:3px 9px; font-size:12px; color:#eef2fb; }
+  .pcast.has-ref { border-color:rgba(138,180,255,.5); background:rgba(138,180,255,.16); }
+  .pcast .pcphoto { cursor:help; font-size:12px; }
+  .pcast .pcgen { font-size:9px; text-transform:uppercase; letter-spacing:.05em; color:#9fb0d0; opacity:.85; }
+  .pcast .pcbig { position:absolute; bottom:calc(100% + 8px); left:50%; transform:translateX(-50%) scale(.96); transform-origin:bottom center; opacity:0; pointer-events:none; transition:opacity .12s, transform .12s; width:150px; padding:5px; background:#0c0a14; border:1px solid rgba(255,255,255,.22); border-radius:10px; box-shadow:0 10px 28px rgba(0,0,0,.55); z-index:6; }
+  .pcast .pcbig img { width:100%; border-radius:6px; display:block; }
+  .pcast.has-ref:hover .pcbig { opacity:1; transform:translateX(-50%) scale(1); }
+  .au-pvnote { margin:auto; max-width:360px; text-align:center; color:#cfe0ff; padding:16px; }
+  .au-pvnote .nyhead { opacity:.7; font-size:12px; text-transform:uppercase; letter-spacing:.06em; margin-bottom:6px; }
+  .au-pvnote .nytitle { font-weight:700; margin-bottom:6px; }
+  .au-pvnote .au-pvinfo { position:static; background:none; padding:6px 0 0; text-align:left; }
+  /* AI character creator */
+  .au-cv-main { flex:1; display:flex; gap:24px; padding:22px 26px; overflow:auto; }
+  .au-cv-form { flex:1; max-width:520px; display:flex; flex-direction:column; gap:10px; }
+  .au-cv-form textarea { background:rgba(255,255,255,.07); border:1px solid rgba(255,255,255,.16); border-radius:9px; color:#fff; font-size:13px; padding:10px 12px; resize:vertical; font-family:inherit; }
+  .au-cv-suggest { display:flex; flex-direction:column; gap:8px; }
+  .au-cv-sug { text-align:left; background:rgba(138,180,255,.08); border:1px solid rgba(138,180,255,.25); border-radius:10px; padding:9px 12px; cursor:pointer; transition:border-color .15s, background .15s; }
+  .au-cv-sug:hover { border-color:#e0668a; background:rgba(224,102,138,.1); }
+  .au-cv-sug .st { display:block; font:700 12px Inter,system-ui,sans-serif; color:#e0a0c0; margin-bottom:2px; }
+  .au-cv-sug .sb { display:block; font-size:12px; color:#c6d2ec; line-height:1.45; }
+  .au-cv-results { flex:1; min-width:340px; display:flex; flex-direction:column; gap:10px; }
+  .au-cv-reshead { display:flex; align-items:center; gap:10px; font:700 13px Inter,system-ui,sans-serif; color:#cfe0ff; }
+  .au-cv-cards { display:flex; flex-direction:column; gap:10px; overflow:auto; }
+  .au-cvc { display:flex; gap:12px; align-items:flex-start; background:rgba(255,255,255,.04); border:1px solid rgba(255,255,255,.12); border-radius:12px; padding:12px 14px; transition:border-color .15s, background .15s; }
+  .au-cvc:hover { border-color:rgba(224,102,138,.5); background:rgba(224,102,138,.06); }
+  .au-cvc .cav { width:56px; height:56px; border-radius:50%; flex:none; }
+  .au-cvc .body { flex:1; min-width:0; }
+  .au-cvc .nm { font:800 15px Inter,system-ui,sans-serif; color:#fff; }
+  .au-cvc .arch { font:600 11px Inter,system-ui,sans-serif; color:#e0a0c0; letter-spacing:.03em; margin:1px 0 4px; }
+  .au-cvc .def { font-size:12px; color:#c6d2ec; line-height:1.45; }
+  .au-cvc .pick { margin-top:8px; }
+  /* initials avatar (character without portrait art yet) */
+  .initav { display:flex; align-items:center; justify-content:center; font:800 30px Inter,system-ui,sans-serif; color:#fff; background:linear-gradient(135deg,#6a5bd0,#c05a86); text-transform:uppercase; }
+  .au-cav .av.initav { font-size:26px; border-style:solid; }
+  .au-mv-head { display:flex; align-items:center; gap:12px; padding:12px 16px; border-bottom:1px solid rgba(255,255,255,.1); }
+  .au-mv-title { font-weight:800; color:#cfe0ff; }
+  .au-mv-main { flex:1; display:flex; gap:14px; padding:14px 16px; overflow:hidden; }
+  .au-mv-mapwrap { position:relative; flex:1; display:flex; align-items:center; justify-content:center; background:#0c0a14; border-radius:10px; overflow:hidden; }
+  /* img fills the wrap with object-fit:contain (auto letterbox); JS sizes #auMvStage to the exact visible image box so overlays always align */
+  #auMvImg { position:absolute; inset:0; width:100%; height:100%; object-fit:contain; display:block; cursor:crosshair; }
+  #auMvStage { position:absolute; left:0; top:0; line-height:0; pointer-events:none; }
+  #auMvSvg { position:absolute; inset:0; width:100%; height:100%; pointer-events:none; }
+  #auMvPins { position:absolute; inset:0; pointer-events:none; }
+  .au-mvpin.newpin .d, .au-wp { pointer-events:auto; cursor:grab; }
+  /* container is a zero-size point exactly at (left,top); dot is centered on it, label floats below — so the DOT is the anchor, not dot+label */
+  .au-mvpin { position:absolute; width:0; height:0; pointer-events:none; }
+  .au-mvpin .d { position:absolute; left:0; top:0; transform:translate(-50%,-50%); width:11px; height:11px; border-radius:50%; }
+  .au-mvpin.taken .d { background:#6a7a9a; }
+  .au-mvpin.free .d { background:#5ac07a; }
+  .au-mvpin.newpin .d { background:#e0668a; width:14px; height:14px; box-shadow:0 0 8px rgba(224,102,138,.9); }
+  .au-mvpin .lb { position:absolute; left:0; top:9px; transform:translateX(-50%); font:600 9px Inter,system-ui,sans-serif; color:#cfe0ff; white-space:nowrap; text-shadow:0 1px 3px #000; text-align:center; }
+  .au-wp { position:absolute; transform:translate(-50%,-50%); width:9px; height:9px; border-radius:50%; background:#e0a0c0; border:1px solid #fff; }
+  .au-mv-side { width:240px; flex:none; display:flex; flex-direction:column; gap:8px; overflow-y:auto; }
+  .au-mv-side input { background:rgba(255,255,255,.07); border:1px solid rgba(255,255,255,.16); border-radius:7px; color:#fff; font-size:12px; padding:6px 8px; }
+  .au-suggests { display:flex; flex-direction:column; gap:4px; }
+  .au-suggest { text-align:left; background:rgba(138,180,255,.08); border:1px solid rgba(138,180,255,.22); border-radius:7px; color:#cfe0ff; font-size:11px; padding:5px 8px; cursor:pointer; }
+  .au-suggest .sn { color:#9fb0d0; font-size:9px; }
+  .au-mv-route { font-size:11px; color:#9fb0d0; display:flex; align-items:center; gap:6px; }
+  .au-status { font-size:11px; color:#9fb0d0; }
+  .au-result { flex:1; display:flex; gap:14px; overflow:hidden; }
+  .au-col { flex:1; display:flex; flex-direction:column; gap:6px; min-width:0; }
+  .au-col-h { font-size:11px; font-weight:700; letter-spacing:.08em; text-transform:uppercase; color:#9fb0d0; display:flex; align-items:center; gap:8px; }
+  .au-mini { background:rgba(138,180,255,.16); border:1px solid rgba(138,180,255,.4); color:#cfe0ff; border-radius:7px; padding:3px 8px; font-size:10px; cursor:pointer; }
+  #auScript { flex:1; background:rgba(0,0,0,.35); border:1px solid rgba(255,255,255,.14); border-radius:8px; color:#dfe6f2; font:12px/1.5 ui-monospace,Menlo,monospace; padding:10px; resize:none; }
+  .au-assets { flex:1; overflow-y:auto; display:flex; flex-direction:column; gap:6px; }
+  .au-asset { display:flex; align-items:center; gap:8px; background:rgba(255,255,255,.04); border:1px solid rgba(255,255,255,.1); border-radius:8px; padding:6px 8px; font-size:11px; }
+  .au-legend { display:flex; gap:14px; padding:2px 2px 6px; font-size:10px; color:#8ea3c9; }
+  .au-legend span { display:inline-flex; align-items:center; gap:5px; }
+  .au-legend .d { width:8px; height:8px; border-radius:50%; display:inline-block; }
+  .au-legend .d.red { background:#c05a5a; } .au-legend .d.ylw { background:#d6b24a; } .au-legend .d.grn { background:#5ac07a; }
+  .au-asset .dot { width:9px; height:9px; border-radius:50%; flex:none; background:#c05a5a; }
+  .au-asset.done .dot { background:#5ac07a; }
+  .au-asset.busy .dot { background:#d6b24a; animation:aupulse 1s infinite; }
+  @keyframes aupulse { 50%{ opacity:.4 } }
+  .au-asset .nm { flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:#dfe6f2; }
+  .au-asset .kind { color:#8ab4ff; font-size:9px; text-transform:uppercase; }
+  .au-asset button { background:rgba(138,180,255,.16); border:1px solid rgba(138,180,255,.4); color:#cfe0ff; border-radius:6px; padding:3px 8px; font-size:10px; cursor:pointer; }
+</style>
+<script>
+(function authorTool(){
+  const WORLD='worlds/pride-and-prejudice';
+  const gid=id=>document.getElementById(id);
+  const ov=gid('authorOverlay');
+  gid('authorLaunch').addEventListener('click',openTool);
+  { const ng=document.getElementById('newGameBtn'); if(ng) ng.addEventListener('click',()=>{
+      if(!confirm('Yeni oyun başlat? Tüm ilerleme (tamamlanan bölümler, ilişkiler) sıfırlanır.'))return;
+      ['rai.completedEps','cowork.room.prideMeta.v1','rai_pride_pcs','rai.activePC','cowork.room.currentScenario','cowork.room.userProfile'].forEach(k=>{ try{localStorage.removeItem(k);}catch(e){} });
+      const fr=document.getElementById('gameFrame');
+      if(fr){ let u; try{ u=new URL(fr.src||'dialog2.html', location.href); }catch(e){ u=new URL('dialog2.html', location.href); } u.searchParams.set('newgame','1'); u.searchParams.set('cb',Date.now()); fr.src=u.toString(); }
+    }); }
+  // "Go to End" — jump the running episode to its end screen (→ dashboard).
+  // Only visible while an episode is playing; toggled by epFlow/situation
+  // messages from the game iframe (see the message listener below).
+  { const ge=document.getElementById('gotoEndBtn'); if(ge) ge.addEventListener('click',()=>{
+      const fr=document.getElementById('gameFrame');
+      try{ if(fr&&fr.contentWindow) fr.contentWindow.postMessage({type:'gotoEnd'},'*'); }catch(e){}
+    }); }
+  window.__setGotoEnd=function(on){ const ge=document.getElementById('gotoEndBtn'); if(ge) ge.style.display=on?'':'none'; };
+  window.addEventListener('message',(e)=>{ const d=e&&e.data; if(!d)return;
+    if(d.type==='epFlow'){ window.__setGotoEnd(!!d.inEpisode); }
+    else if(d.type==='situation'){ window.__setGotoEnd(true); }
+  });
+  gid('auClose').addEventListener('click',()=>ov.classList.remove('on'));
+  // episode id is derived automatically from the chosen location (no manual field)
+  // The location the result view is bound to. Captured when the view opens so it
+  // stays correct even though #auLocation (a <select> of only FREE spots) can't
+  // hold an already-assigned episode id like "brighton-seaside".
+  let resLoc='';
+  function curLoc(){ return resLoc || gid('auLocation').value || ''; }
+  function slug(){ return ((curLoc()||'untitled')).trim().toLowerCase().replace(/[^a-z0-9-]+/g,'-'); }
+  function epBase(){ return 'authored/'+slug(); }
+  let loaded=false, selChars=new Set(), epLocs=[], pickXY=null;
+  function openTool(){ ov.classList.add('on'); loadMapLocations(); if(loaded) return; loaded=true; reloadWorld(); reloadLocations(); }
+
+  const HONORIFICS=new Set(['mr','mrs','miss','ms','sir','lord','lady','capt','captain','ens','ensign','the','dr','rev']);
+  function initials(name){ const words=String(name||'').split(/[^a-z0-9]+/i).filter(w=>w && !HONORIFICS.has(w.toLowerCase()));
+    if(words.length>=2) return (words[0][0]+words[1][0]).toUpperCase();
+    const w=words[0]||String(name||'?'); return w.slice(0,2).toUpperCase(); }
+  function fillInitials(el, name){ el.textContent=initials(name); el.classList.add('initav'); }
+  // shared floating tooltip (lives in .au-box so the scroll-strip can't clip it)
+  let cavTip=null;
+  function showCavTip(b){ if(!cavTip){ cavTip=document.createElement('div'); cavTip.className='au-cav-tip'; document.querySelector('.au-box').appendChild(cavTip); }
+    const arch=b.dataset.arch||'', def=b.dataset.def||'', nm=b.dataset.nm||'', folder=b.dataset.folder||'', hasArt=!!b.dataset.hasart;
+    // big avatar: portrait if art exists, else initials
+    const bigav = hasArt ? '<img class="bigav" src="'+WORLD+'/characters/'+folder+'/appearances/pride.png" alt="">'
+                         : '<div class="bigav">'+initials(nm)+'</div>';
+    cavTip.innerHTML = bigav + '<div class="tnm">'+nm+'</div>' + (arch?'<div class="tarch">'+arch+'</div>':'') + (def?'<div class="tdef">'+def+'</div>':'');
+    const box=document.querySelector('.au-box').getBoundingClientRect(), r=b.getBoundingClientRect();
+    cavTip.style.display='block';
+    const tw=cavTip.offsetWidth, th=cavTip.offsetHeight;  // forces reflow
+    // place BESIDE the avatar (right by default; flip left if it would overflow) so it never covers the avatar/delete
+    let left=r.right-box.left+8;
+    if(left+tw>box.width-6) left=r.left-box.left-tw-8;
+    left=Math.max(6, left);
+    let top=r.top-box.top;  // aligned with the avatar's top
+    if(top+th>box.height-6) top=box.height-6-th;  // keep inside the box
+    top=Math.max(6, top);
+    cavTip.style.left=left+'px'; cavTip.style.top=top+'px'; }
+  function hideCavTip(){ if(cavTip){ cavTip.style.display='none'; } }
+  function reloadWorld(){ fetch('/api/author/world').then(r=>r.json()).then(w=>{
+      const chars=(w.characters||[]).filter(c=>(c.folder||c)!=='arabella_frost');
+      const box=gid('auChars'); box.innerHTML='';
+      chars.forEach(c=>{ if(typeof c==='string') c={folder:c,name:'',archetype:'',definition:'',hasArt:true};
+        const f=c.folder, nm=c.name||f.replace(/_/g,' ');
+        const b=document.createElement('button'); b.type='button'; b.className='au-cav'+(selChars.has(f)?' on':'')+(c.hasArt?'':' noart');
+        // avatar: portrait if art exists, else initials
+        let av;
+        if(c.hasArt){ av=document.createElement('img'); av.className='av'; av.alt=nm; av.src=WORLD+'/characters/'+f+'/appearances/pride.png';
+          av.addEventListener('error',()=>{ const ini=document.createElement('div'); ini.className='av'; fillInitials(ini,nm); b.replaceChild(ini,av); b.classList.add('noart'); }); }
+        else { av=document.createElement('div'); av.className='av'; fillInitials(av,nm); }
+        const lb=document.createElement('span'); lb.className='nm'; lb.textContent=nm;
+        b.appendChild(av); b.appendChild(lb);
+        // hover popover: enlarged avatar + description
+        b.dataset.arch=c.archetype||''; b.dataset.def=c.definition||''; b.dataset.nm=nm; b.dataset.folder=f; b.dataset.hasart=c.hasArt?'1':'';
+        b.addEventListener('mouseenter',()=>showCavTip(b)); b.addEventListener('mouseleave',hideCavTip);
+        // delete button — only for art-less characters (initials only)
+        if(!c.hasArt){ const del=document.createElement('span'); del.className='del'; del.textContent='×'; del.title='Delete character';
+          del.addEventListener('click',(e)=>{ e.stopPropagation(); if(!confirm('“'+nm+'” karakterini silmek istiyor musun? (geri alınamaz)'))return;
+            fetch('/api/author/delete-character',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({folder:f})})
+              .then(r=>r.json()).then(j=>{ if(j.ok){ selChars.delete(f); reloadWorld(); } else alert(j.error||'error'); }).catch(()=>alert('delete failed')); });
+          b.appendChild(del); }
+        b.addEventListener('click',()=>{ if(selChars.has(f))selChars.delete(f); else selChars.add(f); b.classList.toggle('on'); }); box.appendChild(b); });
+      // "+" tile → open the AI character creator
+      const add=document.createElement('button'); add.type='button'; add.className='au-cav add'; add.title='Create a character with AI';
+      add.innerHTML='<span class="av">+</span><span class="nm">New</span>';
+      add.addEventListener('click',openCharCreator);
+      box.appendChild(add);
+      setTimeout(updateCharArrows,0);
+    }).catch(()=>{ gid('auGenStatus').textContent='dev-server list failed — restart the server'; }); }
+
+  // roster paging: left/right arrows + drag-to-swipe (2-row horizontal strip)
+  const charsEl=gid('auChars'), prevBtn=gid('auCharsPrev'), nextBtn=gid('auCharsNext');
+  function updateCharArrows(){ const max=charsEl.scrollWidth-charsEl.clientWidth-1; prevBtn.disabled=charsEl.scrollLeft<=0; nextBtn.disabled=charsEl.scrollLeft>=max; }
+  prevBtn.addEventListener('click',()=>charsEl.scrollBy({left:-charsEl.clientWidth*0.8,behavior:'smooth'}));
+  nextBtn.addEventListener('click',()=>charsEl.scrollBy({left:charsEl.clientWidth*0.8,behavior:'smooth'}));
+  charsEl.addEventListener('scroll',updateCharArrows);
+  window.addEventListener('resize',updateCharArrows);
+  let cDrag=false,cStartX=0,cStartScroll=0,cMoved=false;
+  charsEl.addEventListener('pointerdown',(e)=>{ cDrag=true; cMoved=false; cStartX=e.clientX; cStartScroll=charsEl.scrollLeft; });
+  charsEl.addEventListener('pointermove',(e)=>{ if(!cDrag)return; const dx=e.clientX-cStartX; if(Math.abs(dx)>4){ cMoved=true; hideCavTip(); } charsEl.scrollLeft=cStartScroll-dx; });
+  window.addEventListener('pointerup',()=>{ cDrag=false; });
+  charsEl.addEventListener('click',(e)=>{ if(cMoved){ e.stopPropagation(); e.preventDefault(); cMoved=false; } }, true);  // a swipe shouldn't toggle/select
+
+  function reloadLocations(){ fetch('/api/author/episode-locations').then(r=>r.json()).then(j=>{ epLocs=(j.locations||[]);
+      const free=epLocs.filter(l=>!l.episode);
+      gid('auLocation').innerHTML = free.length ? free.map(l=>'<option value="'+l.id+'">'+(l.title||l.id)+'</option>').join('') : '<option value="">(no free episode spots — add one)</option>';
+    }).catch(()=>{}); }
+
+  // ---------- Map-location manager (all 4 tiers • unlock-after • episode status) ----------
+  let mapLocs=[];
+  const TIER = { episode:{label:'Episodes', ic:'♛'}, interactive:{label:'Interactive locations', ic:'◈'}, 'short-story':{label:'Short stories', ic:'❋'}, onboarding:{label:'Onboarding', ic:'➤'} };
+  const TIER_ORDER = ['episode','interactive','short-story','onboarding'];
+  function switchTab(t){
+    const ep=(t==='episodes'), st=(t==='story'), ch=(t==='chars'), cr=(t==='create'), en=(t==='enc');
+    gid('auEpisodesView').style.display=ep?'flex':'none';
+    gid('auStoryView').style.display=st?'flex':'none';
+    gid('auCharactersView').style.display=ch?'block':'none';
+    gid('auEncView').style.display=en?'block':'none';
+    gid('auCreateView').style.display=cr?'block':'none';
+    gid('auTabEpisodes').classList.toggle('on',ep);
+    gid('auTabStory').classList.toggle('on',st);
+    gid('auTabChars').classList.toggle('on',ch);
+    gid('auTabEnc').classList.toggle('on',en);
+    gid('auTabCreate').classList.toggle('on',cr);
+    if(ep) loadMapLocations();
+    if(st) loadStoryMap();
+    if(ch) ensureSuitors().then(renderCharsRef);
+    if(en) loadEncounters(); }
+  // Karakterler referans sekmesi: her suitor + keşif havuzu (read-only)
+  function renderCharsRef(){ const box=gid('auCharsList'); if(!box) return; box.innerHTML='';
+    if(!SUITORS || !SUITORS.length){ box.innerHTML='<div class="au-status" style="padding:14px">Suitor havuzu yüklenemedi — dev-server’ı yeniden başlatman gerekebilir (/api/author/suitors).</div>'; return; }
+    SUITORS.forEach(s=>{ const c=document.createElement('div'); c.className='au-charref';
+      const disc=(s.discoveries||[]);
+      c.innerHTML='<div class="au-charref-h"><span class="au-charref-name">'+s.name+'</span>'
+        +'<span class="au-charref-id">'+s.id+'</span><span class="au-charref-n">'+disc.length+' keşif</span></div>';
+      const chips=document.createElement('div'); chips.className='au-charref-chips';
+      if(!disc.length){ const e=document.createElement('span'); e.className='au-status'; e.textContent='(havuz boş)'; chips.appendChild(e); }
+      disc.forEach(f=>{ const ch=document.createElement('span'); ch.className='au-charref-chip'; ch.textContent=f; chips.appendChild(ch); });
+      c.appendChild(chips); box.appendChild(c); });
+  }
+  gid('auTabEpisodes').addEventListener('click',()=>switchTab('episodes'));
+  gid('auTabStory').addEventListener('click',()=>switchTab('story'));
+  gid('auTabChars').addEventListener('click',()=>switchTab('chars'));
+  gid('auTabEnc').addEventListener('click',()=>switchTab('enc'));
+  gid('auTabCreate').addEventListener('click',()=>switchTab('create'));
+
+  // ---- Karşılaşmalar (encounters.json) editörü ----
+  let ENC=[];
+  const ENC_TYPES=['whisper','gossip','question','love'];
+  function encStatus(m){ const s=gid('auEncStatus'); if(s){ s.textContent=m||''; if(m) setTimeout(()=>{ if(s.textContent===m) s.textContent=''; },1400); } }
+  function loadEncounters(){ fetch('/api/author/encounters').then(r=>r.json()).then(j=>{ ENC=(j&&j.encounters)||[]; renderEnc(); })
+      .catch(()=>{ gid('auEncList').innerHTML='<div class="au-status" style="padding:14px">Yüklenemedi — dev-server’ı yeniden başlat (/api/author/encounters).</div>'; }); }
+  const encWho=e=> e.who || e.pair || [];
+  function charOpts(){ const ids=new Set(); (SUITORS||[]).forEach(s=>ids.add(s.id));
+    ['elizabeth_bennet','jane_bennet','charlotte_lucas','mrs_bennet','lydia_bennet','miss_bingley','mr_darcy','mr_bingley','mr_wickham'].forEach(x=>ids.add(x));
+    ENC.forEach(e=>encWho(e).forEach(x=>ids.add(x))); return [...ids].sort(); }
+  const ENC_DSL_HINT='Script (episode DSL, aynı tagleme). Sıra: (Situation) → [ui:narrative]+Narrative → [ui:cast layout=pair_two]+[cast: left=ID right=ID] → Konuşan: replikler (BUBBLE YOK) → [ui:multi]+(Choice:N)+Arabella: metin → (IfChoice:i)…(EndIf). pair_two = iki karakter sağ+sol sabit görünür. Sonuç tag: (Relation: id|trust|+1)(XP: id|+2)(Scandal:+1)(Allure:+1)(Discovery: id|bilgi)(Unlock: locId)';
+  function renderEnc(){ const box=gid('auEncList'); if(!box) return; box.innerHTML='';
+    const opts=charOpts();
+    if(!ENC.length){ box.innerHTML='<div class="au-status" style="padding:14px">Karşılaşma yok. “+ Karşılaşma” ile ekle.</div>'; return; }
+    ENC.forEach((e,ei)=>{ const c=document.createElement('div'); c.className='au-enc-card';
+      const mode=e.mode||'npc'; const who=encWho(e);
+      const sel=(v,cur)=>'<option value="'+v+'"'+(v===cur?' selected':'')+'>'+v+'</option>';
+      const whoSel=side=>'<select class="enc-w" data-side="'+side+'">'+opts.map(o=>sel(o,who[side])).join('')+'</select>';
+      const modeSel='<select class="enc-mode">'
+        +'<option value="pc"'+(mode==='pc'?' selected':'')+'>pc — bizimle</option>'
+        +'<option value="npc"'+(mode==='npc'?' selected':'')+'>npc — izlenen</option></select>';
+      const typeSel='<select class="enc-t">'+ENC_TYPES.map(t=>'<option value="'+t+'"'+(t===e.type?' selected':'')+'>'+t+'</option>').join('')+'</select>';
+      c.innerHTML='<div class="enc-row"><input class="enc-id" value="'+(e.id||'').replace(/"/g,'&quot;')+'" placeholder="id">'
+        + modeSel + whoSel(0) + '<span class="enc-amp" style="'+(mode==='pc'?'display:none':'')+'">×</span>'
+        + '<span class="enc-w2wrap" style="'+(mode==='pc'?'display:none':'')+'">'+whoSel(1)+'</span>' + typeSel
+        +'<label class="enc-once"><input type="checkbox" class="enc-onceck"'+(e.once?' checked':'')+'> once</label>'
+        +'<button class="enc-del" title="sil">✕</button></div>'
+        +'<textarea class="enc-script" spellcheck="false" placeholder="'+ENC_DSL_HINT.replace(/"/g,'&quot;')+'">'+((e.script||'').replace(/</g,'&lt;'))+'</textarea>'
+        +'<div class="enc-ch-head" style="opacity:.7">pc: tek karakter yolda + ikon → bizle konuşur, seçimler bizim. npc: iki karakter + ikon → dialoglarını izleriz. Sonuçlar script içindeki tag’lerle.</div>';
+      const modeEl=c.querySelector('.enc-mode');
+      modeEl.addEventListener('change',()=>{ const pc=modeEl.value==='pc';
+        c.querySelector('.enc-amp').style.display=pc?'none':'';
+        c.querySelector('.enc-w2wrap').style.display=pc?'none':''; });
+      c.querySelector('.enc-del').addEventListener('click',()=>{ ENC.splice(ei,1); renderEnc(); });
+      box.appendChild(c); });
+  }
+  function collectEnc(){ const cards=[...gid('auEncList').querySelectorAll('.au-enc-card')];
+    return cards.map(c=>{ const mode=c.querySelector('.enc-mode').value;
+      const ws=[...c.querySelectorAll('.enc-w')].map(s=>s.value);
+      const who = mode==='pc' ? [ws[0]] : [ws[0],ws[1]];
+      const o={ id:c.querySelector('.enc-id').value.trim()||('enc_'+Math.random().toString(36).slice(2,6)),
+        mode, who, type:c.querySelector('.enc-t').value,
+        script:c.querySelector('.enc-script').value };
+      if(c.querySelector('.enc-onceck').checked) o.once=true; return o; }); }
+  gid('auEncAdd').addEventListener('click',()=>{ const o=charOpts(); const L=o[0]||'mr_darcy', R=o[1]||'elizabeth_bennet';
+    ENC.push({ id:'enc_'+Math.random().toString(36).slice(2,6), mode:'npc', who:[L,R], type:'whisper',
+      script:'(Situation: enc_new | Başlık | kısa açıklama)\n[ui:narrative]\nNarrative: Sahneyi kuran kısa anlatı.\n[ui:cast layout=pair_two]\n[cast: left='+L+' right='+R+']\n'+L.replace(/_/g,'-')+': İlk replik.\n'+R.replace(/_/g,'-')+': Cevap.\n[ui:multi]\n(Choice:2)\nArabella: Seçim A\nArabella: Seçim B\n(IfChoice:0)\n[ui:narrative]\nNarrative: A sonucu.\nMechanics: (Allure: +1)\n(EndIf)\n(IfChoice:1)\n[ui:narrative]\nNarrative: B sonucu.\nMechanics: (Scandal: +1)\n(EndIf)' }); renderEnc(); });
+  gid('auEncSave').addEventListener('click',()=>{ const arr=collectEnc(); encStatus('kaydediliyor…');
+    fetch('/api/author/encounters',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({encounters:arr})})
+      .then(r=>r.json()).then(j=>{ ENC=arr; encStatus(j&&j.ok?('kaydedildi ✓ ('+j.count+')'):'hata'); try{notifyGameMap();}catch(e){} })
+      .catch(()=>encStatus('dev-server’ı yeniden başlat')); });
+  gid('auAddPlaceholder').addEventListener('click',()=>{ const t=prompt('Placeholder episode adı (hızlı ilerleme için):','New Placeholder'); if(!t)return;
+    gid('auEpsStatus').textContent='ekleniyor…';
+    fetch('/api/author/add-placeholder',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({title:t.trim()})})
+      .then(r=>r.json()).then(j=>{ if(j.ok){ loadMapLocations(); notifyGameMap(); } else { gid('auEpsStatus').textContent=j.error||'error'; } })
+      .catch(()=>{ gid('auEpsStatus').textContent='dev-server’ı yeniden başlat'; }); });
+  function loadMapLocations(){ gid('auEpsStatus').textContent='yükleniyor…';
+    fetch('/api/author/map-locations').then(r=>r.json()).then(j=>{ mapLocs=j.locations||[]; gid('auEpsStatus').textContent=''; renderMapLocations(); })
+      .catch(()=>{ gid('auEpsStatus').textContent='dev-server’ı yeniden başlat'; }); }
+  function statusLabel(s){ return s==='ready'?'Ready':(s==='draft'?'Draft':(s==='planned'?'Planned':s||'')); }
+  function episodeOptions(){ return mapLocs.filter(l=>l.type==='episode'); }
+  function renderMapLocations(){ const list=gid('auEpsList'); list.innerHTML='';
+    if(!mapLocs.length){ list.innerHTML='<div class="au-status" style="padding:16px">Liste boş — dev-server’ı yeniden başlat.</div>'; return; }
+    TIER_ORDER.forEach(tier=>{ const items=mapLocs.filter(l=>l.type===tier); if(!items.length) return;
+      const head=document.createElement('div'); head.className='au-grp-head'; head.innerHTML='<span class="gic">'+TIER[tier].ic+'</span> '+TIER[tier].label+' <span class="gcount">'+items.length+'</span>'; list.appendChild(head);
+      items.forEach(e=>{
+        const row=document.createElement('div'); row.className='au-ep tier-'+tier+(e.unlockedBy?' locked':''); row.dataset.id=e.id;
+        const TB={episode:'Ep',interactive:'Loc','short-story':'Short',onboarding:'Intro'};
+        const badge2=document.createElement('span'); badge2.className='au-tierbadge '+tier; badge2.textContent=TB[tier]||tier;
+        const meta=document.createElement('div'); meta.className='meta';
+        meta.innerHTML='<div class="etitle"></div><div class="eloc"></div>';
+        meta.querySelector('.etitle').textContent=e.title||e.id; meta.querySelector('.eloc').textContent=e.location||e.id;
+        row.appendChild(badge2); row.appendChild(meta);
+        // status (episodes only)
+        if(tier==='episode'){ const b=document.createElement('span');
+          if(e.episodeArchived){ b.className='au-badge archived'; b.textContent='🗄️ Episode arşivli'; }
+          else { b.className='au-badge '+(e.mode==='placeholder'?'draft':(e.status||'empty')); b.textContent=e.mode==='placeholder'?'⚡ Placeholder':(statusLabel(e.status)+(e.status==='draft'&&e.assetsTotal?' '+e.assetsReady+'/'+e.assetsTotal:'')); }
+          row.appendChild(b); }
+        // two gates (all tiers): "Görünür olur" (appearsAfter) + "Aktif olur" (unlockedBy)
+        const req=document.createElement('div'); req.className='au-req';
+        const eps=episodeOptions().filter(o=>o.id!==e.id);
+        const mkSel=(cur,firstLabel,prefix,onCh)=>{ const s=document.createElement('select'); let o='<option value="">'+firstLabel+'</option>';
+          eps.forEach(x=>{ o+='<option value="'+x.id+'"'+(cur===x.id?' selected':'')+'>'+prefix+(x.title||x.id)+'</option>'; }); s.innerHTML=o; s.addEventListener('change',()=>onCh(s.value||null)); return s; };
+        const selAppear=mkSel(e.appearsAfter,'Görünür: baştan','görünür: ', v=>{ e.appearsAfter=v; saveMapLocations(); });
+        const selActive=mkSel(e.unlockedBy,'Aktif: baştan','aktif: ', v=>{ e.unlockedBy=v; row.classList.toggle('locked',!!e.unlockedBy); saveMapLocations(); });
+        selAppear.title='Ne zaman haritada görünür olsun'; selActive.title='Ne zaman oynanabilir/aktif olsun';
+        req.appendChild(selAppear); req.appendChild(selActive); row.appendChild(req);
+        // actions (episodes only)
+        if(tier==='episode'){ const acts=document.createElement('div'); acts.className='acts';
+          const bEdit=document.createElement('button'); bEdit.textContent='✎'; bEdit.title='Edit'; bEdit.addEventListener('click',()=>editEpisode(e));
+          const bPlay=document.createElement('button'); bPlay.textContent='▶'; bPlay.title='Preview'; bPlay.addEventListener('click',()=>playEpisode(e));
+          if(e.episodeArchived){ const bRes=document.createElement('button'); bRes.className='restore'; bRes.textContent='♻'; bRes.title='Episode’u arşivden geri al (asset+script geri gelir)'; bRes.addEventListener('click',()=>archiveEpisode(e,false)); acts.appendChild(bRes); }
+          else { const bArch=document.createElement('button'); bArch.textContent='📥'; bArch.title='Episode içeriğini arşivle (asset+script kenara taşınır, location kalır)'; bArch.addEventListener('click',()=>archiveEpisode(e,true)); acts.appendChild(bArch); }
+          acts.appendChild(bEdit); acts.appendChild(bPlay); row.appendChild(acts); }
+        list.appendChild(row);
+      });
+    });
+  }
+  function archiveEpisode(e,archived){ gid('auEpsStatus').textContent=archived?'arşivleniyor…':'geri alınıyor…';
+    fetch('/api/author/archive-location',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({id:e.id,archived})})
+      .then(r=>r.json()).then(j=>{ if(!j.ok){ gid('auEpsStatus').textContent='hata: '+(j.error||'?'); return; }
+        gid('auEpsStatus').textContent=archived?'arşivlendi ✓':'geri alındı ✓'; setTimeout(()=>{gid('auEpsStatus').textContent='';},1400);
+        loadMapLocations(); notifyGameMap(); })
+      .catch(err=>{ gid('auEpsStatus').textContent='hata'; });
+  }
+  function notifyGameMap(){ try{ const fr=document.getElementById('gameFrame'); if(fr&&fr.contentWindow) fr.contentWindow.postMessage({type:'refreshMapLocks'},'*'); }catch(e){} }
+  function saveMapLocations(){ const payload=mapLocs.map(l=>({id:l.id, unlockedBy:l.unlockedBy||null, appearsAfter:l.appearsAfter||null}));
+    fetch('/api/author/map-locations-save',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({locations:payload})})
+      .then(()=>{ gid('auEpsStatus').textContent='kaydedildi ✓'; setTimeout(()=>{gid('auEpsStatus').textContent='';},1200); notifyGameMap(); }); }
+  function saveEpisodeTime(id, time){
+    fetch('/api/author/map-locations-save',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({locations:[{id, time}]})})
+      .then(()=>{ try{ const fr=document.getElementById('gameFrame'); if(fr&&fr.contentWindow){ fr.contentWindow.postMessage({type:'refreshMapLocks'},'*'); } }catch(e){} }); }
+  function epScriptPath(e){ // resolve an episode's script for edit/preview via episode-locations
+    return fetch('/api/author/episode-locations').then(r=>r.json()).then(j=>{ const l=(j.locations||[]).find(x=>x.id===e.id); if(!(l&&l.episode))return null; const ep=String(l.episode).startsWith('episodes/')?l.episode:('episodes/'+l.episode); return WORLD+'/'+ep+'/scripts/main.txt'; }); }
+  function editEpisode(e){ switchTab('create'); setTimeout(()=>{ gid('auLocation').value=e.id;
+    epScriptPath(e).then(p=>{ if(!p)return; fetch(p).then(r=>r.ok?r.text():'').then(t=>{ if(t){ openResultView(t, e.id); } }); }); },80); }
+  function playEpisode(e){ epScriptPath(e).then(p=>{ if(!p){ alert('bu lokasyonda script yok'); return; } fetch(p).then(r=>r.ok?r.text():'').then(t=>{ if(!t){ alert('script yok'); return; }
+    const fr=document.getElementById('gameFrame'); if(!fr){ alert('oyun çerçevesi yok'); return; }
+    // Play always runs on the v2 engine (dialog2.html) — that's where the
+    // discovery / dashboard / fork features live. Send pride pack + venue so
+    // assets resolve and completion/dashboard use the right episode id.
+    const ep = p.replace(WORLD+'/','').replace(/\/scripts\/main\.txt$/,'');   // e.g. episodes/authored/country-lane
+    const send=()=>{ try{ fr.contentWindow.postMessage({type:'loadScript',script:t,pack:'pride',venue:e.id,episode:ep,title:(e.title||'')},'*'); }catch(err){} ov.classList.remove('on'); };
+    if(/dialog2\.html/.test(fr.src||'')){ send(); }
+    else { fr.addEventListener('load', function onl(){ fr.removeEventListener('load',onl); setTimeout(send,450); }); fr.src='dialog2.html?cb='+Date.now(); }
+  }); }); }
+
+  // ---------- AI character creator ----------
+  let cvChar=null;  // last generated character record
+  const CV_FALLBACK=[
+    {title:'The Proud Rival', brief:'A cold, newly-rich bachelor from town who belittles Arabella\'s wit even as he is drawn to it.'},
+    {title:'The Scandalous Widow', brief:'A young, sharp-tongued widow who runs every ballroom — half ally, half danger to Arabella\'s reputation.'},
+    {title:'The Penniless Gentleman', brief:'A war-scarred younger son, proud but broke; a good marriage is his only escape.'}
+  ];
+  function renderCvSuggestions(list){ const box=gid('auCvSuggest'); box.innerHTML='';
+    (list||[]).slice(0,3).forEach(s=>{ const b=document.createElement('button'); b.type='button'; b.className='au-cv-sug';
+      b.innerHTML='<span class="st"></span><span class="sb"></span>'; b.querySelector('.st').textContent=s.title||''; b.querySelector('.sb').textContent=s.brief||'';
+      b.addEventListener('click',()=>{ gid('auCvBrief').value=s.brief||''; gid('auCvBrief').focus(); }); box.appendChild(b); }); }
+  function loadCvSuggestions(){ gid('auCvSugStatus').textContent='üretiliyor…'; renderCvSuggestions([]);
+    fetch('/api/author/suggest-characters',{method:'POST',headers:{'content-type':'application/json'},body:'{}'})
+      .then(r=>r.ok?r.json():null).then(j=>{ const list=(j&&j.suggestions&&j.suggestions.length)?j.suggestions:CV_FALLBACK; gid('auCvSugStatus').textContent=(j&&j.suggestions&&j.suggestions.length)?'':'(hazır örnekler)'; renderCvSuggestions(list); })
+      .catch(()=>{ gid('auCvSugStatus').textContent='(hazır örnekler)'; renderCvSuggestions(CV_FALLBACK); }); }
+  function openCharCreator(){ gid('auCharView').classList.add('on'); gid('auCvResults').style.display='none'; gid('auCvCards').innerHTML=''; gid('auCvStatus').textContent=''; gid('auCvBrief').value=''; cvChar=null; loadCvSuggestions(); gid('auCvBrief').focus(); }
+  gid('auCvBack').addEventListener('click',()=>gid('auCharView').classList.remove('on'));
+  function commitCharacter(spec){ gid('auCvStatus').textContent='ekleniyor…';
+    fetch('/api/author/commit-character',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(spec)})
+      .then(r=>r.json()).then(j=>{ if(!j.ok){ gid('auCvStatus').textContent='error: '+(j.error||'failed'); return; }
+        selChars.add(j.folder); gid('auCharView').classList.remove('on'); reloadWorld(); })
+      .catch(e=>{ gid('auCvStatus').textContent='error: '+e; }); }
+  function renderCvCards(cands){ const box=gid('auCvCards'); box.innerHTML='';
+    cands.forEach(c=>{ const card=document.createElement('div'); card.className='au-cvc';
+      const av=document.createElement('div'); av.className='cav'; fillInitials(av, c.name);  // no art yet → initials
+      const body=document.createElement('div'); body.className='body';
+      const nm=document.createElement('div'); nm.className='nm'; nm.textContent=c.name||c.folder;
+      const ar=document.createElement('div'); ar.className='arch'; ar.textContent=c.archetype||'';
+      const df=document.createElement('div'); df.className='def'; df.textContent=c.definition||'';
+      const pick=document.createElement('button'); pick.type='button'; pick.className='au-primary pick'; pick.textContent='✓ Add to episode';
+      pick.addEventListener('click',()=>commitCharacter(c));
+      body.appendChild(nm); body.appendChild(ar); body.appendChild(df); body.appendChild(pick);
+      card.appendChild(av); card.appendChild(body); box.appendChild(card); });
+    gid('auCvResults').style.display='flex'; }
+  function genCharacter(){ const brief=(gid('auCvBrief').value||'').trim();
+    if(!brief){ gid('auCvStatus').textContent='write a brief first'; return; }
+    gid('auCvStatus').textContent='üretiliyor… (~20s)'; gid('auCvGen').disabled=true; gid('auCvResults').style.display='none';
+    fetch('/api/author/generate-character',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({brief})})
+      .then(async r=>{ if(r.status===404) throw new Error('endpoint yok — dev-server’ı yeniden başlat (node dev-server.js)'); const t=await r.text(); try{ return JSON.parse(t); }catch(e){ throw new Error('sunucu JSON dönmedi: '+t.slice(0,80)); } })
+      .then(j=>{ gid('auCvGen').disabled=false;
+        if(!j.ok){ gid('auCvStatus').textContent='error: '+(j.error||'failed'); return; }
+        const cands=j.candidates||[]; if(!cands.length){ gid('auCvStatus').textContent='no candidates'; return; }
+        gid('auCvStatus').textContent=''; renderCvCards(cands);
+      }).catch(e=>{ gid('auCvGen').disabled=false; gid('auCvStatus').textContent='error: '+e; }); }
+  gid('auCvGen').addEventListener('click',genCharacter);
+  gid('auCvRetry').addEventListener('click',genCharacter);
+
+  // ---------- full map builder (place pin + draw walking route) ----------
+  let dest=null;  // destination pin (the location marker) — set by FIRST click, then stays put
+  let wps=[];     // walking-route waypoints as content-% [{x,y}] — the path leading to dest
+  // Size #auMvStage (overlay container for pins+svg) to the EXACT visible image box.
+  // The <img> fills the wrap with object-fit:contain, so we replicate that letterbox math once and pin the stage to it — overlays then align regardless of window shape.
+  function syncStage(){
+    const wrap=gid('auMvWrap'), img=gid('auMvImg'), stage=gid('auMvStage'); if(!wrap||!img||!stage)return;
+    const nW=img.naturalWidth||16, nH=img.naturalHeight||9, ar=nW/nH;
+    const availW=wrap.clientWidth, availH=wrap.clientHeight; if(!availW||!availH)return;
+    let w,h; if(availW/availH > ar){ h=availH; w=h*ar; } else { w=availW; h=w/ar; }
+    stage.style.left=((availW-w)/2)+'px'; stage.style.top=((availH-h)/2)+'px';
+    stage.style.width=w+'px'; stage.style.height=h+'px';
+  }
+  // coordinates are % of the STAGE box (== visible image content box)
+  function imgPctFromEvent(e){ syncStage(); const r=gid('auMvStage').getBoundingClientRect(); if(!r.width||!r.height)return null;
+    let x=100*(e.clientX-r.left)/r.width, y=100*(e.clientY-r.top)/r.height;
+    const inB = x>=-0.5&&x<=100.5&&y>=-0.5&&y<=100.5;
+    x=Math.max(0,Math.min(100,x)); y=Math.max(0,Math.min(100,y));
+    return { x:+x.toFixed(1), y:+y.toFixed(1), inB }; }
+  function openMapBuilder(){ gid('auMapView').classList.add('on'); dest=null; wps=[]; gid('auLocId').value=''; gid('auLocTitle').value=''; gid('auSuggestions').innerHTML=''; gid('auLocStatus').textContent='';
+    // image may not be decoded yet on first open — sync now and again after load/layout
+    syncStage(); requestAnimationFrame(syncStage);
+    const im=gid('auMvImg'); if(im && !im.complete){ im.addEventListener('load',()=>{ syncStage(); renderMap(); },{once:true}); }
+    renderMap(); }
+  window.addEventListener('resize',()=>{ if(gid('auMapView').classList.contains('on')){ syncStage(); renderMap(); } });
+  gid('auAddLoc').addEventListener('click',openMapBuilder);
+  gid('auMvBack').addEventListener('click',()=>gid('auMapView').classList.remove('on'));
+
+  // drag any pin/waypoint — `apply` writes the new {x,y} back to the right slot
+  function makeDraggable(el, apply){
+    el.addEventListener('pointerdown',(ev)=>{ ev.preventDefault(); ev.stopPropagation();
+      el.setPointerCapture&&el.setPointerCapture(ev.pointerId); el.dataset.drag='1';
+      const move=(m)=>{ const p=imgPctFromEvent(m); if(!p)return; apply({x:p.x,y:p.y}); renderMap(); };
+      const up=()=>{ document.removeEventListener('pointermove',move); document.removeEventListener('pointerup',up); };
+      document.addEventListener('pointermove',move); document.addEventListener('pointerup',up);
+    });
+  }
+
+  function renderMap(){
+    syncStage();
+    const pins=gid('auMvPins'); pins.innerHTML='';
+    // existing locations
+    epLocs.forEach(l=>{ const d=document.createElement('div'); d.className='au-mvpin '+(l.episode?'taken':'free'); d.style.left=l.x+'%'; d.style.top=l.y+'%';
+      d.innerHTML='<div class="d"></div><div class="lb">'+(l.title||l.id)+(l.episode?' ✓':'')+'</div>'; pins.appendChild(d); });
+    // route waypoints (small dots, draggable) — the path leading to the destination
+    wps.forEach((w,i)=>{ const el=document.createElement('div'); el.className='au-wp';
+      el.style.left=w.x+'%'; el.style.top=w.y+'%'; makeDraggable(el,(np)=>{ wps[i]=np; }); pins.appendChild(el); });
+    // destination pin (the location marker) — stays where first placed; draggable to fine-tune
+    if(dest){ const el=document.createElement('div'); el.className='au-mvpin newpin';
+      el.innerHTML='<div class="d"></div><div class="lb">'+(gid('auLocTitle').value||'new')+'</div>';
+      el.style.left=dest.x+'%'; el.style.top=dest.y+'%'; makeDraggable(el.querySelector('.d'),(np)=>{ dest=np; }); pins.appendChild(el); }
+    // route polyline: starts AT the destination pin, then the waypoints in draw order —
+    // so the FIRST waypoint added connects to the pin (viewBox 0..100 = %)
+    const path = dest ? [dest, ...wps] : [...wps];
+    const svg=gid('auMvSvg'); svg.setAttribute('viewBox','0 0 100 100');
+    let d=''; path.forEach((w,i)=>{ d+=(i?'L':'M')+w.x+' '+w.y+' '; });
+    svg.innerHTML = path.length>1? '<path d="'+d+'" fill="none" stroke="#e0a0c0" stroke-width="0.6" stroke-dasharray="1.6 1.2" vector-effect="non-scaling-stroke"/>':'';
+    gid('auWpCount').textContent = (dest?1:0)+wps.length;
+  }
+  gid('auMvImg').addEventListener('click',(e)=>{ if(e.target&&e.target.dataset&&e.target.dataset.drag){ delete e.target.dataset.drag; return; } const p=imgPctFromEvent(e); if(!p||!p.inB)return;
+    const r=gid('auMvStage').getBoundingClientRect(); const dbg=gid('auMvDbg'); if(dbg) dbg.textContent='click '+Math.round(e.clientX)+','+Math.round(e.clientY)+' → '+p.x+'%,'+p.y+'% | stage '+Math.round(r.width)+'x'+Math.round(r.height)+' @'+Math.round(r.left)+','+Math.round(r.top);
+    if(!dest){ dest={x:p.x,y:p.y}; gid('auLocStatus').textContent='📍 pin kondu — şimdi ona giden yürüme yolunu tıklayarak çiz'; }  // FIRST click = the pin, stays put
+    else { wps.push({x:p.x,y:p.y}); }                                                                                    // later clicks = route waypoints
+    renderMap(); });
+  gid('auWpUndo').addEventListener('click',()=>{ if(wps.length) wps.pop(); else dest=null; renderMap(); });
+  gid('auWpClear').addEventListener('click',()=>{ dest=null; wps=[]; renderMap(); });
+  gid('auLocTitle').addEventListener('input',renderMap);
+
+  gid('auSuggest').addEventListener('click',()=>{ gid('auLocStatus').textContent='thinking…';
+    fetch('/api/author/suggest-locations',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({brief:gid('auBrief').value.trim(), existing:epLocs.map(l=>l.title||l.id)})})
+      .then(r=>r.json()).then(j=>{ gid('auLocStatus').textContent=''; const box=gid('auSuggestions'); box.innerHTML='';
+        (j.suggestions||[]).forEach(s=>{ const b=document.createElement('button'); b.type='button'; b.className='au-suggest'; b.innerHTML='<b>'+s.title+'</b> <span class="sn">'+(s.note||'')+'</span>';
+          b.addEventListener('click',()=>{ gid('auLocTitle').value=s.title||''; gid('auLocId').value=(s.id||s.title||'').toLowerCase().replace(/[^a-z0-9-]+/g,'-');
+            // drop the movable destination pin (AI position if given, else map center)
+            dest = (typeof s.x==='number'&&typeof s.y==='number') ? {x:s.x,y:s.y} : {x:50,y:50};
+            gid('auLocStatus').textContent='📍 pin kondu — sürükleyerek yerini ayarla, sonra ona giden yolu tıklayarak çiz'; renderMap(); }); box.appendChild(b); });
+        if(!(j.suggestions||[]).length) gid('auLocStatus').textContent=j.error||'no suggestions'; })
+      .catch(e=>{ gid('auLocStatus').textContent='error'; });
+  });
+
+  gid('auLocSave').addEventListener('click',()=>{
+    const id=(gid('auLocId').value||'').trim().toLowerCase().replace(/[^a-z0-9-]+/g,'-'); const title=(gid('auLocTitle').value||'').trim();
+    if(!id){ gid('auLocStatus').textContent='id required'; return; }
+    if(!dest){ gid('auLocStatus').textContent='önce haritaya tıklayıp pini koy'; return; }
+    if(wps.length<1){ gid('auLocStatus').textContent='pine giden yürüme yolunu çiz: en az 1 nokta tıkla'; return; }
+    const route=[[dest.x,dest.y], ...wps.map(w=>[w.x,w.y])];  // pin first, then waypoints (first waypoint touches the pin)
+    fetch('/api/author/add-location',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({id,title,x:dest.x,y:dest.y,route})})
+      .then(r=>r.json()).then(j=>{ if(!j.ok){ gid('auLocStatus').textContent=j.error||'error'; return; } gid('auMapView').classList.remove('on'); reloadLocations(); setTimeout(()=>{ gid('auLocation').value=id; },400); })
+      .catch(e=>{ gid('auLocStatus').textContent='error'; });
+  });
+
+  // ---------- Result view (full overlay: Script | Assets tabs) ----------
+  let resFull='', resSits=[], resPre='', resSel=new Set();
+  function curScript(){ return (gid('auResultView').classList.contains('on')) ? resFull : gid('auScript').value; }
+  function parseSituations(txt){
+    const lines=(txt||'').split('\n'); const blocks=[]; let cur=null; const pre=[];
+    const reSit=/^\(Situation:\s*([^|]+?)\s*(?:\|\s*([^|]*?))?\s*(?:\|\s*([^)]*?))?\)\s*$/;
+    lines.forEach(ln=>{ const m=ln.match(reSit);
+      if(m){ if(cur) blocks.push(cur); cur={id:(m[1]||'').trim(), title:(m[2]||'').trim(), desc:(m[3]||'').trim(), lines:[ln]}; }
+      else { if(cur) cur.lines.push(ln); else pre.push(ln); } });
+    if(cur) blocks.push(cur);
+    return { pre:pre.join('\n'), blocks };
+  }
+  function switchResTab(t){
+    gid('auResScript').style.display = t==='script'?'flex':'none';
+    gid('auResCodes').style.display  = t==='codes'?'block':'none';
+    gid('auResFork').style.display   = t==='fork'?'block':'none';
+    gid('auResAssets').style.display = t==='assets'?'flex':'none';
+    gid('auResTabScript').classList.toggle('on', t==='script');
+    gid('auResTabCodes').classList.toggle('on', t==='codes');
+    gid('auResTabFork').classList.toggle('on', t==='fork');
+    gid('auResTabAssets').classList.toggle('on', t==='assets');
+    // Assets tab: scan only the first time. Re-visiting must NOT wipe the rows.
+    if(t==='assets'){ if(!assets.length) scanAssets(); else { renderAssets(); refreshStatus(); } }
+    if(t==='codes') ensureSuitors().then(renderCodesPane);
+    if(t==='fork') ensureEpisodes().then(renderForkPane);
+  }
+  // Faz 1 — suitor discovery pools (for the Discovery code picker), loaded once
+  let SUITORS=null;
+  async function ensureSuitors(){ if(SUITORS) return SUITORS;
+    try{ const r=await fetch('/api/author/suitors'); const j=await r.json(); SUITORS=Array.isArray(j.suitors)?j.suitors:[]; }
+    catch(e){ SUITORS=[]; } return SUITORS; }
+  const suitorById=id=>(SUITORS||[]).find(s=>s.id===id);
+
+  // ===== Fork authoring (Faz 4) — (Unlock:) lines this episode opens on completion =====
+  let EPISODES=null;
+  async function ensureEpisodes(force){ if(EPISODES && !force) return EPISODES;
+    try{ const r=await fetch('/api/author/map-locations'); const j=await r.json();
+      EPISODES=(j.locations||[]).filter(l=>l.type==='episode' && !l.archived)
+        .map(l=>({id:l.id, title:l.title||l.id, mode:l.mode||'', status:l.status||''})); }
+    catch(e){ EPISODES=[]; } return EPISODES; }
+  function epLabel(e){ return (e.title||e.id) + (e.mode==='placeholder'?' ⚡':'') + (e.status==='empty'||(!e.mode&&!e.status)?'':''); }
+  function parseUnlocks(txt){
+    const out=[]; const re=/\(\s*Unlock\s*:\s*([^)]*)\)/gi; let m;
+    while((m=re.exec(txt||''))){ const parts=m[1].split('|').map(s=>s.trim()).filter(Boolean); if(!parts.length) continue;
+      const u={id:parts[0], group:'', kind:'main', timer:'', title:'', desc:'', cover:''};
+      for(let i=1;i<parts.length;i++){ const p=parts[i]; const kv=p.match(/^(\w+)\s*=\s*([\s\S]+)$/);
+        if(kv && ['group','kind','timer','title','desc','cover'].includes(kv[1].toLowerCase())) u[kv[1].toLowerCase()]=kv[2].trim();
+        else if(/\.(png|jpe?g|webp)$/i.test(p)) u.cover=p; else if(!u.title) u.title=p; else if(!u.desc) u.desc=p; }
+      out.push(u); }
+    return out;
+  }
+  function unlockLine(u){ let s='(Unlock: '+(u.id||''); if(u.group)s+=' | group='+u.group; if(u.kind==='side')s+=' | kind=side'; if(u.kind==='side'&&u.timer)s+=' | timer='+u.timer; if(u.title)s+=' | title='+u.title; if(u.desc)s+=' | desc='+u.desc; if(u.cover)s+=' | cover='+u.cover; return s+')'; }
+  let forkRows=[];
+  function writeForkToScript(){
+    let lines=(resFull||'').split('\n').filter(ln=> !/^\s*\(\s*Unlock\s*:/i.test(ln) && !/^\s*#\s*Fork —/i.test(ln));
+    while(lines.length && !lines[lines.length-1].trim()) lines.pop();
+    const valid=forkRows.filter(u=>u.id);
+    if(valid.length){ lines.push(''); lines.push('# Fork — bölüm bitince açılacaklar'); valid.forEach(u=>lines.push(unlockLine(u))); }
+    const txt=lines.join('\n')+'\n';
+    resFull=txt; const ta=gid('auScript'); if(ta) ta.value=txt; buildSituations();
+  }
+  function paintFork(){
+    const box=gid('auForkList'); if(!box) return; box.innerHTML='';
+    if(!forkRows.length){ const e=document.createElement('div'); e.className='au-status'; e.style.padding='10px'; e.textContent='Henüz unlock yok — "+ Unlock" ile ekle.'; box.appendChild(e); return; }
+    const esc=s=>String(s||'').replace(/"/g,'&quot;');
+    forkRows.forEach((u,idx)=>{
+      const row=document.createElement('div'); row.className='au-fork-row';
+      const inPool=(EPISODES||[]).some(e=>e.id===u.id);
+      const epOpts='<option value="">— hedef episode —</option>'+(EPISODES||[]).map(e=>'<option value="'+e.id+'"'+(e.id===u.id?' selected':'')+'>'+epLabel(e)+'</option>').join('')+((u.id&&!inPool)?'<option value="'+esc(u.id)+'" selected>'+esc(u.id)+'</option>':'');
+      row.innerHTML=''
+        +'<div class="afr-line"><select class="afr-ep">'+epOpts+'</select>'
+        +'<select class="afr-kind"><option value="main"'+(u.kind!=='side'?' selected':'')+'>Ana çatal (Continue)</option><option value="side"'+(u.kind==='side'?' selected':'')+'>Side (timer)</option></select>'
+        +'<input class="afr-group" placeholder="grup (pair=aynı)" value="'+esc(u.group)+'">'
+        +'<input class="afr-timer" placeholder="sn" value="'+esc(u.timer)+'" style="width:56px;'+(u.kind==='side'?'':'display:none')+'">'
+        +'<button class="afr-del" title="sil">✕</button></div>'
+        +'<div class="afr-line"><input class="afr-title" placeholder="başlık (karar kartı)" value="'+esc(u.title)+'"></div>'
+        +'<div class="afr-line"><input class="afr-desc" placeholder="açıklama (karar kartı)" value="'+esc(u.desc)+'"><input class="afr-cover" placeholder="cover görsel yolu" value="'+esc(u.cover)+'"></div>';
+      const q=s=>row.querySelector(s);
+      const sync=()=>{ u.id=q('.afr-ep').value; u.kind=q('.afr-kind').value; u.group=q('.afr-group').value.trim(); u.timer=q('.afr-timer').value.trim(); u.title=q('.afr-title').value.trim(); u.desc=q('.afr-desc').value.trim(); u.cover=q('.afr-cover').value.trim(); q('.afr-timer').style.display=(u.kind==='side')?'':'none'; writeForkToScript(); };
+      row.querySelectorAll('select,input').forEach(el=>{ el.addEventListener('change',sync); el.addEventListener('input',()=>{ if(el.tagName==='INPUT') sync(); }); });
+      q('.afr-del').addEventListener('click',()=>{ forkRows.splice(idx,1); writeForkToScript(); paintFork(); });
+      box.appendChild(row);
+    });
+  }
+  function renderForkPane(){ forkRows=parseUnlocks(resFull); paintFork(); }
+  gid('auForkAdd').addEventListener('click',()=>{ ensureEpisodes().then(()=>{ forkRows.push({id:'',group:'',kind:'main',timer:'',title:'',desc:'',cover:''}); paintFork(); }); });
+  gid('auForkNewPh').addEventListener('click',()=>{ const t=prompt('Yeni placeholder episode adı:','New Episode'); if(!t||!t.trim())return;
+    fetch('/api/author/add-placeholder',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({title:t.trim()})})
+      .then(r=>r.json()).then(j=>{ if(!j||!j.id){ alert('oluşturulamadı'); return; }
+        ensureEpisodes(true).then(()=>{ forkRows.push({id:j.id,group:'',kind:'main',timer:'',title:j.title||t.trim(),desc:'',cover:''}); writeForkToScript(); paintFork(); try{ notifyGameMap(); }catch(e){} }); })
+      .catch(()=>alert('oluşturulamadı')); });
+
+  // ===== Story map (Faz A okunur + Faz B sürükle-bağla düzenleme) =====
+  let STORY=null, storySel=null;
+  function loadStoryMap(){ const st=gid('auStoryStatus'); if(st)st.textContent='yükleniyor…';
+    return fetch('/api/author/story-map').then(r=>r.json()).then(j=>{ STORY=j; if(st)st.textContent=''; renderStory(); renderStoryInspector(); })
+      .catch(()=>{ if(st)st.textContent='yüklenemedi — dev-server restart gerekebilir'; }); }
+  gid('auStoryReload').addEventListener('click',loadStoryMap);
+  function roleMap(){ const role={}; (STORY.forks||[]).forEach(f=>{ (f.members||[]).forEach(m=>{ role[m.id]=f.grouped?(f.kind==='side'?'side':'main'):'solo'; }); }); return role; }
+  function nodeById(id){ return (STORY.nodes||[]).find(n=>n.id===id); }
+  function srcUnlocks(srcId){ const rows=[]; (STORY.forks||[]).forEach(f=>{ if(f.source!==srcId)return; (f.members||[]).forEach(m=> rows.push({id:m.id,group:f.group||'',kind:f.kind||'main',timer:f.timer||'',title:m.title||'',desc:m.desc||'',cover:m.cover||''})); }); return rows; }
+  function saveUnlocks(srcNode, rows){ const st=gid('auStoryStatus');
+    if(!srcNode){ return Promise.resolve(false); }
+    if(st)st.textContent='kaydediliyor…';
+    // scripted → written to script; placeholder (no episode) → stored on the location (id)
+    return fetch('/api/author/save-unlocks',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({id:srcNode.id,episode:srcNode.episode||'',unlocks:rows})})
+      .then(r=>r.json()).then(j=>{ if(j&&j.ok){ if(st){st.textContent='kaydedildi ✓'; setTimeout(()=>{if(st)st.textContent='';},1000);} try{notifyGameMap();}catch(e){} return loadStoryMap(); } else { if(st)st.textContent=(j&&j.error)||'kayıt hatası'; return false; } }); }
+  function addUnlock(srcId,tgtId){ if(!srcId||!tgtId||srcId===tgtId)return; const src=nodeById(srcId); if(!src){ return; }
+    const rows=srcUnlocks(srcId); if(rows.some(r=>r.id===tgtId))return; rows.push({id:tgtId,group:'',kind:'main',timer:'',title:(nodeById(tgtId)||{}).title||'',desc:'',cover:''}); storySel=srcId; saveUnlocks(src,rows); }
+  function computeDepth(){
+    const nodes=STORY.nodes||[]; const inc={}; nodes.forEach(n=>inc[n.id]=0);
+    const E=[]; (STORY.staticEdges||[]).forEach(e=>E.push([e.from,e.to])); (STORY.forks||[]).forEach(f=>(f.members||[]).forEach(m=>E.push([f.source,m.id])));
+    E.forEach(([a,b])=>{ if(inc[b]!=null)inc[b]++; });
+    const depth={}; nodes.forEach(n=>depth[n.id]= inc[n.id]===0?0:0);
+    for(let pass=0;pass<nodes.length+2;pass++){ let ch=false; E.forEach(([a,b])=>{ if(depth[a]==null||depth[b]==null)return; if(depth[b]<depth[a]+1){ depth[b]=depth[a]+1; ch=true; } }); if(!ch)break; }
+    return depth;
+  }
+  function saveStoryPos(id,sx,tier){ const b={id}; if(typeof sx==='number')b.sx=sx; if(typeof tier==='number')b.tier=tier; fetch('/api/author/save-story-pos',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(b)}).then(()=>{ try{notifyGameMap();}catch(e){} }).catch(()=>{}); }
+  let storyMultiSel=new Set(), storyEdgeSel=null, _storyKeyBound=false;
+  let storyLaneCount=0; try{ storyLaneCount=parseInt(localStorage.getItem('rai.storyLanes')||'0',10)||0; }catch(e){}
+  gid('auStoryAddTier').addEventListener('click',()=>{ const cv=gid('auStoryCanvas'); storyLaneCount=(cv&&cv.__lanes?cv.__lanes:3)+1; try{localStorage.setItem('rai.storyLanes',String(storyLaneCount));}catch(e){} renderStory(); });
+  function bindStoryKeys(){ if(_storyKeyBound)return; _storyKeyBound=true;
+    document.addEventListener('keydown',(e)=>{ const sv=gid('auStoryView'); if(!sv||sv.style.display==='none')return;
+      if((e.key==='Delete'||e.key==='Backspace') && storyEdgeSel){ e.preventDefault();
+        if(storyEdgeSel.staticTo){ const to=storyEdgeSel.staticTo; storyEdgeSel=null; const st=gid('auStoryStatus'); if(st)st.textContent='siliniyor…'; fetch('/api/author/clear-unlock',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({to})}).then(()=>{ try{notifyGameMap();}catch(e){} return loadStoryMap(); }).catch(()=>{ if(st)st.textContent='hata'; }); }
+        else { const src=nodeById(storyEdgeSel.source); if(src){ const rows=srcUnlocks(storyEdgeSel.source).filter(r=>r.id!==storyEdgeSel.member); storyEdgeSel=null; saveUnlocks(src,rows); } } } }); }
+  function commonSource(ids){ let src=null; (STORY.nodes||[]).forEach(n=>{ if(src)return; const mem=new Set(srcUnlocks(n.id).map(r=>r.id)); if(ids.length&&ids.every(id=>mem.has(id))) src=n; }); return src; }
+  function pairSelected(kind,timer){ const ids=[...storyMultiSel]; if(ids.length<2)return; const src=commonSource(ids); const st=gid('auStoryStatus');
+    if(!src){ if(st)st.textContent='seçilenler aynı kaynaktan açılmalı — önce o kaynaktan porttan sürükleyip bağla'; return; }
+    const side=(kind==='side'); const rows=srcUnlocks(src.id); const grp='pair-'+Math.random().toString(36).slice(2,6);
+    rows.forEach(r=>{ if(ids.includes(r.id)){ r.group=grp; r.kind=side?'side':'main'; r.timer=(side&&timer)?String(timer):''; } }); storyMultiSel.clear(); saveUnlocks(src,rows); }
+  function unpairSelected(){ const ids=[...storyMultiSel]; if(!ids.length)return; const src=commonSource(ids); if(!src)return; const rows=srcUnlocks(src.id); rows.forEach(r=>{ if(ids.includes(r.id)) r.group=''; }); storyMultiSel.clear(); saveUnlocks(src,rows); }
+  const STORY_LANE_H=132;
+  function renderStory(){
+    const cv=gid('auStoryCanvas'); if(!cv||!STORY) return; bindStoryKeys(); cv.innerHTML='';
+    const nodes=STORY.nodes||[]; const W=cv.clientWidth||620; const role=roleMap();
+    const NW=130, NH=38; const depth=computeDepth();
+    // TIER = order (tek doğru). order yoksa: eski sy'den ya da edge-derinliğinden türet, sonra order'a yaz (migrasyon).
+    const laneOf = n => (typeof n.tier==='number' && n.tier>0) ? (n.tier-1) : (typeof n.sy==='number' ? Math.max(0,Math.round(n.sy/STORY_LANE_H)) : (depth[n.id]||0));
+    let maxLane=0; nodes.forEach(n=>{ const li=laneOf(n); if(li>maxLane)maxLane=li; });
+    const LANES=Math.max(3, maxLane+1, storyLaneCount); const laneH=STORY_LANE_H; const H=LANES*laneH; cv.__lanes=LANES;
+    const inner=document.createElement('div'); inner.className='au-story-inner'; inner.style.height=H+'px';
+    const byLane={}; nodes.forEach(n=>{ (byLane[laneOf(n)]=byLane[laneOf(n)]||[]).push(n.id); });
+    const cols=Math.max(1, Math.floor((W-24)/(NW+18)));
+    const pos={};
+    nodes.forEach(n=>{ const li=laneOf(n); const arr=byLane[li]; const i=arr.indexOf(n.id); const rows=Math.ceil(arr.length/cols); const r=Math.floor(i/cols); const c=i%cols; const inRow=Math.min(cols, arr.length-r*cols);
+      let cx = ((c+1)/(inRow+1))*W;                        // yatay = tur içinde otomatik grid (çakışma yok)
+      let cy = (li+0.5)*laneH + (r-(rows-1)/2)*(NH+12);    // dikey = tur bandı → görsel tur = tier
+      cx=Math.max(NW/2+4,Math.min(W-NW/2-4,cx)); cy=Math.max(NH/2+4,Math.min(H-NH/2-4,cy)); pos[n.id]={cx,cy};
+      if(!(typeof n.tier==='number' && n.tier>0)){ n.tier=li+1; saveStoryPos(n.id, undefined, n.tier); }   // migrate: mevcut düzeni tier'a yaz
+    });
+    let lanes='';
+    for(let i=0;i<LANES;i++){ const y=i*laneH; if(i>0) lanes+='<line x1="0" y1="'+y+'" x2="'+W+'" y2="'+y+'" stroke="rgba(255,255,255,.09)" stroke-width="1"/>'; lanes+='<text x="8" y="'+(y+16)+'" fill="rgba(255,255,255,.32)" font-size="10" font-family="Inter,system-ui">Tur '+(i+1)+'</text>'; }
+    let edges='';
+    (STORY.staticEdges||[]).forEach(e=>{ const p=pos[e.from],q=pos[e.to]; if(!p||!q)return; const sel=storyEdgeSel&&storyEdgeSel.staticTo===e.to; const base='x1="'+p.cx+'" y1="'+p.cy+'" x2="'+q.cx+'" y2="'+q.cy+'"';
+      edges+='<line '+base+' stroke="'+(sel?'#fff':'#888780')+'" stroke-width="'+(sel?4:2)+'" marker-end="url(#sar)"/>'
+        +'<line class="au-edge-hit" '+base+' stroke="transparent" stroke-width="16" style="pointer-events:stroke;cursor:pointer" data-static="1" data-to="'+e.to+'"/>'; });
+    (STORY.forks||[]).forEach(f=>{ const col=f.grouped?(f.kind==='side'?'#EF9F27':'#7F77DD'):'#888780'; (f.members||[]).forEach(m=>{ const p=pos[f.source],q=pos[m.id]; if(!p||!q)return; const sel=storyEdgeSel&&storyEdgeSel.source===f.source&&storyEdgeSel.member===m.id; const base='x1="'+p.cx+'" y1="'+p.cy+'" x2="'+q.cx+'" y2="'+q.cy+'"';
+      edges+='<line '+base+' stroke="'+(sel?'#fff':col)+'" stroke-width="'+(sel?4:2)+'"'+(f.grouped?' stroke-dasharray="5 4"':'')+' marker-end="url(#sar)"/>'
+        +'<line class="au-edge-hit" '+base+' stroke="transparent" stroke-width="16" style="pointer-events:stroke;cursor:pointer" data-src="'+f.source+'" data-mem="'+m.id+'"/>'; }); });
+    inner.insertAdjacentHTML('beforeend','<svg class="au-story-svg" width="'+W+'" height="'+H+'"><defs><marker id="sar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#888780"/></marker></defs>'+lanes+edges+'<line id="auDragLine" stroke="#fff" stroke-width="2" stroke-dasharray="4 3" marker-end="url(#sar)" style="display:none"/></svg>');
+    cv.appendChild(inner);
+    const dragLine=inner.querySelector('#auDragLine');
+    const cpt=(ev)=>{ const r=cv.getBoundingClientRect(); return { x:ev.clientX-r.left+cv.scrollLeft, y:ev.clientY-r.top+cv.scrollTop }; };
+    inner.querySelectorAll('.au-edge-hit').forEach(h=> h.addEventListener('click',(e)=>{ e.stopPropagation(); storyEdgeSel = h.dataset.static ? {staticTo:h.dataset.to} : {source:h.dataset.src,member:h.dataset.mem}; storySel=null; storyMultiSel.clear(); const st=gid('auStoryStatus'); if(st)st.textContent='çizgi seçili — silmek için Delete'; renderStory(); renderStoryInspector(); }));
+    nodes.forEach(n=>{ const p=pos[n.id]; const d=document.createElement('div'); d.className='au-node t-'+(n.type||'episode')+' r-'+(role[n.id]||'plain')+(n.mode==='placeholder'?' ph':'')+(n.id===storySel?' sel':'')+(storyMultiSel.has(n.id)?' msel':''); d.dataset.id=n.id;
+      d.style.left=(p.cx-NW/2)+'px'; d.style.top=(p.cy-NH/2)+'px'; d.style.width=NW+'px';
+      const suAv=(n.type==='episode'&&n.suitor)?('<span class="au-node-su" title="suitor: '+n.suitor+'" style="background-image:url(\'worlds/pride-and-prejudice/characters/'+n.suitor+'/appearances/pride.png\')"></span>'):'';
+      d.innerHTML=suAv+'<span class="au-node-t">'+(n.title||n.id)+'</span><span class="au-port" title="bağla (sürükle)"></span>';
+      // MOVE: drag node body → reposition; keep the y you drop at within its lane (2nd row ok)
+      d.addEventListener('mousedown',(e)=>{ if(e.target.classList.contains('au-port'))return;
+        if(e.metaKey||e.ctrlKey){ e.preventDefault(); if(storyMultiSel.has(n.id))storyMultiSel.delete(n.id); else storyMultiSel.add(n.id); storyEdgeSel=null; storySel=null; renderStory(); renderStoryInspector(); return; }
+        e.preventDefault();
+        let moved=false; const c0=cpt(e); const offX=c0.x-p.cx, offY=c0.y-p.cy;
+        const mm=(ev)=>{ moved=true; const c=cpt(ev); let cx=c.x-offX, cy=c.y-offY; cx=Math.max(NW/2,Math.min(W-NW/2,cx)); cy=Math.max(NH/2,Math.min(H-NH/2,cy)); d.style.left=(cx-NW/2)+'px'; d.style.top=(cy-NH/2)+'px'; p.cx=cx; p.cy=cy; };
+        const mu=(ev)=>{ document.removeEventListener('mousemove',mm); document.removeEventListener('mouseup',mu);
+          if(moved){ const li=Math.max(0,Math.min(LANES-1,Math.floor(p.cy/laneH))); n.tier=li+1; saveStoryPos(n.id,undefined,n.tier); renderStory(); }   // sürükle = sadece tur'u değiştir (yatay otomatik)
+          else { storySel=n.id; storyEdgeSel=null; inner.querySelectorAll('.au-node').forEach(x=>x.classList.remove('sel')); d.classList.add('sel'); renderStoryInspector(); } };
+        document.addEventListener('mousemove',mm); document.addEventListener('mouseup',mu); });
+      // CONNECT: drag from the port → create unlock to the node under cursor
+      d.querySelector('.au-port').addEventListener('mousedown',(e)=>{ e.preventDefault(); e.stopPropagation(); const sp=pos[n.id]; let moved=false;
+        const mm=(ev)=>{ moved=true; const c=cpt(ev); dragLine.style.display=''; dragLine.setAttribute('x1',sp.cx); dragLine.setAttribute('y1',sp.cy); dragLine.setAttribute('x2',c.x); dragLine.setAttribute('y2',c.y); };
+        const mu=(ev)=>{ document.removeEventListener('mousemove',mm); document.removeEventListener('mouseup',mu); dragLine.style.display='none';
+          const el=document.elementFromPoint(ev.clientX,ev.clientY); const tn=el&&el.closest?el.closest('.au-node'):null;
+          if(moved && tn && tn.dataset.id && tn.dataset.id!==n.id) addUnlock(n.id, tn.dataset.id); };
+        document.addEventListener('mousemove',mm); document.addEventListener('mouseup',mu); });
+      inner.appendChild(d); });
+    if(storyMultiSel.size>=2){ const tb=document.createElement('div'); tb.className='au-story-toolbar';
+      tb.innerHTML='<span>'+storyMultiSel.size+' seçili</span>'
+        +'<select id="auPairKind" title="çatal türü"><option value="main">Ana çatal</option><option value="side">Süreli</option></select>'
+        +'<input id="auPairTimer" placeholder="sn" title="süre (saniye)" style="width:52px;display:none">'
+        +'<button type="button" id="auPairBtn">⌘ Pair yap</button><button type="button" id="auUnpairBtn">Ayır</button>';
+      const pk=tb.querySelector('#auPairKind'), pt=tb.querySelector('#auPairTimer');
+      pk.addEventListener('change',()=>{ pt.style.display=(pk.value==='side')?'':'none'; });
+      tb.querySelector('#auPairBtn').addEventListener('click',()=>pairSelected(pk.value, pt.value.trim()));
+      tb.querySelector('#auUnpairBtn').addEventListener('click',unpairSelected); cv.appendChild(tb); }
+  }
+  function renderStoryInspector(){
+    const box=gid('auStoryInspector'); if(!box||!STORY) return;
+    const n=nodeById(storySel); if(!n){ box.innerHTML='<div class="au-status" style="padding:12px">Bir düğüme tıkla.<br><br>Dikey <b>sürükle</b> = tur (sıra). Porttan <b>sürükle</b> = branch (çizgi).</div>'; return; }
+    const rows=srcUnlocks(n.id);
+    const openedBy=[...new Set((STORY.staticEdges||[]).filter(e=>e.to===n.id).map(e=>e.from).concat((STORY.forks||[]).filter(f=>(f.members||[]).some(m=>m.id===n.id)).map(f=>f.source)))];
+    box.innerHTML='<div class="au-insp-h">'+(n.title||n.id)+'</div><div class="au-insp-id">'+n.id+(n.mode==='placeholder'?' · placeholder':(n.episode?'':' · script yok'))+'</div>';
+    // ---- Time-of-day (map mood): this episode's `time` paints the map background ----
+    if(n.type==='episode'){
+      const secT=document.createElement('div'); secT.className='au-insp-sec'; secT.textContent='Zaman (harita moodu)'; box.appendChild(secT);
+      const tsel=document.createElement('select'); tsel.style.cssText='width:100%;padding:7px 9px;border-radius:8px;background:rgba(0,0,0,.28);color:#eae6f5;border:1px solid rgba(183,156,240,.28);font:600 12px Inter,system-ui;';
+      [['day','Gündüz (map.jpg)'],['dawn','Gün doğumu'],['sunset','Gün batımı'],['night','Gece']].forEach(o=>{
+        const op=document.createElement('option'); op.value=o[0]; op.textContent=o[1]; if((n.time||'day')===o[0]||((n.time==='any'||!n.time)&&o[0]==='day')) op.selected=true; tsel.appendChild(op); });
+      tsel.addEventListener('change',()=>{ n.time=tsel.value; saveEpisodeTime(n.id, tsel.value); });
+      box.appendChild(tsel);
+      const th=document.createElement('div'); th.className='au-status'; th.style.marginTop='6px'; th.textContent='Bu episode aktif olduğunda harita bu zamanın görseline döner.'; box.appendChild(th);
+    }
+    const secOpen=document.createElement('div'); secOpen.className='au-insp-sec'; secOpen.textContent='Çıkan branch (çizgi)'; box.appendChild(secOpen);
+    if(!n.episode){ const w=document.createElement('div'); w.className='au-status'; w.textContent='Bu düğümün scriptʼi yok; branch eklemek için önce script üret.'; box.appendChild(w); }
+    const rowsBox=document.createElement('div');
+    function collectAndSave(){ const rs=[...rowsBox.querySelectorAll('.au-srow')].map(r=>({ id:r.dataset.id, kind:r.querySelector('.sr-kind').value, group:r.querySelector('.sr-group').value.trim(), timer:(r.querySelector('.sr-timer')?r.querySelector('.sr-timer').value.trim():''), title:r.dataset.title||'', desc:r.dataset.desc||'', cover:r.dataset.cover||'' })); saveUnlocks(n, rs); }
+    rows.forEach(u=>{ const r=document.createElement('div'); r.className='au-srow'; r.dataset.id=u.id; r.dataset.title=u.title; r.dataset.desc=u.desc; r.dataset.cover=u.cover;
+      r.innerHTML='<div class="sr-top"><span class="sr-name">'+((nodeById(u.id)||{}).title||u.id)+'</span><button class="sr-del" title="sil">✕</button></div>'
+        +'<div class="sr-line"><select class="sr-kind"><option value="main"'+(u.kind!=='side'?' selected':'')+'>Ana çatal</option><option value="side"'+(u.kind==='side'?' selected':'')+'>Süreli</option></select>'
+        +'<input class="sr-group" placeholder="grup (pair=aynı)" value="'+(u.group||'').replace(/"/g,'&quot;')+'">'
+        +'<input class="sr-timer" placeholder="sn" value="'+(u.timer||'').replace(/"/g,'&quot;')+'" style="width:52px;'+(u.kind==='side'?'':'display:none')+'"></div>';
+      r.querySelector('.sr-kind').addEventListener('change',(e)=>{ r.querySelector('.sr-timer').style.display=(e.target.value==='side')?'':'none'; collectAndSave(); });
+      r.querySelector('.sr-group').addEventListener('change',collectAndSave);
+      const tm=r.querySelector('.sr-timer'); if(tm) tm.addEventListener('change',collectAndSave);
+      r.querySelector('.sr-del').addEventListener('click',()=>{ r.remove(); collectAndSave(); });
+      rowsBox.appendChild(r); });
+    if(!rows.length){ const e=document.createElement('div'); e.className='au-status'; e.textContent='—  (başka düğüme sürükleyerek ekle)'; rowsBox.appendChild(e); }
+    box.appendChild(rowsBox);
+    const secBy=document.createElement('div'); secBy.className='au-insp-sec'; secBy.textContent='Gelen branch (çizgi)'; box.appendChild(secBy);
+    const by=document.createElement('div'); by.innerHTML= openedBy.length ? openedBy.map(o=>'<span class="au-insp-chip">'+o+'</span>').join('') : '<span class="au-status">— (baştan açık / kilitli)</span>'; box.appendChild(by);
+  }
+  gid('auResTabScript').addEventListener('click',()=>switchResTab('script'));
+  gid('auResTabCodes').addEventListener('click',()=>switchResTab('codes'));
+  gid('auResTabFork').addEventListener('click',()=>switchResTab('fork'));
+  gid('auResTabAssets').addEventListener('click',()=>switchResTab('assets'));
+  // ---- Codes tab: attach consequence codes to each choice option ----
+  const CODE_TEMPLATES={ 'Scandal':'Scandal: +5', 'Allure':'Allure: +5', 'XP':'XP: mr_darcy | +10',
+    'Relation':'Relation: mr_darcy | trust | +1', 'Discover':'Discover: mr_darcy',
+    'Discovery':'Discovery: mr_darcy | fact', 'Item':'Item: silver_locket', 'Trait':'Trait: Wit' };
+  function parseChoices(txt){
+    const lines=(txt||'').split('\n'); const out=[];
+    for(let i=0;i<lines.length;i++){
+      const cm=lines[i].match(/^\(Choice:\s*(\d+)\s*\)/i); if(!cm) continue;
+      const n=parseInt(cm[1],10)||0; const opts=[]; let found=0;
+      for(let j=i+1;j<lines.length && found<n;j++){ const ln=lines[j].trim();
+        if(/^\(Situation:|^\(Choice:/i.test(ln)) break;
+        if(ln && !ln.startsWith('[') && !ln.startsWith('(') && /^[A-Za-z][\w-]*:/.test(ln)){ opts.push({text:ln, idx:found}); found++; } }
+      opts.forEach(o=>{ o.ifLine=-1; o.codes=[];
+        for(let k=i;k<lines.length;k++){ const im=lines[k].match(/^\(IfChoice:\s*(\d+)\s*\)/i); if(im && parseInt(im[1],10)===o.idx){ o.ifLine=k; break; } }
+        if(o.ifLine>=0){ for(let k=o.ifLine+1;k<lines.length;k++){ const t=lines[k].trim();
+          if(/^\(IfChoice:|^\(EndIf\)|^\(Choice:/i.test(t)) break;
+          const ml=t.match(/^Mechanics:\s*(.+)$/i); if(ml){ o.codes=(ml[1].match(/\(([^)]*)\)/g)||[]).map(g=>g.slice(1,-1).trim()); break; } } }
+      });
+      out.push({line:i, n, opts});
+    }
+    return out;
+  }
+  // per-line code model: codes live as standalone (Kind: payload) lines placed
+  // AFTER the dialogue line they belong to, so they fire as the scene advances.
+  const isDlgLine=t=>/^[A-Za-zÇĞİÖŞÜ][\w-]*:\s*\S/.test(t) && !/^Mechanics:/i.test(t);
+  const isCodeLine=t=>/^Mechanics:/i.test(t) || /^\([A-Za-z][A-Za-z]*:\s*[^)]*\)$/.test(t);
+  function codesFromLine(t){ if(/^Mechanics:/i.test(t)) return (t.replace(/^Mechanics:\s*/i,'').match(/\(([^)]*)\)/g)||[]).map(g=>g.slice(1,-1).trim());
+    const m=t.match(/^\(([^)]*)\)$/); return m?[m[1].trim()]:[]; }
+  function optBlockRange(lines, ifLine){ let k=ifLine+1;
+    if(lines[k]!==undefined && /^\(Situation:/i.test((lines[k]||'').trim())) k++;
+    const start=k; while(k<lines.length){ const t=(lines[k]||'').trim(); if(/^\(IfChoice:|^\(EndIf\)|^\(Choice:|^\(Situation:/i.test(t)) break; k++; }
+    return {start, end:k}; }
+  function findIf(lines, choiceLineIdx, optIdx){ for(let k=choiceLineIdx;k<lines.length;k++){ const im=(lines[k]||'').match(/^\(IfChoice:\s*(\d+)\s*\)/i); if(im && +im[1]===optIdx) return k; } return -1; }
+  // dialogueIdx: -1 = block-top (immediate); >=0 = after that dialogue line
+  function setLineCodes(choiceLineIdx, optIdx, dialogueIdx, codesArr){
+    const lines=resFull.split('\n'); const ifi=findIf(lines,choiceLineIdx,optIdx); if(ifi<0) return;
+    const {start,end}=optBlockRange(lines, ifi);
+    let anchor;
+    if(dialogueIdx<0){ anchor=start-1; }
+    else { let c=0, di=-1; for(let k=start;k<end;k++){ if(isDlgLine((lines[k]||'').trim())){ if(c===dialogueIdx){ di=k; break; } c++; } } if(di<0) return; anchor=di; }
+    let e=anchor+1; while(e<lines.length && isCodeLine((lines[e]||'').trim())) e++;   // strip existing code lines
+    lines.splice(anchor+1, e-(anchor+1));
+    if(codesArr.length) lines.splice(anchor+1, 0, ...codesArr.map(c=>'('+c.trim()+')'));
+    resFull=lines.join('\n');
+  }
+  // Mark ONE option per choice as the canon "main path" ([main] on its option line).
+  function setMainOption(choiceLineIdx, optIdx, on){
+    const lines=resFull.split('\n'); const cm=(lines[choiceLineIdx]||'').match(/\(Choice:\s*(\d+)\s*\)/i); const n=cm?+cm[1]:0;
+    const optLineIdxs=[]; for(let j=choiceLineIdx+1;j<lines.length && optLineIdxs.length<n;j++){ const t=(lines[j]||'').trim(); if(/^\(Situation:|^\(Choice:/i.test(t)) break; if(t && !t.startsWith('[') && !t.startsWith('(') && /^[A-Za-z][\w-]*:/.test(t)) optLineIdxs.push(j); }
+    optLineIdxs.forEach((li,k)=>{ let s=lines[li].replace(/\s*\[\s*main\s*\]/ig,''); if(on && k===optIdx) s=s.replace(/\s*$/,'')+' [main]'; lines[li]=s; });
+    resFull=lines.join('\n');
+  }
+  // consequence-code kind → color class + icon (matches in-game toast accents)
+  function codeKindOf(code){ const m=(code||'').match(/^([A-Za-z]+)\s*:/); return m?m[1].toLowerCase():''; }
+  const CODE_IC={ xp:'✦', relation:'❤', discover:'★', discovery:'◆', scandal:'🔥', allure:'✧', item:'🎁', trait:'▲' };
+  // Discovery code chip: suitor <select> + fact <select> (from that suitor's pool, + custom)
+  function parseDisc(code){ const m=(code||'').match(/^Discovery:\s*([^|]*)\|?\s*([\s\S]*)$/i);
+    return { suitor:(m&&m[1]||'').trim(), fact:(m&&m[2]||'').trim() }; }
+  function makeDiscChip(code, commit){
+    const st=parseDisc(code);
+    const chip=document.createElement('span'); chip.className='au-chip disc k-discovery'; chip.style.gap='4px';
+    const kic=document.createElement('span'); kic.className='k-ic'; kic.textContent=CODE_IC.discovery; chip.appendChild(kic);
+    const opt=(v,l,sel)=>{ const o=document.createElement('option'); o.value=v; o.textContent=l; if(sel)o.selected=true; return o; };
+    const write=()=>commit('Discovery: '+(ssel.value)+' | '+(chip.__fact||''));
+    // suitor select
+    const ssel=document.createElement('select'); ssel.style.cssText='background:transparent;border:0;color:inherit;font:inherit;';
+    if(st.suitor && !suitorById(st.suitor)) ssel.appendChild(opt(st.suitor, st.suitor, true));
+    (SUITORS||[]).forEach(s=> ssel.appendChild(opt(s.id, s.name, s.id===st.suitor)));
+    // fact select
+    const fsel=document.createElement('select'); fsel.style.cssText='background:transparent;border:0;color:inherit;font:inherit;max-width:180px;';
+    function fillFacts(){ fsel.innerHTML=''; const su=suitorById(ssel.value); const pool=(su&&su.discoveries)||[];
+      const cur=chip.__fact||''; const curl=cur.toLowerCase(); const match=pool.find(f=>f.toLowerCase()===curl);
+      if(cur && !match) fsel.appendChild(opt(cur, cur+' (özel)', true));
+      pool.forEach(f=> fsel.appendChild(opt(f, f, f.toLowerCase()===curl)));
+      fsel.appendChild(opt('__custom__','✎ özel…', false)); }
+    chip.__fact=st.fact; fillFacts();
+    ssel.addEventListener('change',()=>{ chip.__fact=''; fillFacts(); if(fsel.options.length){ chip.__fact=fsel.value==='__custom__'?'':fsel.value; } write(); });
+    fsel.addEventListener('change',()=>{ if(fsel.value==='__custom__'){ const v=(prompt('Keşif metni:', chip.__fact||'')||'').trim(); if(v){ chip.__fact=v; } fillFacts(); }
+      else chip.__fact=fsel.value; write(); });
+    chip.appendChild(ssel); const sep=document.createElement('span'); sep.textContent='·'; sep.style.opacity='.4'; chip.appendChild(sep); chip.appendChild(fsel);
+    return chip;
+  }
+  function renderCodesPane(){
+    const box=gid('auCodesList'); box.innerHTML='';
+    const choices=parseChoices(resFull);
+    if(!choices.length){ box.innerHTML='<div class="au-status" style="padding:14px">Bu script’te seçim (Choice) yok.</div>'; return; }
+    const lines=resFull.split('\n');
+    choices.forEach(ch=>{
+      const wrap=document.createElement('div'); wrap.className='au-choice';
+      const h=document.createElement('div'); h.className='au-choice-h'; h.textContent='Seçim — '+ch.n+' opsiyon'; wrap.appendChild(h);
+      ch.opts.forEach(o=>{
+        const ohead=document.createElement('div'); ohead.className='au-copt-txt au-copt-head'; ohead.style.marginTop='6px';
+        const isMain=/\[\s*main\s*\]/i.test(o.text);
+        const dot=document.createElement('button'); dot.type='button'; dot.className='au-main-dot'+(isMain?' on':''); dot.title=isMain?'Ana hat (canon) — kaldır':'Ana hat olarak işaretle';
+        dot.addEventListener('click',()=>{ setMainOption(ch.line, o.idx, !isMain); renderScriptPane(); renderCodesPane(); });
+        const lab=document.createElement('span'); lab.textContent=(o.idx+1)+'. '+o.text.replace(/^[A-Za-z][\w-]*:\s*/,'').replace(/\s*\[trait:[^\]]*\]/i,'').replace(/\s*\[\s*main\s*\]/i,'').trim();
+        ohead.appendChild(dot); ohead.appendChild(lab);
+        wrap.appendChild(ohead);
+        if(o.ifLine<0){ const w=document.createElement('div'); w.className='au-status'; w.textContent='(IfChoice bloğu yok — kod eklenemez)'; wrap.appendChild(w); return; }
+        const {start,end}=optBlockRange(lines, o.ifLine);
+        // build the list of rows: (immediate) + each dialogue line
+        const rows=[];
+        let fd=end; for(let k=start;k<end;k++){ if(isDlgLine((lines[k]||'').trim())){ fd=k; break; } }
+        let imm=[]; for(let k=start;k<fd;k++){ if(isCodeLine((lines[k]||'').trim())) imm=imm.concat(codesFromLine((lines[k]||'').trim())); }
+        if(imm.length) rows.push({label:'⚡ hemen (sahne başında)', codes:imm, di:-1});
+        let dIdx=0;
+        for(let k=start;k<end;k++){ const t=(lines[k]||'').trim(); if(!isDlgLine(t)) continue;
+          let codes=[]; let j=k+1; while(j<end && isCodeLine((lines[j]||'').trim())){ codes=codes.concat(codesFromLine((lines[j]||'').trim())); j++; }
+          const spk=(t.match(/^([A-Za-z][\w-]*):/)||[])[1]||''; const say=t.replace(/^[A-Za-z][\w-]*:\s*/,'').slice(0,48);
+          rows.push({label:spk+': '+say, codes, di:dIdx}); dIdx++;
+        }
+        rows.forEach(r=>{
+          const line=document.createElement('div'); line.className='au-cline';
+          const lab=document.createElement('div'); lab.className='au-cline-lab'; lab.textContent=r.label; line.appendChild(lab);
+          const chips=document.createElement('div'); chips.className='au-chips'; const codes=r.codes.slice();
+          r.codes.forEach((c,ci)=>{
+            const x=document.createElement('button'); x.textContent='✕'; x.addEventListener('click',()=>{ codes.splice(ci,1); setLineCodes(ch.line,o.idx,r.di,codes); renderScriptPane(); renderCodesPane(); });
+            if(/^Discovery:/i.test(c)){
+              const chip=makeDiscChip(c, nc=>{ codes[ci]=nc; setLineCodes(ch.line,o.idx,r.di,codes); renderScriptPane(); });
+              chip.appendChild(x); chips.appendChild(chip); return;
+            }
+            const kind=codeKindOf(c);
+            const chip=document.createElement('span'); chip.className='au-chip'+(kind?' k-'+kind:'');
+            const kic=document.createElement('span'); kic.className='k-ic'; kic.textContent=CODE_IC[kind]||'•'; chip.appendChild(kic);
+            const inp=document.createElement('input'); inp.value=c; inp.addEventListener('input',()=>{ codes[ci]=inp.value; setLineCodes(ch.line,o.idx,r.di,codes); renderScriptPane(); });
+            chip.appendChild(inp); chip.appendChild(x); chips.appendChild(chip); });
+          const sel=document.createElement('select'); sel.className='au-code-add';
+          sel.innerHTML='<option value="">+ Kod</option>'+Object.keys(CODE_TEMPLATES).map(k=>'<option value="'+k+'">'+k+'</option>').join('');
+          sel.addEventListener('change',()=>{ if(!sel.value)return; let tpl=CODE_TEMPLATES[sel.value];
+            if(sel.value==='Discovery'){ const su=(SUITORS||[])[0]; if(su){ tpl='Discovery: '+su.id+' | '+((su.discoveries&&su.discoveries[0])||'fact'); } }
+            codes.push(tpl); setLineCodes(ch.line,o.idx,r.di,codes); renderScriptPane(); renderCodesPane(); });
+          chips.appendChild(sel); line.appendChild(chips); wrap.appendChild(line);
+        });
+      });
+      box.appendChild(wrap);
+    });
+  }
+  gid('auResBack').addEventListener('click',()=>{ gid('auResultView').classList.remove('on'); });
+  function countDlg(block){ return (block.lines||[]).filter(ln=>/^[A-Z][A-Za-z-]*:\s/.test(ln) && !/^Mechanics:/.test(ln) && !/^Narrative:/.test(ln)).length; }
+  function cutsOf(block){ const out=[]; (block.lines||[]).forEach(ln=>{ const m=ln.match(/\[bg:cutscene=([^\]\s]+)\]/); if(m)out.push(m[1]); }); return out; }
+  function choiceOpts(block){ const m=(block.lines||[]).join('\n').match(/\(Choice:\s*(\d+)\s*\)/i); return m?(parseInt(m[1],10)||0):0; }
+  function choiceMoments(block){ const m=(block.lines||[]).join('\n').match(/\(Choice:\s*\d+\s*\)/gi); return m?m.length:0; }
+  function pngize(n){ n=(n||'').trim().toLowerCase().replace(/[^a-z0-9_.-]+/g,'_'); if(!n)return ''; return /\.(png|jpg|jpeg|webp)$/.test(n)?n:n+'.png'; }
+  // ---- staging model: place placeholders + edits, then ONE regenerate ----
+  let stage=[], phSeq=0;
+  function isStaged(it){ return it.kind==='ph' || it.setDlg!=null || it.setCs!=null || it.setCh!=null; }
+  function rebuildStage(){ const p=parseSituations(resFull); resSits=p.blocks; resPre=p.pre;
+    stage = p.blocks.map(s=>({ kind:'ex', id:s.id, title:s.title, desc:s.desc, lines:s.lines, dlgCur:countDlg(s), setDlg:null, csCur:cutsOf(s).length, setCs:null, chCur:choiceOpts(s), setCh:null, chMom:choiceMoments(s), detail:false })); }
+  function hasStaged(){ return stage.some(isStaged); }
+  function updateRegen(){ const n=stage.filter(isStaged).length; gid('auRegen').style.display=n?'inline-block':'none'; gid('auStageN').textContent=n; }
+  function insZone(idx){ const z=document.createElement('div'); z.className='au-ins';
+    const plus=document.createElement('button'); plus.className='plus'; plus.textContent='+'; plus.title='Buraya placeholder sahne ekle';
+    plus.addEventListener('click',()=>{ stage.splice(idx,0,{kind:'ph', tid:'ph'+(++phSeq), dlg:4, cs:0, ch:0, detail:true}); renderStage(); });
+    z.appendChild(plus); return z;
+  }
+  function numRow(label, val, min, max, onCh){ const f=document.createElement('div'); f.className='dfield';
+    const l=document.createElement('label'); l.textContent=label; f.appendChild(l);
+    const st=document.createElement('div'); st.className='stepper';
+    const i=document.createElement('input'); i.className='num'; i.type='number'; i.min=min; i.max=max; i.value=val; i.inputMode='numeric';
+    const clamp=v=>Math.max(min,Math.min(max,v|0));
+    const dec=document.createElement('button'); dec.type='button'; dec.className='sbtn'; dec.textContent='−';
+    const inc=document.createElement('button'); inc.type='button'; inc.className='sbtn'; inc.textContent='+';
+    const set=v=>{ v=clamp(v); i.value=v; onCh(v); };
+    dec.addEventListener('click',e=>{ e.stopPropagation(); set((+i.value||min)-1); });
+    inc.addEventListener('click',e=>{ e.stopPropagation(); set((+i.value||min)+1); });
+    i.addEventListener('input',()=>{ onCh(clamp(+i.value||min)); });
+    st.appendChild(dec); st.appendChild(i); st.appendChild(inc); f.appendChild(st); return f; }
+  function detailEl(it){ const d=document.createElement('div'); d.className='au-sitdetail'+(it.detail?' on':'');
+    const dlgVal = it.kind==='ph' ? it.dlg : (it.setDlg!=null?it.setDlg:it.dlgCur);
+    const csVal  = it.kind==='ph' ? it.cs  : (it.setCs!=null?it.setCs:it.csCur);
+    const chVal  = it.kind==='ph' ? (it.ch||0) : (it.setCh!=null?it.setCh:it.chCur);
+    d.appendChild(numRow('Diyalog sayısı', dlgVal, 1, 20, n=>{ if(it.kind==='ph')it.dlg=n; else it.setDlg=(n===it.dlgCur?null:n); afterEdit(it); }));
+    d.appendChild(numRow('Cutscene sayısı', csVal, 0, 6, n=>{ if(it.kind==='ph')it.cs=n; else it.setCs=(n===it.csCur?null:n); afterEdit(it); }));
+    d.appendChild(numRow('Seçenek (0=karar yok)', chVal, 0, 4, n=>{ if(it.kind==='ph')it.ch=n; else it.setCh=(n===it.chCur?null:n); afterEdit(it); }));
+    return d;
+  }
+  function afterEdit(it){ updateRegen(); if(it._wrap) it._wrap.querySelector('.au-sit').classList.toggle('staged', isStaged(it));
+    // live-update both stat chips (cutscene + dialogue)
+    if(it._wrap){ const cs=it.kind==='ph'?it.cs:(it.setCs!=null?it.setCs:it.csCur); const dl=it.kind==='ph'?it.dlg:(it.setDlg!=null?it.setDlg:it.dlgCur); const chn=it.kind==='ph'?(it.ch||0):(it.setCh!=null?it.setCh:it.chCur);
+      const csn=it._wrap.querySelector('.arrow .stat.cut .n'); if(csn) csn.textContent=cs;
+      const dln=it._wrap.querySelector('.arrow .stat.talk .n'); if(dln) dln.textContent=dl;
+      const chE=it._wrap.querySelector('.arrow .stat.cho'); if(chE){ chE.querySelector('.n').textContent=chn; chE.style.display=chn?'':'none'; } } }
+  function renderStage(){ const box=gid('auSituations'); box.innerHTML='';
+    box.appendChild(insZone(0));
+    stage.forEach((it,idx)=>{
+      const wrap=document.createElement('div'); wrap.className='au-sitwrap'; it._wrap=wrap;
+      const b=document.createElement('div'); b.className='au-sit'+(it.kind==='ph'?' placeholder':'')+(resSel.has(it.id)?' on':'');
+      if(isStaged(it)) b.classList.add('staged');
+      b.classList.toggle('open-detail', !!it.detail);
+      const title = it.kind==='ph' ? 'Yeni sahne (placeholder)' : (it.title||it.id);
+      const desc  = it.kind==='ph' ? 'regenerate ile AI yazacak' : (it.desc||'');
+      b.innerHTML='<span class="st"></span><span class="sd"></span>';
+      b.querySelector('.st').textContent=title; b.querySelector('.sd').textContent=desc;
+      // right side: two stat chips (cutscene + dialogue), icon over number, + chevron
+      const csCount  = it.kind==='ph' ? it.cs  : (it.setCs!=null?it.setCs:it.csCur);
+      const dlgCount = it.kind==='ph' ? it.dlg : (it.setDlg!=null?it.setDlg:it.dlgCur);
+      const chCount  = it.kind==='ph' ? (it.ch||0) : (it.chMom||0);
+      const arrow=document.createElement('span'); arrow.className='arrow';
+      arrow.innerHTML='<span class="stat cut" title="Cutscene sayısı"><span class="ic">🎬</span><span class="n">'+csCount+'</span></span>'
+                     +'<span class="stat talk" title="Diyalog sayısı"><span class="ic">💬</span><span class="n">'+dlgCount+'</span></span>'
+                     +'<span class="stat cho" title="Karar anı" style="'+(chCount?'':'display:none')+'"><span class="ic">🔀</span><span class="n">'+chCount+'</span></span>'
+                     +'<span class="chev">›</span>';
+      arrow.addEventListener('click',e=>{ e.stopPropagation(); it.detail=!it.detail; renderStage(); });
+      b.appendChild(arrow);
+      if(it.kind==='ph'){ const del=document.createElement('button'); del.className='phdel'; del.textContent='✕'; del.title='placeholder’ı sil'; del.addEventListener('click',e=>{ e.stopPropagation(); const i=stage.indexOf(it); if(i>=0)stage.splice(i,1); renderStage(); }); b.appendChild(del); }
+      else b.addEventListener('click',()=>{ if(resSel.has(it.id))resSel.delete(it.id); else resSel.add(it.id); renderScriptPane(); renderStage(); });
+      wrap.appendChild(b); wrap.appendChild(detailEl(it)); box.appendChild(wrap);
+      box.appendChild(insZone(idx+1));
+    });
+    if(!stage.length){ const d=document.createElement('div'); d.className='au-status'; d.style.padding='8px'; d.textContent='Henüz situation yok — + ile ekle.'; box.appendChild(d); }
+    updateRegen();
+  }
+  function regenerate(){ if(!hasStaged())return; const parts=[]; let lastEx=null;
+    const chClause=(n)=> n>=2 ? (' Include a '+n+'-option player choice: (Choice:'+n+') then '+n+' Arabella option lines (each with a [trait: Name] tag), then a (IfChoice:0)…(EndIf) consequence block per option — every block MUST end with a Mechanics: line of consequence codes ((Relation/XP/Scandal/Allure/Discovery/Item)); make the options AND their consequences differ.') : (n===0?' Do NOT include any player choice in this situation.':'');
+    stage.forEach(it=>{ if(it.kind==='ph'){ parts.push('Insert a NEW situation '+(lastEx?('immediately after the situation "'+lastEx+'"'):'at the very beginning')+' that extends the story coherently, with about '+it.dlg+' dialogue exchanges and exactly '+it.cs+' cutscene(s) — YOU choose fitting dramatic cutscene moments and place them with [bg:cutscene=snake_case.png].'+chClause(it.ch||0)); }
+      else { lastEx=it.id; if(it.setDlg!=null||it.setCs!=null||it.setCh!=null){ const d=it.setDlg!=null?it.setDlg:it.dlgCur, c=it.setCs!=null?it.setCs:it.csCur, ch=it.setCh!=null?it.setCh:it.chCur; parts.push('Rewrite situation "'+it.id+'" to have about '+d+' dialogue exchanges and exactly '+c+' cutscene(s) — add or remove cutscenes as needed, YOU choose the fitting moments ([bg:cutscene=snake_case.png]).'+(it.setCh!=null?chClause(ch):'')); } } });
+    const instruction='Apply ALL of these edits, keep every OTHER situation and the overall order intact:\n- '+parts.join('\n- ');
+    gid('auRegen').disabled=true; gid('auSitHint').textContent='AI çalışıyor…';
+    fetch('/api/author/expand-script',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({script:resFull, op:'custom', instruction})})
+      .then(async r=>{ if(r.status===404) throw new Error('dev-server’ı yeniden başlat'); return r.json(); })
+      .then(j=>{ gid('auRegen').disabled=false; gid('auSitHint').textContent='tıkla → sadece o bölüm'; if(!j.ok){ gid('auSitHint').textContent='hata: '+(j.error||'?'); return; }
+        resFull=j.script; resSel.clear(); rebuildStage(); renderStage(); renderScriptPane(); scanAssets(); })
+      .catch(e=>{ gid('auRegen').disabled=false; gid('auSitHint').textContent='hata: '+e.message; });
+  }
+  gid('auRegen').addEventListener('click',regenerate);
+  function buildSituations(){ rebuildStage(); renderStage(); }
+  function renderScriptPane(){ const ta=gid('auScript');
+    if(!resSel.size){ ta.value=resFull; ta.dataset.filtered=''; }
+    else { ta.value=resSits.filter(s=>resSel.has(s.id)).map(s=>s.lines.join('\n')).join('\n\n'); ta.dataset.filtered='1'; } }
+  gid('auScript').addEventListener('input',()=>{ const ta=gid('auScript');
+    if(!ta.dataset.filtered){ resFull=ta.value; return; }
+    const byId={}; parseSituations(ta.value).blocks.forEach(b=>byId[b.id]=b.lines.join('\n'));
+    const p=parseSituations(resFull); const out=[]; if(p.pre) out.push(p.pre);
+    p.blocks.forEach(b=>out.push(byId[b.id]!=null?byId[b.id]:b.lines.join('\n')));
+    resFull=out.join('\n'); });
+  // Info overlay: description + quote + "Who is in the picture?" with a ref-photo
+  // icon (hover → portrait) for characters that HAVE a reference; others tagged "genel".
+  function buildInfo(a){
+    const wrap=document.createElement('div'); wrap.className='au-pvinfo';
+    if(a.about){ const d=document.createElement('div'); d.className='pvdesc'; d.textContent=a.about; wrap.appendChild(d); }
+    if(a.quote){ const q=document.createElement('div'); q.className='pvquote'; q.textContent='“'+a.quote+'”'; wrap.appendChild(q); }
+    if((a.kind==='cutscene'||a.kind==='intro'||a.kind==='ending'||a.kind==='discovery') && a.castInfo && a.castInfo.length){
+      const who=document.createElement('div'); who.className='pvwho';
+      const lbl=document.createElement('span'); lbl.className='pvwho-l'; lbl.textContent='Who is in the picture?'; who.appendChild(lbl);
+      a.castInfo.forEach(c=>{
+        const chip=document.createElement('span'); chip.className='pcast';
+        const nm=document.createElement('span'); nm.className='pcn'; nm.textContent=c.name; chip.appendChild(nm);
+        const probe=new Image();
+        probe.onload=()=>{ chip.classList.add('has-ref');
+          const icon=document.createElement('span'); icon.className='pcphoto'; icon.textContent='📷'; icon.title='referans görsel var'; chip.appendChild(icon);
+          const big=document.createElement('span'); big.className='pcbig'; const bi=new Image(); bi.src=c.ref+'?cb='+Date.now(); big.appendChild(bi); chip.appendChild(big); };
+        probe.onerror=()=>{ const g=document.createElement('span'); g.className='pcgen'; g.textContent='genel'; g.title='referans yok — genel prompt ile üretilir'; chip.appendChild(g); };
+        probe.src=c.ref+'?cb='+Date.now();
+        who.appendChild(chip);
+      });
+      wrap.appendChild(who);
+    }
+    return wrap;
+  }
+  function previewAsset(idx){ const a=assets[idx]; const box=gid('auAssetPreview'); if(!a){ return; }
+    box.innerHTML='<div class="au-status" style="margin:auto">yükleniyor…</div>';
+    const img=new Image();
+    img.onload=()=>{ box.innerHTML=''; const wrap=document.createElement('div'); wrap.className='au-pvwrap'; img.className='main'; wrap.appendChild(img); wrap.appendChild(buildInfo(a)); box.appendChild(wrap); };
+    img.onerror=()=>{ box.innerHTML=''; const note=document.createElement('div'); note.className='au-pvnote';
+      const h=document.createElement('div'); h.className='nyhead'; h.textContent=a.kind+' · henüz üretilmedi'; note.appendChild(h);
+      const t=document.createElement('div'); t.className='nytitle'; t.textContent=a.label; note.appendChild(t);
+      note.appendChild(buildInfo(a)); box.appendChild(note); };
+    img.src=a.relPath+'?cb='+Date.now(); }
+  function openResultView(script, locId){ resFull=(script!=null?script:'')||''; resSel.clear();
+    resLoc = locId || gid('auLocation').value || '';
+    gid('auResTitle').textContent=(curLoc()||'Episode');
+    gid('auGenSummary').classList.remove('on');   // hide any prior summary (edit-open shows no summary)
+    gid('auResultView').classList.add('on'); switchResTab('script'); buildSituations(); renderScriptPane(); }
+
+  // "What was generated" summary shown once after a fresh Generate.
+  function summarizeScript(txt){
+    const s=txt||'';
+    const situ=(s.match(/\(Situation:/gi)||[]).length;
+    const hasIntro=/\[bg:intro=/i.test(s), hasEnding=/\[bg:ending=/i.test(s);
+    const choices=(s.match(/\(Choice:/gi)||[]).length;
+    let opts=0; (s.match(/\(Choice:\s*(\d+)\s*\)/gi)||[]).forEach(c=>{ opts+=parseInt((c.match(/\d+/)||[0])[0],10)||0; });
+    const codeKinds={}; (s.match(/\((?:Trait|Relation|Memory|Discovery|Quest|Scandal|Allure|Discover|XP|Item)\s*:/gi)||[]).forEach(g=>{ const k=g.replace(/[(:\s]/g,'').toLowerCase(); codeKinds[k]=(codeKinds[k]||0)+1; });
+    const uniq=re=>new Set((s.match(re)||[]).map(x=>x)).size;
+    const cutscenes=uniq(/\[bg:cutscene=[^\]\s]+\]/gi);
+    const explores=uniq(/\[bg:explore=[^\]\s]+\]/gi);
+    const items=uniq(/\(Item:\s*[^)|]+?\s*\)/gi);
+    const discs=uniq(/\(Discovery:\s*[^)]*\)/gi);
+    const casts=new Set(); (s.match(/\[cast:[^\]]+\]/gi)||[]).forEach(l=>{ l.replace(/\[cast:|\]/gi,'').split(/\s+/).forEach(tok=>{ const i=tok.indexOf('='); if(i>0){ const f=tok.slice(i+1).trim().toLowerCase(); if(f && !['none','you','pc','player','arabella_frost'].includes(f)) casts.add(f); } }); });
+    return { situ, choices, opts, hasIntro, hasEnding, codeKinds, cutscenes, explores, items, discs, portraits:casts.size };
+  }
+  function showGenSummary(txt){
+    const sm=summarizeScript(txt); const body=gid('auGsBody'); body.innerHTML='';
+    const row=(ic,html,sub)=>{ const r=document.createElement('div'); r.className='au-gs-row'; r.innerHTML='<span class="ic">'+ic+'</span><span>'+html+'</span>'; body.appendChild(r); if(sub){ const d=document.createElement('div'); d.className='au-gs-sub'; d.textContent=sub; body.appendChild(d); } };
+    row('📖','<b>'+sm.situ+'</b> sahne'+(sm.hasIntro?' · intro ✓':'')+(sm.hasEnding?' · ending ✓':''));
+    if(sm.choices) row('🔀','<b>'+sm.choices+'</b> seçim · <b>'+sm.opts+'</b> opsiyon');
+    const kinds=Object.keys(sm.codeKinds);
+    if(kinds.length){ const total=kinds.reduce((a,k)=>a+sm.codeKinds[k],0); row('🏷️','<b>'+total+'</b> sonuç kodu', kinds.map(k=>sm.codeKinds[k]+'× '+k).join(', ')); }
+    const assetTotal=1+sm.explores+sm.cutscenes+(sm.hasIntro?1:0)+(sm.hasEnding?1:0)+sm.items+sm.discs+sm.portraits;
+    row('🎨','<b>'+assetTotal+'</b> üretilecek asset', ['cover 1', sm.explores?sm.explores+' backdrop':'', sm.cutscenes?sm.cutscenes+' cutscene':'', sm.hasIntro?'intro':'', sm.hasEnding?'ending':'', sm.portraits?sm.portraits+' portre':'', sm.items?sm.items+' item':'', sm.discs?sm.discs+' anı':''].filter(Boolean).join(' · '));
+    gid('auGenSummary').classList.add('on');
+  }
+  gid('auGsGo').addEventListener('click',()=>gid('auGenSummary').classList.remove('on'));
+
+  gid('auGen').addEventListener('click',()=>{
+    const location=gid('auLocation').value, brief=gid('auBrief').value.trim();
+    if(!brief){ gid('auGenStatus').textContent='write a brief first'; return; }
+    if(!location){ gid('auGenStatus').textContent='pick or add a location'; return; }
+    gid('auGenStatus').textContent='generating… (up to ~30s)';
+    fetch('/api/author/script',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({characters:[...selChars],location,brief})})
+      .then(r=>r.json()).then(j=>{ if(j.error){ gid('auGenStatus').textContent='error: '+j.error; return; }
+        gid('auGenStatus').textContent='done'; openResultView(j.script||''); showGenSummary(j.script||''); })
+      .catch(e=>{ gid('auGenStatus').textContent='error: '+e; });
+  });
+
+  gid('auSave').addEventListener('click',()=>{
+    const loc=curLoc(); const p=WORLD+'/episodes/'+epBase()+'/scripts/main.txt';
+    fetch('/api/save-script',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({path:p,content:curScript()})})
+      .then(r=>r.json()).then(j=>{ if(!j.ok){ gid('auSaveStatus').textContent='error: '+j.error; return; } gid('auSaveStatus').textContent='saved → '+j.path;
+        if(loc) fetch('/api/author/assign-episode',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({id:loc,episode:epBase()})}).then(()=>reloadLocations()); })
+      .catch(e=>gid('auSaveStatus').textContent='error');
+  });
+  gid('auScan').addEventListener('click',scanAssets);
+
+  const LOC_BASE='cinematic painterly-photoreal Regency England circa 1810s, warm natural light, rich period detail, gilt / blush / dark-wood / deep-green palette. ';
+  const NO_PEOPLE=' ABSOLUTELY NO people, no figures, no humans, no silhouettes, no characters anywhere in the image — an empty environment only (characters are drawn on top separately). ';
+  const LOC_INT='The setting is an INTERIOR room. ';
+  const LOC_EXT='The setting is an OUTDOOR exterior — open air with sky and landscape as the scene requires, NOT an indoor room. ';
+  const OUTDOOR=/(park|garden|seaside|\bsea\b|beach|shore|coast|street|lane|\broad\b|field|meadow|camp|court|courtyard|exterior|outdoor|outside|grove|woods|forest|lawn|terrace|balcony|market|village|churchyard|bridge|pond|lake|river|hill|cliff|promenade|walk|path|grounds|estate)/i;
+  const CUT='ONE single continuous scene in ONE camera frame — a single instant, NOT a sequence, NOT a diptych, NOT split into top/bottom or left/right panels, NOT a comic strip or storyboard. Romantic classical oil painting in the style of an Old Master portrait scene, painterly oil-and-gouache with soft visible brushwork, Regency England circa 1810s, warm dramatic light, atmospheric and period-accurate (NOT a photograph, NOT a film still). ';
+  const NEG=' No text, letters, numbers, captions, labels, titles, UI, or any on-image writing of any kind. No watermark, modern objects, distorted faces or hands. CRITICAL: one single uninterrupted image — no panels, no tiles, no split screen, no diptych, no multiple frames, no collage, no borders dividing the picture.';
+  function humanize(f){ return f.replace(/\.[^.]+$/,'').replace(/[_-]+/g,' '); }
+
+  let assets=[];
+  // Find the situation block that a given script file/token appears in, so we
+  // can describe what a cutscene/backdrop is ABOUT before it's generated.
+  function situationForToken(s, tok){
+    try{ const p=parseSituations(s); for(const b of (p.blocks||[])){ if(b.lines && b.lines.join('\n').indexOf(tok)>=0) return b; } }catch(e){}
+    return null;
+  }
+  function aboutFor(s, tok, fallback){
+    const b=situationForToken(s,tok);
+    if(b){ const t=(b.title||'').trim(), d=(b.desc||'').trim(); return (t?t:'') + (t&&d?' — ':'') + (d?d:'') || fallback; }
+    return fallback;
+  }
+  // cast folders declared anywhere inside a situation block (before or after the
+  // cutscene line — the whole beat involves those people).
+  function castInBlock(block){ const out=[]; const skip=new Set(['none','','you','pc','player']);
+    (block&&block.lines||[]).forEach(ln=>{ const mm=ln.match(/\[cast:([^\]]+)\]/); if(!mm)return;
+      mm[1].split(/\s+/).forEach(tok=>{ const i=tok.indexOf('='); if(i<0)return; const fol=tok.slice(i+1).trim(); if(fol&&!skip.has(fol.toLowerCase())) out.push(fol); }); });
+    return [...new Set(out)]; }
+  // the people on stage for a cutscene: its own beat's cast, else inherit the
+  // most recent [cast:] from earlier beats (cast persists until re-declared).
+  function castForCutscene(s, file){ const b=castInBlock(situationForToken(s,file)); return b.length?b:castActiveAt(s,file); }
+  function castActiveAt(s, file){ const skip=new Set(['none','','you','pc','player']);
+    const pos=s.indexOf('='+file+']'); const limit=pos<0?s.length:pos;  // matches cutscene/intro/ending directives
+    let last=[]; const re=/\[cast:([^\]]+)\]/g; let mm;
+    while((mm=re.exec(s))){ if(mm.index>limit) break; const arr=[];
+      mm[1].split(/\s+/).forEach(tok=>{ const i=tok.indexOf('='); if(i<0)return; const fol=tok.slice(i+1).trim(); if(fol&&!skip.has(fol.toLowerCase())) arr.push(fol); });
+      if(arr.length) last=arr; }
+    return [...new Set(last)]; }
+  function scanAssets(){
+    const s=curScript(), loc=curLoc(); const brief=gid('auBrief').value.trim();
+    const out=[]; const seen=new Set(); let m;
+    // Episode cover — shown on the map POI bottom-sheet. Always generatable.
+    const coverRel=WORLD+'/episodes/'+epBase()+'/cover.jpg';
+    const coverOutdoor=OUTDOOR.test(loc)||OUTDOOR.test(brief);
+    out.push({relPath:coverRel, label:'cover (map card)', kind:'cover', size:'1536x1024',
+      about:'Episode kapak görseli — haritadaki noktaya tıklanınca açılan panelde görünür.',
+      prompt:LOC_BASE+(coverOutdoor?LOC_EXT:LOC_INT)+'Wide establishing cover banner for the episode "'+(loc||'Episode')+'" — an evocative empty landscape/location, no story text.'+NO_PEOPLE+NEG});
+    seen.add(coverRel);
+    const reEx=/\[bg:explore=([^\]\s]+)\]/g;
+    while((m=reEx.exec(s))){ const f=m[1]; const rel=WORLD+'/locations/'+loc+'/explore/'+f; if(seen.has(rel))continue; seen.add(rel);
+      const about=aboutFor(s,f,'Explore arka planı: '+humanize(f));
+      const outdoor=OUTDOOR.test(f)||OUTDOOR.test(about)||OUTDOOR.test(loc)||OUTDOOR.test(brief);
+      out.push({relPath:rel, label:f, kind:'backdrop', size:'2496x1664', about, prompt:LOC_BASE+(outdoor?LOC_EXT:LOC_INT)+'Empty location backdrop of: '+humanize(f)+'. '+about+'.'+NO_PEOPLE+NEG}); }
+    const reCut=/\[bg:cutscene=([^\]\s]+)\]/g;
+    while((m=reCut.exec(s))){ const f=m[1]; const rel=WORLD+'/episodes/'+epBase()+'/cutscenes/'+f; if(seen.has(rel))continue; seen.add(rel);
+      const about=aboutFor(s,f,'Cutscene: '+humanize(f));
+      const cast=castForCutscene(s,f);                           // beat's cast, else inherited from prior beats
+      const refs=cast.slice();                                    // all present chars → refs (server skips any missing pride.png)
+      const names=cast.map(humanize);
+      const castInfo=cast.map(c=>({folder:c, name:humanize(c), ref:WORLD+'/characters/'+c+'/appearances/pride.png'}));
+      const blk=situationForToken(s,f);
+      const q=((blk&&blk.lines)||[]).map(l=>l.match(/^([A-Za-z][A-Za-z-]*):\s*(.+)$/)).find(x=>x&&!/^(Mechanics|Narrative)$/i.test(x[1]));
+      const quote=q?q[2].trim():'';
+      const who = names.length ? ' The people in the frame are '+names.join(' and ')+'. Render their faces, hair and clothing to match the provided reference image(s).' : '';
+      const outdoor=OUTDOOR.test(f)||OUTDOOR.test(about)||OUTDOOR.test(loc)||OUTDOOR.test(brief);
+      out.push({relPath:rel, label:f, kind:'cutscene', size:'1440x2560', about, refs, castInfo, quote,
+        prompt:CUT+(outdoor?'Outdoor exterior setting. ':'')+'Scene: '+about+'.'+who+' Context: '+brief+'.'+NEG}); }
+    // intro / ending = story's first & last scene. Render like cutscenes, share the
+    // cutscenes/ asset folder, but carry a tailored opening/closing prompt + label.
+    const reIE=/\[bg:(intro|ending)=([^\]\s]+)\]/g;
+    while((m=reIE.exec(s))){ const kind=m[1].toLowerCase(); const f=m[2]; const rel=WORLD+'/episodes/'+epBase()+'/cutscenes/'+f; if(seen.has(rel))continue; seen.add(rel);
+      const about=aboutFor(s,f,(kind==='intro'?'Açılış sahnesi: ':'Kapanış sahnesi: ')+humanize(f));
+      const cast=castForCutscene(s,f); const refs=cast.slice(); const names=cast.map(humanize);
+      const castInfo=cast.map(c=>({folder:c, name:humanize(c), ref:WORLD+'/characters/'+c+'/appearances/pride.png'}));
+      const blk=situationForToken(s,f);
+      const q=((blk&&blk.lines)||[]).map(l=>l.match(/^([A-Za-z][A-Za-z-]*):\s*(.+)$/)).find(x=>x&&!/^(Mechanics|Narrative)$/i.test(x[1]));
+      const quote=q?q[2].trim():'';
+      const who = names.length ? ' The people in the frame are '+names.join(' and ')+'. Render their faces, hair and clothing to match the provided reference image(s).' : '';
+      const outdoor=OUTDOOR.test(f)||OUTDOOR.test(about)||OUTDOOR.test(loc)||OUTDOOR.test(brief);
+      const lead = kind==='intro' ? 'Opening establishing scene that sets up the episode. ' : 'Final closing scene that resolves the episode. ';
+      out.push({relPath:rel, label:f+' ('+kind+')', kind:kind, size:'1440x2560', about, refs, castInfo, quote,
+        prompt:CUT+(outdoor?'Outdoor exterior setting. ':'')+lead+'Scene: '+about+'.'+who+' Context: '+brief+'.'+NEG}); }
+    const reCast=/\[cast:([^\]]+)\]/g; const skip=new Set(['none','','you','pc','player','arabella_frost']);
+    while((m=reCast.exec(s))){ m[1].split(/\s+/).forEach(tok=>{ const i=tok.indexOf('='); if(i<0)return; const folder=tok.slice(i+1).trim(); if(skip.has(folder.toLowerCase()))return; const rel=WORLD+'/characters/'+folder+'/appearances/pride.png'; if(seen.has(rel))return; seen.add(rel);
+      out.push({relPath:rel, label:folder+' (portrait)', kind:'portrait', size:'1440x2560', about:'Karakter portresi: '+humanize(folder), prompt:'full-body Regency character portrait of '+humanize(folder)+', single standing figure, plain white background, painterly oil-and-gouache.'+NEG}); }); }
+    // Faz 0 — consequence-code assets: (Item: id) → item icon, (Discovery: suitor|fact) → memory vignette
+    const slugify=x=>String(x||'').trim().toLowerCase().replace(/[^a-z0-9]+/g,'_').replace(/^_|_$/g,'');
+    const reItem=/\(Item:\s*([^)|]+?)\s*\)/gi;
+    while((m=reItem.exec(s))){ const id=slugify(m[1]); if(!id)continue; const rel=WORLD+'/items/'+id+'.png'; if(seen.has(rel))continue; seen.add(rel);
+      out.push({relPath:rel, label:humanize(id)+' (item)', kind:'item', size:'1024x1024', about:'Item görseli: '+humanize(id),
+        prompt:'painterly oil still-life of a single Regency-era object — '+humanize(id)+', centered on a plain warm background, soft light, ornate period detail.'+NEG}); }
+    const reDisc=/\(Discovery:\s*([^)]*)\)/gi;
+    while((m=reDisc.exec(s))){ const parts=m[1].split('|').map(x=>x.trim()); const suitor=parts[0]||''; const fact=parts[1]||parts[0]||''; if(!suitor)continue;
+      const rel=WORLD+'/characters/'+suitor+'/discoveries/'+slugify(fact)+'.png'; if(seen.has(rel))continue; seen.add(rel);
+      const refs=(suitor && suitor.toLowerCase()!=='none')?[suitor]:[];
+      const castInfo=refs.map(c=>({folder:c, name:humanize(c), ref:WORLD+'/characters/'+c+'/appearances/pride.png'}));
+      out.push({relPath:rel, label:humanize(fact)+' (discovery)', kind:'discovery', size:'1024x1536', about:'Keşif/anı: '+humanize(suitor)+' — '+humanize(fact), refs, castInfo,
+        prompt:CUT+'A tender, atmospheric memory of '+humanize(suitor)+': '+fact+'. Match the character to the reference image.'+NEG}); }
+    const prevGen={}; assets.forEach(a=>{ if(a.gen) prevGen[a.relPath]=a.gen; });
+    out.forEach(a=>{ if(prevGen[a.relPath]) a.gen=prevGen[a.relPath]; });
+    assets=out; renderAssets(); refreshStatus();
+  }
+  const GEN_BTN={busy:'…', done:'Regen', err:'Retry'};
+  function renderAssets(){
+    const box=gid('auAssets'); box.innerHTML='';
+    // legend so a red dot doesn't read as an error
+    const leg=document.createElement('div'); leg.className='au-legend';
+    leg.innerHTML='<span><i class="d red"></i>üretilmedi</span><span><i class="d ylw"></i>üretiliyor</span><span><i class="d grn"></i>hazır</span>';
+    box.appendChild(leg);
+    if(!assets.length){ const e=document.createElement('div'); e.className='au-status'; e.textContent='No assets found in script.'; box.appendChild(e); return; }
+    assets.forEach((a,idx)=>{ const row=document.createElement('div'); row.className='au-asset'+(a.gen==='done'?' done':'')+(a.gen==='busy'?' busy':''); row.dataset.i=idx; row.style.cursor='pointer';
+      row.innerHTML='<span class="dot"></span><span class="nm" title="'+a.relPath+'">'+a.label+' <span class="kind">'+a.kind+'</span></span>';
+      const b=document.createElement('button'); b.textContent=GEN_BTN[a.gen]||'Generate'; if(a.gen==='busy')b.disabled=true; b.addEventListener('click',(e)=>{ e.stopPropagation(); genAsset(idx); }); row.appendChild(b);
+      if(a.kind==='cutscene'){ const del=document.createElement('button'); del.className='del'; del.textContent='✕'; del.title='Cutscene’i script’ten kaldır';
+        del.addEventListener('click',(e)=>{ e.stopPropagation(); deleteCutscene(a); }); row.appendChild(del); }
+      row.addEventListener('click',()=>previewAsset(idx));
+      box.appendChild(row);
+    });
+  }
+  function rowFor(idx){ return gid('auAssets').querySelector('[data-i="'+idx+'"]'); }
+  function refreshStatus(){ if(!assets.length)return;
+    fetch('/api/author/asset-status?paths='+encodeURIComponent(assets.map(a=>a.relPath).join(','))).then(r=>r.json()).then(j=>{
+      const st=j.status||{}; assets.forEach((a,idx)=>{ if(st[a.relPath] && a.gen!=='busy'){ a.gen='done'; const row=rowFor(idx); if(row) row.classList.add('done'); } });
+    }).catch(()=>{});
+  }
+  async function assetExists(rel){ try{ const j=await fetch('/api/author/asset-status?paths='+encodeURIComponent(rel)).then(r=>r.json()); return !!(j&&j.status&&j.status[rel]); }catch(e){ return false; } }
+  async function genAsset(idx){ const a=assets[idx];
+    // DEPENDENCY: a ref-using scene (cutscene/intro/ending/discovery) needs its cast
+    // portraits generated FIRST. Only make portraits that are MISSING on disk — never
+    // overwrite an existing (canonical suitor) portrait.
+    if(a.refs&&a.refs.length){
+      for(const folder of a.refs){
+        const pRel=WORLD+'/characters/'+folder+'/appearances/pride.png';
+        if(await assetExists(pRel)) continue;                 // already on disk → skip
+        const pIdx=assets.findIndex(x=>x.relPath===pRel);
+        if(pIdx>=0 && pIdx!==idx) await genAsset(pIdx);       // generate the missing side-char portrait first
+      }
+    }
+    a.gen='busy';
+    let row=rowFor(idx); if(row){ row.classList.add('busy'); row.classList.remove('done'); const btn=row.querySelector('button'); if(btn){ btn.disabled=true; btn.textContent='…'; } }
+    const body={relPath:a.relPath, prompt:a.prompt, size:a.size}; if(a.refs&&a.refs.length) body.refs=a.refs;
+    return fetch('/api/author/gen-asset',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(body)})
+      .then(r=>r.json()).then(j=>{ a.gen=j.ok?'done':'err';
+        const row=rowFor(idx); if(row){ row.classList.remove('busy'); if(j.ok) row.classList.add('done'); else row.title=j.error||'error'; const btn=row.querySelector('button'); if(btn){ btn.disabled=false; btn.textContent=j.ok?'Regen':'Retry'; } } })
+      .catch(e=>{ a.gen='err'; const row=rowFor(idx); if(row){ row.classList.remove('busy'); const btn=row.querySelector('button'); if(btn){ btn.disabled=false; btn.textContent='Retry'; } } });
+  }
+  let genAllActive=false;
+  gid('auGenAll').addEventListener('click',async()=>{ const btn=gid('auGenAll');
+    if(genAllActive){ genAllActive=false; btn.textContent='Generate all'; gid('auGenAll').classList.remove('stopping'); return; }  // 2nd click = stop
+    genAllActive=true; btn.textContent='⏹ Stop';
+    for(let i=0;i<assets.length;i++){
+      if(!genAllActive) break;                              // stop requested → halt after current
+      const row=rowFor(i); if(row&&row.classList.contains('done'))continue;
+      await genAsset(i);
+    }
+    genAllActive=false; btn.textContent='Generate all';
+  });
+  function deleteCutscene(a){ if(!confirm('“'+a.label+'” cutscene’ini script’ten kaldır?'))return;
+    const esc=a.label.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
+    resFull=resFull.split('\n').filter(ln=>!new RegExp('\\[bg:cutscene='+esc+'\\]').test(ln)).join('\n');
+    if(!gid('auScript').dataset.filtered) gid('auScript').value=resFull;
+    buildSituations(); scanAssets(); }
+})();
+</script>
+
 <div class="center">
   <div class="stage" id="stage">
     <div class="phone">
       <div class="screen">
         <!-- src is set in JS below so we can forward the wrapper's
              URL params (?dev=keys, ?edit=paths, etc.) into the iframe. -->
-        <iframe id="gameFrame" title="Oda — Visual Novel"></iframe>
+        <iframe id="gameFrame" title="Oda — Visual Novel" allow="autoplay; fullscreen"></iframe>
       </div>
     </div>
   </div>
@@ -995,16 +2645,18 @@
     const cleaned = search
       .replace(/[?&]embed=1\b/, '')   // wrapper-only flag
       .replace(/^&/, '?');            // tidy up leading char
-    frame.src = 'dialog.html' + (cleaned || '');
+    frame.src = 'dialog2.html' + (cleaned || '');   // v2 is now the default engine (story editor drives v2's map)
     // v2 link: swap the iframe between dialog.html (v1) and dialog2.html (v2)
     // WITHOUT leaving the phone frame. Toggles its own label.
     const v2 = document.getElementById('v2Link');
     if (v2) {
+      v2.textContent = 'v1 →';     // default is v2 → the toggle offers v1
       v2.style.display = 'none';   // hidden until we confirm the entry screen
       v2.addEventListener('click', function(e){
         e.preventDefault();
         const onV2 = /dialog2\.html/.test(frame.src);
-        frame.src = (onV2 ? 'dialog.html' : 'dialog2.html') + (cleaned || '');
+        let _q = (cleaned || ''); _q += (_q.indexOf('?') >= 0 ? '&' : '?') + 'cb=' + Date.now();
+        frame.src = (onV2 ? 'dialog.html' : 'dialog2.html') + _q;   // cb= → always fresh engine
         v2.textContent = onV2 ? 'v2 →' : 'v1 →';
       });
       // Only show the v1/v2 toggle on the game's entry (landing) screen —
@@ -1220,7 +2872,7 @@
         // iframe is still v1 (dialog.html) — swap to v2 then launch once loaded
         frame.addEventListener('load', function once(){ frame.removeEventListener('load', once);
           setTimeout(()=>{ try{ frame.contentWindow.startCaller(); }catch(e){} }, 400); });
-        frame.src = 'dialog2.html';
+        frame.src = 'dialog2.html?cb=' + Date.now();
       } catch (e) { console.warn('[ep1]', e); }
     });
   }

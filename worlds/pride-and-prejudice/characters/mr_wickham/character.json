@@ -1,0 +1,21 @@
+{
+  "name": "Mr. Wickham",
+  "folder": "mr_wickham",
+  "archetype": "The Charming Officer",
+  "appearance": "Strikingly handsome in a militia officer's scarlet regimentals, an easy open smile and a manner that invites instant trust.",
+  "definition": "Charm as a full-body performance: everything on the surface is warm and confiding, underneath is mercenary calculation and no loyalty. Son of Darcy's late steward, he carries a grievance he wields like a blade — the story that Darcy cheated him of his inheritance. His amiability lasts exactly as long as it serves him.",
+  "voice": "Smooth and confiding, a practiced ease that never stumbles; he keeps grievances light and agreeable, framing every choice as impulse or others' fault, never calculation.",
+  "traits": [
+    "Charm",
+    "Opportunism",
+    "Duplicity"
+  ],
+  "brief": "",
+  "created": "2026-08-28T01:31:41.162Z",
+  "suitor": true,
+  "discoveries": [
+    "A charming teller of tales.",
+    "Says Darcy cheated him.",
+    "Popular with every young lady."
+  ]
+}

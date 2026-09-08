@@ -1,0 +1,24 @@
+{
+  "name": "Mr. Darcy",
+  "folder": "mr_darcy",
+  "archetype": "The Proud Suitor",
+  "appearance": "Tall and fastidious, gravely handsome in impeccable dark tailoring; a reserved, unsmiling bearing that does not invite approach.",
+  "definition": "The proudest, most disagreeable man in the room — clever, reserved, and quick to judge, yet capable of deep self-examination beneath the defensive shell that a lifetime of deference has built. Ten thousand a year and a name to match, he is already half-caught by a wit sharper than his own. His story is pride slowly learning humility, drawn out of him by love.",
+  "voice": "Formal, measured, and complete in syntax; he speaks less and weightily, distant and cutting at first, warmth surfacing only as feeling cracks the structure.",
+  "traits": [
+    "Pride",
+    "Reserve",
+    "Integrity"
+  ],
+  "brief": "",
+  "created": "2026-08-28T01:31:41.157Z",
+  "suitor": true,
+  "discoveries": [
+    "Dances rarely, and never to be agreeable.",
+    "His sister Georgiana is barely sixteen.",
+    "Keeps his warmth for a chosen few.",
+    "Reads more than he speaks.",
+    "A steward-family pride in Pemberley.",
+    "Once did Wickham a wrong — or so it is said."
+  ]
+}

@@ -1,0 +1,15 @@
+{
+  "name": "Arabella Frost",
+  "folder": "arabella_frost",
+  "archetype": "The Wit (Player)",
+  "appearance": "A gentleman's daughter of modest fortune, keen-eyed and composed, dressed with quiet good taste; she meets a room with a raised eyebrow rather than a lowered gaze.",
+  "definition": "The player character — a gentleman's daughter of modest fortune and immodest cleverness who arrives with sharper eyes than the room expects. She inherits Elizabeth's role in the Darcy duel: the outsider who refuses to be quietly measured and priced, and answers condescension with something colder still. Her weakness is a pride as quick as her tongue — she would rather wound than appear to care.",
+  "voice": "Quick, dry and unafraid; she never leaves a clever cruelty unanswered and turns an intended slight into the laughter of the room.",
+  "traits": [
+    "Sharp Wit",
+    "Large Spirit",
+    "Pride"
+  ],
+  "brief": "",
+  "created": "2026-08-28T01:31:41.175Z"
+}

@@ -1,0 +1,222 @@
+{
+  "_note": "Tanımlı 2-karakter karşılaşmaları. mode:'pc' = PC ile karşılaşma (haritada TEK avatar, biz konuşuruz, seçim bizim); mode:'npc' = iki NPC, biz izleriz. who: pc→[charId] (tek), npc→[a,b]. type=whisper|gossip|question|love (ikon). script = episode DSL (Situation / [cast] / [ui:narrative|bubble|multi] / Narrative: / Speaker: / (Choice:N)/(IfChoice)/(EndIf) / Mechanics: (Relation:id|trust|+n)(XP:id|+n)(Scandal:+n)(Allure:+n)(Discovery:id|fact)(Unlock:loc)). once=bir kez. Oyun: pc→tek avatar+ikon; npc→çift+ikon; tap → pridePlayEncounter (map kararır, episode dialog UI). Editörden düzenlenir.",
+  "encounters": [
+    {
+      "id": "pc_darcy_road",
+      "mode": "pc",
+      "who": [
+        "mr_darcy"
+      ],
+      "type": "love",
+      "once": false,
+      "script": "(Situation: enc_darcy | On the Lane | Mr Darcy blocks your path)\n[ui:narrative]\nNarrative: Mr Darcy stands square in the lane, as if he had been waiting — though he would never own to it.\n[ui:cast layout=convo_two]\n[cast: left=arabella_frost right=mr_darcy]\nMr-Darcy: Miss Frost. You walk out early.\nArabella: Earlier than is fashionable, and later than is wise.\n[ui:multi]\n(Choice:2)\nArabella: Fall into step with him — let him keep pace. [trait: Bold]\nArabella: Give a cool curtsy and walk on. [trait: Reserved]\n(IfChoice:0)\n[ui:narrative]\nNarrative: He falls in beside you. Neither speaks; both are aware of it.\nMechanics: (Relation: mr_darcy | desire | +2) (Allure: +1)\n(EndIf)\n(IfChoice:1)\n[ui:narrative]\nNarrative: You pass him with a nod. His eyes follow you the whole length of the lane.\nMechanics: (Relation: mr_darcy | affection | +1)\n(EndIf)"
+    },
+    {
+      "id": "pc_wickham_road",
+      "mode": "pc",
+      "who": [
+        "mr_wickham"
+      ],
+      "type": "whisper",
+      "once": false,
+      "script": "(Situation: enc_wickham | A Charming Word | Mr Wickham falls in beside you)\n[ui:narrative]\nNarrative: Wickham appears at your elbow with a smile made for exactly this moment.\n[ui:cast layout=convo_two]\n[cast: left=arabella_frost right=mr_wickham]\nMr-Wickham: Miss Frost — you are the one interesting thing in a very dull county.\nArabella: Flattery so early? You must want something.\n[ui:multi]\n(Choice:2)\nArabella: Let him talk, and listen for the cracks. [trait: Sharp]\nArabella: Warn him you are not so easily charmed. [trait: Guarded]\n(IfChoice:0)\n[ui:narrative]\nNarrative: He talks, and among the charm you catch a bitterness whenever Darcy's name arises.\nMechanics: (Discovery: mr_wickham | resentment sharpens whenever Darcy is named) (Relation: mr_wickham | trust | +1)\n(EndIf)\n(IfChoice:1)\n[ui:narrative]\nNarrative: He laughs, delighted. 'A lady with defences. How refreshing.'\nMechanics: (Relation: mr_wickham | desire | +1) (Allure: +1)\n(EndIf)"
+    },
+    {
+      "id": "pc_bingley_road",
+      "mode": "pc",
+      "who": [
+        "mr_bingley"
+      ],
+      "type": "love",
+      "once": false,
+      "script": "(Situation: enc_bingley | An Open Heart | Mr Bingley greets you warmly)\n[ui:narrative]\nNarrative: Bingley greets you as though you were an old friend he is delighted to have found.\n[ui:cast layout=convo_two]\n[cast: left=arabella_frost right=mr_bingley]\nMr-Bingley: Miss Frost! Is it not the finest morning? I declare Meryton the happiest place in England.\nArabella: You declare that of everywhere, I think.\n[ui:multi]\n(Choice:2)\nArabella: Ask, lightly, after Jane Bennet. [trait: Kind]\nArabella: Tease him about his easy heart. [trait: Playful]\n(IfChoice:0)\n[ui:narrative]\nNarrative: At Jane's name his whole face changes. He is further gone than he knows.\nMechanics: (Discovery: mr_bingley | Jane Bennet has caught his whole heart) (Relation: mr_bingley | trust | +1)\n(EndIf)\n(IfChoice:1)\n[ui:narrative]\nNarrative: He laughs without offence. It is impossible to wound a man so good-natured.\nMechanics: (Relation: mr_bingley | affection | +1) (Allure: +1)\n(EndIf)"
+    },
+    {
+      "id": "npc_darcy_wickham",
+      "mode": "npc",
+      "who": [
+        "mr_darcy",
+        "mr_wickham"
+      ],
+      "type": "whisper",
+      "once": true,
+      "script": "(Situation: enc_dw | A Frost Between Them | Darcy and Wickham cross paths)\n[ui:narrative]\nNarrative: Darcy and Wickham have met on the road, and neither will bow first.\n[ui:cast layout=convo_two]\n[cast: left=mr_darcy right=mr_wickham]\nMr-Wickham: Darcy. You are looking as agreeable as ever.\nMr-Darcy: Wickham.\n[ui:narrative]\nNarrative: One word, and a world of cold in it. Whatever lies between them, it is not small.\n[ui:multi]\n(Choice:2)\nArabella: Draw closer and mark every look. [trait: Observant]\nArabella: Give them their privacy and pass. [trait: Discreet]\n(IfChoice:0)\n[ui:narrative]\nNarrative: You catch the truth beneath the manners: this is an old wound, not a new quarrel.\nMechanics: (Discovery: mr_darcy | an old, private grievance with Wickham) (Discovery: mr_wickham | claims Darcy wronged him of a living)\n(EndIf)\n(IfChoice:1)\n[ui:narrative]\nNarrative: You walk on. Some enmities are best not witnessed too closely.\nMechanics: (Allure: +1)\n(EndIf)"
+    },
+    {
+      "id": "npc_bingley_jane",
+      "mode": "npc",
+      "who": [
+        "mr_bingley",
+        "jane_bennet"
+      ],
+      "type": "love",
+      "once": false,
+      "script": "(Situation: enc_bj | Two Kind Hearts | Bingley and Jane, lost in talk)\n[ui:narrative]\nNarrative: Bingley and Jane have fallen into conversation and forgotten the world entirely.\n[ui:cast layout=convo_two]\n[cast: left=jane_bennet right=mr_bingley]\nMr-Bingley: I hope — that is — I do hope we shall dance again soon.\nJane: I should like that very much, Mr Bingley.\n[ui:multi]\n(Choice:2)\nArabella: Watch how they suit one another. [trait: Warm]\nArabella: Slip away and leave them to it. [trait: Kind]\n(IfChoice:0)\n[ui:narrative]\nNarrative: They suit like a key and its lock. If only the world would leave them be.\nMechanics: (Discovery: mr_bingley | falls in love as easily as breathing) (Allure: +1)\n(EndIf)\n(IfChoice:1)\nMechanics: (Allure: +1)\n(EndIf)"
+    },
+    {
+      "id": "npc_darcy_bingley",
+      "mode": "npc",
+      "who": [
+        "mr_darcy",
+        "mr_bingley"
+      ],
+      "type": "whisper",
+      "once": false,
+      "script": "(Situation: enc_db | A Friend's Counsel | Darcy speaks low to Bingley)\n[ui:narrative]\nNarrative: Darcy speaks low into Bingley's ear; Bingley's smile falters, then bravely returns.\n[ui:cast layout=convo_two]\n[cast: left=mr_darcy right=mr_bingley]\nMr-Darcy: I only counsel you to be certain of the lady's regard before the whole county is.\nMr-Bingley: You are always so careful, Darcy.\n[ui:multi]\n(Choice:2)\nArabella: Note how Bingley defers to him. [trait: Observant]\nArabella: Interrupt with a bright remark. [trait: Bold]\n(IfChoice:0)\nMechanics: (Discovery: mr_darcy | steers Bingley's affections more than he admits) (Relation: mr_darcy | trust | +1)\n(EndIf)\n(IfChoice:1)\n[ui:narrative]\nNarrative: They break apart; Bingley laughs, Darcy does not. But his eyes stay on you.\nMechanics: (Relation: mr_darcy | desire | +1) (Scandal: +1)\n(EndIf)"
+    },
+    {
+      "id": "npc_wickham_lydia",
+      "mode": "npc",
+      "who": [
+        "mr_wickham",
+        "lydia_bennet"
+      ],
+      "type": "whisper",
+      "once": true,
+      "script": "(Situation: enc_wl | Too Bold by Half | Wickham indulges Lydia)\n[ui:narrative]\nNarrative: Lydia hangs on Wickham's arm, laughing far too loud; he indulges her, a man who knows his effect.\n[ui:cast layout=convo_two]\n[cast: left=lydia_bennet right=mr_wickham]\nLydia: Oh, you are wicked, Mr Wickham!\nMr-Wickham: Only as wicked as good company makes me, Miss Lydia.\n[ui:narrative]\nNarrative: This is the sort of thing that ruins a family — and no one here to see it but you.\n[ui:multi]\n(Choice:2)\nArabella: Break it up and steer Lydia away. [trait: Protective]\nArabella: Let it be seen — and remembered. [trait: Cold]\n(IfChoice:0)\nMechanics: (Discovery: mr_wickham | pursues the youngest and most foolish) (Allure: +1)\n(EndIf)\n(IfChoice:1)\nMechanics: (Scandal: +2)\n(EndIf)"
+    },
+    {
+      "id": "npc_eliza_wickham",
+      "mode": "npc",
+      "who": [
+        "elizabeth_bennet",
+        "mr_wickham"
+      ],
+      "type": "love",
+      "once": false,
+      "script": "(Situation: enc_ew | An Easy Charm | Wickham enchants Elizabeth)\n[ui:narrative]\nNarrative: Wickham is at his most charming, and Elizabeth listens with evident pleasure.\n[ui:cast layout=convo_two]\n[cast: left=elizabeth_bennet right=mr_wickham]\nMr-Wickham: You understand me, Miss Bennet, as few do.\nElizabeth: You make it easy to be understood, sir.\n[ui:multi]\n(Choice:2)\nArabella: Admire the performance for what it is. [trait: Shrewd]\nArabella: Feel a flicker of jealousy. [trait: Honest]\n(IfChoice:0)\nMechanics: (Discovery: mr_wickham | charms by making the listener the centre of the world)\n(EndIf)\n(IfChoice:1)\nMechanics: (Relation: mr_wickham | desire | +1) (Scandal: +1)\n(EndIf)"
+    },
+    {
+      "id": "npc_eliza_charlotte",
+      "mode": "npc",
+      "who": [
+        "elizabeth_bennet",
+        "charlotte_lucas"
+      ],
+      "type": "question",
+      "once": false,
+      "script": "(Situation: enc_ec | Between Friends | Elizabeth and Charlotte on marriage)\n[ui:narrative]\nNarrative: Elizabeth and Charlotte have their heads together, arguing happiness against security.\n[ui:cast layout=convo_two]\n[cast: left=elizabeth_bennet right=charlotte_lucas]\nCharlotte: Happiness in marriage is entirely a matter of chance, Lizzy.\nElizabeth: You would not act so yourself, Charlotte.\n[ui:multi]\n(Choice:2)\nArabella: Side with Charlotte's cold prudence. [trait: Pragmatic]\nArabella: Argue for love, and let them hear it. [trait: Romantic]\n(IfChoice:0)\nMechanics: (Allure: +1) (Discovery: mr_collins | Charlotte would take even Mr Collins for a home of her own)\n(EndIf)\n(IfChoice:1)\nMechanics: (Allure: +1) (Scandal: +1)\n(EndIf)"
+    },
+    {
+      "id": "npc_mrsb_bingley",
+      "mode": "npc",
+      "who": [
+        "mrs_bennet",
+        "mr_bingley"
+      ],
+      "type": "gossip",
+      "once": false,
+      "script": "(Situation: enc_mb | A Mother's Campaign | Mrs Bennet corners Bingley)\n[ui:narrative]\nNarrative: Mrs Bennet has cornered Mr Bingley and extols Jane's virtues at a volume the whole road enjoys.\n[ui:cast layout=convo_two]\n[cast: left=mrs_bennet right=mr_bingley]\nMrs-Bennet: Five daughters, Mr Bingley, and not one so sweet-tempered as my Jane!\nMr-Bingley: I — yes — she is all that is amiable, ma'am.\n[ui:multi]\n(Choice:2)\nArabella: Rescue him with a graceful diversion. [trait: Gracious]\nArabella: Let your mother run on. [trait: Wry]\n(IfChoice:0)\nMechanics: (Relation: mr_bingley | affection | +2) (Allure: +1)\n(EndIf)\n(IfChoice:1)\nMechanics: (Scandal: +2)\n(EndIf)"
+    },
+    {
+      "id": "npc_mrsb_darcy",
+      "mode": "npc",
+      "who": [
+        "mrs_bennet",
+        "mr_darcy"
+      ],
+      "type": "gossip",
+      "once": false,
+      "script": "(Situation: enc_md | A Proud Man Offended | Mrs Bennet slights Darcy)\n[ui:narrative]\nNarrative: Mrs Bennet declares Mr Darcy the proudest man in England — well within his hearing.\n[ui:cast layout=convo_two]\n[cast: left=mrs_bennet right=mr_darcy]\nMrs-Bennet: A most disagreeable man! I quite detest him.\n[ui:narrative]\nNarrative: Darcy's expression does not change, which is somehow worse.\n[ui:multi]\n(Choice:2)\nArabella: Apologise for the family with quiet wit. [trait: Deft]\nArabella: Privately agree with your mother. [trait: Blunt]\n(IfChoice:0)\nMechanics: (Relation: mr_darcy | trust | +2)\n(EndIf)\n(IfChoice:1)\nMechanics: (Scandal: +1)\n(EndIf)"
+    },
+    {
+      "id": "npc_missb_jane",
+      "mode": "npc",
+      "who": [
+        "miss_bingley",
+        "jane_bennet"
+      ],
+      "type": "whisper",
+      "once": false,
+      "script": "(Situation: enc_mj | A Cool Civility | Miss Bingley and Jane)\n[ui:narrative]\nNarrative: Miss Bingley is all smiles to Jane's face, and ice behind her eyes.\n[ui:cast layout=convo_two]\n[cast: left=miss_bingley right=jane_bennet]\nMiss-Bingley: What a sweet gown, Miss Bennet. So brave to wear it twice.\nJane: You are very kind, Miss Bingley.\n[ui:multi]\n(Choice:2)\nArabella: Return the barb with interest. [trait: Sharp]\nArabella: Stand near Jane in silent support. [trait: Loyal]\n(IfChoice:0)\nMechanics: (Allure: +2) (Scandal: +1)\n(EndIf)\n(IfChoice:1)\nMechanics: (Allure: +1) (Discovery: mr_bingley | his sisters guard him against the Bennets)\n(EndIf)"
+    },
+    {
+      "id": "npc_eliza_jane",
+      "mode": "npc",
+      "who": [
+        "elizabeth_bennet",
+        "jane_bennet"
+      ],
+      "type": "question",
+      "once": false,
+      "script": "(Situation: enc_ej | Sisterly Counsel | Elizabeth and Jane confide)\n[ui:narrative]\nNarrative: Jane confides a hope she scarcely dares name; Elizabeth teases, then softens.\n[ui:cast layout=convo_two]\n[cast: left=elizabeth_bennet right=jane_bennet]\nJane: Do you think he — no. I must not hope it.\nElizabeth: Hope it, Jane. For once, hope it aloud.\n[ui:multi]\n(Choice:2)\nArabella: Add your own confidence in return. [trait: Warm]\nArabella: Ask, gently, after Bingley's intentions. [trait: Curious]\n(IfChoice:0)\nMechanics: (Allure: +1)\n(EndIf)\n(IfChoice:1)\nMechanics: (Discovery: mr_bingley | Jane believes his regard is real)\n(EndIf)"
+    },
+    {
+      "id": "npc_darcy_eliza",
+      "mode": "npc",
+      "who": [
+        "mr_darcy",
+        "elizabeth_bennet"
+      ],
+      "type": "love",
+      "once": false,
+      "script": "(Situation: enc_de | A Battle of Wits | Darcy and Elizabeth spar)\n[ui:narrative]\nNarrative: Darcy and Elizabeth are sparring again — every civility edged like a blade, and both enjoying it.\n[ui:cast layout=convo_two]\n[cast: left=mr_darcy right=elizabeth_bennet]\nElizabeth: I dearly love a laugh, Mr Darcy.\nMr-Darcy: The wisest of us may be laughed at by a person who makes it their study.\n[ui:multi]\n(Choice:2)\nArabella: Take Elizabeth's side and best him. [trait: Bold]\nArabella: Note how well they are matched. [trait: Observant]\n(IfChoice:0)\nMechanics: (Relation: mr_darcy | desire | +2) (Allure: +1)\n(EndIf)\n(IfChoice:1)\nMechanics: (Discovery: mr_darcy | only truly speaks to those who challenge him)\n(EndIf)"
+    },
+    {
+      "id": "npc_wickham_charlotte",
+      "mode": "npc",
+      "who": [
+        "mr_wickham",
+        "charlotte_lucas"
+      ],
+      "type": "whisper",
+      "once": false,
+      "script": "(Situation: enc_wc | A Shrewd Eye | Charlotte watches Wickham)\n[ui:narrative]\nNarrative: Charlotte watches Wickham work the room, and is not charmed.\n[ui:cast layout=convo_two]\n[cast: left=charlotte_lucas right=mr_wickham]\nCharlotte: A man who owes everyone smiles at everyone.\n[ui:multi]\n(Choice:2)\nArabella: Ask her quietly what she knows. [trait: Curious]\nArabella: Defend Wickham's easy manner. [trait: Contrary]\n(IfChoice:0)\nMechanics: (Discovery: mr_wickham | leaves debts wherever the militia is quartered)\n(EndIf)\n(IfChoice:1)\nMechanics: (Relation: mr_wickham | trust | +1) (Scandal: +1)\n(EndIf)"
+    },
+    {
+      "id": "npc_lydia_missb",
+      "mode": "npc",
+      "who": [
+        "lydia_bennet",
+        "miss_bingley"
+      ],
+      "type": "gossip",
+      "once": false,
+      "script": "(Situation: enc_lm | Folly Meets Disdain | Lydia prattles at Miss Bingley)\n[ui:narrative]\nNarrative: Lydia prattles of officers and lace; Miss Bingley's smile grows thinner by the word.\n[ui:cast layout=convo_two]\n[cast: left=lydia_bennet right=miss_bingley]\nLydia: There are to be a dozen officers at the assembly — a dozen!\nMiss-Bingley: How very... diverting for you.\n[ui:multi]\n(Choice:2)\nArabella: Steer Lydia off before she shames you all. [trait: Prudent]\nArabella: Enjoy Miss Bingley's discomfort. [trait: Wicked]\n(IfChoice:0)\nMechanics: (Allure: +1)\n(EndIf)\n(IfChoice:1)\nMechanics: (Scandal: +1)\n(EndIf)"
+    },
+    {
+      "id": "npc_eliza_missb",
+      "mode": "npc",
+      "who": [
+        "elizabeth_bennet",
+        "miss_bingley"
+      ],
+      "type": "whisper",
+      "once": false,
+      "script": "(Situation: enc_em | Claws Beneath Silk | Elizabeth and Miss Bingley)\n[ui:narrative]\nNarrative: Miss Bingley remarks that Elizabeth's eyes are 'much improved by exercise' — a mile of mud, she means.\n[ui:cast layout=convo_two]\n[cast: left=miss_bingley right=elizabeth_bennet]\nElizabeth: How kind of you to notice, Miss Bingley.\n[ui:multi]\n(Choice:2)\nArabella: Add your own polished barb. [trait: Sharp]\nArabella: Refuse to play the game. [trait: Composed]\n(IfChoice:0)\nMechanics: (Allure: +2) (Scandal: +1)\n(EndIf)\n(IfChoice:1)\nMechanics: (Allure: +1)\n(EndIf)"
+    },
+    {
+      "id": "npc_lydia_eliza",
+      "mode": "npc",
+      "who": [
+        "lydia_bennet",
+        "elizabeth_bennet"
+      ],
+      "type": "question",
+      "once": false,
+      "script": "(Situation: enc_le | An Unheeded Warning | Elizabeth warns Lydia)\n[ui:narrative]\nNarrative: Elizabeth begs Lydia to have some care for her reputation; Lydia only laughs.\n[ui:cast layout=convo_two]\n[cast: left=elizabeth_bennet right=lydia_bennet]\nElizabeth: You will make us all ridiculous, Lydia.\nLydia: You are grown so dull, Lizzy!\n[ui:multi]\n(Choice:2)\nArabella: Support Elizabeth's warning. [trait: Sensible]\nArabella: Fear where Lydia's folly leads. [trait: Wary]\n(IfChoice:0)\nMechanics: (Allure: +1)\n(EndIf)\n(IfChoice:1)\nMechanics: (Discovery: mr_wickham | Lydia is exactly the ruin he could use)\n(EndIf)"
+    },
+    {
+      "id": "npc_bingley_missb",
+      "mode": "npc",
+      "who": [
+        "mr_bingley",
+        "miss_bingley"
+      ],
+      "type": "question",
+      "once": false,
+      "script": "(Situation: enc_bm | Brother and Sister | Miss Bingley presses her brother)\n[ui:narrative]\nNarrative: Miss Bingley presses her brother about Netherfield — whether he means to stay the winter.\n[ui:cast layout=convo_two]\n[cast: left=mr_bingley right=miss_bingley]\nMiss-Bingley: Surely you tire of the country by now, Charles.\nMr-Bingley: On the contrary — I have never liked a place so well.\n[ui:multi]\n(Choice:2)\nArabella: Listen for what keeps him here. [trait: Observant]\nArabella: Remind Bingley how fine the neighbourhood is. [trait: Warm]\n(IfChoice:0)\nMechanics: (Discovery: mr_bingley | his sisters would remove him from Meryton if they could)\n(EndIf)\n(IfChoice:1)\nMechanics: (Relation: mr_bingley | affection | +1)\n(EndIf)"
+    },
+    {
+      "id": "npc_jane_mrsb",
+      "mode": "npc",
+      "who": [
+        "jane_bennet",
+        "mrs_bennet"
+      ],
+      "type": "gossip",
+      "once": false,
+      "script": "(Situation: enc_jm | Counting Chickens | Mrs Bennet marries Jane off early)\n[ui:narrative]\nNarrative: Mrs Bennet has all but married Jane to Bingley and settled the wedding-clothes.\n[ui:cast layout=convo_two]\n[cast: left=jane_bennet right=mrs_bennet]\nMrs-Bennet: Three thousand a year, and the lace from town!\nJane: Mama — please — say no more.\n[ui:multi]\n(Choice:2)\nArabella: Gently hush Mrs Bennet for Jane's sake. [trait: Kind]\nArabella: Wince and withdraw. [trait: Weary]\n(IfChoice:0)\nMechanics: (Relation: mr_bingley | trust | +1)\n(EndIf)\n(IfChoice:1)\nMechanics: (Scandal: +1)\n(EndIf)"
+    }
+  ]
+}

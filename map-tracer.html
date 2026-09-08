@@ -1,0 +1,366 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Map Tracer — roles.ai</title>
+<style>
+  :root{ --bg:#0d0a14; --panel:#171021; --line:rgba(255,255,255,.12); --ink:#eae6f5; --muted:#9a90b4; --accent:#8b7bd8; --pink:#e0668a; --road:#f0b968; }
+  *{ box-sizing:border-box; }
+  html,body{ margin:0; height:100%; background:var(--bg); color:var(--ink); font-family:Inter,system-ui,sans-serif; }
+  .app{ display:flex; height:100vh; }
+  .stage{ flex:1; min-width:0; position:relative; overflow:auto; display:flex; align-items:flex-start; justify-content:center; padding:20px; }
+  .canvas-wrap{ position:relative; line-height:0; box-shadow:0 12px 40px rgba(0,0,0,.6); border-radius:8px; overflow:hidden; }
+  #mapImg{ display:block; max-width:100%; height:auto; user-select:none; -webkit-user-drag:none; }
+  #svg{ position:absolute; inset:0; width:100%; height:100%; overflow:visible; cursor:crosshair; }
+  /* fog paint layer — shown only in fog mode; renders the mask tinted like the game fog */
+  #fogCanvas{ position:absolute; inset:0; width:100%; height:100%; display:none; z-index:6; pointer-events:none; opacity:.9; }
+  body.fogmode #fogCanvas{ display:block; pointer-events:auto; cursor:crosshair; }
+  body.fogmode #svg{ pointer-events:none; }
+  body.fogmode .node, body.fogmode .node-loc, body.fogmode .pt{ pointer-events:none; }
+  .ref-lbl{ fill:#cfeee6; font:600 9px Inter,system-ui; paint-order:stroke; stroke:rgba(0,0,0,.7); stroke-width:2.4; }
+  .edge{ stroke:var(--road); stroke-width:3; stroke-linecap:round; pointer-events:none; }
+  .region-fill,.region-line{ pointer-events:none; }
+  .node{ fill:var(--road); stroke:#3a2a08; stroke-width:1.5; cursor:grab; }
+  .node.active{ fill:#fff; stroke:var(--road); stroke-width:3; }
+  /* location joints: same size, teal, fixed attach points for roads */
+  .node-loc{ fill:#6fe3c8; stroke:#0d3b34; stroke-width:1.5; cursor:grab; }
+  .node-loc.active{ fill:#fff; stroke:#2a8f7a; stroke-width:3; }
+  .region-fill{ opacity:.24; }
+  .region-line{ fill:none; stroke-dasharray:6 4; }
+  .pt{ cursor:grab; }
+  .pt.sel{ stroke:#fff; stroke-width:2.5; }
+  .hint{ position:fixed; left:16px; bottom:14px; font:500 12px Inter; color:var(--muted); background:rgba(0,0,0,.55); padding:7px 12px; border-radius:8px; pointer-events:none; max-width:60vw; }
+  .panel{ width:320px; flex:none; background:var(--panel); border-left:1px solid var(--line); display:flex; flex-direction:column; }
+  .panel h1{ font:800 15px Inter; margin:0; padding:14px 16px; border-bottom:1px solid var(--line); }
+  .panel h1 small{ display:block; font:500 11px Inter; color:var(--muted); margin-top:3px; }
+  .bar{ display:flex; gap:8px; padding:12px 16px; border-bottom:1px solid var(--line); flex-wrap:wrap; align-items:center; }
+  button{ font:700 12px Inter; border:1px solid var(--line); background:rgba(255,255,255,.06); color:var(--ink); border-radius:8px; padding:8px 11px; cursor:pointer; }
+  button.primary{ background:linear-gradient(120deg,var(--pink),var(--accent)); border:none; }
+  button.on{ background:var(--road); color:#241800; border-color:var(--road); }
+  button:active{ transform:scale(.97); }
+  label.chk{ display:inline-flex; align-items:center; gap:6px; font:600 12px Inter; color:var(--muted); cursor:pointer; }
+  .sec{ padding:12px 16px; border-bottom:1px solid var(--line); }
+  .sec .t{ font:800 11px Inter; letter-spacing:.1em; text-transform:uppercase; color:var(--muted); margin-bottom:8px; }
+  .roadstat{ font:600 12px Inter; color:var(--ink); }
+  .list{ flex:1; overflow:auto; padding:8px 10px; }
+  .trace{ border:1px solid var(--line); border-radius:10px; padding:9px 10px; margin-bottom:8px; background:rgba(255,255,255,.03); }
+  .trace.sel{ border-color:var(--accent); background:rgba(139,123,216,.12); }
+  .trace .row1{ display:flex; align-items:center; gap:7px; }
+  .trace .dot{ width:14px; height:14px; border-radius:3px; flex:none; border:1px solid rgba(0,0,0,.5); }
+  .trace input.nm{ flex:1; min-width:0; background:transparent; border:none; color:var(--ink); font:700 13px Inter; }
+  .trace input.nm:focus{ outline:none; border-bottom:1px solid var(--accent); }
+  .trace .meta{ display:flex; align-items:center; gap:6px; margin-top:7px; flex-wrap:wrap; }
+  .trace select,.trace input.clr{ font:600 11px Inter; background:rgba(0,0,0,.25); color:var(--ink); border:1px solid var(--line); border-radius:6px; padding:3px 5px; }
+  .trace input.clr{ padding:0; width:26px; height:22px; }
+  .trace .cnt{ font:600 11px Inter; color:var(--muted); margin-left:auto; }
+  .trace .x{ border:none; background:transparent; color:#f0889f; font-size:15px; padding:0 4px; cursor:pointer; }
+  .empty{ color:var(--muted); font:500 12px Inter; padding:14px; text-align:center; }
+  .io{ border-top:1px solid var(--line); padding:12px 16px; display:flex; flex-direction:column; gap:8px; }
+  textarea{ width:100%; height:110px; background:#0a0710; color:#cfe; border:1px solid var(--line); border-radius:8px; font:500 11px/1.4 ui-monospace,Menlo,monospace; padding:8px; resize:vertical; }
+  .status{ font:600 11px Inter; color:#7fe0b0; min-height:14px; }
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="stage"><div class="canvas-wrap" id="wrap">
+    <img id="mapImg" src="worlds/pride-and-prejudice/map.jpg" alt="map" />
+    <svg id="svg" xmlns="http://www.w3.org/2000/svg"></svg>
+    <canvas id="fogCanvas"></canvas>
+  </div></div>
+
+  <div class="panel">
+    <h1>Map Tracer <small>yol ağı (graph) + bölgeler · % koordinat</small></h1>
+    <div class="bar">
+      <button id="modeRoads" class="on">🕸 Yol modu</button>
+      <button id="modeFog">🌫 Sis modu</button>
+      <button id="addRegion" class="primary">+ Bölge</button>
+      <label class="chk"><input type="checkbox" id="showRef" checked> Lokasyon joint'leri</label>
+    </div>
+    <div class="sec" id="fogSec" style="display:none">
+      <div class="t">Sis katmanları</div>
+      <div id="fogList"></div>
+      <button id="fogAdd" style="width:100%; margin:2px 0 10px;">+ Sis ekle</button>
+      <div class="t">Aktif sisi boya</div>
+      <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+        <button id="fogBrush" class="on">🖌 Boya</button>
+        <button id="fogErase">🧽 Sil</button>
+        <label class="chk" style="flex:1">Boyut <input type="range" id="fogSize" min="8" max="140" value="56" style="flex:1"></label>
+      </div>
+      <div style="display:flex; gap:8px; margin-top:9px;">
+        <button id="fogClear">Aktif sisi temizle</button>
+        <button id="fogSave" class="primary" style="flex:1">💾 Tüm sisi kaydet</button>
+      </div>
+      <div style="font:500 11px Inter; color:var(--muted); margin-top:8px;">Her sis ayrı katman. Bir katmana <b>lokasyon</b> atarsan, oyunda o lokasyonun kilidi açılınca o sis kalkar. Lokasyon "—" ise sis kalıcı. Kaydet → map-fog.json (restart gerekmez).</div>
+    </div>
+    <div class="sec">
+      <div class="t">Yol ağı</div>
+      <div class="roadstat" id="roadStat">0 joint · 0 bağlantı</div>
+      <div style="display:flex; gap:8px; margin-top:9px;">
+        <button id="roadDeselect">Bağlantıyı bitir (Esc)</button>
+        <button id="roadClear">Yolları temizle</button>
+      </div>
+      <div style="display:flex; gap:8px; margin-top:8px;">
+        <button id="roadSaveSrv" class="primary" style="flex:1">💾 Yolları kaydet</button>
+        <button id="roadLoadSrv">↻ Sunucudan yükle</button>
+      </div>
+      <div style="font:500 11px Inter; color:var(--muted); margin-top:7px;">Kaydet → map-fog.json değil, <b>map-roads.json</b> (sunucuya yazılır, restart gerekmez). Oyun bu ağı okuyup karakterleri yolda yürütür.</div>
+    </div>
+    <div class="list" id="list"></div>
+    <div class="io">
+      <div style="display:flex; gap:8px;">
+        <button id="exportBtn" style="flex:1">⤓ Export</button>
+        <button id="importBtn" style="flex:1">⤒ Import</button>
+        <button id="clearBtn">Hepsini sil</button>
+      </div>
+      <textarea id="io" placeholder="Export → JSON çıkar (kopyalanır). Import → JSON yapıştır + Import."></textarea>
+      <div class="status" id="status"></div>
+    </div>
+  </div>
+</div>
+<div class="hint" id="hint">Yol modu: boşluğa tıkla = yeni joint · joint'e tıkla = oradan devam · Shift+joint = bağla · <b>çizgiye tıkla = araya kavşak</b> · <b>joint'i başka joint'e sürükle = birleşir</b> · çift-tık sil</div>
+
+<script>
+const LS='rai.mapTracer.v2';
+const svg=document.getElementById('svg'), img=document.getElementById('mapImg'), listEl=document.getElementById('list'), statusEl=document.getElementById('status'), roadStat=document.getElementById('roadStat');
+const NS='http://www.w3.org/2000/svg';
+let roads={ nodes:[], edges:[] };   // nodes:[{id,x,y}] edges:[[a,b]]
+let regions=[];                     // [{id,name,color,suitor,pts:[{x,y}]}]
+let mode='roads', activeNode=null, selRegion=null, selPt=-1, refs=[], showRef=true, drag=null;
+let locPos={};   // moved location-joint positions (override map-locations, non-destructive)
+const SUITORS=['','mr_darcy','mr_bingley','mr_wickham','mr_collins','lord_ravenscar','sir_ashbourne','capt_vane','mr_devereux','mr_hale','mr_fenwick','ens_pryce','mr_quill'];
+const PALETTE=['#e0668a','#8b7bd8','#6fe3c8','#f0b968','#5ec9a8','#f08aa0','#7fb0f0','#c6a8f0'];
+let nseq=0;
+function nid(){ nseq++; return 'n'+nseq; }
+function rid(){ return 'r'+Math.random().toString(36).slice(2,6); }
+function save(){ try{ localStorage.setItem(LS, JSON.stringify({roads,regions,nseq,locPos})); }catch(e){} }
+function load(){ try{ const s=JSON.parse(localStorage.getItem(LS)||'null'); if(s){ roads=s.roads||{nodes:[],edges:[]}; regions=s.regions||[]; nseq=s.nseq||0; locPos=s.locPos||{}; } }catch(e){} }
+function flash(m){ statusEl.textContent=m; setTimeout(()=>{ if(statusEl.textContent===m) statusEl.textContent=''; },1600); }
+function locNode(id){ const rf=refs.find(r=>('loc:'+r.id)===id); return rf?{id:'loc:'+rf.id,x:rf.x,y:rf.y,loc:true}:null; }
+function nodeById(id){ if(typeof id==='string'&&id.slice(0,4)==='loc:') return locNode(id); return roads.nodes.find(n=>n.id===id); }
+function allNodes(){ return roads.nodes.concat(refs.map(r=>({id:'loc:'+r.id,x:r.x,y:r.y,loc:true}))); }
+function hasEdge(a,b){ return roads.edges.some(e=>(e[0]===a&&e[1]===b)||(e[0]===b&&e[1]===a)); }
+function addEdge(a,b){ if(a&&b&&a!==b&&!hasEdge(a,b)) roads.edges.push([a,b]); }
+function delNode(id){ roads.nodes=roads.nodes.filter(n=>n.id!==id); roads.edges=roads.edges.filter(e=>e[0]!==id&&e[1]!==id); if(activeNode===id) activeNode=null; }
+function dedupEdges(){ const seen=new Set(); roads.edges=roads.edges.filter(e=>{ if(e[0]===e[1]) return false; const k=e[0]<e[1]?e[0]+'|'+e[1]:e[1]+'|'+e[0]; if(seen.has(k))return false; seen.add(k); return true; }); }
+// project point onto segment a-b (pixel space); returns closest point + distance + t
+function projSeg(px,py,a,b){ const dx=b.x-a.x, dy=b.y-a.y, L2=dx*dx+dy*dy||1; let t=((px-a.x)*dx+(py-a.y)*dy)/L2; t=Math.max(0,Math.min(1,t)); const x=a.x+t*dx, y=a.y+t*dy; return {x,y,t,d:Math.hypot(px-x,py-y)}; }
+// after dragging a node onto another, merge them into one joint
+function mergeIfOverlap(id){ const n=nodeById(id); if(!n) return false; const r=img.getBoundingClientRect(), W=r.width,H=r.height; const qx=n.x/100*W, qy=n.y/100*H;
+  let tgt=null,td=1e9; allNodes().forEach(m=>{ if(m.id===id)return; const d=Math.hypot(m.x/100*W-qx, m.y/100*H-qy); if(d<td){td=d;tgt=m;} });
+  if(tgt && td<=14){ roads.edges.forEach(e=>{ if(e[0]===id)e[0]=tgt.id; if(e[1]===id)e[1]=tgt.id; }); roads.nodes=roads.nodes.filter(x=>x.id!==id); dedupEdges(); if(activeNode===id) activeNode=tgt.id; flash(tgt.loc?'yola lokasyona attach oldu':'joint birleşti'); return true; }
+  return false; }
+// picking a location joint up detaches it from its current edges; if it sat
+// between two joints the road heals (a—b) so there's no leftover gap.
+function detachLoc(id){ const nb=[]; roads.edges.forEach(e=>{ if(e[0]===id)nb.push(e[1]); else if(e[1]===id)nb.push(e[0]); }); roads.edges=roads.edges.filter(e=>e[0]!==id&&e[1]!==id); if(nb.length===2) addEdge(nb[0],nb[1]); dedupEdges(); }
+// dropped a joint ONTO a path → split that edge and splice the joint in (no gap)
+function attachToEdge(id){ const n=nodeById(id); if(!n) return false; const r=img.getBoundingClientRect(),W=r.width,H=r.height; const P={x:n.x/100*W,y:n.y/100*H};
+  let best=null; roads.edges.forEach((ed,ei)=>{ if(ed[0]===id||ed[1]===id) return; const a=nodeById(ed[0]),b=nodeById(ed[1]); if(!a||!b) return; const pr=projSeg(P.x,P.y,{x:a.x/100*W,y:a.y/100*H},{x:b.x/100*W,y:b.y/100*H}); if(pr.t>0.06&&pr.t<0.94&&pr.d<=10&&(!best||pr.d<best.d)) best={ei,ed}; });
+  if(best){ const a=best.ed[0],b=best.ed[1]; roads.edges.splice(best.ei,1); addEdge(a,id); addEdge(id,b); dedupEdges(); flash('yola attach oldu'); return true; }
+  return false; }
+
+fetch('worlds/pride-and-prejudice/map-locations.json',{cache:'no-store'}).then(r=>r.ok?r.json():null).then(j=>{
+  refs=((j&&j.locations)||[]).filter(l=>typeof l.x==='number'&&typeof l.y==='number').map(l=>({id:l.id,title:l.title||l.id,x:l.x,y:l.y}));
+  refs.forEach(r=>{ if(locPos[r.id]){ r.x=locPos[r.id].x; r.y=locPos[r.id].y; } });   // apply saved moves
+  render();
+  try{ if(window.__refreshFogList) window.__refreshFogList(); }catch(e){}   // fill fog-layer location dropdowns
+}).catch(()=>{});
+
+function pctFromEvent(ev){ const r=img.getBoundingClientRect();
+  return { x:Math.max(0,Math.min(100,Math.round((ev.clientX-r.left)/r.width*1000)/10)),
+           y:Math.max(0,Math.min(100,Math.round((ev.clientY-r.top)/r.height*1000)/10)) }; }
+
+function render(){
+  svg.innerHTML='';
+  const W=img.clientWidth||1, H=img.clientHeight||1, px=p=>({x:p.x/100*W,y:p.y/100*H});
+  // (location joints are drawn later, ABOVE edges, so they stay clickable)
+  // regions
+  regions.forEach(rg=>{ if(!rg.pts.length) return; const isSel=rg.id===selRegion&&mode==='region';
+    const d=rg.pts.map((p,i)=>{ const q=px(p); return (i?'L':'M')+q.x+' '+q.y; }).join(' ')+(rg.pts.length>2?' Z':'');
+    if(rg.pts.length>2){ const f=document.createElementNS(NS,'path'); f.setAttribute('d',d); f.setAttribute('class','region-fill'); f.setAttribute('fill',rg.color); svg.appendChild(f); }
+    const ln=document.createElementNS(NS,'path'); ln.setAttribute('d',d); ln.setAttribute('class','region-line'); ln.setAttribute('stroke',rg.color); ln.setAttribute('stroke-width',isSel?3:2); svg.appendChild(ln);
+    if(isSel){ rg.pts.forEach((p,i)=>{ const q=px(p); const c=document.createElementNS(NS,'circle'); c.setAttribute('cx',q.x); c.setAttribute('cy',q.y); c.setAttribute('r',6); c.setAttribute('fill',rg.color); c.setAttribute('class','pt'+(i===selPt?' sel':'')); c.dataset.ri=i;
+      c.addEventListener('mousedown',e=>{ e.stopPropagation(); selPt=i; drag={region:rg.id,i}; render(); });
+      c.addEventListener('dblclick',e=>{ e.stopPropagation(); rg.pts.splice(i,1); selPt=-1; save(); render(); });
+      svg.appendChild(c); }); }
+  });
+  // road edges
+  roads.edges.forEach(e=>{ const a=nodeById(e[0]),b=nodeById(e[1]); if(!a||!b) return; const pa=px(a),pb=px(b);
+    const l=document.createElementNS(NS,'line'); l.setAttribute('x1',pa.x); l.setAttribute('y1',pa.y); l.setAttribute('x2',pb.x); l.setAttribute('y2',pb.y); l.setAttribute('class','edge'); svg.appendChild(l); });
+  // location joints (teal) — drawn above edges so they're always grabbable
+  if(showRef){ refs.forEach(rf=>{ const p=px(rf); const lid='loc:'+rf.id;
+    const c=document.createElementNS(NS,'circle'); c.setAttribute('cx',p.x); c.setAttribute('cy',p.y); c.setAttribute('r',lid===activeNode?8:6); c.setAttribute('class','node-loc'+(lid===activeNode?' active':'')); c.dataset.loc=rf.id;
+    c.addEventListener('mousedown',e=>{ e.stopPropagation(); onLocDown(lid,e); });
+    svg.appendChild(c);
+    const t=document.createElementNS(NS,'text'); t.setAttribute('x',p.x+9); t.setAttribute('y',p.y+3); t.setAttribute('class','ref-lbl'); t.textContent=rf.title; svg.appendChild(t); }); }
+  // road nodes (joints)
+  roads.nodes.forEach(n=>{ const q=px(n); const c=document.createElementNS(NS,'circle'); c.setAttribute('cx',q.x); c.setAttribute('cy',q.y); c.setAttribute('r',n.id===activeNode?8:6); c.setAttribute('class','node'+(n.id===activeNode?' active':'')); c.dataset.id=n.id;
+    c.addEventListener('mousedown',e=>{ e.stopPropagation(); onNodeDown(n.id,e); });
+    c.addEventListener('dblclick',e=>{ e.stopPropagation(); delNode(n.id); save(); render(); });
+    svg.appendChild(c); });
+  roadStat.textContent=roads.nodes.length+' joint · '+roads.edges.length+' bağlantı';
+  renderList();
+}
+
+function onNodeDown(id,e){
+  drag={node:id, moved:false, sx:e.clientX, sy:e.clientY};
+  if(e.shiftKey && activeNode && activeNode!==id){ addEdge(activeNode,id); activeNode=id; save(); render(); return; }
+  activeNode=id;   // continue/branch from this joint
+  render();
+}
+// location joints: movable (drag) + connectable, but never deleted
+function onLocDown(id,e){
+  drag={loc:id, moved:false};
+  if(e.shiftKey && activeNode && activeNode!==id){ addEdge(activeNode,id); }
+  activeNode=id; save(); render();
+}
+
+function renderList(){
+  listEl.innerHTML='';
+  if(!regions.length){ listEl.innerHTML='<div class="empty">Bölge yok. “+ Bölge” ile ekle,<br>sonra haritaya tıklayarak köşeleri koy.</div>'; return; }
+  regions.forEach(rg=>{ const el=document.createElement('div'); el.className='trace'+(rg.id===selRegion?' sel':'');
+    const opts=SUITORS.map(s=>'<option value="'+s+'"'+(s===rg.suitor?' selected':'')+'>'+(s||'— suitor —')+'</option>').join('');
+    el.innerHTML='<div class="row1"><span class="dot" style="background:'+rg.color+'"></span><input class="nm" value="'+(rg.name||'').replace(/"/g,'&quot;')+'"><button class="x">✕</button></div>'
+      +'<div class="meta"><input class="clr" type="color" value="'+rg.color+'"><select class="su">'+opts+'</select><span class="cnt">'+rg.pts.length+' köşe</span></div>';
+    el.addEventListener('mousedown',ev=>{ if(ev.target.closest('input,select,button'))return; mode='region'; selRegion=rg.id; selPt=-1; syncModeBtns(); render(); });
+    el.querySelector('.nm').addEventListener('input',ev=>{ rg.name=ev.target.value; save(); });
+    el.querySelector('.clr').addEventListener('input',ev=>{ rg.color=ev.target.value; save(); render(); });
+    el.querySelector('.su').addEventListener('change',ev=>{ rg.suitor=ev.target.value; save(); });
+    el.querySelector('.x').addEventListener('click',()=>{ regions=regions.filter(x=>x.id!==rg.id); if(selRegion===rg.id){selRegion=null;selPt=-1;} save(); render(); });
+    listEl.appendChild(el); });
+}
+
+// canvas click (empty space)
+svg.addEventListener('mousedown',e=>{ if(drag) return; const p=pctFromEvent(e);
+  if(mode==='region'){ const rg=regions.find(r=>r.id===selRegion); if(!rg){ flash('Önce bir bölge seç/ekle.'); return; } rg.pts.push(p); selPt=rg.pts.length-1; save(); render(); return; }
+  // ---- roads mode ----
+  const r=img.getBoundingClientRect(), W=r.width, H=r.height; const cx=e.clientX-r.left, cy=e.clientY-r.top; const toPx=n=>({x:n.x/100*W,y:n.y/100*H});
+  // 1) clicked (near) an existing joint (road OR location) → select / connect, no duplicate
+  let nn=null,nd=1e9; allNodes().forEach(n=>{ const q=toPx(n); const d=Math.hypot(q.x-cx,q.y-cy); if(d<nd){nd=d;nn=n;} });
+  if(nn && nd<=12){ if(e.shiftKey && activeNode && activeNode!==nn.id) addEdge(activeNode,nn.id); activeNode=nn.id; save(); render(); return; }
+  // 2) clicked ON an existing road → insert a junction there (split the edge)
+  let best=null; roads.edges.forEach((ed,ei)=>{ const a=nodeById(ed[0]),b=nodeById(ed[1]); if(!a||!b)return; const pr=projSeg(cx,cy,toPx(a),toPx(b)); if(pr.t>0.06&&pr.t<0.94&&pr.d<=9&&(!best||pr.d<best.d)) best={ei,x:pr.x,y:pr.y}; });
+  if(best){ const np={x:Math.round(best.x/W*1000)/10,y:Math.round(best.y/H*1000)/10}; const node={id:nid(),x:np.x,y:np.y}; roads.nodes.push(node); const ed=roads.edges[best.ei]; const a=ed[0],b=ed[1]; roads.edges.splice(best.ei,1); addEdge(a,node.id); addEdge(node.id,b); activeNode=node.id; save(); render(); return; }
+  // 3) empty space → new joint, connect from active
+  const node={id:nid(),x:p.x,y:p.y}; roads.nodes.push(node); if(activeNode) addEdge(activeNode,node.id); activeNode=node.id; save(); render();
+});
+window.addEventListener('mousemove',e=>{ if(!drag) return; const p=pctFromEvent(e);
+  if(drag.node){ const n=nodeById(drag.node); if(n){ n.x=p.x; n.y=p.y; drag.moved=true; render(); } }
+  else if(drag.loc){ const rf=refs.find(r=>('loc:'+r.id)===drag.loc); if(rf){ if(!drag.detached){ detachLoc(drag.loc); drag.detached=true; } rf.x=p.x; rf.y=p.y; drag.moved=true; render(); } }
+  else if(drag.region){ const rg=regions.find(r=>r.id===drag.region); if(rg&&rg.pts[drag.i]){ rg.pts[drag.i]=p; render(); } } });
+window.addEventListener('mouseup',()=>{ if(drag){ if(drag.node && drag.moved){ if(!mergeIfOverlap(drag.node)) attachToEdge(drag.node); }
+  if(drag.loc && drag.moved){ const rf=refs.find(r=>('loc:'+r.id)===drag.loc); if(rf) locPos[rf.id]={x:rf.x,y:rf.y}; attachToEdge(drag.loc); }
+  drag=null; save(); render(); } });
+window.addEventListener('keydown',e=>{ if(e.key==='Escape'){ activeNode=null; selPt=-1; render(); }
+  if((e.key==='Delete'||e.key==='Backspace')){ if(mode==='region'&&selPt>=0){ const rg=regions.find(r=>r.id===selRegion); if(rg){ e.preventDefault(); rg.pts.splice(selPt,1); selPt=-1; save(); render(); } }
+    else if(mode==='roads'&&activeNode){ e.preventDefault(); delNode(activeNode); save(); render(); } } });
+
+function syncModeBtns(){ document.getElementById('modeRoads').classList.toggle('on',mode==='roads');
+  const fm=(mode==='fog'); const mf=document.getElementById('modeFog'); if(mf) mf.classList.toggle('on',fm);
+  document.body.classList.toggle('fogmode',fm); const fs=document.getElementById('fogSec'); if(fs) fs.style.display=fm?'':'none'; }
+document.getElementById('modeRoads').addEventListener('click',()=>{ mode='roads'; selRegion=null; selPt=-1; syncModeBtns(); render(); });
+document.getElementById('modeFog').addEventListener('click',()=>{ mode='fog'; selRegion=null; selPt=-1; activeNode=null; syncModeBtns(); render(); });
+document.getElementById('addRegion').addEventListener('click',()=>{ const rg={id:rid(),name:'Bölge '+(regions.length+1),color:PALETTE[regions.length%PALETTE.length],suitor:'',pts:[]}; regions.push(rg); mode='region'; selRegion=rg.id; selPt=-1; syncModeBtns(); save(); render(); });
+document.getElementById('roadDeselect').addEventListener('click',()=>{ activeNode=null; render(); });
+document.getElementById('roadClear').addEventListener('click',()=>{ if(confirm('Tüm yol ağını sil?')){ roads={nodes:[],edges:[]}; activeNode=null; save(); render(); } });
+document.getElementById('showRef').addEventListener('change',e=>{ showRef=e.target.checked; render(); });
+document.getElementById('exportBtn').addEventListener('click',()=>{ const out=JSON.stringify({ roads:{nodes:roads.nodes,edges:roads.edges}, regions:regions.map(r=>({name:r.name,color:r.color,suitor:r.suitor||undefined,points:r.pts})), locOverrides:(Object.keys(locPos).length?locPos:undefined) },null,2); document.getElementById('io').value=out; try{ navigator.clipboard.writeText(out); flash('Kopyalandı ✓'); }catch(e){ flash('JSON hazır'); } });
+document.getElementById('importBtn').addEventListener('click',()=>{ try{ const o=JSON.parse(document.getElementById('io').value);
+  roads={ nodes:(o.roads&&o.roads.nodes||[]).map(n=>({id:n.id||nid(),x:+n.x,y:+n.y})), edges:(o.roads&&o.roads.edges||[]).map(e=>[e[0],e[1]]) };
+  nseq=roads.nodes.reduce((m,n)=>Math.max(m,parseInt((n.id||'n0').slice(1))||0),0);
+  regions=(o.regions||[]).map(r=>({id:rid(),name:r.name||'bölge',color:r.color||'#e0668a',suitor:r.suitor||'',pts:(r.points||r.pts||[]).map(p=>({x:+p.x,y:+p.y}))}));
+  locPos=o.locOverrides||{}; refs.forEach(r=>{ if(locPos[r.id]){ r.x=locPos[r.id].x; r.y=locPos[r.id].y; } });
+  activeNode=null; selRegion=null; save(); render(); flash('Import ✓'); }catch(e){ flash('Geçersiz JSON'); } });
+document.getElementById('clearBtn').addEventListener('click',()=>{ if(confirm('Yollar + bölgeler + taşınan lokasyonlar sıfırlansın mı?')){ roads={nodes:[],edges:[]}; regions=[]; locPos={}; activeNode=null; selRegion=null; save(); location.reload(); } });
+
+// ---- Road network server persistence (map-roads.json) ----
+function applyRoadsObj(o){
+  roads={ nodes:((o.roads&&o.roads.nodes)||[]).map(n=>({id:n.id||nid(),x:+n.x,y:+n.y})), edges:((o.roads&&o.roads.edges)||[]).map(e=>[e[0],e[1]]) };
+  nseq=roads.nodes.reduce((m,n)=>Math.max(m,parseInt((n.id||'n0').slice(1))||0),0);
+  regions=(o.regions||[]).map(r=>({id:rid(),name:r.name||'bölge',color:r.color||'#e0668a',suitor:r.suitor||'',pts:(r.points||r.pts||[]).map(p=>({x:+p.x,y:+p.y}))}));
+  locPos=o.locOverrides||{}; refs.forEach(r=>{ if(locPos[r.id]){ r.x=locPos[r.id].x; r.y=locPos[r.id].y; } });
+}
+function saveRoadsServer(){ const body=JSON.stringify({ roads:{nodes:roads.nodes,edges:roads.edges}, regions:regions.map(r=>({name:r.name,color:r.color,suitor:r.suitor||undefined,points:r.pts})), locOverrides:locPos });
+  flash('yollar kaydediliyor…');
+  fetch('/api/author/map-roads',{method:'POST',headers:{'content-type':'application/json'},body})
+    .then(r=>r.json()).then(j=>flash(j&&j.ok?('yollar kaydedildi ✓ ('+j.nodes+' joint · '+j.edges+' bağlantı)'):'hata'))
+    .catch(()=>flash('dev-server’ı başlat')); }
+function loadRoadsServer(){ fetch('/api/author/map-roads',{cache:'no-store'}).then(r=>r.ok?r.json():null).then(j=>{
+    if(j&&j.roads&&((j.roads.nodes||[]).length||(j.regions||[]).length)){ applyRoadsObj(j); save(); flash('sunucudan yüklendi ✓'); render(); }
+    else flash('sunucuda yol yok'); }).catch(()=>flash('dev-server’ı başlat')); }
+document.getElementById('roadSaveSrv').addEventListener('click',saveRoadsServer);
+document.getElementById('roadLoadSrv').addEventListener('click',()=>{ if(confirm('Sunucudaki map-roads.json yüklensin mi? (yerel değişiklikler gider)')) loadRoadsServer(); });
+
+window.addEventListener('resize',render);
+img.addEventListener('load',render);
+const _hadLocal=!!localStorage.getItem(LS);
+load(); if(img.complete) render();
+// First run (no local working copy) → pull the canonical map-roads.json from the server.
+if(!_hadLocal){ fetch('/api/author/map-roads',{cache:'no-store'}).then(r=>r.ok?r.json():null).then(j=>{
+  if(j&&j.roads&&((j.roads.nodes||[]).length||(j.regions||[]).length)){ applyRoadsObj(j); save(); render(); } }).catch(()=>{}); }
+
+// ===== FOG module — MULTIPLE soft "misty" layers, each optionally tied to a
+// location (locId). Saved to map-fog.json (v2). In-game a location-tied fog lifts
+// once that location unlocks. One shared paint canvas edits the ACTIVE layer. =====
+(function fogModule(){
+  const cv=document.getElementById('fogCanvas'); if(!cv) return; const ctx=cv.getContext('2d');
+  const FW=480; let FH=679, tool='brush', bsz=56, painting=false;
+  const FOG_URL='/api/author/map-fog';
+  let fogs=[];        // [{id,name,locId,mask}]
+  let active=0;
+  function fit(){ FH=Math.round(FW*((img.naturalHeight||1414)/(img.naturalWidth||1000)));
+    if(cv.width!==FW||cv.height!==FH){ cv.width=FW; cv.height=FH; } }
+  function fnid(){ return 'fog'+Math.random().toString(36).slice(2,6); }
+  function snapshotActive(){ if(fogs[active]) fogs[active].mask=cv.toDataURL('image/png'); }
+  function loadActiveToCanvas(){ fit(); ctx.clearRect(0,0,cv.width,cv.height);
+    const m=fogs[active]&&fogs[active].mask; if(!m) return;
+    const im=new Image(); im.onload=()=>{ ctx.clearRect(0,0,cv.width,cv.height); ctx.drawImage(im,0,0,cv.width,cv.height); }; im.src=m; }
+  function locOptions(sel){ let o='<option value="">— lokasyon yok (kalıcı) —</option>';
+    (refs||[]).forEach(r=>{ o+='<option value="'+r.id+'"'+(r.id===sel?' selected':'')+'>'+(r.title||r.id)+'</option>'; }); return o; }
+  function renderFogList(){ const el=document.getElementById('fogList'); if(!el) return; el.innerHTML='';
+    if(!fogs.length){ el.innerHTML='<div class="empty">Sis yok. “+ Sis ekle” ile başla.</div>'; return; }
+    fogs.forEach((f,i)=>{ const d=document.createElement('div'); d.className='trace'+(i===active?' sel':'');
+      d.innerHTML='<div class="row1"><span class="dot" style="background:#8fb0d8"></span>'
+        +'<input class="nm" value="'+(f.name||('Sis '+(i+1))).replace(/"/g,'&quot;')+'"><button class="x">✕</button></div>'
+        +'<div class="meta"><select class="lc">'+locOptions(f.locId)+'</select>'
+        +'<span class="cnt">'+(f.mask?'boyalı':'boş')+(i===active?' · aktif':'')+'</span></div>';
+      d.addEventListener('mousedown',ev=>{ if(ev.target.closest('input,select,button')) return; if(i!==active){ snapshotActive(); active=i; loadActiveToCanvas(); renderFogList(); } });
+      d.querySelector('.nm').addEventListener('input',ev=>{ f.name=ev.target.value; });
+      d.querySelector('.lc').addEventListener('change',ev=>{ f.locId=ev.target.value||null; });
+      d.querySelector('.x').addEventListener('click',()=>{ if(!confirm('Bu sis katmanı silinsin mi?'))return; snapshotActive(); fogs.splice(i,1); if(active>=fogs.length) active=Math.max(0,fogs.length-1); loadActiveToCanvas(); renderFogList(); });
+      el.appendChild(d); });
+  }
+  function loadFog(){ fetch(FOG_URL,{cache:'no-store'}).then(r=>r.ok?r.json():null).then(j=>{
+    if(j&&Array.isArray(j.fogs)&&j.fogs.length){ fogs=j.fogs.map((f,i)=>({id:f.id||fnid(),name:f.name||('Sis '+(i+1)),locId:f.locId||null,mask:f.mask||null})); }
+    else if(j&&j.mask){ fogs=[{id:fnid(),name:'Sis 1',locId:null,mask:j.mask}]; }   // legacy single mask
+    else { fogs=[{id:fnid(),name:'Sis 1',locId:null,mask:null}]; }
+    active=0; loadActiveToCanvas(); renderFogList(); }).catch(()=>{ fogs=[{id:fnid(),name:'Sis 1',locId:null,mask:null}]; active=0; renderFogList(); }); }
+  function evPt(ev){ const r=cv.getBoundingClientRect(); return { x:(ev.clientX-r.left)/r.width*cv.width, y:(ev.clientY-r.top)/r.height*cv.height, scale:cv.width/r.width }; }
+  function stamp(x,y,scale){ const rad=Math.max(3,bsz*scale/2);
+    if(tool==='erase'){ ctx.save(); ctx.globalCompositeOperation='destination-out'; ctx.beginPath(); ctx.arc(x,y,rad,0,7); ctx.fillStyle='#fff'; ctx.fill(); ctx.restore(); return; }
+    const g=ctx.createRadialGradient(x,y,rad*0.2,x,y,rad); g.addColorStop(0,'rgba(210,219,236,0.92)'); g.addColorStop(0.7,'rgba(210,219,236,0.55)'); g.addColorStop(1,'rgba(210,219,236,0)');
+    ctx.fillStyle=g; ctx.beginPath(); ctx.arc(x,y,rad,0,7); ctx.fill(); }
+  cv.addEventListener('pointerdown',e=>{ if(mode!=='fog')return; if(!fogs.length){ fogs=[{id:fnid(),name:'Sis 1',locId:null,mask:null}]; active=0; renderFogList(); }
+    e.preventDefault(); painting=true; try{cv.setPointerCapture(e.pointerId);}catch(_){}
+    const p=evPt(e); stamp(p.x,p.y,p.scale); });
+  cv.addEventListener('pointermove',e=>{ if(!painting)return; const p=evPt(e); stamp(p.x,p.y,p.scale); });
+  cv.addEventListener('pointerup',()=>{ if(painting){ painting=false; snapshotActive(); renderFogList(); } });
+  cv.addEventListener('pointerleave',()=>{ if(painting){ painting=false; snapshotActive(); renderFogList(); } });
+  const bB=document.getElementById('fogBrush'), bE=document.getElementById('fogErase');
+  bB&&bB.addEventListener('click',()=>{ tool='brush'; bB.classList.add('on'); bE&&bE.classList.remove('on'); });
+  bE&&bE.addEventListener('click',()=>{ tool='erase'; bE.classList.add('on'); bB&&bB.classList.remove('on'); });
+  const sz=document.getElementById('fogSize'); sz&&sz.addEventListener('input',e=>{ bsz=+e.target.value; });
+  const fadd=document.getElementById('fogAdd'); fadd&&fadd.addEventListener('click',()=>{ snapshotActive(); fogs.push({id:fnid(),name:'Sis '+(fogs.length+1),locId:null,mask:null}); active=fogs.length-1; loadActiveToCanvas(); renderFogList(); });
+  const fc=document.getElementById('fogClear'); fc&&fc.addEventListener('click',()=>{ if(confirm('Aktif sis katmanı temizlensin mi?')){ ctx.clearRect(0,0,cv.width,cv.height); snapshotActive(); renderFogList(); } });
+  const fsv=document.getElementById('fogSave'); fsv&&fsv.addEventListener('click',()=>{ snapshotActive();
+    const payload={ w:cv.width, h:cv.height, fogs:fogs.filter(f=>f.mask).map(f=>({id:f.id,name:f.name,locId:f.locId||null,mask:f.mask})) };
+    flash('sis kaydediliyor…');
+    fetch(FOG_URL,{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(payload)})
+      .then(r=>r.json()).then(j=>{ flash(j&&j.ok?('sis kaydedildi ✓ ('+j.count+' katman)'):'hata'); }).catch(()=>flash('dev-server’ı başlat')); });
+  img.addEventListener('load',fit); if(img.complete) fit(); else fit();
+  window.__refreshFogList=renderFogList;   // called once map-locations (refs) are in, to fill the location dropdowns
+  loadFog();
+})();
+</script>
+</body>
+</html>

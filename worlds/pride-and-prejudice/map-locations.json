@@ -1,0 +1,342 @@
+{
+  "_note": "Full pride map inventory across all 4 location functions. The Episode manager lists these and manages `unlockedBy` (which episode's completion unlocks each). Episode positions/assignment still live in episode-locations.json; this file adds the interactive / short-story / onboarding tiers for management. `unlockedBy` = episode id that must be completed first (null = open from the start).",
+  "locations": [
+    {
+      "id": "netherfield-ball",
+      "title": "The Netherfield Ball",
+      "type": "episode",
+      "x": 83.7,
+      "y": 43.9,
+      "unlockedBy": null,
+      "episode": "the-newcomer/the-netherfield-ball",
+      "order": 1,
+      "appearsAfter": null,
+      "sx": 12.633451957295375,
+      "sy": 65,
+      "tier": 1,
+      "suitor": "mr_bingley",
+      "time": "sunset"
+    },
+    {
+      "id": "longbourn",
+      "title": "Longbourn",
+      "type": "episode",
+      "x": 45.6,
+      "y": 63.4,
+      "unlockedBy": null,
+      "episode": "the-newcomer/a-caller-at-the-house",
+      "order": 2,
+      "appearsAfter": null,
+      "sx": 37.5741399762752,
+      "sy": 213,
+      "tier": 2,
+      "suitor": "sir_ashbourne"
+    },
+    {
+      "id": "lucas-lodge",
+      "title": "Lucas Lodge",
+      "type": "episode",
+      "x": 22.8,
+      "y": 53.9,
+      "unlockedBy": null,
+      "episode": null,
+      "order": 3,
+      "mode": "placeholder",
+      "appearsAfter": null,
+      "sx": 85.40925266903915,
+      "sy": 359,
+      "tier": 3,
+      "unlocks": [
+        {
+          "id": "brighton-seaside",
+          "group": "pair-f8r4",
+          "kind": "side",
+          "timer": "600",
+          "title": "Brighton Seaside",
+          "desc": "A season by the sea — and Mr Darcy has followed the party south.",
+          "cover": ""
+        },
+        {
+          "id": "country-lane",
+          "group": "pair-f8r4",
+          "kind": "side",
+          "timer": "600",
+          "title": "Country Lane",
+          "desc": "A storm, an empty road, and Ensign Pryce’s carriage the only shelter.",
+          "cover": ""
+        },
+        {
+          "id": "pemberley",
+          "group": "",
+          "kind": "main",
+          "timer": "",
+          "title": "Pemberley",
+          "desc": "",
+          "cover": ""
+        },
+        {
+          "id": "circulating-library",
+          "group": "",
+          "kind": "main",
+          "timer": "",
+          "title": "Circulating Library",
+          "desc": "",
+          "cover": ""
+        },
+        {
+          "id": "brighton-camp",
+          "group": "",
+          "kind": "main",
+          "timer": "",
+          "title": "Brighton Camp",
+          "desc": "",
+          "cover": ""
+        }
+      ],
+      "suitor": "mr_collins",
+      "time": "night"
+    },
+    {
+      "id": "meryton",
+      "title": "Meryton",
+      "type": "episode",
+      "x": 90.7,
+      "y": 77.5,
+      "unlockedBy": null,
+      "episode": null,
+      "order": 3,
+      "appearsAfter": null,
+      "sx": 16.192170818505343,
+      "sy": 319,
+      "tier": 3,
+      "suitor": "capt_vane"
+    },
+    {
+      "id": "pemberley",
+      "title": "Pemberley",
+      "type": "episode",
+      "x": 69.1,
+      "y": 32,
+      "unlockedBy": null,
+      "episode": null,
+      "order": 3,
+      "appearsAfter": null,
+      "sx": 83.65954922894426,
+      "sy": 308,
+      "tier": 4,
+      "suitor": "mr_wickham"
+    },
+    {
+      "id": "rosings-park",
+      "title": "Rosings Park",
+      "type": "episode",
+      "x": 11.3,
+      "y": 71.4,
+      "unlockedBy": null,
+      "episode": "authored/rosings-park",
+      "route": [
+        [
+          11.3,
+          71.4
+        ],
+        [
+          13.6,
+          74.3
+        ],
+        [
+          16,
+          71.3
+        ],
+        [
+          17.9,
+          68.3
+        ],
+        [
+          22.6,
+          62.9
+        ]
+      ],
+      "order": 2,
+      "appearsAfter": null,
+      "sx": 58.65954922894424,
+      "sy": 200,
+      "tier": 2,
+      "suitor": "mr_darcy"
+    },
+    {
+      "id": "short-stories",
+      "title": "Short Stories",
+      "type": "short-story",
+      "unlockedBy": null,
+      "appearsAfter": null,
+      "sx": 38.552787663107964,
+      "sy": 310,
+      "order": 3,
+      "tier": 3
+    },
+    {
+      "id": "the-parsonage",
+      "title": "The Parsonage",
+      "type": "interactive",
+      "x": 55.7,
+      "y": 33.9,
+      "unlockedBy": null,
+      "appearsAfter": null,
+      "sx": 18.289658147309392,
+      "sy": 217.36673625608907,
+      "order": 2,
+      "tier": 2
+    },
+    {
+      "id": "circulating-library",
+      "title": "Circulating Library",
+      "type": "interactive",
+      "x": 61.7,
+      "y": 77.2,
+      "unlockedBy": null,
+      "appearsAfter": null,
+      "sx": 27.024695352097478,
+      "sy": 437.32289491997216,
+      "order": 4,
+      "tier": 4
+    },
+    {
+      "id": "tea-room",
+      "title": "Tea Room",
+      "type": "interactive",
+      "x": 63.5,
+      "y": 59.2,
+      "unlockedBy": null,
+      "appearsAfter": null,
+      "sx": 65.53434702900896,
+      "sy": 326,
+      "tier": 3
+    },
+    {
+      "id": "the-apothecary",
+      "title": "The Apothecary",
+      "type": "interactive",
+      "x": 42,
+      "y": 52,
+      "unlockedBy": null,
+      "appearsAfter": null,
+      "sx": 27.768791113986847,
+      "sy": 369.6527487821851,
+      "tier": 4
+    },
+    {
+      "id": "the-tavern",
+      "title": "The Tavern",
+      "type": "interactive",
+      "x": 75.9,
+      "y": 63,
+      "unlockedBy": null,
+      "appearsAfter": null,
+      "sx": 50.77105575326216,
+      "sy": 369.5594989561587,
+      "order": 3,
+      "tier": 4
+    },
+    {
+      "id": "brighton-camp",
+      "title": "Brighton Camp",
+      "type": "interactive",
+      "x": 38.6,
+      "y": 81.4,
+      "unlockedBy": null,
+      "appearsAfter": null,
+      "sx": 51.76318343578129,
+      "sy": 442.37369519832987,
+      "order": 4,
+      "tier": 4
+    },
+    {
+      "id": "pride-ep1",
+      "title": "Onboarding — Step 1 (Lucas Lodge)",
+      "type": "onboarding",
+      "unlockedBy": null,
+      "appearsAfter": null
+    },
+    {
+      "id": "pride-ep2",
+      "title": "Onboarding — Step 2",
+      "type": "onboarding",
+      "unlockedBy": "lucas-lodge",
+      "appearsAfter": null
+    },
+    {
+      "id": "pride-ep3",
+      "title": "Onboarding — Step 3",
+      "type": "onboarding",
+      "unlockedBy": "pride-ep2",
+      "appearsAfter": null
+    },
+    {
+      "id": "brighton-seaside",
+      "title": "Brighton Seaside",
+      "type": "episode",
+      "x": 49.6,
+      "y": 47.4,
+      "unlockedBy": null,
+      "episode": "authored/brighton-seaside",
+      "route": [
+        [
+          49.6,
+          47.4
+        ],
+        [
+          52.8,
+          44.6
+        ],
+        [
+          54.6,
+          41.3
+        ],
+        [
+          55.4,
+          35
+        ]
+      ],
+      "order": 4,
+      "sx": 88.61209964412812,
+      "sy": 439,
+      "appearsAfter": null,
+      "tier": 4,
+      "suitor": "mr_darcy",
+      "desc": "A season by the sea — and Mr Darcy has followed the party south."
+    },
+    {
+      "id": "country-lane",
+      "title": "Country Lane",
+      "type": "episode",
+      "x": 57,
+      "y": 22.7,
+      "unlockedBy": null,
+      "episode": "authored/country-lane",
+      "route": [
+        [
+          57,
+          22.7
+        ],
+        [
+          57,
+          27.6
+        ],
+        [
+          55.5,
+          31.2
+        ],
+        [
+          56,
+          38.4
+        ]
+      ],
+      "order": 4,
+      "sx": 69.57295373665481,
+      "sy": 439,
+      "tier": 4,
+      "suitor": "ens_pryce",
+      "desc": "A storm, an empty road, and Ensign Pryce’s carriage the only shelter."
+    }
+  ]
+}

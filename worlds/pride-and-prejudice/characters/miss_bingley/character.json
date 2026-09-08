@@ -1,0 +1,15 @@
+{
+  "name": "Miss Bingley",
+  "folder": "miss_bingley",
+  "archetype": "The Rival",
+  "appearance": "Fashionable and studiedly elegant, a beauty of £20,000 dressed at the height of town taste, her poise polished to a cold gleam.",
+  "definition": "Caroline Bingley — calculating and status-obsessed, a refined veneer laid over envy and malice. Her ambition is social, her designs fixed on Darcy, and when thwarted her sweetness curdles into spite. Beneath her contempt for inferiors lies the terror that she herself is contemptible.",
+  "voice": "Polished and controlled, compliments used as weapons; her cruelty arrives wrapped in the grammar of propriety — concern, observation, aesthetic judgment.",
+  "traits": [
+    "Ambition",
+    "Vanity",
+    "Insincerity"
+  ],
+  "brief": "",
+  "created": "2026-08-28T01:31:41.161Z"
+}

@@ -1,0 +1,15 @@
+{
+  "name": "The Maid",
+  "folder": "the_maid",
+  "archetype": "The Confidante Below Stairs",
+  "appearance": "A neat young servant in a plain cap and apron, quick-handed and quiet-footed, eyes lowered but missing nothing.",
+  "definition": "A lady's maid who sees the household from below stairs — discreet, observant, and privy to secrets her mistress would not speak aloud. Loyal but not blind, she is the small, steady presence at the edge of every private scene.",
+  "voice": "Soft and deferential, plain-spoken in private; she offers homely truth when the drawing-room manner is dropped.",
+  "traits": [
+    "Discreet",
+    "Observant",
+    "Loyal"
+  ],
+  "brief": "",
+  "created": "2026-08-28T01:31:41.182Z"
+}

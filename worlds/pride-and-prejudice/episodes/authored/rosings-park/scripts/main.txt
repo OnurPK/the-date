@@ -1,0 +1,55 @@
+(Situation: rosings_park_encounter | A Chance Meeting | Arabella encounters Mr. Darcy in Rosings Park)
+[bg:explore=rosings_park_morning.png]
+[ui:cast layout=convo_two]
+[cast: left=arabella_frost right=mr_darcy]
+Arabella: What a curious coincidence, Mr. Darcy, to find you here in this seclusion.
+Mr-Darcy: Indeed, Miss Frost, much like finding a rose amidst the brambles.
+(Discover: mr_darcy)
+
+(Situation: darcy_almost_confesses | An Interrupted Confession | Darcy hesitates with an admission)
+Arabella: And yet, roses have their thorns. I wonder what brings you to this path?
+Mr-Darcy: A desire, perhaps, to find solace in the unlikeliest of places.
+[ui:cast layout=convo_three]
+[cast: left=arabella_frost center=mr_darcy right=miss_bingley]
+[bg:cutscene=miss_bingley_arrival.png]
+Miss-Bingley: There you are, Mr. Darcy. How fortuitous, to stumble upon such esteemed company!
+[ui:bubble]
+Mr-Darcy: (quietly) Fortuitous, indeed...
+
+(Situation: internal_revelation | Revelations Unspoken | Arabella's inner realization while the moment passes)
+[ui:cast layout=convo_two]
+[cast: left=arabella_frost right=mr_darcy]
+Arabella: How often do masks shield us from the world, yet isolate us further?
+
+(Situation: choice_reaction | A Choice to Make | Arabella decides her next words)
+(Choice:3)
+Arabella: Might we return to the frivolities, or shall I find refuge in the roses? [trait: Wit]
+Arabella: Your heart seems weighted, Mr. Darcy. Would you unburden it with me? [trait: Empathy]
+Arabella: Miss Bingley's arrival is timely; I shall not intrude further. [trait: Poise]
+
+(IfChoice:0)
+(Situation: clever_retreat | A Clever Retreat | Arabella chooses wit over depth)
+Arabella: The roses, I believe, provide more amusement than the thorns of conversation.
+Mr-Darcy: Indeed, your company is as diverting as ever, Miss Frost.
+Mechanics: (Relation: mr_darcy | trust | +1) (Trait: Wit)
+(EndIf)
+
+(IfChoice:1)
+(Situation: empathetic_encounter | Empathetic Encounter | Arabella offers genuine empathy)
+Arabella: There is no shame in solitude, nor in sharing it.
+Mr-Darcy: You have an unexpected kindness, Miss Frost. It is a rarity.
+Mechanics: (Relation: mr_darcy | trust | +2) (Trait: Empathy)
+(EndIf)
+
+(IfChoice:2)
+(Situation: graceful_exit | A Graceful Exit | Arabella exits the scene with poise)
+Arabella: Farewell, Mr. Darcy. Miss Bingley, your presence is a welcome diversion.
+Mr-Darcy: Until we meet again, Miss Frost.
+Mechanics: (Relation: mr_darcy | trust | +1) (Trait: Poise)
+(EndIf)
+
+# Fork — bölüm bitince açılacaklar
+(Unlock: tea-room | title=Tea Room)
+(Unlock: lucas-lodge | title=Lucas Lodge)
+(Unlock: the-tavern | title=The Tavern)
+(Unlock: the-apothecary | title=The Apothecary)

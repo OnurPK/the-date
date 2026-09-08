@@ -1,0 +1,123 @@
+(Situation: intro | Arrival at Brighton | Dawn on the Brighton seafront)
+[bg:intro=intro.png]
+[cast: left=arabella_frost]
+Narrative: Dawn breaks over Brighton. Arabella Frost takes the sea air alone, unaware whom the morning will set in her path.
+Arabella: A rare hour — the shore all to myself. Let us see what the day intends.
+
+(Situation: morning_encounter | Morning Encounter | Arabella meets Mr. Darcy by chance in the park)
+[bg:explore=brighton_seaside.png]
+[ui:cast layout=convo_two]
+[cast: left=arabella_frost right=mr_darcy]
+Arabella: The morning air is particularly refreshing today, Mr. Darcy. One rarely finds such solitude at this hour.
+Mr-Darcy: Indeed, Miss Frost. Solitude is a rare companion in these social climes. I must admit, it is fortuitous to encounter someone who appreciates it as much as I do.
+Arabella: What brings you out this early, if I may inquire?
+Mr-Darcy: Reflection, perhaps. The sea provides clarity amidst life's complexities.
+Arabella: Ah, the tides as a metaphor for our turbulent existence?
+Mr-Darcy: Precisely. Though turbulence is not always unwelcome.
+Arabella: True, a little chaos often reveals hidden truths.
+Mr-Darcy: And one cannot deny the allure of such revelations.
+Arabella: Especially when shared with intriguing company.
+Mr-Darcy: It seems we find ourselves in agreeable accord, Miss Frost.
+[bg:cutscene=shared_understanding.png]
+Arabella: Then let us cherish this rare alignment of thoughts.
+
+(Situation: unexpected_confession | Unexpected Confession | Darcy approaches a revelation)
+[ui:bubble]
+Mr-Darcy: There is something... I have been meaning to convey, Miss Frost.
+[ui:cast layout=convo_two]
+Arabella: Oh? You have piqued my curiosity, Mr. Darcy. Pray, do not keep me in suspense.
+Mr-Darcy: It occurs to me that we may have more in common than meets the eye. Your wit, though sharp, reveals a mind as attuned to the world’s follies as my own.
+Arabella: That is high praise coming from you, sir. I must admit, I find your perspective rather refreshing.
+Mr-Darcy: You speak as though it is a rare occurrence.
+Arabella: Indeed, it is. Most are content to float on society's surface.
+Mr-Darcy: And you prefer the depths?
+Arabella: If one wishes to understand the tides, one must dive beneath them.
+Mr-Darcy: A philosophy I share. It appears we are both seekers of truth amidst the waves.
+[bg:cutscene=philosophical_agreement.png]
+Arabella: Then let us navigate these waters together for a while longer.
+
+(Situation: interruption_arrives | Interruption Arrives | Miss Bingley halts the moment)
+[bg:cutscene=miss_bingley_approaching.png]
+[ui:bubble]
+Miss-Bingley: Mr. Darcy! What a surprise to find you here.
+[ui:cast layout=convo_three]
+[cast: left=arabella_frost center=mr_darcy right=miss_bingley]
+Miss-Bingley: Miss Frost, how delightful to see you as well.
+Arabella: Miss Bingley, your timing is impeccable, as always.
+
+(Choice:3)
+Arabella: Perhaps we should reconvene this enlightening discourse another time. [trait: Wit]
+Arabella: Mr. Darcy, should you ever wish for company in solitude, I daresay I might oblige. [trait: Empathy]
+Arabella: It seems fate conspires to keep us from earnest conversation. [trait: Reflection]
+
+(IfChoice:0)
+(Situation: witful_departure | A Witful Departure | Arabella chooses wit)
+[ui:bubble]
+Arabella: I fear the air grows too brisk for delicate confidences. Shall we retreat to the shelter of society's predictability?
+[ui:cast layout=convo_two]
+[cast: left=arabella_frost right=mr_darcy]
+Mr-Darcy: Predictability does have its comforts, though it lacks the charm of spontaneity.
+Arabella: True, yet society provides a necessary stage for the theater of our lives.
+Mr-Darcy: And what role do you wish to play upon it?
+Arabella: Perhaps that of the observant onlooker, offering commentary from the wings.
+Mr-Darcy: An astute position, where wit and wisdom may be freely dispensed.
+Arabella: And you, Mr. Darcy, what role shall you assume?
+Mr-Darcy: The ever-watchful guardian, perhaps, ensuring the play remains within bounds.
+[bg:cutscene=theatrical_allusion.png]
+Arabella: Then let us part as fellow thespians, each to our respective roles.
+Mechanics: (Relation: mr_darcy | trust | +1) (Discover: mr_darcy)
+
+(IfChoice:1)
+(Situation: empathetic_offer | Empathetic Offer | Arabella softens her demeanor)
+[ui:cast layout=convo_two]
+[cast: left=arabella_frost right=mr_darcy]
+Arabella: I find that solitude is often less lonesome when shared. Should you ever seek a confidante, Mr. Darcy, I should not be unwelcoming.
+Mr-Darcy: Your offer is both kind and unexpected, Miss Frost.
+Arabella: A shared understanding can be its own form of solace.
+Mr-Darcy: Indeed, and one seldom encountered amidst the cacophony of society.
+Arabella: Then may we each find solace in the other's presence when needed.
+Mr-Darcy: A most agreeable arrangement. I shall not forget your generosity.
+Arabella: Nor I your candidness, Mr. Darcy. Until we meet again.
+Mr-Darcy: Until then, Miss Frost. May the winds favor our next meeting.
+Arabella: And may it be just as enlightening as today's.
+Mechanics: (Relation: mr_darcy | romance | +1) (Discover: mr_darcy)
+
+(IfChoice:2)
+(Situation: reflective_moment | Reflective Moment | A shared understanding)
+[ui:cast layout=convo_two]
+[cast: left=arabella_frost right=mr_darcy]
+Arabella: It appears the universe delights in withholding confidences. Perhaps it is best, for some mysteries thrive in their ambiguity.
+Mr-Darcy: There is wisdom in accepting what we cannot fully grasp.
+Arabella: Indeed, a certain beauty lies in the undiscovered.
+Mr-Darcy: The allure of the unknown is a powerful force.
+Arabella: And yet, how often do we find ourselves yearning to uncover it?
+Mr-Darcy: More often than we care to admit, I suspect.
+Arabella: Then let us, at least, acknowledge it as a shared curiosity.
+Mr-Darcy: A curiosity that binds us, even as it eludes us.
+Arabella: In that, we find comfort, do we not?
+Mr-Darcy: Yes, Miss Frost, comfort in the dance of mysteries.
+Arabella: Then let us leave it in the hands of fate, for now.
+Mechanics: (Relation: mr_darcy | trust | +1) (Discover: mr_darcy)
+
+(Situation: revelation | Revelation | Arabella's realization about herself)
+[bg:explore=brighton_seaside.png]
+[ui:cast layout=convo_two]
+[cast: left=arabella_frost right=miss_bingley]
+Arabella: It strikes me, Miss Bingley, that our interactions with society's elite are not unlike dances dictated by unseen conductors, each step a mask for our true selves.
+Miss-Bingley: Quite the philosophical turn, Miss Frost. Perhaps there is more to you than meets the eye.
+Arabella: As with us all, Miss Bingley. As with us all.
+Miss-Bingley: Do you not find amusement in these societal performances?
+Arabella: Amusement, certainly, but also a degree of introspection.
+[bg:cutscene=introspective_gaze.png]
+Miss-Bingley: Curious, and what conclusions have you drawn from such introspection?
+Arabella: That beneath the masks, we are all seeking acceptance, in one form or another.
+Miss-Bingley: A rather sobering thought for a morning stroll.
+Arabella: Sobering, perhaps, but necessary to navigate the intricate dance of society.
+Miss-Bingley: Then let us continue this dance with grace, Miss Frost.
+Arabella: Indeed, Miss Bingley, with grace and a touch of candor.
+
+(Situation: ending | The Tide Withdraws | The morning's encounters settle into memory)
+[bg:ending=ending.png]
+[cast: left=arabella_frost right=mr_darcy]
+Arabella: The tide withdraws, and with it the morning's masks.
+Narrative: Brighton would remember this morning — and so, she suspected, would Mr Darcy.

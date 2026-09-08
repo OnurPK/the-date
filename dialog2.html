@@ -164,6 +164,78 @@
     pointer-events: none;
   }
 
+  /* Cutscene bubble beat: hide the bottom dialog box entirely (same as a narrative
+     scene). The full-screen tap-anywhere handler still advances via clicks on the
+     cutscene image, so there's no empty box sitting at the bottom. Keyed on a
+     per-beat body class so it self-clears on the next normal line / the END screen. */
+  body.cutscene-bubble #dialogBox { transform: translateY(160%) !important; opacity: 0 !important; pointer-events: none !important; }
+  body.cutscene-bubble #cutsceneLayer { pointer-events: auto !important; cursor: pointer; }
+  /* End-of-episode Continue → map button */
+  .ep-end-continue { position: fixed; left: 50%; bottom: calc(env(safe-area-inset-bottom,0px) + 44px); transform: translateX(-50%); z-index: 200; display: none;
+    padding: 15px 46px; border: none; border-radius: 999px; background: linear-gradient(120deg,#e0668a,#8b7bd8); color: #fff;
+    font: 800 15px/1 "Inter",system-ui,sans-serif; letter-spacing: .02em; box-shadow: 0 14px 32px rgba(139,123,216,.42); cursor: pointer; }
+  .ep-end-continue:active { transform: translateX(-50%) scale(.97); }
+  /* Chapter-end dashboard (Faz 3) */
+  #prideEpiDash { position:fixed; inset:0; z-index:9999; display:flex; align-items:center; justify-content:center; padding:22px;
+    background:radial-gradient(120% 90% at 50% 0%, rgba(60,40,80,.6), rgba(10,8,16,.94)); opacity:0; transition:opacity .28s ease; overflow:auto; }
+  #prideEpiDash.on { opacity:1; }
+  #prideEpiDash .ed-card { width:100%; max-width:340px; background:linear-gradient(160deg,#1c1730,#141019); border:1px solid rgba(183,156,240,.22);
+    border-radius:20px; padding:22px 20px 18px; box-shadow:0 24px 60px rgba(0,0,0,.5); transform:translateY(14px); transition:transform .3s ease; }
+  #prideEpiDash.on .ed-card { transform:translateY(0); }
+  #prideEpiDash .ed-eyebrow { font:700 11px Inter,system-ui,sans-serif; letter-spacing:.14em; text-transform:uppercase; color:#b79cf0; }
+  #prideEpiDash .ed-title { font:800 22px/1.15 "Playfair Display",Georgia,serif; color:#f3eeff; margin:3px 0 16px; }
+  #prideEpiDash .ed-sec { display:flex; flex-direction:column; gap:11px; margin-bottom:6px; }
+  #prideEpiDash .ed-meter .ed-mrow { display:flex; justify-content:space-between; align-items:baseline; margin-bottom:5px; }
+  #prideEpiDash .ed-mlabel { font:600 12px Inter,system-ui,sans-serif; color:#cfc6e6; letter-spacing:.04em; }
+  #prideEpiDash .ed-mval { font:700 13px Inter,system-ui,sans-serif; color:#f0ecff; }
+  #prideEpiDash .ed-mval b { font-weight:800; margin-left:2px; }
+  #prideEpiDash .ed-mval b.up { color:#7fe0c0; } #prideEpiDash .ed-mval b.dn { color:#f08aa0; }
+  #prideEpiDash .ed-mbar { height:7px; border-radius:5px; background:rgba(255,255,255,.08); overflow:hidden; }
+  #prideEpiDash .ed-mbar span { display:block; height:100%; border-radius:5px; }
+  #prideEpiDash .ed-h { font:700 11px Inter,system-ui,sans-serif; letter-spacing:.1em; text-transform:uppercase; color:#8f86a8; margin:16px 0 8px; }
+  #prideEpiDash .ed-chips { display:flex; flex-wrap:wrap; gap:6px; }
+  #prideEpiDash .ed-chip { font:600 12px Inter,system-ui,sans-serif; color:#e7deff; background:rgba(183,156,240,.14); border:1px solid rgba(183,156,240,.3); padding:4px 10px; border-radius:14px; }
+  #prideEpiDash .ed-empty { color:#6b6480; font:500 12px Inter,system-ui,sans-serif; }
+  #prideEpiDash .ed-bonds { display:flex; flex-direction:column; gap:7px; }
+  #prideEpiDash .ed-bond { display:flex; justify-content:space-between; align-items:center; background:rgba(160,111,227,.10); border:1px solid rgba(160,111,227,.24); border-radius:10px; padding:8px 11px; }
+  #prideEpiDash .ed-bname { font:600 13px Inter,system-ui,sans-serif; color:#f0ecff; }
+  #prideEpiDash .ed-bxp { font:700 12px Inter,system-ui,sans-serif; color:#c6a8f0; }
+  #prideEpiDash .ed-cont { width:100%; margin-top:18px; padding:14px; border:none; border-radius:999px; background:linear-gradient(120deg,#e0668a,#8b7bd8); color:#fff; font:800 15px Inter,system-ui,sans-serif; cursor:pointer; }
+  #prideEpiDash .ed-cont:active { transform:scale(.98); }
+  /* Chapter fork — "choose one path" decision screen (Faz 4, redesigned) */
+  #pridePathChoice { position:fixed; inset:0; z-index:9999; display:flex; align-items:center; justify-content:center; padding:20px;
+    background:rgba(6,4,10,.93); -webkit-backdrop-filter:blur(6px); backdrop-filter:blur(6px); opacity:0; transition:opacity .28s ease; }
+  #pridePathChoice.on { opacity:1; }
+  #pridePathChoice .pc-wrap { position:relative; width:100%; max-width:380px; }
+  #pridePathChoice .pc-close { position:fixed; top:14px; right:14px; z-index:7; width:38px; height:38px; border-radius:50%;
+    background:rgba(255,255,255,.12); border:1px solid rgba(255,255,255,.24); color:#fff; font:400 18px/1 system-ui; cursor:pointer; }
+  #pridePathChoice .pc-close:active { transform:scale(.94); }
+  #pridePathChoice .pc-head { text-align:center; margin-bottom:38px; }
+  #pridePathChoice .pc-warn { font:800 22px/1.15 "Playfair Display",Georgia,serif; letter-spacing:.02em; color:#f3eeff; }
+  #pridePathChoice .pc-timer { margin-top:7px; font:700 12.5px Inter,system-ui,sans-serif; letter-spacing:.14em; text-transform:uppercase; color:#f0b968; }
+  #pridePathChoice .pc-cards { display:flex; flex-direction:column; gap:30px; }
+  /* card = cover image; title/sub-text/button overlaid; suitor figure (waist-up) rises out of a side */
+  #pridePathChoice .pc-card { position:relative; height:172px; border-radius:18px; border:1px solid rgba(183,156,240,.22);
+    transform:translateY(14px); opacity:0; transition:transform .3s ease, opacity .3s ease, border-color .2s; }
+  #pridePathChoice.on .pc-card { transform:translateY(0); opacity:1; }
+  #pridePathChoice .pc-card:active { border-color:rgba(224,102,138,.7); }
+  #pridePathChoice .pc-bg { position:absolute; inset:0; border-radius:18px; overflow:hidden; background:#241c38 center/cover no-repeat; }
+  #pridePathChoice .pc-bg::after { content:''; position:absolute; inset:0; background:linear-gradient(90deg, rgba(10,7,16,.82) 0%, rgba(10,7,16,.35) 55%, rgba(10,7,16,.72) 100%),
+    linear-gradient(180deg, rgba(10,7,16,.15) 0%, rgba(10,7,16,.78) 100%); }
+  /* suitor: waist-up shows (head just above the card); lower body dissolves into the cover via a bottom fade mask */
+  #pridePathChoice .pc-fig { position:absolute; top:-40px; bottom:0; width:70%; background:center top/auto 205% no-repeat; z-index:3; pointer-events:none;
+    -webkit-mask-image:linear-gradient(to bottom, #000 0%, #000 72%, rgba(0,0,0,.35) 88%, transparent 100%);
+    mask-image:linear-gradient(to bottom, #000 0%, #000 72%, rgba(0,0,0,.35) 88%, transparent 100%); }
+  #pridePathChoice .pc-card.fig-left  .pc-fig { left:-20%; transform:scaleX(-1); }   /* left suitor faces inward */
+  #pridePathChoice .pc-card.fig-left  .pc-content { left:46%; right:14px; text-align:left; }
+  #pridePathChoice .pc-card.fig-right .pc-fig { right:-20%; }
+  #pridePathChoice .pc-card.fig-right .pc-content { right:46%; left:14px; text-align:left; }
+  #pridePathChoice .pc-content { position:absolute; bottom:14px; z-index:4; display:flex; flex-direction:column; gap:10px; align-items:flex-start; }
+  #pridePathChoice .pc-title { font:800 22px/1.08 "Playfair Display",Georgia,serif; color:#fff; text-shadow:0 2px 10px rgba(0,0,0,.85); }
+  #pridePathChoice .pc-desc { margin-top:-4px; font:500 12px/1.4 Inter,system-ui,sans-serif; color:rgba(255,255,255,.86); text-shadow:0 1px 6px rgba(0,0,0,.85); }
+  #pridePathChoice .pc-act { margin-top:4px; max-width:100%; padding:10px 18px; border:none; border-radius:999px; background:linear-gradient(120deg,#e0668a,#8b7bd8); color:#fff; font:800 13px/1.2 Inter,system-ui,sans-serif; text-align:center; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; cursor:pointer; box-shadow:0 6px 16px rgba(0,0,0,.4); }
+  #pridePathChoice .pc-act:active { transform:scale(.97); }
+  #pridePathChoice .pc-or { display:none; }
   /* Speech bubbles, dark, translucent, positioned closer to the heads. */
   .scene-bubble {
     position: fixed;
@@ -604,6 +676,8 @@
       rgba(20,17,32,0.92) 0%, rgba(28,22,46,0.98) 100%);
   }
   .choice-opt:active { transform: scale(0.985); }
+  /* subtle "main path" (canon) dot on the authored continuation option */
+  .choice-main-dot { width: 7px; height: 7px; border-radius: 50%; background: rgba(111,227,200,.7); box-shadow: 0 0 6px rgba(111,227,200,.45); flex: none; }
 
   /* Wrapper that clips the avatar so the body can't leak into the
      next row. Top edge sits 16px ABOVE the card (so the head pokes
@@ -4932,6 +5006,14 @@
   .mech-toast.discovery .mt-icon { background: linear-gradient(140deg,#4bb0c9,#6fd3e3); }
   .mech-toast.quest     { border-left: 3px solid #8fb0ff; }
   .mech-toast.quest     .mt-icon { background: linear-gradient(140deg,#5c7ad8,#8fb0ff); }
+  .mech-toast.xp        { border-left: 3px solid #a06fe3; }
+  .mech-toast.xp        .mt-icon { background: linear-gradient(140deg,#6a4bc9,#a06fe3); }
+  .mech-toast.item      { border-left: 3px solid #e7b25c; }
+  .mech-toast.item      .mt-icon { background: linear-gradient(140deg,#c98a2a,#e7b25c); color:#2c2410; }
+  .mech-toast.scandal   { border-left: 3px solid #e0668a; }
+  .mech-toast.scandal   .mt-icon { background: linear-gradient(140deg,#d1445f,#f08aa0); }
+  .mech-toast.allure    { border-left: 3px solid #f0b968; }
+  .mech-toast.allure    .mt-icon { background: linear-gradient(140deg,#e09a3f,#f4cf8a); color:#2c2410; }
   /* Keep toasts out of the way on the onboarding / map / end screens. */
   body.in-endscene #mechToastHost,
   body.flow-worlds #mechToastHost,
@@ -6243,6 +6325,11 @@
   body[data-pack="pride"] .map-world {
     background-image: url("worlds/pride-and-prejudice/map.jpg");
   }
+  /* Time-of-day map mood: the ACTIVE episode's `time` swaps the map background.
+     day = default map.jpg; dawn/sunset/night = their own art. */
+  body[data-pack="pride"].pride-tod-dawn   .map-world { background-image: url("worlds/pride-and-prejudice/map_dawn.jpeg"); }
+  body[data-pack="pride"].pride-tod-sunset .map-world { background-image: url("worlds/pride-and-prejudice/map_sunset.jpeg"); }
+  body[data-pack="pride"].pride-tod-night  .map-world { background-image: url("worlds/pride-and-prejudice/map_night.jpeg"); }
 
   /* London night-map overlay, sits on top of the day-map background
      but below the hotspots (pseudo-elements paint behind children).
@@ -6953,6 +7040,15 @@
     background-color: #2a1f38;
     border-color: rgba(255,255,255,0.92);
   }
+  /* Suitor walkers: warm gold ring + a small ♥ badge (courtship-capable). */
+  .map-avatar.sim-suitor { border-color:#f0c46a;
+    box-shadow:0 2px 9px rgba(0,0,0,.65), 0 0 0 2px rgba(240,196,106,.55); }
+  .map-avatar .sim-badge { position:absolute; right:-3px; bottom:-3px; width:15px; height:15px; border-radius:50%;
+    background:linear-gradient(135deg,#e0668a,#c8477a); border:1.5px solid #fff; display:grid; place-items:center;
+    font:700 8px/1 system-ui; color:#fff; box-shadow:0 1px 4px rgba(0,0,0,.5); }
+  .map-avatar .sim-badge::after { content:"\2665"; }
+  /* NPC walkers: plainer, slightly smaller, cooler — read as background people. */
+  .map-avatar.sim-npc { width:34px; height:34px; border-color:rgba(255,255,255,0.65); filter:saturate(.8) brightness(.96); opacity:.96; }
 
   /* ---------- POI modal ---------- */
   #poiBackdrop {
@@ -14031,6 +14127,15 @@ const PRIDE_ACTORS = {
   'mrs-frost':   'mrs_frost',
   'mr-frost':    'mr_frost',
   maid:          'the_maid',
+  // additional canonical suitors (Suitors DB) — speakable with sprites
+  pryce:         'ens_pryce',
+  vane:          'capt_vane',
+  ravenscar:     'lord_ravenscar',
+  collins:       'mr_collins',
+  devereux:      'mr_devereux',
+  fenwick:       'mr_fenwick',
+  hale:          'mr_hale',
+  quill:         'mr_quill',
 };
 const PRIDE_LABELS = {
   arabella: 'Arabella',    bingley: 'Mr Bingley',   darcy: 'Mr Darcy',
@@ -14038,8 +14143,11 @@ const PRIDE_LABELS = {
   charlotte: 'Charlotte',  lydia: 'Lydia',          jane: 'Jane',
   elizabeth: 'Elizabeth',  'sir-william': 'Sir William',
   'sir-henry': 'Sir Henry', 'mrs-frost': 'Mrs Frost', 'mr-frost': 'Mr Frost', maid: 'The Maid',
+  pryce: 'Ensign Pryce', vane: 'Captain Vane', ravenscar: 'Lord Ravenscar', collins: 'Mr Collins',
+  devereux: 'Mr Devereux', fenwick: 'Mr Fenwick', hale: 'Mr Hale', quill: 'Mr Quill',
 };
 const PRIDE_WORLD_BASE = 'worlds/pride-and-prejudice';
+window.PRIDE_ACTORS = PRIDE_ACTORS;   // expose so the cast stage can map speaker→folder
 function prideSpritePath(speaker) {
   const folder = PRIDE_ACTORS[speaker];
   if (!folder) return null;
@@ -14052,6 +14160,50 @@ Object.keys(PRIDE_ACTORS).forEach(function (k) {
   VALID.add(k);
   if (!(k in LABELS)) LABELS[k] = PRIDE_LABELS[k] || k;
 });
+// Authored scripts emit fuller speaker tags ("Mr-Darcy:", "Miss-Bingley:") and
+// sometimes the character FOLDER name ("mr_darcy"). Map those to the engine's
+// canonical speaker keys so they render as proper bubbles (not raw narrative).
+const PRIDE_SPEAKER_ALIAS = {
+  'mr-darcy':'darcy', 'mr_darcy':'darcy',
+  'miss-bingley':'caroline', 'miss_bingley':'caroline', 'caroline-bingley':'caroline',
+  'mr-bingley':'bingley', 'mr_bingley':'bingley', 'charles-bingley':'bingley',
+  'mr-wickham':'wickham', 'mr_wickham':'wickham',
+  'arabella-frost':'arabella', 'arabella_frost':'arabella',
+  'elizabeth-bennet':'elizabeth', 'elizabeth_bennet':'elizabeth', 'miss-elizabeth':'elizabeth',
+  'jane-bennet':'jane', 'jane_bennet':'jane',
+  'lydia-bennet':'lydia', 'lydia_bennet':'lydia',
+  'charlotte-lucas':'charlotte', 'charlotte_lucas':'charlotte',
+  'mrs-bennet':'mrs-bennet', 'mrs_bennet':'mrs-bennet',
+  'ens-pryce':'pryce', 'ens_pryce':'pryce', 'ensign-pryce':'pryce', 'ensign_pryce':'pryce',
+  'capt-vane':'vane', 'capt_vane':'vane', 'captain-vane':'vane', 'captain_vane':'vane',
+  'lord-ravenscar':'ravenscar', 'lord_ravenscar':'ravenscar',
+  'mr-collins':'collins', 'mr_collins':'collins',
+  'mr-devereux':'devereux', 'mr_devereux':'devereux',
+  'mr-fenwick':'fenwick', 'mr_fenwick':'fenwick',
+  'mr-hale':'hale', 'mr_hale':'hale', 'mr-quill':'quill', 'mr_quill':'quill',
+};
+window.__prideSpeakerAlias = PRIDE_SPEAKER_ALIAS;
+// Side/bit-part characters are invented per-episode and can't be pre-registered.
+// On script load, scan [cast: …] folders and register any UNKNOWN folder as a
+// dynamic speaker so its lines render as a proper bubble (with its own sprite)
+// instead of falling back to raw narrative.
+window.prideRegisterCastSpeakers = function (txt) {
+  const skip = new Set(['none', '', 'you', 'pc', 'player', 'arabella_frost']);
+  const knownFolders = new Set(Object.values(PRIDE_ACTORS));
+  const re = /\[cast:([^\]]+)\]/gi; let m;
+  while ((m = re.exec(txt || ''))) {
+    m[1].split(/\s+/).forEach(tok => {
+      const i = tok.indexOf('='); if (i < 0) return;
+      const F = tok.slice(i + 1).trim(); if (!F || skip.has(F.toLowerCase()) || knownFolders.has(F)) return;
+      const key = F.toLowerCase().replace(/_/g, '-');
+      if (!PRIDE_ACTORS[key]) {
+        PRIDE_ACTORS[key] = F; VALID.add(key);
+        if (!(key in LABELS)) LABELS[key] = F.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+        PRIDE_SPEAKER_ALIAS[F.toLowerCase()] = key; PRIDE_SPEAKER_ALIAS[key] = key;
+      }
+    });
+  }
+};
 // Inject the stage-sprite sizing rule + cast-small portraits
 // (.focus-character.c-<speaker>) so the small bottom-left avatar path
 // also shows the right character. The full-body cast-large sprite is
@@ -14424,9 +14576,15 @@ function applyBgState(bgValue) {
     if (typeof clearNarrativeScene === 'function') clearNarrativeScene();
     return;
   }
-  const cutMatch = bgValue.match(/^cutscene\s*=\s*(.+)$/i);
+  // intro / ending are STORY cutscenes (first & last scene) — render identically
+  // to a cutscene; only their asset slot + author labelling differ.
+  const cutMatch = bgValue.match(/^(?:cutscene|intro|ending)\s*=\s*(.+)$/i);
   if (cutMatch && typeof setCutscene === 'function') {
     if (typeof clearNarrativeScene === 'function') clearNarrativeScene();
+    // A cutscene beat is a full-frame still + bubble — drop the cast figures and
+    // cast-large layout so they don't render on top of the cutscene.
+    if (typeof window.castClear === 'function') window.castClear();
+    if (typeof currentDialogState !== 'undefined') currentDialogState.castLayout = null;
     setCutscene(cutMatch[1].trim());
     return;
   }
@@ -14440,7 +14598,10 @@ function applyBgState(bgValue) {
     // drop those layers first so they don't linger on top of the backdrop.
     if (typeof clearCutscene === 'function')       clearCutscene();
     if (typeof clearNarrativeScene === 'function') clearNarrativeScene();
-    const nm = (bgValue.split('=')[1] || 'ballroom').trim();
+    // authored DSL may pass the filename WITH extension (explore=foo.png); the
+    // built-in form is bare (explore=ballroom). Strip any extension so we don't
+    // request foo.png.png.
+    let nm = (bgValue.split('=')[1] || 'ballroom').trim().replace(/\.(png|jpe?g|webp)$/i, '');
     const bd = document.getElementById('backdrop');
     if (bd) { bd.style.backgroundImage = `url("${currentLocationBase()}/explore/${nm}.png")`; bd.style.opacity = '1'; }
     return;
@@ -14927,6 +15088,8 @@ function showMechToast(kind, parts) {
   const host = document.getElementById('mechToastHost');
   if (!host) return;
   parts = parts || [];
+  // Faz 3 — log episode events for the chapter-end dashboard (trait from endChoice, discovery logged explicitly with suitor id)
+  try { if (kind !== 'trait' && kind !== 'discovery' && typeof window.prideEpiRecord === 'function') window.prideEpiRecord(kind, parts); } catch (e) {}
   // Pride: route relationship + memory beats to the bottom notifications
   // (attached to the dialogue box, with character avatars) rather than the
   // top mech-toast bar. Other kinds (trait/discovery/quest) stay on top.
@@ -14993,28 +15156,67 @@ function showMechToast(kind, parts) {
     title = 'New objective';
     detail = parts[0] || '';
     cls = 'quest';
+  } else if (kind === 'xp') {
+    const who = mechActorLabel(parts[0]);
+    const n = Math.abs(deltaOf(parts[1]));
+    icon = '✦';
+    title = who + ' · +' + n + ' XP';
+    cls = 'xp';
+  } else if (kind === 'item') {
+    icon = '🎁';
+    title = 'Item acquired';
+    detail = (parts[0] || '').replace(/_/g, ' ');
+    cls = 'item';
+  } else if (kind === 'scandal') {
+    const d = deltaOf(parts[0]); const up = d >= 0;
+    icon = '🔥';
+    title = 'Scandal ' + (up ? 'rises' : 'settles') + ' · ' + (up ? '+' : '') + d;
+    cls = 'scandal';
+  } else if (kind === 'allure') {
+    const d = deltaOf(parts[0]); const up = d >= 0;
+    icon = '✧';
+    title = 'Allure ' + (up ? 'grows' : 'fades') + ' · ' + (up ? '+' : '') + d;
+    cls = 'allure';
   } else {
     return;
   }
-  const node = document.createElement('div');
-  node.className = 'mech-toast ' + cls;
-  node.innerHTML = '<div class="mt-icon"></div><div class="mt-body"><div class="mt-title"></div><div class="mt-detail"></div></div>';
-  node.querySelector('.mt-icon').textContent = icon;
-  node.querySelector('.mt-title').textContent = title;
-  const dt = node.querySelector('.mt-detail');
-  if (detail) dt.textContent = detail; else dt.remove();
-  host.appendChild(node);
-  // Never let more than TWO toasts sit on screen at once — a third
-  // arrival evicts the oldest immediately. Keeps the screen calm even
-  // when the player taps quickly through beats.
-  while (host.children.length > 2) host.removeChild(host.firstChild);
-  requestAnimationFrame(() => node.classList.add('show'));
-  const life = 2600 + Math.min(2000, (detail || '').length * 22);
-  setTimeout(() => {
-    node.classList.remove('show');
-    node.classList.add('out');
-    setTimeout(() => { try { node.remove(); } catch (e) {} }, 520);
-  }, life);
+  // Queue instead of rendering immediately — several mechanics may fire in the
+  // same tick (one Mechanics: line); staggering keeps them readable, none evicted.
+  __mechToastQueue.push({ cls, icon, title, detail });
+  pumpMechToasts();
+}
+
+// Toast kuyruğu: aynı anda gelen mekanikler üst üste binmesin, sırayla insin.
+const __mechToastQueue = [];
+let __mechToastTimer = null;
+const MECH_TOAST_MAX = 3;
+function pumpMechToasts() {
+  if (__mechToastTimer) return;
+  const step = () => {
+    __mechToastTimer = null;
+    const host = document.getElementById('mechToastHost');
+    if (!host || !__mechToastQueue.length) return;
+    if (host.children.length >= MECH_TOAST_MAX) { __mechToastTimer = setTimeout(step, 400); return; }
+    const t = __mechToastQueue.shift();
+    const node = document.createElement('div');
+    node.className = 'mech-toast ' + t.cls;
+    node.innerHTML = '<div class="mt-icon"></div><div class="mt-body"><div class="mt-title"></div><div class="mt-detail"></div></div>';
+    node.querySelector('.mt-icon').textContent = t.icon;
+    node.querySelector('.mt-title').textContent = t.title;
+    const dt = node.querySelector('.mt-detail');
+    if (t.detail) dt.textContent = t.detail; else dt.remove();
+    host.appendChild(node);
+    while (host.children.length > MECH_TOAST_MAX) host.removeChild(host.firstChild);
+    requestAnimationFrame(() => node.classList.add('show'));
+    const life = 2600 + Math.min(2000, (t.detail || '').length * 22);
+    setTimeout(() => {
+      node.classList.remove('show');
+      node.classList.add('out');
+      setTimeout(() => { try { node.remove(); } catch (e) {} }, 520);
+    }, life);
+    if (__mechToastQueue.length) __mechToastTimer = setTimeout(step, 340);
+  };
+  step();
 }
 
 function showScoreBadge(delta) {
@@ -15103,7 +15305,9 @@ function parseLine(s) {
   // rather than narrative.
   const m = s.match(/^([A-Za-zÇĞİÖŞÜçğıöşü_-]+)\s*:\s*(.*)$/);
   if (m) {
-    const who = m[1].toLowerCase();
+    let who = m[1].toLowerCase();
+    // resolve authored aliases ("mr-darcy" → "darcy", "miss_bingley" → "caroline")
+    if (typeof PRIDE_SPEAKER_ALIAS !== 'undefined' && PRIDE_SPEAKER_ALIAS[who]) who = PRIDE_SPEAKER_ALIAS[who];
     if (VALID.has(who)) return { speaker: who, text: m[2], points, cutscene };
   }
   return { speaker: 'narrative', text: s, points, cutscene };
@@ -15181,7 +15385,8 @@ function parseScript(text) {
   try {
     if (typeof window.parseCastLayouts === 'function') {
       const _cl = window.parseCastLayouts(text);
-      window.CAST_LAYOUTS = _cl.presets || {};
+      // merge script presets over the built-in defaults (convo_two/convo_three)
+      window.CAST_LAYOUTS = Object.assign({}, window.__DEFAULT_CAST_LAYOUTS || {}, _cl.presets || {});
       text = _cl.cleaned;
     }
   } catch (e) { console.warn('[cast] layout parse failed', e); }
@@ -15295,13 +15500,30 @@ function parseScript(text) {
     // auto-dismisses. Payload fields are pipe-separated. Fire-and-continue
     // (auto-advances), so they attach to whatever dialog/narrative beat
     // they're authored next to.
-    const mechMatch = s.match(/^\(\s*(Trait|Relation|Memory|Discovery|Quest|Combat|Scandal|Allure|Discover)\s*:\s*(.+)\)$/i);
+    const mechMatch = s.match(/^\(\s*(Trait|Relation|Memory|Discovery|Quest|Combat|Intro|Scandal|Allure|Discover|XP|Item)\s*:\s*(.+)\)$/i);
     if (mechMatch) {
       const kind = mechMatch[1].toLowerCase();
       const parts = mechMatch[2].split('|').map(x => x.trim());
       const ev = { type: 'mechanic', kind, parts };
       if (currentAction) currentAction.lines.push(ev);
       else currentArr.push(ev);
+      continue;
+    }
+
+    // Authored form: "Mechanics: (Relation: …) (Discover: …)" — one line with a
+    // Mechanics: prefix and one or more (Kind: payload) groups. Emit a mechanic
+    // event per group and DON'T render the line as dialogue.
+    const mechLine = s.match(/^Mechanics\s*:\s*(.+)$/i);
+    if (mechLine) {
+      const groups = mechLine[1].match(/\(([^)]*)\)/g) || [];
+      groups.forEach(g => {
+        const inner = g.slice(1, -1);
+        const mm = inner.match(/^\s*(Trait|Relation|Memory|Discovery|Quest|Combat|Scandal|Allure|Discover|XP|Item)\s*:\s*(.+)$/i);
+        if (mm) {
+          const ev = { type: 'mechanic', kind: mm[1].toLowerCase(), parts: mm[2].split('|').map(x => x.trim()) };
+          if (currentAction) currentAction.lines.push(ev); else currentArr.push(ev);
+        }
+      });
       continue;
     }
 
@@ -15486,6 +15708,7 @@ function parseScript(text) {
         const tr = t.match(/\[\s*trait\s*:\s*([^\]]+?)\s*\]/i);
         if (tr) { opt.trait = tr[1].trim(); t = t.replace(tr[0], ''); }
         if (/\[\s*(continue|next|advance|ok)\s*\]/i.test(t)) { opt.advance = true; t = t.replace(/\[\s*(continue|next|advance|ok)\s*\]/i, ''); }
+        if (/\[\s*main\s*\]/i.test(t)) { opt.main = true; t = t.replace(/\[\s*main\s*\]/i, ''); }   // canon "main path" marker → subtle dot
         t = t.replace(/\s{2,}/g, ' ').trim();
         // Swappable word groups {a|b|c} — long-press opens an editor that
         // cycles them. Split into fixed/variant segments; opt.text renders
@@ -15691,7 +15914,67 @@ function escapeHtml(s) {
 // ============================================================
 // RENDER
 // ============================================================
+// End-of-episode "Continue" button → mark complete + back to the map.
+function hideEndContinue(){ const b = document.getElementById('epEndContinue'); if (b) b.style.display = 'none'; }
+function showEndContinue(){
+  let b = document.getElementById('epEndContinue');
+  if (!b) {
+    b = document.createElement('button');
+    b.id = 'epEndContinue'; b.type = 'button'; b.className = 'ep-end-continue'; b.textContent = 'Continue';
+    b.addEventListener('click', () => {
+      hideEndContinue();
+      // Encounter mode: no completion / no dashboard — just apply the script's
+      // (Unlock:) consequences and return to the map.
+      if (window.__prideEncounterMode) {
+        try { if (typeof window.prideApplyUnlocks === 'function') window.prideApplyUnlocks(window.__prideScriptUnlocks||[]); } catch (e) {}
+        try { if (typeof window.prideEndEncounter === 'function') window.prideEndEncounter(); } catch (e) {}
+        return;
+      }
+      const toMap = () => {
+        try { if (typeof window.prideMarkComplete === 'function') window.prideMarkComplete(currentVenue); } catch (e) {}
+        try { if (typeof window.prideRefreshMapLocks === 'function') window.prideRefreshMapLocks(); } catch (e) {}
+        // Clear any lingering conversation layers (cutscene / narrative
+        // backdrops, bubbles) so they can't paint over the map on return.
+        try { if (typeof clearCutscene === 'function') clearCutscene(); } catch (e) {}
+        try { if (typeof clearNarrativeScene === 'function') clearNarrativeScene(); } catch (e) {}
+        try { if (el && el.body) el.body.classList.remove('narrativeScene','scene-inner','cutscene-active','cutscene-bubble','ui-narrative','narrative-active','choosing','exploring','inner'); } catch (e) {}
+        try { if (el && el.choicePanel) el.choicePanel.classList.remove('open'); } catch (e) {}
+        // Unlock cinematic: if this episode unlocked a location that has a reveal
+        // video, play it BEFORE the map appears. Its Continue → map, centre the new
+        // location, and dissolve its fog.
+        let _cine = null; try { _cine = window.prideUnlockVideoFor ? window.prideUnlockVideoFor(window.__prideScriptUnlocks) : null; } catch (e) {}
+        if (_cine && typeof window.pridePlayUnlockCinematic === 'function') {
+          window.pridePlayUnlockCinematic(_cine.locId, _cine.url, () => {
+            // Hold the fog BEFORE the map shows → the map returns WITH the fog already
+            // in place (no clear-first / pop-in), then it dissolves after a short beat.
+            try { if (window.prideHoldFog) window.prideHoldFog(_cine.locId); } catch (e) {}
+            if (typeof showMap === 'function') showMap();
+            try { window.prideActiveEp = _cine.locId; } catch (e) {}
+            try { if (window.prideApplyMapTod) { const L=(window.__mapLocs||[]).find(x=>x.id===_cine.locId); window.prideApplyMapTod(L&&L.time); } } catch (e) {}
+            try { if (window.prideCenterOn) window.prideCenterOn(_cine.locId); else if (window.prideCenterPoi) window.prideCenterPoi(_cine.locId); } catch (e) {}
+            try { if (window.prideHoldFog) window.prideHoldFog(_cine.locId); } catch (e) {}   // re-assert after refresh
+            setTimeout(() => { try { if (window.prideDisperseFog) window.prideDisperseFog(_cine.locId); } catch (e) {} }, 900);
+          });
+          return;
+        }
+        if (typeof showMap === 'function') showMap();
+      };
+      // Faz 3 — show the chapter-end dashboard first, then continue to the map
+      if (typeof window.prideEpiDashboard === 'function') {
+        let ttl = ''; try { ttl = window.__prideEpisodeTitle || ''; } catch (e) {}
+        if (!ttl && typeof currentVenue === 'string') ttl = currentVenue.replace(/[-_]/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+        window.prideEpiDashboard(ttl, toMap);
+      } else { toMap(); }
+    });
+    document.body.appendChild(b);
+  }
+  b.style.display = 'block';
+}
+
 function renderLine() {
+  // Reset the cutscene-bubble box-hide by default; only cutscene bubble beats re-add it.
+  if (el.body) el.body.classList.remove('cutscene-bubble');
+  hideEndContinue();   // hide the end button on every non-END render
   // End of script
   if (!lines.length) {
     el.lineCounter.textContent = `0 / 0`;
@@ -15706,9 +15989,22 @@ function renderLine() {
     el.lineCounter.textContent = `${lines.length} / ${lines.length}`;
     el.dialogBox.className = 'end';
     el.speakerLabel.textContent = 'END';
-    el.dialogText.textContent = 'The scene is over. Tap ↺ to replay.';
     el.continueHint.style.display = 'none';
     applyStage(null);
+    if (activePack === 'pride' && window.__prideEncounterMode) {
+      // Encounters just return straight to the map (apply the script's unlocks first).
+      // No Continue button — the tap that reached END ends the scene.
+      try { if (typeof window.prideApplyUnlocks === 'function') window.prideApplyUnlocks(window.__prideScriptUnlocks||[]); } catch (e) {}
+      try { if (typeof window.prideEndEncounter === 'function') window.prideEndEncounter(); } catch (e) {}
+      return;
+    }
+    if (activePack === 'pride') {
+      // Pride episodes end with a Continue → map button (marks complete + unlocks).
+      el.dialogText.textContent = 'End of episode.';
+      showEndContinue();
+    } else {
+      el.dialogText.textContent = 'The scene is over. Tap ↺ to replay.';
+    }
     return;
   }
   if (idx < 0) idx = 0;
@@ -15746,6 +16042,17 @@ function renderLine() {
   // Mechanic → slide a toast down from the top, then advance silently so
   // it reads as attached to the surrounding dialog/narrative beat.
   if (line.type === 'mechanic') {
+    // Character intro: (Intro: mr_darcy) — pause the script, play that character's
+    // unlock video (name / origin / two traits reveal in the last second), then resume
+    // on Continue. Author it after 2-3 plain narrative beats, before the figure appears.
+    if (line.kind === 'intro') {
+      const cid = ((line.parts && line.parts[0]) || '').trim();
+      if (cid && typeof window.pridePlayCharUnlock === 'function' && (!window.prideHasCharUnlock || window.prideHasCharUnlock(cid))) {
+        window.pridePlayCharUnlock(cid, function(){ idx++; renderLine(); });
+        return;   // resumes the script when Continue is pressed
+      }
+      idx++; renderLine(); return;   // no video registered → skip cleanly
+    }
     // Pride combat: (Combat: darcy-duel) — pause the script, run the card duel
     // as a full-screen overlay, then apply results and resume on the next line.
     if (line.kind === 'combat') {
@@ -15771,8 +16078,20 @@ function renderLine() {
     // beat so the player reads it. showMechToast still collects it for the
     // logbook (and suppresses the old top toast).
     if (typeof activePack !== 'undefined' && activePack === 'pride' && line.kind === 'discovery') {
-      showMechToast(line.kind, line.parts);
-      pridePaintDiscovery((line.parts && line.parts[0]) || '');
+      const dparts = line.parts || [];
+      // Structured: (Discovery: suitor | fact text) → record on the suitor (Faz 1)
+      if (dparts.length >= 2) {
+        const sid = (dparts[0] || '').trim();
+        const fact = dparts.slice(1).join(' | ').trim();
+        try { if (typeof window.prideDiscoverFact === 'function') window.prideDiscoverFact(sid, fact); } catch (e) {}
+        try { if (typeof window.prideEpiRecord === 'function') window.prideEpiRecord('discovery', [sid, fact]); } catch (e) {}   // log with suitor id → dashboard XP bonus
+        showMechToast('discovery', [fact]);
+        pridePaintDiscovery(fact);
+        return;
+      }
+      try { if (typeof window.prideEpiRecord === 'function') window.prideEpiRecord('discovery', dparts); } catch (e) {}
+      showMechToast(line.kind, dparts);
+      pridePaintDiscovery((dparts && dparts[0]) || '');
       return;   // next tap → next() does idx++/renderLine() past this marker
     }
     // Meta meters: (Scandal:+N) / (Allure:+N) — nudge the world meters + toast.
@@ -15788,6 +16107,21 @@ function renderLine() {
       try { if (typeof window.prideDiscover === 'function') window.prideDiscover(sid); } catch (e) {}
       if (typeof window.prideSuitorIntro === 'function') { window.prideSuitorIntro(sid, function () { idx++; renderLine(); }); return; }
       showMechToast('discovery', ['New suitor discovered']);
+      idx++; renderLine(); return;
+    }
+    // Suitor XP: (XP: suitor | +N) — add XP (may level up), toast.
+    if (line.kind === 'xp') {
+      const sid = ((line.parts && line.parts[0]) || '').trim();
+      const n = parseInt((line.parts && line.parts[1]) || '0', 10) || 0;
+      try { if (typeof window.prideAddXp === 'function') window.prideAddXp(sid, n); } catch (e) {}
+      showMechToast('xp', line.parts);
+      idx++; renderLine(); return;
+    }
+    // Item: (Item: itemId) — add to the collection, toast.
+    if (line.kind === 'item') {
+      const it = ((line.parts && line.parts[0]) || '').trim();
+      try { if (typeof window.prideAddItem === 'function') window.prideAddItem(it); } catch (e) {}
+      showMechToast('item', line.parts);
       idx++; renderLine(); return;
     }
     showMechToast(line.kind, line.parts);
@@ -15962,14 +16296,18 @@ function renderLine() {
     if (matched) {
       idx++; // step into the block
     } else {
-      // Skip ahead to the matching (EndIf), then past it. NOTE: the
-      // engine's main array is `lines`, not `script` — using `script`
-      // here threw ReferenceError silently and left idx parked one
-      // step inside the IfChoice:0 block, so subsequent taps would
-      // render that body regardless of which option the player picked.
-      idx++;
-      while (idx < lines.length && lines[idx].type !== 'endif') idx++;
-      idx++; // skip the endif itself
+      // Skip this branch's body. Boundary = the next (IfChoice:…) / (EndIf) OR,
+      // for the LAST branch (authored scripts omit (EndIf)), the next (Situation:…)
+      // that begins the common continuation. We first step past this branch's own
+      // opening (Situation:…) so it doesn't stop us immediately.
+      idx++;                                            // past the (IfChoice) marker
+      if (idx < lines.length && lines[idx].type === 'situation') idx++;   // past the branch's own situation
+      while (idx < lines.length &&
+             lines[idx].type !== 'ifchoice' &&
+             lines[idx].type !== 'endif' &&
+             lines[idx].type !== 'choice' &&
+             lines[idx].type !== 'situation') idx++;
+      if (idx < lines.length && lines[idx].type === 'endif') idx++;       // consume an explicit (EndIf)
     }
     renderLine();
     return;
@@ -15986,7 +16324,17 @@ function renderLine() {
   // backgrounds — useful for off-stage speakers (dog barking behind a door,
   // a voice from off-camera) without forcing the writer into scene mode.
   const wantsBubble = currentDialogState && currentDialogState.ui === 'bubble';
-  if (line.type === 'line' && (el.body.classList.contains('narrativeScene') || wantsBubble)) {
+  // If a full-frame background image is up (cutscene), the dialogue must read as
+  // a bubble over it — never the cast-large box with figures on top of the still.
+  const cutsceneActive = el.body.classList.contains('cutscene-active');
+  if (line.type === 'line' && (el.body.classList.contains('narrativeScene') || wantsBubble || cutsceneActive)) {
+    if (cutsceneActive) {
+      // #dialogBox stays as an invisible tap-to-advance layer (CSS makes it
+      // transparent). Clear its text/speaker + show the continue chevron so the
+      // player can still tap through the cutscene's bubbles.
+      if (typeTimer) { clearInterval(typeTimer); typeTimer = null; }
+      el.body.classList.add('cutscene-bubble');   // hide bottom box; tap-anywhere advances
+    }
     handleSceneDialogLine(line);
     return;
   }
@@ -16020,6 +16368,9 @@ function renderLine() {
   }
 
   // Regular dialog line
+  // Reaching the bottom-box path means we're NOT in a bubble/cutscene beat —
+  // clear any lingering speech bubble so it doesn't hang over the next line.
+  if (typeof hideSceneBubbles === 'function') hideSceneBubbles();
   const speaker = line.speaker;
   el.dialogBox.className = speaker;
   // Toggle the global "narrative-active" body class so the fixed dark
@@ -16041,7 +16392,9 @@ function renderLine() {
   applyStage(speaker);
   // Per-line cast tuner (dev): apply any saved override for this line + tell the
   // dev panel which line is on screen so it can edit it live.
-  try { if (activePack === 'pride' && typeof window.prideLineCtx === 'function') window.prideLineCtx(line, speaker); } catch (e) {}
+  // Encounters drive figures via castSpeak's shot/reverse-shot path; skip the per-line
+  // enter/exit animator (it fights that + can leave figures stuck hidden).
+  try { if (activePack === 'pride' && !window.__prideEncounterMode && typeof window.prideLineCtx === 'function') window.prideLineCtx(line, speaker); } catch (e) {}
   typeText(renderText(line.text));
   // Swap in the cutscene image if this line triggers one
   if (line.cutscene === '__clear__') clearCutscene();
@@ -16177,6 +16530,8 @@ const END_SCENE_LINES_PRIDE = [
   { t: 12.6, text: "End of Episode — The Netherfield Ball." },
 ];
 function startPrideEnd() {
+  // (b) episode-completion tracking: reaching the coda = this episode is done.
+  try { if (typeof window.prideMarkComplete === 'function') window.prideMarkComplete(currentVenue); } catch (e) {}
   const scene  = document.getElementById('endScene');
   const video  = document.getElementById('endVideo');
   const dialog = document.getElementById('endDialog');
@@ -17925,10 +18280,12 @@ function startChoice(options) {
     } else {
       textEl.textContent = opt.text;
     }
-    // P&P: right-side aux — trait label pill and/or continue arrow.
-    if (activePack === 'pride' && (opt.trait || opt.advance)) {
+    // P&P: right-side aux — trait label pill and/or continue arrow, and a subtle
+    // "main path" dot marking the canon option the story is authored to follow.
+    if (activePack === 'pride' && (opt.trait || opt.advance || opt.main)) {
       const aux = document.createElement('div'); aux.className = 'choice-aux';
       if (opt.trait) { const tp = document.createElement('span'); tp.className = 'choice-trait'; tp.textContent = opt.trait; aux.appendChild(tp); }
+      if (opt.main) { const d = document.createElement('span'); d.className = 'choice-main-dot'; d.title = 'ana hat'; aux.appendChild(d); }
       if (opt.advance) { const c = document.createElement('span'); c.className = 'choice-cont'; c.innerHTML = PRIDE_ARROW_SVG; aux.appendChild(c); }
       btn.appendChild(aux);
     }
@@ -17987,6 +18344,7 @@ function endChoice(chosenIdx, chosenOpt) {
     lastPlayerInput = chosenOpt.typed.replace(/[.,!?;:…]+$/, '').trim();
     }
     lastChosenIdx = chosenIdx;
+    try { if (chosenOpt && chosenOpt.trait && typeof window.prideEpiRecord === 'function') window.prideEpiRecord('trait', [chosenOpt.trait]); } catch (e) {}
     console.log('[choice] picked idx=' + chosenIdx,
                 'speaker=' + (chosenOpt && chosenOpt.speaker),
                 'text=' + (chosenOpt && chosenOpt.text));
@@ -18453,6 +18811,15 @@ document.getElementById('narrativeSceneLayer').addEventListener('click', () => {
   if (el.body.classList.contains('awaiting-gift')) return;
   if (el.body.classList.contains('narrativeScene')) next();
 });
+// Cutscene bubble beat: the bottom box is hidden, so make the cutscene image
+// itself the tap-to-advance target (CSS enables pointer-events for this state).
+(function(){ const cl = document.getElementById('cutsceneLayer'); if (!cl) return;
+  cl.addEventListener('click', () => {
+    if (el.body.classList.contains('gift-picking')) return;
+    if (el.body.classList.contains('awaiting-gift')) return;
+    if (el.body.classList.contains('cutscene-bubble')) next();
+  });
+})();
 el.objectFocus.addEventListener('click', (e) => {
   // Tap on empty area of focus screen also advances
   if (e.target === el.objectFocus || e.target === el.focusImage) {
@@ -18581,6 +18948,9 @@ document.getElementById('btnRestart').addEventListener('click', () => {
 
 // Script loader, invoked by the external editor (editor.html) via postMessage.
 function loadScript(text) {
+  try { if (typeof prideRegisterCastSpeakers === 'function') prideRegisterCastSpeakers(text); } catch (e) {}
+  try { if (typeof window.prideEpiReset === 'function') window.prideEpiReset(); } catch (e) {}   // Faz 3: baseline chapter log
+  try { window.__prideScriptUnlocks = (typeof window.prideScanUnlocks === 'function') ? window.prideScanUnlocks(text) : []; } catch (e) { window.__prideScriptUnlocks = []; }   // Faz 4: forks declared by this episode
   const parsed = parseScript(text);
   lines = parsed.main;
   OBJECTS = parsed.objects;
@@ -19144,6 +19514,8 @@ el.body.classList.add('rain-off');
 function showMap() {
   setFlow('map');
   flowEl.mapScroll.scrollTo({ left: 0, behavior: 'auto' });
+  // Tell the editor chrome we left the episode (hides its "Go to End" pill).
+  try { if (window.parent && window.parent !== window) window.parent.postMessage({ type:'epFlow', inEpisode:false }, '*'); } catch (e) {}
 }
 
 // ============================================================
@@ -19238,6 +19610,277 @@ function venueCountForPack(packId) {
   } catch (e) {
     console.warn('[custom-venues] failed to load', e);
   }
+})();
+
+// ============================================================
+// EPISODE LOCATIONS — sync the pride map's EPISODE pins from the
+// author's episode-locations.json (the same file the Episode manager
+// writes). Purely ADDITIVE: built-in hardcoded venues (netherfield-ball,
+// longbourn, meryton, lucas-lodge, pemberley) are left untouched so the
+// working Netherfield episode is never disturbed. Only NEW episode-bearing
+// locations (authored via the tool) get added + pinned at their real x/y.
+// Interactive locations and short stories are not touched.
+(function mergeEpisodeLocationsIntoMap() {
+  fetch('worlds/pride-and-prejudice/episode-locations.json', { cache: 'no-store' })
+    .then(r => r.ok ? r.json() : null).then(j => {
+      if (!j || !Array.isArray(j.locations)) return;
+      const byId = {}; j.locations.forEach(l => { byId[l.id] = l; });
+      let added = 0;
+      j.locations.forEach(l => {
+        if (!l.episode) return;                       // only episode-launch locations
+        if (VENUES[l.id]) return;                     // built-in / already defined → leave alone
+        const reqId = l.requires || null;
+        const reqTitle = reqId && byId[reqId] ? (byId[reqId].title || reqId) : reqId;
+        const epPath = String(l.episode).startsWith('episodes/') ? l.episode : ('episodes/' + l.episode);
+        VENUES[l.id] = {
+          title: l.title || l.id,
+          kind: reqId ? 'Episode · Locked' : 'Episode',
+          cover: `worlds/pride-and-prejudice/${epPath}/cover.jpg`,
+          desc: '',
+          startable: !reqId,
+          requirement: reqId ? ('Önce “' + reqTitle + '” bölümünü bitir') : undefined,
+          pack: 'pride',
+          fromEpLoc: true,
+          episode: l.episode,           // e.g. episodes/authored/rosings-park
+          epX: l.x, epY: l.y, requires: reqId,
+        };
+        added++;
+      });
+      if (typeof buildBlindVenues === 'function') buildBlindVenues();
+      // One-time override CSS: episode pins are driven by the manager, so they
+      // stay visible even in the onboarding pride-ep1/2/3 states, and read as
+      // OPEN (teal) or LOCKED (dim + no pulse). Interactive pins and short
+      // stories are untouched — this only targets [data-ep].
+      if (!document.getElementById('epLocSyncCss')) {
+        const st = document.createElement('style'); st.id = 'epLocSyncCss';
+        st.textContent =
+          // manager-driven map: legacy onboarding hide-all no longer gates pins
+          'body.pride-ep1 #mapScreen .map-hotspot[data-pack="pride"], body.pride-ep2 #mapScreen .map-hotspot[data-pack="pride"], body.pride-ep3 #mapScreen .map-hotspot[data-pack="pride"]{ display:block; }' +
+          // manager unlock authority — 3 states: hidden · shown-locked (visible, dim, lock) · open (teal)
+          '.map-hotspot[data-mgr="hidden"]{ display:none !important; }' +
+          '.map-hotspot[data-mgr="shown-locked"]{ filter:grayscale(.7) brightness(.72); }' +
+          '.map-hotspot[data-mgr="shown-locked"] .pulse{ display:none; }' +
+          '.map-hotspot[data-mgr="shown-locked"] .label::after{ content:" \\1F512"; font-size:9px; opacity:.85; }' +
+          '.map-hotspot[data-ep="open"] .dot{ background:#6fe3c8; box-shadow:0 0 0 1.5px rgba(0,0,0,.55), 0 0 0 5px rgba(111,227,200,.30), 0 3px 12px rgba(0,0,0,.6); }' +
+          // "Start from here" — driven dynamically by the .starthere class (earliest playable, uncompleted episode)
+          '.map-hotspot .start-here{ display:none; }' +
+          '#mapScreen .map-hotspot.starthere .start-here{ display:block; margin-top:3px; color:#6fe3c8; font:800 8.5px/1 "Inter",system-ui,sans-serif; letter-spacing:.1em; text-transform:uppercase; text-shadow:0 1px 6px rgba(0,0,0,.9); }' +
+          // Faz 4 — exclusive-fork pins: pink pulsing dot + "Continue" badge
+          '#mapScreen .map-hotspot.fork .dot{ background:#f0a0be; box-shadow:0 0 0 1.5px rgba(0,0,0,.55),0 0 0 6px rgba(224,102,138,.34),0 3px 12px rgba(0,0,0,.6); }' +
+          '#mapScreen .map-hotspot.fork .dot-wrap{ animation:zoomPinPulse 2.2s ease-in-out infinite; }' +
+          '.map-hotspot .fork-badge{ display:block; margin-top:3px; color:#f4a6c0; font:800 8.5px/1 "Inter",system-ui,sans-serif; letter-spacing:.1em; text-transform:uppercase; text-shadow:0 1px 6px rgba(0,0,0,.9); }' +
+          '#mapScreen .map-hotspot.fork.side .dot{ background:#f0c060; box-shadow:0 0 0 1.5px rgba(0,0,0,.55),0 0 0 6px rgba(240,185,104,.34),0 3px 12px rgba(0,0,0,.6); }' +
+          '.map-hotspot.fork.side .fork-badge{ color:#f4cf8a; letter-spacing:0; }' +
+          // active episode sub-text: "Continue" / "Start Here"
+          '.map-hotspot .ep-badge{ display:block; margin-top:3px; color:#6fe3c8; font:800 8.5px/1 "Inter",system-ui,sans-serif; letter-spacing:.1em; text-transform:uppercase; text-shadow:0 1px 6px rgba(0,0,0,.9); }' +
+          // completed episode → check glyph INSIDE the dot (mirrors the Short Stories magnifier pin, just a ✓)
+          '#mapScreen .map-hotspot.done .dot-wrap{ width:30px; height:30px; animation:none; }' +
+          '#mapScreen .map-hotspot.done .dot{ width:30px; height:30px; border-width:3px; background-color:#4bbf8a;'
+          + " background-image:url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%230d3b34' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 13l4 4 10-10'/%3E%3C/svg%3E\");"
+          + ' background-repeat:no-repeat; background-position:center; background-size:17px 17px; box-shadow:0 0 0 1.5px rgba(0,0,0,.55),0 0 0 5px rgba(75,191,138,.30),0 3px 12px rgba(0,0,0,.6); }' +
+          // "NEW" — sub-text (like Continue), pink = interactive-location colour
+          '.map-hotspot .new-badge{ display:block; margin-top:3px; color:#ff9ec9; font:800 8.5px/1 "Inter",system-ui,sans-serif; letter-spacing:.1em; text-transform:uppercase; text-shadow:0 1px 6px rgba(0,0,0,.9); }' +
+          // short-story rail: hidden (not appeared) / locked (visible, dim) / open
+          'body.pride-shorts-hidden #pmcShorts{ display:none !important; }' +
+          // the map "Meryton — High St" (meryton-zoom) magnifier pin IS the
+          // Short Stories entry — gate it by the same state so it only appears
+          // once Short Stories unlocks (its branch/tier), not at Tur 1.
+          'body.pride-shorts-hidden #mapScreen .map-hotspot[data-poi="meryton-zoom"]{ display:none !important; }' +
+          'body.pride-shorts-locked #mapScreen .map-hotspot[data-poi="meryton-zoom"]{ opacity:.42; filter:grayscale(.75); }' +
+          'body.pride-shorts-locked #pmcShorts .stack{ filter:grayscale(.65) brightness(.4); }' +
+          'body.pride-shorts-locked #pmcShorts .pmc-lock{ display:grid; position:absolute; right:14px; bottom:15px; width:28px; height:28px; border-radius:50%; background:rgba(8,5,12,.92); border:1px solid rgba(255,255,255,.5); place-items:center; box-shadow:0 3px 10px rgba(0,0,0,.6); }';
+        document.head.appendChild(st);
+      }
+      window.__epLocs = j.locations;   // episode-locations (mirror of master)
+      // (b) completion store + (c) runtime unlock recompute — manager (map-locations.json) is the SINGLE authority
+      window.prideCompleted = function(){ try{ return JSON.parse(localStorage.getItem('rai.completedEps')||'[]'); }catch(e){ return []; } };
+      window.prideMarkComplete = function(id){ if(!id) return; try{ const s=new Set(window.prideCompleted()); if(!s.has(id)){ s.add(id); localStorage.setItem('rai.completedEps', JSON.stringify([...s])); } }catch(e){}
+        try { if (typeof window.prideApplyUnlocks === 'function') window.prideApplyUnlocks(window.__prideScriptUnlocks||[]); } catch(e){}   // Faz 4: apply this episode's forks
+        try { if (typeof window.prideEliminateSiblings === 'function') window.prideEliminateSiblings(id); } catch(e){}   // same-tur unchosen episodes vanish
+        try { const L=(window.__mapLocs||[]).find(x=>x.id===id); if(L && L.suitor && typeof window.prideDiscover==='function') window.prideDiscover(L.suitor); } catch(e){}   // unlock this episode's bound suitor
+        if (typeof window.prideRefreshMapLocks === 'function') window.prideRefreshMapLocks(); };
+      // load the master manifest (all tiers + unlockedBy) so we can gate episode + interactive pins
+      fetch('worlds/pride-and-prejudice/map-locations.json', { cache:'no-store' }).then(r=>r.ok?r.json():null).then(mm=>{ window.__mapLocs = (mm&&mm.locations)||[]; if (typeof window.prideRefreshMapLocks==='function') window.prideRefreshMapLocks(); if (typeof window.prideLoadForkEdges==='function') window.prideLoadForkEdges(); }).catch(()=>{});
+      // Fork/branch edges = the (Unlock:) tags inside each episode's script.
+      // These are the SAME lines drawn on the story-map. We scan every
+      // episode's script once and cache source→[targets], so map gating can
+      // follow the lines directly (not only the runtime forceOpen store,
+      // which the in-game completion path doesn't always populate).
+      window.__prideForkEdges = window.__prideForkEdges || {};
+      window.prideLoadForkEdges = async function(){
+        const master = window.__mapLocs || [];
+        await Promise.all(master.map(async l => {
+          try {
+            let us = [];
+            if (l.episode) {   // scripted episode → scan its (Unlock:) block
+              const ep = String(l.episode).startsWith('episodes/') ? l.episode : ('episodes/' + l.episode);
+              const url = 'worlds/pride-and-prejudice/' + ep + '/scripts/main.txt';
+              const r = await fetch(url, { cache:'no-store' });
+              if (r.ok) { const txt = await r.text();
+                us = (typeof window.prideScanUnlocks==='function') ? window.prideScanUnlocks(txt) : []; }
+            }
+            // placeholder / script-less → edges stored on the location itself
+            if (!us.length && Array.isArray(l.unlocks)) us = l.unlocks;
+            // keep the FULL unlock objects (id + group/kind/timer/…) so side-pairs
+            // (timer) and main forks are set up correctly, not just visibility.
+            if (us.length) window.__prideForkEdges[l.id] = us.filter(u => u && u.id);
+          } catch(e){}
+        }));
+        if (typeof window.prideRefreshMapLocks==='function') window.prideRefreshMapLocks();
+      };
+      window.prideRefreshMapLocks = function(){
+        const mapWorld = document.querySelector('.map-world'); if (!mapWorld) return;
+        const done = new Set(window.prideCompleted());
+        const master = window.__mapLocs || [];
+        const epById = {}; (window.__epLocs||[]).forEach(l=>{ epById[l.id]=l; });
+        const titleOf = id => { const e = master.find(x=>x.id===id); return (e&&e.title)||id; };
+        // two gates per location:
+        //   appearsAfter → pin becomes VISIBLE (default: same as the active gate)
+        //   unlockedBy   → pin becomes PLAYABLE/active
+        // → 3 states: hidden · shown-locked (visible but not playable) · open (active)
+        // Faz 4 — dynamic unlocks (forceOpen) + declined (exclusive pair losers)
+        const fo = new Set((typeof window.prideForceOpen==='function' ? window.prideForceOpen() : [])||[]);
+        const declined = new Set((typeof window.prideDeclinedEps==='function' ? window.prideDeclinedEps() : [])||[]);
+        // ÇİZGİ (dal/fork) tabanlı kilit — story-map'teki çizgiler tek doğru:
+        //   • Tur 1 = kök(ler), baştan açık.
+        //   • Başka her nokta YALNIZCA tamamlanan bir bölümün dalı (çizgi)
+        //     oraya işaret edince açılır (→ forceOpen). Tur, sadece dizilim/
+        //     satır içindir; bir tur'u bitirmek tüm sonraki tur'u AÇMAZ.
+        // Reverse the fork edges: hangi TAMAMLANMIŞ bölümler bu noktaya
+        // çizgi çekiyor? Biri bile tamamlandıysa nokta açılır. (Çizgiler =
+        // script'lerdeki (Unlock:) = story-map'te çizilen dallar.)
+        const edges = window.__prideForkEdges || {};
+        const openedByLine = new Set();
+        // Full unlock objects from every COMPLETED source (id + group/kind/timer).
+        const openedUnlocks = [];
+        Object.keys(edges).forEach(src => { if (done.has(src)) (edges[src]||[]).forEach(u => { if(u&&u.id){ openedByLine.add(u.id); openedUnlocks.push(u); } }); });
+        // STICKY + PAIR SETUP: apply the full unlock data so (a) the node stays
+        // open across reloads (persisted forceOpen) and (b) side-pairs (timer) /
+        // main forks register their group in meta.pairs → countdown + decision
+        // screen work. prideApplyUnlocks is idempotent and skips declined ids.
+        try {
+          const existingPairs = (typeof window.pridePairs==='function' ? window.pridePairs() : {}) || {};
+          const pending = openedUnlocks.filter(u => u.group ? !existingPairs[u.group] : (!fo.has(u.id) && !declined.has(u.id)));
+          if (pending.length && typeof window.prideApplyUnlocks === 'function') {
+            window.prideApplyUnlocks(pending);
+            pending.forEach(u => { if(!declined.has(u.id)) fo.add(u.id); });   // reflect in this pass too
+          }
+        } catch(e){}
+        const gateState = l => {
+          if (declined.has(l.id)) return { appeared:false, playable:false, mgr:'hidden' };   // road not taken
+          if (fo.has(l.id))       return { appeared:true,  playable:true,  mgr:'open' };       // bir dal bunu açtı (runtime)
+          if (openedByLine.has(l.id)) return { appeared:true, playable:true, mgr:'open' };     // bir çizgi bunu açtı (script)
+          const t = (typeof l.tier==='number' && l.tier>0) ? l.tier : null;
+          if (t === 1) return { appeared:true, playable:true, mgr:'open' };   // kök: baştan açık
+          // legacy statik kenarlar (dropdown) hâlâ desteklensin
+          if (l.appearsAfter || l.unlockedBy) {
+            const appeared = !l.appearsAfter || done.has(l.appearsAfter);
+            const playable = !l.unlockedBy || done.has(l.unlockedBy);
+            return { appeared, playable, mgr: !appeared ? 'hidden' : (playable ? 'open' : 'shown-locked') };
+          }
+          // gelen dal yok + Tur 1 değil → bir çizgi açana kadar gizli
+          return { appeared:false, playable:false, mgr:'hidden' };
+        };
+        // "Start from here" targets = the earliest currently-playable, not-yet-completed
+        // episode(s) on the map (excludes placeholders). Updates as episodes complete.
+        const _cand = master
+          .filter(l => l.type === 'episode' && !l.archived && l.mode !== 'placeholder')
+          .map(l => ({ l, g: gateState(l), ord: (typeof l.order === 'number' ? l.order : 999) }))
+          .filter(x => x.g.appeared && x.g.playable && !done.has(x.l.id));
+        const _minOrd = _cand.length ? Math.min(..._cand.map(x => x.ord)) : null;
+        const startIds = new Set(_cand.filter(x => x.ord === _minOrd).map(x => x.l.id));
+        master.forEach(l => {
+          if (l.type !== 'episode' && l.type !== 'interactive') return;   // pins only; shorts handled below
+          // Skip phantom episodes: no script assigned AND no OWN pin. Such a
+          // slot (e.g. "meryton", which shares coords with the Short Stories
+          // "meryton-zoom" pin) must NOT hijack another location's pin.
+          if (l.type === 'episode' && !l.episode && !mapWorld.querySelector('.map-hotspot[data-poi="' + l.id + '"]')) return;
+          const g = gateState(l);   // archive only sets episode content aside; the location/pin stays
+          // time-of-day lock: an episode tagged day/night is only playable at that time
+          // NOTE: `time` no longer LOCKS an episode — it drives the MAP BACKGROUND mood
+          // (day/dawn/sunset/night art) when that episode is the active one. See
+          // prideApplyMapTod + prideFocusActiveEpisode. So no time-gating here.
+          l.__timeLock = null;
+          let pin = mapWorld.querySelector('.map-hotspot[data-poi="' + l.id + '"]') || mapWorld.querySelector('.map-hotspot[data-poi="' + l.id + '-zoom"]');
+          if (!pin && l.type === 'episode' && l.x != null) {   // authored episode with no static pin → create
+            pin = document.createElement('div');
+            pin.className = 'map-hotspot'; pin.dataset.pack = 'pride'; pin.dataset.poi = l.id; pin.dataset.eploc = '1';
+            pin.innerHTML = '<div class="dot-wrap"><div class="pulse"></div><div class="dot"></div></div><div class="label">' + (l.title || l.id) + '</div>';
+            pin.addEventListener('click', () => { if (typeof openPOI === 'function') openPOI(l.id); });
+            mapWorld.appendChild(pin);
+          }
+          if (!pin) return;
+          // Apply map-tracer moves (map-roads.json → locOverrides) non-destructively.
+          const _ov = (window.__prideLocOverrides||{})[l.id];
+          const _lx = (_ov && _ov.x!=null) ? _ov.x : l.x;
+          const _ly = (_ov && _ov.y!=null) ? _ov.y : l.y;
+          if (_lx != null) pin.style.left = _lx + '%';
+          if (_ly != null) pin.style.top  = _ly + '%';
+          pin.dataset.mgr = g.mgr;
+          if (declined.has(l.id)) { pin.style.display='none'; } else if (pin.style.display==='none') { pin.style.display=''; }
+          const label = pin.querySelector('.label');
+          if (label) { ['.ep-badge','.new-badge','.start-here'].forEach(sel=>{ const e=label.querySelector(sel); if(e) e.remove(); }); }   // rebuild managed badges each pass
+          // ---- pair (fork) badge: main = yellow dot + "Continue", side = orange dot + timer (unchosen only) ----
+          const grp = (typeof window.pridePairOf === 'function') ? window.pridePairOf(l.id) : null;
+          {
+            let fexist = label && label.querySelector('.fork-badge');
+            if (grp) {
+              pin.classList.add('fork'); pin.dataset.fork = grp.group;
+              pin.classList.toggle('side', grp.kind === 'side');
+              if (label && !fexist) { fexist=document.createElement('span'); fexist.className='fork-badge'; label.appendChild(fexist); }
+              if (fexist) fexist.textContent = (grp.kind === 'side')
+                ? (window.prideFmtTime ? window.prideFmtTime(grp.remaining!=null?grp.remaining:(grp.timer||0)) : '')
+                : 'Continue';
+            } else { pin.classList.remove('fork','side'); if (pin.dataset.fork) delete pin.dataset.fork; if (fexist) fexist.remove(); }
+          }
+          if (l.type === 'episode') {
+            pin.dataset.ep = g.playable ? 'open' : 'locked';
+            const v = (typeof VENUES !== 'undefined') && VENUES[l.id];
+            if (v) { v.startable = g.playable; v.requirement = g.playable ? undefined : ('Önce “' + titleOf(l.unlockedBy) + '” bölümünü bitir'); }
+            pin.classList.toggle('starthere', startIds.has(l.id));   // drives map centering
+            pin.classList.toggle('done', done.has(l.id));
+            // completed → check glyph in the dot (via .done class, no sub-text);
+            // active → ONE current marker on the whole map: the earliest playable,
+            //   not-yet-completed episode (startIds). "Start Here" only on a pristine
+            //   game (nothing completed yet); "Continue" once you've progressed.
+            //   Other open non-fork episodes stay available pins with NO Start/Continue
+            //   sub-text — so "Start Here" and "Continue" can never appear at once.
+            //   (Forks are handled above via the fork-badge, so they're excluded here.)
+            if (label && !grp && !done.has(l.id) && g.playable && startIds.has(l.id)) {
+              // "Start Here" only on a truly pristine game (nothing completed AND nothing
+              // unlocked beyond the root). Any progress/unlock → this is "Continue", so the
+              // map can never show "Start Here" and "Continue" at the same time.
+              const pristine = (done.size === 0) && (fo.size === 0) && (openedByLine.size === 0);
+              const b=document.createElement('span'); b.className='ep-badge'; b.textContent = pristine ? 'Start Here' : 'Continue'; label.appendChild(b);
+            } else if (label && !grp && !done.has(l.id) && l.__timeLock) {
+              const b=document.createElement('span'); b.className='ep-badge'; b.style.color='#8fb0f0'; b.textContent = (l.__timeLock === 'night') ? 'At night' : 'By day'; label.appendChild(b);
+            }
+          } else if (l.type === 'interactive') {
+            // NEW badge for exactly one tur after an interactive first opens
+            if (g.mgr === 'open') {
+              if (window.prideMarkNewOpen) window.prideMarkNewOpen(l.id);
+              if (label && window.prideIsNew && window.prideIsNew(l.id)) { const b=document.createElement('span'); b.className='new-badge'; b.textContent='NEW'; label.appendChild(b); }
+            }
+          }
+        });
+        // short-story access (single pin-level entry) — gate the shorts rail (appears vs playable)
+        const shorts = master.find(l => l.type === 'short-story');
+        if (shorts) { const g = gateState(shorts);
+          document.body.classList.toggle('pride-shorts-hidden', g.mgr === 'hidden');
+          document.body.classList.toggle('pride-shorts-locked', g.mgr === 'shown-locked');
+          window.__shortsReq = g.playable ? null : shorts.unlockedBy; }
+        try { if (typeof window.prideSideTickStart === 'function') window.prideSideTickStart(); } catch(e){}   // CASE 2: side-pair countdown
+        // fog: clear a soft hole around every open location (+ Netherfield always visible as the start)
+        try { if (typeof window.prideUpdateFog === 'function') {
+          const openCoords = master.filter(l => (l.type==='episode'||l.type==='interactive') && l.x!=null && l.y!=null && gateState(l).appeared)
+            .map(l => ({ x:l.x, y:l.y }));
+          window.prideUpdateFog(openCoords);
+        } } catch(e){}
+        console.log('[map-locations] locks recomputed; completed =', [...done]);
+      };
+      if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', ()=>{ if(window.prideRefreshMapLocks) window.prideRefreshMapLocks(); }, { once: true });
+      else if (window.prideRefreshMapLocks) window.prideRefreshMapLocks();
+    }).catch(e => console.warn('[episode-locations] load failed', e));
 })();
 
 // Helper for loadActiveScript: returns the editor-saved script for a
@@ -19548,6 +20191,31 @@ function showWorldList() {
 }
 
 function openPOI(id) {
+  // Faz 4 — if this episode is part of an unchosen exclusive pair, open the
+  // decision screen instead of the location panel. Picking commits the fork.
+  if (typeof window.pridePairOf === 'function' && typeof window.pridePathChoice === 'function') {
+    const grp = window.pridePairOf(id);
+    if (grp) {
+      const paths = (grp.members||[]).map(mid => { const d=(grp.display&&grp.display[mid])||{}; const vv=(typeof VENUES!=='undefined'&&VENUES[mid])||{};
+        const loc=(window.__mapLocs||[]).find(l=>l.id===mid)||{}; const su=loc.suitor||'';
+        // the overflowing card figure = this episode's bound suitor
+        const figure = d.figure || (su ? ('worlds/pride-and-prejudice/characters/'+su+'/appearances/pride.png') : '');
+        const suName = (su && typeof window.prideSuitorName==='function') ? window.prideSuitorName(su) : '';
+        // short name for the button: title + surname (e.g. "Mr Fitzwilliam Darcy" → "Mr Darcy")
+        const sw=(suName||'').trim().split(/\s+/); const suShort = sw.length>2 ? (sw[0]+' '+sw[sw.length-1]) : suName;
+        // desc: prefer the location's own desc (fresh map-locations) over any stale
+        // saved pair display, then venue, then suitor name.
+        const desc = loc.desc || d.desc || vv.desc || (suShort ? ('with '+suShort) : '');
+        return { id:mid, title:d.title||vv.title||mid, desc:desc, cover:d.cover||vv.cover||'', figure:figure, suitor:su, actionLabel:'Choose '+(suShort || d.title || vv.title || mid) }; });
+      const remaining = (grp.kind==='side') ? (grp.remaining!=null?grp.remaining:(grp.timer||0)) : 0;
+      window.pridePathChoice(paths, (i,p)=>{
+        try { window.pridePickPath(grp.group, p.id); } catch(e){}
+        try { if (window.prideRefreshMapLocks) window.prideRefreshMapLocks(); } catch(e){}
+        openPOI(p.id);   // group.chosen is now set → falls through to the normal panel
+      }, { remaining: remaining });
+      return;
+    }
+  }
   const v = VENUES[id];
   if (!v) return;
   currentVenue = id;
@@ -19578,7 +20246,8 @@ function openPOI(id) {
   if (v.startable) {
     btn.classList.add('start');
     btn.disabled = false;
-    btn.textContent = 'Go to Here';
+    // unlocked + already the active/in-progress episode → "Continue"; otherwise "Go to Here"
+    btn.textContent = (id === window.prideActiveEp) ? 'Continue' : 'Go to Here';
   } else if (showsUnlock) {
     btn.classList.add('unlock');
     btn.disabled = false;
@@ -19619,16 +20288,18 @@ function dismissPOI() {
 }
 
 async function startDateHere() {
-  // Fast-forward stand-in: ONLY placeholder episodes (no real script yet) show
-  // the black "episode playing" screen so we can jump to the next map state.
-  // Real episodes (e.g. the Netherfield Ball) play for real — no stand-in.
-  const PRIDE_SIM_STANDINS = ['lucas-lodge', 'longbourn'];
-  const _ep = document.body.classList;
-  if ((_ep.contains('pride-ep1') || _ep.contains('pride-ep2') || _ep.contains('pride-ep3'))
-      && currentVenue === window.prideActiveEp
-      && PRIDE_SIM_STANDINS.indexOf(currentVenue) !== -1) {
+  // Fast-forward PLACEHOLDER episodes (manager mode:'placeholder', no real script):
+  // show the one-page "episode playing" screen; completing it marks the episode
+  // done so the manager's unlock rules open the next locations. Real episodes
+  // (e.g. the Netherfield Ball) fall through and play for real.
+  // Any scriptless episode is a placeholder in-game: its on-screen button
+  // simulates "playing" so its unlock rules (incl. timed pairs) still fire.
+  const _ph = (window.__mapLocs || []).find(l => l.id === currentVenue && (l.mode === 'placeholder' || (l.type === 'episode' && !l.episode)));
+  if (_ph) {
+    window.__phEp = currentVenue;
     if (typeof closePOI === 'function') closePOI();
     if (typeof window.pridePlayEp === 'function') window.pridePlayEp();
+    else { if (window.prideMarkComplete) window.prideMarkComplete(currentVenue); if (typeof showMap === 'function') showMap(); }
     return;
   }
   const v = VENUES[currentVenue];
@@ -21417,19 +22088,19 @@ function stopLondonAmbient() {
        no pins/dots, no walking avatars, no tooltips, no HUD. */
     'body.pc-firststate .map-hotspot, body.pc-firststate .map-avatar, body.pc-firststate .ambient-pin, body.pc-firststate #mapAmbientTip, body.pc-firststate #pridePcHud, body.pc-firststate #prideMapChrome{ display:none !important; }',
     /* ---- first gameplay state (pride-ep1): only Lucas Lodge, no ambient, locked shorts ---- */
-    'body.pride-ep1 #mapScreen .map-hotspot{ display:none !important; }',
+    '/* retired: manager (map-locations) now controls pin visibility */',
     'body.pride-ep1 #mapScreen .map-hotspot[data-poi="lucas-lodge"]{ display:block !important; }',
     'body.pride-ep1 .map-avatar, body.pride-ep1 .ambient-pin, body.pride-ep1 .map-ambient, body.pride-ep1 #mapAmbientTip{ display:none !important; }',
     '.map-hotspot .start-here{ display:none; }',
-    'body.pride-ep1 #mapScreen .map-hotspot[data-poi="lucas-lodge"] .start-here{ display:block; margin-top:3px; color:#6fe3c8; font:800 8.5px/1 "Inter",system-ui,sans-serif; letter-spacing:.1em; text-transform:uppercase; text-shadow:0 1px 6px rgba(0,0,0,.9); }',
+    '/* retired: static Lucas-Lodge start-here — now driven dynamically by .starthere (earliest playable episode) */',
     '#pmcShorts .pmc-lock{ display:none; }',
-    'body.pride-ep1 #pmcShorts .stack{ filter:grayscale(.65) brightness(.4); }',
-    'body.pride-ep1 #pmcShorts .pmc-lock{ display:grid; position:absolute; right:14px; bottom:15px; width:28px; height:28px; border-radius:50%; background:rgba(8,5,12,.92); border:1px solid rgba(255,255,255,.5); place-items:center; box-shadow:0 3px 10px rgba(0,0,0,.6); }',
+    '/* retired: shorts lock now driven by manager (pride-shorts-locked) */',
+    '/* retired */',
     '#prideLockTip{ position:fixed; left:14px; bottom:82px; z-index:8000; max-width:240px; background:rgba(20,12,26,.92); color:#fff; border:1px solid rgba(255,255,255,.18); border-radius:12px; padding:9px 13px; font:600 12px/1.35 "Inter",system-ui,sans-serif; box-shadow:0 8px 22px rgba(0,0,0,.5); opacity:0; transform:translateY(6px); pointer-events:none; transition:opacity .25s ease, transform .25s ease; }',
     '#prideLockTip.on{ opacity:1; transform:translateY(0); }',
     /* ---- post-episode gameplay states (pride-ep2 / pride-ep3) ---- */
-    'body.pride-ep2 #mapScreen .map-hotspot, body.pride-ep3 #mapScreen .map-hotspot{ display:none !important; }',
-    'body.pride-ep2 #mapScreen .map-hotspot.map-pin, body.pride-ep3 #mapScreen .map-hotspot.map-pin{ display:block !important; }',
+    '/* retired: manager controls pin visibility (ep2/ep3) */',
+    '/* retired */',
     'body.pride-ep2 .map-avatar, body.pride-ep2 .ambient-pin, body.pride-ep2 .map-ambient, body.pride-ep2 #mapAmbientTip, body.pride-ep3 .ambient-pin, body.pride-ep3 .map-ambient, body.pride-ep3 #mapAmbientTip{ display:none !important; }',
     /* pin badge: bigger dot with an icon inside; border colour = state */
     '.map-hotspot .dot-wrap:has(.pin-badge){ width:auto; height:auto; }',
@@ -21493,13 +22164,11 @@ function stopLondonAmbient() {
   };
 
   function apply(){
-    const pack = document.body.getAttribute('data-pack') || (typeof activePack!=='undefined' ? activePack : '');
-    if(pack!=='pride') return;
-    document.querySelectorAll('#mapScreen .map-hotspot[data-pack="pride"]').forEach(h=>{
-      const need = GATE[h.dataset.poi] || STAGE.EP1;
-      h.classList.toggle('pride-locked', stage < need);
-    });
+    // Legacy 3-stage GATE retired — the manager (map-locations.json unlockedBy)
+    // is now the single unlock authority. Just keep the dev buttons in sync and
+    // hand off to the manager-driven recompute.
     document.querySelectorAll('#prideStageDev button').forEach(b=> b.classList.toggle('on', +b.dataset.s===stage));
+    if (typeof window.prideRefreshMapLocks === 'function') window.prideRefreshMapLocks();
   }
   window.applyPrideStage = apply;
   window.setPrideStage = function(s){ stage = Math.max(1, Math.min(3, s|0)); apply(); };
@@ -21518,6 +22187,31 @@ function stopLondonAmbient() {
   }
   function prideCenterLucas(){ prideCenterPoi('lucas-lodge'); }
   function prideCenterOn(poi){ requestAnimationFrame(()=>prideCenterPoi(poi)); [80,260,600].forEach(t=>setTimeout(()=>prideCenterPoi(poi),t)); }
+  window.prideCenterOn=prideCenterOn;
+  // On "Continue", focus the ACTIVE (continuable) episode. If several are continuable
+  // (forks) and sit at opposite edges, focus the one nearest the map centre so the
+  // camera lands on the most reachable one.
+  window.prideFocusActiveEpisode=function(){
+    const world=document.querySelector('#mapScreen .map-world'); if(!world) return null;
+    let cands=[...world.querySelectorAll('.map-hotspot.pin-active')];   // "Continue" pins
+    if(!cands.length){ const sh=world.querySelector('.map-hotspot.starthere'); if(sh) cands=[sh]; }
+    if(!cands.length) return null;
+    let best=null, bd=1e9;
+    cands.forEach(h=>{ const x=parseFloat(h.style.left)||50, y=parseFloat(h.style.top)||50; const d=Math.hypot(x-50,y-50); if(d<bd){ bd=d; best=h; } });
+    if(best && best.dataset.poi){ window.prideActiveEp=best.dataset.poi;
+      // paint the map for this episode's time-of-day
+      try{ const L=(window.__mapLocs||[]).find(x=>x.id===best.dataset.poi); if(window.prideApplyMapTod) window.prideApplyMapTod(L&&L.time); }catch(e){}
+      prideCenterOn(best.dataset.poi); return best.dataset.poi; }
+    return null;
+  };
+  // Map-mood time-of-day: swap the .map-world background art (day default / dawn /
+  // sunset / night). Independent of any gameplay clock.
+  window.prideApplyMapTod=function(tod){ const b=document.body;
+    b.classList.remove('pride-tod-dawn','pride-tod-sunset','pride-tod-night');
+    tod=(tod==='dawn'||tod==='sunset'||tod==='night')?tod:'day';
+    window.prideMapTod=tod;
+    if(tod!=='day') b.classList.add('pride-tod-'+tod);
+  };
   // ---- Pin state system (episode / short-stories / interactive) ----
   const PIN_ICO={
     active:'<svg viewBox="0 0 24 24" fill="none" stroke="#6fe3c8" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M6 12h11M12 6l6 6-6 6"/></svg>',
@@ -21559,69 +22253,298 @@ function stopLondonAmbient() {
     {id:'mr_darcy',         img:'fig_mr_darcy'},
     {id:'mr_wickham',       img:'fig_mr_wickham'},
     {id:'jane_bennet',      img:'fig_jane_bennet'},
-    {id:'charlotte_lucas',  img:'fig_charlotte_lucas'}
+    {id:'charlotte_lucas',  img:'fig_charlotte_lucas'},
+    {id:'miss_bingley',     img:'fig_miss_bingley'},
+    {id:'mrs_bennet',       img:'fig_mrs_bennet'},
+    {id:'lydia_bennet',     img:'fig_lydia_bennet'}
   ];
-  const SIM_ANCHORS=[ {id:'mr_bingley', img:'fig_mr_bingley', loc:'netherfield-ball'} ]; // active-episode host stays put
-  const SIM_STOPS=['tea-room','the-tavern','the-apothecary','circulating-library','meryton-zoom']; // wanderers roam these (no episode pins)
+  // No anchored host on the map: characters must never sit on an episode/story pin
+  // (a walker docked on the "Netherfield · START HERE" pin looked wrong). Wanderers
+  // only ever dock at the interactive SIM_STOPS below.
+  const SIM_ANCHORS=[];
+  // wanderers roam ONLY interactive locations — no episode pins, no short-stories (meryton-zoom removed):
+  // characters attach + open a chat only at these.
+  const SIM_STOPS=['tea-room','the-tavern','the-apothecary','circulating-library'];
   const SIM_IMG='worlds/pride-and-prejudice/pc-select/';
-  const EXIT_MS=5200, ENTER_MS=5200, TRANSIT_MS=14000, DWELL_MIN=14000, DWELL_MAX=30000;
-  let _sim=null, _simRaf=0, _simTimer=0, _busyId=null;
+  // Slower, calmer travel: one continuous VISIBLE walk between stops (was exit→hide→enter).
+  const WALK_MS=26000, DWELL_MIN=16000, DWELL_MAX=34000;
+  // Road-event rules: a lone walker stops (or two meet), an icon pops, 15s later they resume.
+  const PAUSE_MS=15000;      // dwell of a road encounter before resuming
+  const SAFE_R=9;            // invisible "safe circle" radius (map %) around every location — no road events inside
+  const MEET_DIST=6;         // two walkers this close (map %) can meet
+  const MAX_ICONS=3;         // never more than 3 interest icons on screen at once
+  const EVENT_EVERY=1600;    // how often we look for a new road event (ms)
+  const SOLO_CHANCE=0.16;    // per-check chance a lone eligible walker stops
+  let _sim=null, _simRaf=0, _simTimer=0, _busyId=null, _nextEvent=0, _lastRaf=0;
   window.prideSetBusy=function(id){ _busyId=id||null; };  // chatting character stays put until chat closes
   function ptOnPath(path,p){ if(!path||!path.length) return {x:50,y:50}; if(path.length===1) return path[0];
     const f=Math.max(0,Math.min(1,p))*(path.length-1), i=Math.min(path.length-2,Math.floor(f)), s=f-i, a=path[i], b=path[i+1];
     return {x:a.x+(b.x-a.x)*s, y:a.y+(b.y-a.y)*s}; }
-  function mkAvatar(img){ const el=document.createElement('div'); el.className='map-avatar pride-avatar pride-ep3-av';
-    el.style.backgroundImage="url('"+SIM_IMG+img+".webp')"; el.style.transition='opacity .3s linear'; return el; }
-  function prideClearEp3Avatars(){ if(_simRaf){ cancelAnimationFrame(_simRaf); _simRaf=0; } if(_simTimer){ clearInterval(_simTimer); _simTimer=0; } if(_sim){ _sim.forEach(c=>{ try{c.el.remove();}catch(_){}; }); } _sim=null; }
+  const SIM_SUITORS=new Set(['mr_darcy','mr_bingley','mr_wickham','mr_collins','lord_ravenscar','sir_ashbourne','capt_vane','mr_devereux','mr_hale','mr_fenwick','ens_pryce','mr_quill']);
+  const isSuitorId=id=>SIM_SUITORS.has(id);
+  function mkAvatar(img, id){ const el=document.createElement('div'); const suit=isSuitorId(id);
+    el.className='map-avatar pride-avatar pride-ep3-av '+(suit?'sim-suitor':'sim-npc');
+    el.style.backgroundImage="url('"+SIM_IMG+img+".webp')"; el.style.transition='opacity .3s linear';
+    // Start hidden + roughly on-stage so a not-yet-placed avatar never flashes/flies
+    // in from the top-left (0,0) before its first position is computed. It fades in
+    // once place() puts it on its pin.
+    el.style.opacity='0'; el.style.left='50%'; el.style.top='50%';
+    // NOT tappable by default. simTick enables pointer-events only while a walker is
+    // docked at an interactive location ('at') or paused on the road with an icon ('pause').
+    el.style.pointerEvents='none'; el.style.cursor='pointer'; el.dataset.cid=id; el.dataset.kind=suit?'suitor':'npc';
+    el.addEventListener('click',(e)=>{ e.stopPropagation(); if(window.prideAvatarTap) window.prideAvatarTap(id, suit?'suitor':'npc'); });
+    if(suit){ const b=document.createElement('span'); b.className='sim-badge'; el.appendChild(b); }
+    return el; }
+  function prideClearEp3Avatars(){ if(_simRaf){ cancelAnimationFrame(_simRaf); _simRaf=0; } if(_simTimer){ clearInterval(_simTimer); _simTimer=0; } if(_sim){ _sim.forEach(c=>{ try{c.el.remove();}catch(_){}; }); } _sim=null; clearEdges(); }
   function prideSpawnEp3Avatars(){
     prideClearEp3Avatars();
+    ensureSimCss(); loadGraph();
     const world=document.querySelector('#mapScreen .map-world'); if(!world) return;
     const now=performance.now(); _sim=[];
-    SIM_ANCHORS.forEach(a=>{ const el=mkAvatar(a.img); world.appendChild(el); _sim.push({el,id:a.id,anchor:true,status:'at',loc:a.loc}); });
-    SIM_ROSTER.forEach((c,i)=>{ const el=mkAvatar(c.img); world.appendChild(el);
-      _sim.push({el,id:c.id,status:'at',loc:SIM_STOPS[i%SIM_STOPS.length], dwellUntil: now + 4000 + i*3000}); });
-    // rAF loop → smooth in a real browser (matches the ambient system);
-    // simTick reads performance.now() so it is framerate-independent.
+    SIM_ANCHORS.forEach(a=>{ const el=mkAvatar(a.img, a.id); world.appendChild(el); _sim.push({el,id:a.id,kind:isSuitorId(a.id)?'suitor':'npc',anchor:true,status:'at',loc:a.loc}); });
+    SIM_ROSTER.forEach((c,i)=>{ const el=mkAvatar(c.img, c.id); world.appendChild(el);
+      _sim.push({el,id:c.id,kind:isSuitorId(c.id)?'suitor':'npc',status:'at',loc:SIM_STOPS[i%SIM_STOPS.length], dwellUntil: now + 4000 + i*3000, nextEventOk:0}); });
+    _nextEvent=0;
+    // Two drivers: rAF for smooth motion when the tab is foreground, PLUS a setInterval
+    // fallback so the world keeps living even when rAF is throttled (embedded/off-screen
+    // iframe, background tab). simTick reads performance.now() so it is framerate-
+    // independent and safe to call from both — extra calls in the same frame are no-ops.
     simTick();
-    const loop=()=>{ simTick(); _simRaf=requestAnimationFrame(loop); };
+    const loop=()=>{ _lastRaf=performance.now(); simTick(); _simRaf=requestAnimationFrame(loop); };
     _simRaf=requestAnimationFrame(loop);
+    // Watchdog (NOT a second driver): only ticks when rAF has stalled (embedded/
+    // background iframe throttles rAF). In normal foreground play rAF runs at 60fps
+    // so this stays idle — avoids the constant main-thread load that hurt panning.
+    _simTimer=setInterval(function(){ if(performance.now()-_lastRaf>260) simTick(); }, 260);
   }
   function place(el,pt,offX,opacity){ el.style.left=pt.x+'%'; el.style.top=pt.y+'%';
     el.style.transform='translate(-50%,-50%)'+(offX?(' translate('+offX+'px,0)'):''); el.style.opacity=opacity; el.style.display=''; }
+
+  // distance in map-% space (approx; good enough for gating)
+  function pdist(p,q){ return Math.hypot(p.x-q.x, p.y-q.y); }
+  function pathLen(pts){ let L=0; for(let i=1;i<pts.length;i++) L+=pdist(pts[i-1],pts[i]); return L; }
+
+  // ---- Road NETWORK (worlds/.../map-roads.json): nodes[] joints + edges[] links,
+  // plus loc:<id> edges attaching a node to a location pin. Walkers travel ALONG this
+  // graph (Dijkstra) so they never cut off-road, and wander the whole map — incl. the
+  // top — rather than only shuttling the lower stops. ----
+  let _graph=null;
+  function loadGraph(){
+    if(_graph) return;
+    fetch('worlds/pride-and-prejudice/map-roads.json',{cache:'no-store'}).then(r=>r.ok?r.json():null).then(j=>{
+      if(!j||!j.roads) return; const R=j.roads; const node={}, adj={}, loc={};
+      (R.nodes||[]).forEach(n=>{ node[n.id]={x:n.x,y:n.y}; if(!adj[n.id]) adj[n.id]=[]; });
+      (R.edges||[]).forEach(e=>{ const a=e[0], b=e[1]; if(a==null||b==null) return;
+        (adj[a]=adj[a]||[]).push(b); (adj[b]=adj[b]||[]).push(a);
+        if(typeof a==='string'&&a.indexOf('loc:')===0) loc[a.slice(4)]=a;
+        if(typeof b==='string'&&b.indexOf('loc:')===0) loc[b.slice(4)]=b; });
+      _graph={node,adj,loc,keys:Object.keys(node)};
+      // Location moves from the tracer live here too — apply them so pins (and thus
+      // walker docking, safe circles, fog alignment) follow the moved position.
+      try{ window.__prideLocOverrides = j.locOverrides || {}; if(window.prideRefreshMapLocks) window.prideRefreshMapLocks(); }catch(e){}
+    }).catch(()=>{});
+  }
+  function nodePos(id){ if(typeof id==='string'&&id.indexOf('loc:')===0){ const c=window.prideDotCenter(id.slice(4)); if(c) return c; }
+    return (_graph&&_graph.node[id])||null; }
+  // Dijkstra over the road graph → array of node ids (a..b), or null.
+  function pathfind(a,b){ if(!_graph||!_graph.adj[a]||!_graph.adj[b]) return null;
+    const dist={}, prev={}, seen={}; dist[a]=0; const pq=[[0,a]];
+    while(pq.length){ pq.sort((x,y)=>x[0]-y[0]); const top=pq.shift(), d=top[0], u=top[1];
+      if(seen[u]) continue; seen[u]=1; if(u===b) break;
+      (_graph.adj[u]||[]).forEach(v=>{ const pu=nodePos(u), pv=nodePos(v); if(!pu||!pv) return;
+        const nd=d+pdist(pu,pv); if(dist[v]===undefined||nd<dist[v]){ dist[v]=nd; prev[v]=u; pq.push([nd,v]); } }); }
+    if(dist[b]===undefined) return null; const out=[]; let u=b; let guard=0;
+    while(u!==undefined && guard++<500){ out.unshift(u); if(u===a) break; u=prev[u]; }
+    return out[0]===a?out:null;
+  }
+  // Pick where a walker heads next from `fromNode` and set up its walk. ~45% aim for
+  // another interactive location (→ dock + chat); otherwise wander a road node, biased
+  // toward the upper map so encounters spread across the whole board.
+  function chooseDestination(c, fromNode, now){
+    if(!_graph){ // graph not ready yet → legacy approach-route hop as a fallback
+      const routes=(typeof window.prideGetRoutes==='function')?window.prideGetRoutes():{};
+      const opts=SIM_STOPS.filter(s=>s!==c.loc); const to=opts[Math.floor(Math.random()*opts.length)];
+      const a=window.prideDotCenter(c.loc), b=window.prideDotCenter(to);
+      c.path=[a||{x:50,y:50}, b||{x:50,y:50}]; c.pathIds=null; c.destNode='loc:'+to; c.destLoc=to;
+      c.walkStart=now; c.walkDur=WALK_MS; c.status='walk'; c.curNode='loc:'+to; return;
+    }
+    let dest;
+    if(Math.random()<0.45){ const opts=SIM_STOPS.filter(s=>('loc:'+s)!==fromNode && _graph.loc[s]);
+      dest = opts.length? _graph.loc[opts[Math.floor(Math.random()*opts.length)]] : null; }
+    if(!dest){ // wander a road node — half the time force an UPPER-map node (y<42)
+      let pool=_graph.keys; if(Math.random()<0.5){ const up=_graph.keys.filter(k=>_graph.node[k].y<42); if(up.length) pool=up; }
+      dest = pool[Math.floor(Math.random()*pool.length)];
+    }
+    const ids=pathfind(fromNode, dest);
+    if(ids && ids.length>=2){ const pts=ids.map(nodePos).filter(Boolean);
+      if(pts.length>=2){ c.pathIds=ids; c.path=pts; c.destNode=dest; c.destLoc = (typeof dest==='string'&&dest.indexOf('loc:')===0)?dest.slice(4):null;
+        c.walkStart=now; c.walkDur=Math.max(7000, Math.min(30000, pathLen(pts)*320)); c.status='walk'; return; }
+    }
+    // pathfinding failed → short idle then retry
+    c.dwellUntil=now+1500;
+  }
+  // outside EVERY location's invisible safe circle?
+  function outsideSafe(pos){
+    for(const loc of SIM_STOPS){ const c0=window.prideDotCenter(loc); if(c0 && pdist(pos,c0)<SAFE_R) return false; }
+    for(const a of SIM_ANCHORS){ const c0=window.prideDotCenter(a.loc); if(c0 && pdist(pos,c0)<SAFE_R) return false; }
+    return true;
+  }
+
+  // ---- Encounter icons anchored on the walker (only 2 kinds) ----
+  function showIcon(c, kind){   // 'whisper' (animated speech bubble) | 'alert' (!)
+    removeIcon(c); c.iconKind=kind;
+    const el=document.createElement('div');
+    if(kind==='whisper'){ el.className='ml-interest ml-anchored ml-whisper'; el.innerHTML='<span></span><span></span><span></span>'; }
+    else { el.className='ml-interest ml-anchored ml-alert'; el.textContent='!'; }
+    el.addEventListener('click',(e)=>{ e.stopPropagation(); if(window.prideAvatarTap) window.prideAvatarTap(c.id, c.kind); });
+    c.el.appendChild(el); c.iconEl=el;
+  }
+  function removeIcon(c){ if(c&&c.iconEl){ try{c.iconEl.remove();}catch(_){} c.iconEl=null; c.iconKind=null; }
+    if(c&&c.el){ delete c.el.dataset.encmode; delete c.el.dataset.partner; } c.meetOffX=0; }
+
+  // ---- Road events: lone stop / two-character meet, gated by safe circles + an icon cap ----
+  // At most 3 icons on screen at once. A meet shows ONE icon (whisper OR alert) between
+  // the pair — the player is NOT part of that scene, so tapping it plays an OBSERVED npc
+  // exchange with no choices. A lone stop is a pc encounter → our decisions.
+  function iconCount(){ return _sim.filter(c=>c.iconKind).length; }
+  function scheduleRoadEvents(now){
+    if(window.__prideEncounterMode) return;
+    if(iconCount()>=MAX_ICONS) return;
+    const movers=_sim.filter(c=>c.status==='walk' && !c.anchor && c.id!==_busyId && c.pos && now>=c.nextEventOk && outsideSafe(c.pos));
+    if(!movers.length) return;
+    // (A) MEET — two eligible walkers close together, away from any location.
+    for(let i=0;i<movers.length;i++) for(let j=i+1;j<movers.length;j++){
+      if(iconCount()>=MAX_ICONS) return;
+      const A=movers[i], B=movers[j];
+      if(A.status!=='walk'||B.status!=='walk') continue;
+      if(pdist(A.pos,B.pos)>MEET_DIST) continue;
+      // nest the pair together (like avatars docked at a pin) instead of standing apart
+      const mid={x:(A.pos.x+B.pos.x)/2, y:(A.pos.y+B.pos.y)/2}; A.pos={...mid}; B.pos={...mid};
+      A.meetOffX=-9; B.meetOffX=9;
+      pauseWalker(A, now, Math.random()<0.5?'whisper':'alert'); pauseWalker(B, now, null);
+      B.partner=A; A.partner=B;
+      A.el.dataset.encmode='npc'; A.el.dataset.partner=B.id; B.el.dataset.encmode='npc'; B.el.dataset.partner=A.id;
+      return;   // one meet per check keeps it calm
+    }
+    // (B) SOLO — a lone walker stops on the road (our conversation → choices).
+    for(const c of movers){
+      if(iconCount()>=MAX_ICONS) return;
+      if(c.status!=='walk') continue;
+      if(Math.random()<SOLO_CHANCE){ pauseWalker(c, now, Math.random()<0.5?'whisper':'alert'); c.el.dataset.encmode='pc'; return; }
+    }
+  }
+  function pauseWalker(c, now, iconKind){
+    c.status='pause'; c.pauseStart=now; c.nextEventOk=now+PAUSE_MS+14000;
+    if(iconKind) showIcon(c, iconKind);
+  }
+
   function simTick(){
     if(!_sim) return;
-    const now=performance.now(), routes=(typeof window.prideGetRoutes==='function')?window.prideGetRoutes():{};
-    // phase transitions
+    // Freeze the ambient world while an encounter/chat is playing over the map.
+    if(window.__prideEncounterMode){ clearEdges(); return; }
+    const now=performance.now();
+    // ---- state machine ----
     _sim.forEach(c=>{
-      if(c.anchor || c.id===_busyId) return;   // anchored or currently being chatted with → stay docked
-      if(c.status==='at'){ if(now>=c.dwellUntil){ const opts=SIM_STOPS.filter(s=>s!==c.loc); c.to=opts[Math.floor(Math.random()*opts.length)]; c.from=c.loc; c.status='exit'; c.phase=now; } }
-      else if(c.status==='exit'){ if(now-c.phase>=EXIT_MS){ c.status='transit'; c.phase=now; } }
-      else if(c.status==='transit'){ if(now-c.phase>=TRANSIT_MS){ c.status='enter'; c.phase=now; c.loc=c.to; } }
-      else if(c.status==='enter'){ if(now-c.phase>=ENTER_MS){ c.status='at'; c.loc=c.to; c.dwellUntil=now+DWELL_MIN+Math.random()*(DWELL_MAX-DWELL_MIN); } }
+      if(c.anchor || c.id===_busyId) return;
+      if(c.status==='at'){
+        if(now>=c.dwellUntil){ chooseDestination(c, 'loc:'+c.loc, now); }
+      } else if(c.status==='walk'){
+        const p=(now-c.walkStart)/(c.walkDur||WALK_MS);
+        if(p>=1){
+          c.partner=null; c.curNode=c.destNode;
+          if(c.destLoc){ // arrived at an interactive location → dock + chat + dwell
+            c.status='at'; c.loc=c.destLoc; c.path=null; c.pathIds=null; c.dwellUntil=now+DWELL_MIN+Math.random()*(DWELL_MAX-DWELL_MIN); }
+          else { // reached a road node → keep roaming (no dock, not tappable)
+            chooseDestination(c, c.destNode, now); }
+        }
+      } else if(c.status==='pause'){
+        if(now-c.pauseStart>=PAUSE_MS){ removeIcon(c); c.walkStart+=(now-c.pauseStart); c.status='walk'; c.partner=null; }
+      }
     });
-    // render travellers
+    // ---- render ----
     _sim.forEach(c=>{
-      if(c.status==='exit'){ const c0=window.prideDotCenter(c.from)||{x:50,y:50}; const p=Math.min(1,(now-c.phase)/EXIT_MS);
-        place(c.el, ptOnPath([c0,...(routes[c.from]||[])],p), 0, (p<0.6?1:1-(p-0.6)/0.4)); }
-      else if(c.status==='transit'){ c.el.style.opacity='0'; c.el.style.display='none'; }
-      else if(c.status==='enter'){ const c0=window.prideDotCenter(c.to)||{x:50,y:50}; const fwd=[c0,...(routes[c.to]||[])]; const p=Math.min(1,(now-c.phase)/ENTER_MS);
-        place(c.el, ptOnPath(fwd.slice().reverse(),p), 0, (p<0.4?p/0.4:1)); }
+      if(c.status==='walk'){
+        const path=c.path; if(!path||path.length<2){ return; }
+        const p=Math.max(0,Math.min(1,(now-c.walkStart)/(c.walkDur||WALK_MS)));
+        const pt=ptOnPath(path,p); c.pos=pt;
+        const op = p<0.06 ? (p/0.06) : (p>0.94 ? (1-(p-0.94)/0.06) : 1);
+        place(c.el, pt, 0, op); c.el.style.zIndex='6';
+      } else if(c.status==='pause'){
+        if(c.pos) place(c.el, c.pos, c.meetOffX||0, 1); c.el.style.zIndex='9';
+      }
+      // tappable ONLY while docked at an interactive location or paused with an icon.
+      // anchor (episode host) is never tappable.
+      c.el.style.pointerEvents = (!c.anchor && (c.status==='at' || c.status==='pause')) ? 'auto' : 'none';
     });
     // dock "at"/anchor characters onto their location pin (nested with the pin icon)
     const byLoc={}; _sim.forEach(c=>{ if(c.status==='at'||c.anchor){ (byLoc[c.loc]=byLoc[c.loc]||[]).push(c); } });
     Object.keys(byLoc).forEach(loc=>{ const c0=window.prideDotCenter(loc); if(!c0) return;
       byLoc[loc].forEach((c,i)=>{ place(c.el, c0, 22+i*16, 1); c.el.style.zIndex=String(7+i); }); });
+    // ---- road-event scheduler (throttled) ----
+    if(now>=_nextEvent){ _nextEvent=now+EVENT_EVERY; scheduleRoadEvents(now); }
+    // ---- off-focus trail indicators on the L/R screen borders ----
+    updateEdges();
   }
+
+  // ===== off-screen icon trail: non-tappable markers on left/right borders =====
+  let _edgeLayer=null, _edgeMarks={};
+  function ensureEdgeLayer(){ if(_edgeLayer&&document.body.contains(_edgeLayer)) return _edgeLayer;
+    _edgeLayer=document.getElementById('prideEdge'); if(!_edgeLayer){ _edgeLayer=document.createElement('div'); _edgeLayer.id='prideEdge'; document.body.appendChild(_edgeLayer); } return _edgeLayer; }
+  function clearEdges(){ if(_edgeLayer){ _edgeLayer.innerHTML=''; } _edgeMarks={}; }
+  function updateEdges(){
+    const onMap = document.body.classList.contains('flow-map') && !window.__prideEncounterMode;
+    if(!onMap){ if(_edgeLayer&&_edgeLayer.childNodes.length) clearEdges(); return; }
+    const layer=ensureEdgeLayer(); const vw=window.innerWidth, vh=window.innerHeight;
+    const iconed=_sim.filter(c=>c.status==='pause' && c.iconKind && c.iconEl);   // things worth pointing at
+    const live=new Set();
+    iconed.forEach(c=>{ const r=c.iconEl.getBoundingClientRect();   // the ICON's real screen box (above the head), not the avatar centre
+      const cx=r.left+r.width/2, cy=r.top+r.height/2;
+      let side=null; if(cx< 0) side='left'; else if(cx>vw) side='right'; else return;   // on-screen → no border marker
+      live.add(c.id);
+      let m=_edgeMarks[c.id];
+      if(!m){ m=document.createElement('div'); m.className='pe-edge'; layer.appendChild(m); _edgeMarks[c.id]=m; }
+      m.className='pe-edge '+side+' '+(c.iconKind==='whisper'?'k-whisper':'k-alert');
+      m.textContent = c.iconKind==='whisper'?'…':'!';
+      m.style.top = Math.max(46, Math.min(vh-46, cy))+'px';
+    });
+    // drop markers whose walker resumed or came on-screen
+    Object.keys(_edgeMarks).forEach(id=>{ if(!live.has(id)){ try{_edgeMarks[id].remove();}catch(_){} delete _edgeMarks[id]; } });
+  }
+
+  // Inject icon + edge CSS once (kept with the sim so it's self-contained).
+  function ensureSimCss(){ if(document.getElementById('pride-sim-life-css')) return;
+    const s=document.createElement('style'); s.id='pride-sim-life-css'; s.textContent=`
+    .ml-interest.ml-alert{ background:linear-gradient(135deg,#f0b34a,#e0662f); font-weight:900; }
+    .ml-interest.ml-whisper{ width:36px; height:24px; border-radius:12px; padding:0; gap:2px; grid-auto-flow:column;
+      background:linear-gradient(160deg,#fbf7ff,#e9e1ff); border-color:#fff; box-shadow:0 3px 12px rgba(0,0,0,.5); }
+    .ml-interest.ml-whisper span{ width:5px; height:5px; border-radius:50%; background:#6a5aa8; animation:mlDot 1.25s ease-in-out infinite; }
+    .ml-interest.ml-whisper span:nth-child(2){ animation-delay:.18s; } .ml-interest.ml-whisper span:nth-child(3){ animation-delay:.36s; }
+    .ml-interest.ml-whisper::after{ content:''; position:absolute; bottom:-5px; left:50%; transform:translateX(-50%); border:5px solid transparent; border-top-color:#e9e1ff; }
+    @keyframes mlDot{ 0%,60%,100%{ transform:translateY(0); opacity:.45; } 30%{ transform:translateY(-3px); opacity:1; } }
+    #prideEdge{ position:fixed; inset:0; z-index:340; pointer-events:none; }
+    .pe-edge{ position:absolute; width:26px; height:26px; border-radius:50%; display:grid; place-items:center;
+      font:800 13px/1 system-ui; color:#fff; border:2px solid #fff; box-shadow:0 2px 10px rgba(0,0,0,.55);
+      opacity:.92; pointer-events:none; transform:translateY(-50%); transition:top .5s linear; }
+    .pe-edge.left{ left:6px; } .pe-edge.right{ right:6px; }
+    .pe-edge.k-whisper{ background:linear-gradient(160deg,#8b7bd8,#5d51a8); letter-spacing:1px; }
+    .pe-edge.k-alert{ background:linear-gradient(135deg,#f0b34a,#e0662f); }`;
+    document.head.appendChild(s);
+  }
+
   // Occupancy API (chat / item 4 reads these)
   window.prideOccupantsAt=poi=>_sim?_sim.filter(c=>(c.status==='at'||c.anchor)&&c.loc===poi).map(c=>c.id):[];
   window.prideOccupantAt=poi=>{ const a=window.prideOccupantsAt(poi); return a[0]||null; };
+  // exposed so the map can populate ambient walkers on entry / resume (no longer tied to legacy ep3)
+  window.prideSpawnWalkers=function(){ try{ prideSpawnEp3Avatars(); }catch(e){} };
+  window.prideClearWalkers=function(){ try{ prideClearEp3Avatars(); }catch(e){} };
 
   // First gameplay state: Lucas Lodge only, styled as the active (playable) pin.
   window.prideEnterEp1=function(){
-    document.body.classList.remove('pride-ep2','pride-ep3'); document.body.classList.add('pride-ep1');
-    prideClearMapPins(); prideClearEp3Avatars(); prideStylePin('lucas-lodge','active');  // START FROM HERE label stays (its own span)
-    window.prideActiveEp='lucas-lodge';
-    prideCenterOn('lucas-lodge');
+    // Legacy Lucas-Lodge hardcode kaldırıldı — artık harita TAMAMEN tur-gating'e göre (sadece Tur 1 açık).
+    document.body.classList.remove('pride-ep1','pride-ep2','pride-ep3');
+    try{ prideSpawnEp3Avatars(); }catch(e){}   // ambient walkers (NPC + suitor) on the map
+    try{ if(window.prideRefreshMapLocks) window.prideRefreshMapLocks(); }catch(e){}
+    try{ if(window.prideFocusActiveEpisode && window.prideFocusActiveEpisode()){} else { const sh=document.querySelector('#mapScreen .map-hotspot.starthere'); if(sh && sh.dataset.poi){ window.prideActiveEp=sh.dataset.poi; if(window.prideCenterPoi) prideCenterPoi(sh.dataset.poi); } } }catch(e){}
   };
   window.prideExitEp1=function(){ document.body.classList.remove('pride-ep1'); };  // reveal the full map (later / dev)
 
@@ -21646,6 +22569,7 @@ function stopLondonAmbient() {
     st.pins.forEach(a=>prideStylePin(a[0],a[1],a[2],a[3]));
     prideClearEp3Avatars(); if(key==='ep3') prideSpawnEp3Avatars();
     window.prideActiveEp=st.active;
+    try{ const L=(window.__mapLocs||[]).find(x=>x.id===st.active); if(window.prideApplyMapTod) window.prideApplyMapTod(L&&L.time); }catch(e){}
     prideCenterOn(st.center);
     if(st.shortsTip && typeof window.prideLockTip==='function') setTimeout(()=>window.prideLockTip('Short Stories are unlocked'),450);
   }
@@ -22418,8 +23342,13 @@ const CHARACTER_PHRASES = [
 // the saved profile on load.
 try {
   const qs = new URLSearchParams((typeof window !== 'undefined' ? window.location.search : '') || '');
-  if (qs.get('reset') === '1' || qs.get('intro') === '1') {
+  if (qs.get('reset') === '1' || qs.get('intro') === '1' || qs.get('newgame') === '1') {
     localStorage.removeItem(PROFILE_KEY);
+  }
+  // New game: also wipe pride progress so the map starts fully fresh (nothing completed → gates reset)
+  if (qs.get('newgame') === '1' || qs.get('reset') === '1') {
+    ['rai.completedEps','cowork.room.prideMeta.v1','rai_pride_pcs','rai.activePC','cowork.room.currentScenario']
+      .forEach(k => { try { localStorage.removeItem(k); } catch (e) {} });
   }
 } catch (e) {}
 
@@ -27125,11 +28054,27 @@ document.getElementById('introStart').addEventListener('click', () => {
   // into the date picker.
   showForm();
 });
+// Returning player? (progress = a chosen PC or any completed episode.)
+// If so, the line button becomes "Continue" and resumes straight onto the
+// map; otherwise it stays "Sign in" → World List.
+function prideHasProgress(){
+  try { if ((JSON.parse(localStorage.getItem('rai.completedEps')||'[]')||[]).length) return true; } catch(e){}
+  try { if (localStorage.getItem('rai.activePC')) return true; } catch(e){}
+  return false;
+}
+function prideUpdateIntroCTA(){
+  const b=document.getElementById('introSignIn'); if(!b) return;
+  b.textContent = prideHasProgress() ? 'Continue' : 'Sign in';
+}
+prideUpdateIntroCTA();
 document.getElementById('introSignIn').addEventListener('click', () => {
-  // Sign in = treat as a returning user. Skip the form, drop straight
-  // into the World List (new entry point). Profile-driven UI has its
-  // own fallbacks so this works even on a fresh install.
-  showWorldList();
+  if (prideHasProgress() && typeof window.prideResumeToMap === 'function') {
+    // Returning user → resume onto their map at the right spot.
+    window.prideResumeToMap();
+  } else {
+    // First-timer → World List (new entry point).
+    showWorldList();
+  }
 });
 
 document.getElementById('formContinue').addEventListener('click', () => {
@@ -27197,6 +28142,13 @@ if (window !== window.top) {
 window.addEventListener('message', (e) => {
   const data = e && e.data;
   if (!data || !data.type) return;
+  if (data.type === 'refreshMapLocks') {
+    // manager changed unlock/appear rules → re-fetch master + recompute the map live
+    fetch('worlds/pride-and-prejudice/map-locations.json', { cache:'no-store' }).then(r=>r.ok?r.json():null).then(mm=>{ if(mm&&mm.locations) window.__mapLocs=mm.locations; if(typeof window.prideRefreshMapLocks==='function') window.prideRefreshMapLocks();
+      // reflect the active episode's time-of-day on the map background live
+      try{ const L=(window.__mapLocs||[]).find(x=>x.id===window.prideActiveEp); if(window.prideApplyMapTod) window.prideApplyMapTod(L&&L.time); }catch(e){} }).catch(()=>{});
+    return;
+  }
   if (data.type === 'restart') {
     // Restart, clear in-game state and return to the date picker
     // (NOT the intro/start logo). Going back to showIntro would briefly
@@ -27249,6 +28201,10 @@ window.addEventListener('message', (e) => {
     // Reset choice gate so a stale pick from a prior run can't make
     // the wrong (IfChoice:N) branch fire when jumping into a Choice.
     lastChosenIdx = -1;
+    currentVenue = wantVenue;   // re-assert: closePOI() above reset it to null (Faz 4 completion needs the real id)
+    // Point asset base at the authored episode so [bg:cutscene=…]/[bg:explore=…] resolve (else backdrops 404 → black)
+    try { if (wantPack==='pride' && data.episode && typeof PACK_LOCATION!=='undefined' && PACK_LOCATION.pride){ PACK_LOCATION.pride.episode=data.episode; PACK_LOCATION.pride.location=wantVenue; } } catch(e){}
+    try { window.__prideEpisodeTitle = data.title || ''; } catch(e){}
     let startIdx = (typeof data.startIdx === 'number') ? data.startIdx : 0;
     // Clamp so an editor-side miscount can't crash renderLine — at
     // worst we land on the last event in the script.
@@ -27268,6 +28224,13 @@ window.addEventListener('message', (e) => {
     }
     idx = startIdx;
     renderLine();
+    try { if (window.parent && window.parent !== window) window.parent.postMessage({ type:'epFlow', inEpisode:true }, '*'); } catch (e) {}
+  } else if (data.type === 'gotoEnd') {
+    // Dev shortcut from the editor chrome: skip to the END screen of the
+    // current episode (which shows the Continue → chapter dashboard button).
+    try {
+      if (Array.isArray(lines) && lines.length) { idx = lines.length; renderLine(); }
+    } catch (e) {}
   } else if (data.type === 'jump-episode') {
     // Dev shortcut from the index.html chrome: jump straight into a
     // location's script, bypassing intro / form / map / casting.
@@ -27466,6 +28429,28 @@ async function loadActiveScript() {
   console.log('[loadActiveScript] activePack=', activePack,
               'currentVenue=', currentVenue,
               'isCustom=', currentVenueObj && currentVenueObj.isCustom);
+  // 0b) Episode-locations venue (authored via the tool): load from its
+  //     real episode folder, e.g. worlds/pride-and-prejudice/episodes/authored/{id}.
+  if (currentVenueObj && currentVenueObj.fromEpLoc && currentVenueObj.episode) {
+    try {
+      const _ep = String(currentVenueObj.episode).startsWith('episodes/') ? currentVenueObj.episode : ('episodes/' + currentVenueObj.episode);
+      // Point the asset-resolution base at THIS episode + location so
+      // [bg:cutscene=…] resolves to episodes/<ep>/cutscenes and
+      // [bg:explore=…] to locations/<id>/explore. Without this the engine
+      // used a stale base and every backdrop/cutscene 404'd.
+      if (typeof PACK_LOCATION !== 'undefined' && PACK_LOCATION.pride) {
+        PACK_LOCATION.pride.episode  = _ep;
+        PACK_LOCATION.pride.location = currentVenue;
+      }
+      const url = `worlds/pride-and-prejudice/${_ep}/scripts/main.txt`;
+      const r = await fetch(url, { cache: 'no-store' });
+      if (r.ok) { const txt = await r.text(); if (txt && txt.trim()) { el.scriptBox.value = txt; loadScript(txt); idx = 0; console.log('[episode-locations] loaded script from', url); return; } }
+      console.log('[episode-locations] script not found (HTTP', r.status + ')');
+    } catch (e) { console.log('[episode-locations] fetch threw:', e && e.message); }
+    const ph = 'Narrative: Bu bölümün scripti henüz yok. Author aracından üret.\n';
+    el.scriptBox.value = ph; loadScript(ph); idx = 0; return;
+  }
+
   if (currentVenueObj && currentVenueObj.isCustom) {
     // Try disk first (worlds/{pack}/locations/{id}/scripts/main.txt) since
     // dev-server writes there. Fall back to localStorage scenarios if disk
@@ -27559,6 +28544,30 @@ window.startPride = function () {
   } catch (e) { console.error('[pride] startPride failed', e); }
 };
 console.log('%c[pride] ready — run startPride() or click the launcher', 'color:#e0668a');
+
+/* Resume a returning player straight onto the Pride map (used by the intro
+   "Continue" button). Restores the last-chosen PC and applies map gating so
+   the map reflects their progress. If no PC is stored, the map opens on its
+   first state (character roster over the map). */
+window.prideResumeToMap = function () {
+  try {
+    activePack = 'pride';
+    document.body.setAttribute('data-pack', 'pride');
+    if (typeof profilesForPack === 'function' && typeof PROFILES !== 'undefined') { try { PROFILES = profilesForPack('pride'); } catch (e) {} }
+    if (typeof window.prideLoadOverrides === 'function') { try { window.prideLoadOverrides(); } catch (e) {} }
+    const toMap = () => {
+      if (typeof showMap === 'function') showMap();
+      try { if (window.prideRefreshMapLocks) window.prideRefreshMapLocks(); } catch (e) {}
+      try { if (window.prideSpawnWalkers) window.prideSpawnWalkers(); } catch (e) {}   // ambient walkers on resume
+      try { if (typeof window.pcMapHudShow === 'function') window.pcMapHudShow(); } catch (e) {}   // HUD if PC restored, else roster-over-map
+      // Continue → focus the active (continuable) episode; nearest-to-centre if several.
+      try { if(window.prideFocusActiveEpisode) window.prideFocusActiveEpisode();
+        else { const sh=document.querySelector('#mapScreen .map-hotspot.starthere'); if(sh && sh.dataset.poi){ window.prideActiveEp=sh.dataset.poi; if(window.prideCenterPoi) prideCenterPoi(sh.dataset.poi); } } } catch (e) {}
+    };
+    if (typeof window.prideRestoreActivePC === 'function') window.prideRestoreActivePC(toMap);
+    else toMap();
+  } catch (e) { console.error('[pride] resume failed', e); }
+};
 
 /* Episode 1 "A Caller at the House" — placeholder launch (run startCaller()).
    Points the pride episode base at the new episode so loadActiveScript +
@@ -28061,7 +29070,16 @@ console.log('%c[caller] Episode 1 ready — run startCaller()', 'color:#e7b24c')
     if(typeof PRIDE_ACTORS!=='undefined'){ PRIDE_ACTORS.arabella=c.portrait; }
     if(typeof injectPrideSpriteCss==='function'){ try{injectPrideSpriteCss();}catch(_){} }
     window.__pridePC=c;
+    try{ if(c&&c.id) localStorage.setItem('rai.activePC', c.id); }catch(_){}   // persist for Continue/resume
   }catch(e){ console.warn('[pcsel] setPridePC',e); } }
+  // Restore the last-chosen PC (by persisted id) so "Continue" can resume the
+  // map with the right character. cb(true) if a PC was restored, else cb(false).
+  window.prideRestoreActivePC=function(cb){ ensureData().then(()=>{
+      let pid=''; try{ pid=localStorage.getItem('rai.activePC')||''; }catch(e){}
+      const c = pid ? allChars().find(x=>x&&x.id===pid) : null;
+      if(c) setPridePC(c);
+      if(typeof cb==='function') cb(!!c);
+    }).catch(()=>{ if(typeof cb==='function') cb(false); }); };
   function choose(c){ setPridePC(c); hide(); showHud(c); if(typeof window.prideEnterEp1==='function') window.prideEnterEp1(); const cb=onPlayCb; onPlayCb=null; if(typeof cb==='function') cb(); }
   function hide(){ $('pcsel').classList.remove('on','overmap'); document.body.classList.remove('pc-firststate'); }
 
@@ -29271,12 +30289,17 @@ body.pride-hud-on #pridePcHud{ display:none !important; }
     const mrAv=document.getElementById('mrAv'); if(mrAv){ mrAv.addEventListener('click', ()=>{ if(typeof window.pcSelectSwitch==='function') window.pcSelectSwitch(); });
       const c=window.__pridePC; if(c&&c.portrait) mrAv.style.backgroundImage="url('worlds/pride-and-prejudice/pc-select/fig_"+c.portrait+".webp')"; }
     const store=document.getElementById('pmcStore'); if(store) store.addEventListener('click', ()=>{ if(typeof openStore==='function') openStore('worlds'); });
-    const shorts=document.getElementById('pmcShorts'); if(shorts) shorts.addEventListener('click', ()=>{ if(document.body.classList.contains('pride-ep1')){ prideLockTip('Play the first episode to unlock Short Stories'); } else { openShorts(); } });
+    const shorts=document.getElementById('pmcShorts'); if(shorts) shorts.addEventListener('click', ()=>{ if(document.body.classList.contains('pride-shorts-locked')){ const req=window.__shortsReq; prideLockTip(req?('Önce “'+req+'” bölümünü bitir — Short Stories açılır'):'Short Stories kilitli'); } else { openShorts(); } });
     const spb=document.getElementById('spClose'); if(spb) spb.addEventListener('click', closeShorts);
     // fast-forward episode stand-in: "Complete episode" closes the black screen
     // and advances the map to the post-episode-1 state (pride-ep2).
     window.pridePlayEp=function(){ const s=document.getElementById('prideEpSim'); if(s) s.classList.add('on'); };
-    const pes=document.getElementById('pesComplete'); if(pes) pes.addEventListener('click', ()=>{ const s=document.getElementById('prideEpSim'); if(s) s.classList.remove('on'); const b=document.body.classList; if(b.contains('pride-ep2')){ if(typeof window.prideEnterEp3==='function') window.prideEnterEp3(); if(typeof window.prideOnbShow==='function') window.prideOnbShow('ep3'); } else { if(typeof window.prideEnterEp2==='function') window.prideEnterEp2(); if(typeof window.prideOnbShow==='function') window.prideOnbShow('ep2'); } });
+    const pes=document.getElementById('pesComplete'); if(pes) pes.addEventListener('click', ()=>{ const s=document.getElementById('prideEpSim'); if(s) s.classList.remove('on');
+      // manager-driven: mark the placeholder episode complete → its unlock rules open the next locations
+      const id = window.__phEp || window.prideActiveEp;
+      if (typeof window.prideMarkComplete === 'function') window.prideMarkComplete(id);
+      window.__phEp = null;
+      if (typeof showMap === 'function') showMap(); });
   });
 })();
 </script>
@@ -29504,7 +30527,13 @@ body.pride-hud-on #pridePcHud{ display:none !important; }
     if(!h||!w) return null;
     const dot=h.querySelector('.pin-badge')||h.querySelector('.dot')||h.querySelector('.dot-wrap')||h;
     const wr=w.getBoundingClientRect(), dr=dot.getBoundingClientRect();
-    return { x:((dr.left+dr.width/2)-wr.left)/wr.width*100, y:((dr.top+dr.height/2)-wr.top)/wr.height*100 };
+    // Not laid out yet (map hidden / mid-entrance): rects are 0 → return null so
+    // walkers stay hidden instead of being placed at the top-left corner (0,0) and
+    // "flying" to their pin once measurement resolves.
+    if(!wr.width || !wr.height || !dr.width) return null;
+    const x=((dr.left+dr.width/2)-wr.left)/wr.width*100, y=((dr.top+dr.height/2)-wr.top)/wr.height*100;
+    if(!isFinite(x) || !isFinite(y)) return null;
+    return { x, y };
   };
   if(!/[?&#]edit=routes/.test(location.href)) return;
   const onReady=fn=>{ if(document.readyState!=='loading') fn(); else document.addEventListener('DOMContentLoaded',fn); };
@@ -29810,7 +30839,7 @@ body.pride-hud-on #pridePcHud{ display:none !important; }
 <script>
 (function setupPrideMeta(){
   const LS='cowork.room.prideMeta.v1';
-  const DEF={ scandal:10, allure:45, suitors:{} };
+  const DEF={ scandal:10, allure:45, suitors:{}, items:{} };
   function load(){ try{ const s=JSON.parse(localStorage.getItem(LS)||'null'); return s?Object.assign({},DEF,s):Object.assign({},DEF); }catch(_){ return Object.assign({},DEF); } }
   const meta = load();
   window.prideMeta = meta;
@@ -29825,6 +30854,220 @@ body.pride-hud-on #pridePcHud{ display:none !important; }
   // suitor helpers (data model — screens read these)
   window.prideDiscover = function(id){ if(!meta.suitors[id]) meta.suitors[id]={}; meta.suitors[id].discovered=true; save(); };
   window.prideRelate = function(id, delta){ if(!meta.suitors[id]) meta.suitors[id]={}; const s=meta.suitors[id]; s.rel=Math.max(0,Math.min(100,(s.rel||0)+(+delta||0))); save(); };
+  // Faz 0/1 — suitor XP (level system), discovery facts, item collection
+  const _levelOf = xp => xp>=500?4:xp>=250?3:xp>=100?2:1;
+  window.PRIDE_DISCOVERY_XP = 8;   // XP granted per newly-discovered fact
+  function _miniToast(text){ try{
+    const t=document.createElement('div'); t.textContent=text;
+    t.style.cssText='position:fixed;left:50%;top:64px;transform:translateX(-50%);z-index:99999;background:linear-gradient(140deg,#6a4bc9,#a06fe3);color:#fff;font:600 13px Inter,system-ui,sans-serif;padding:9px 16px;border-radius:20px;box-shadow:0 6px 20px rgba(0,0,0,.35);opacity:0;transition:opacity .25s ease,top .25s ease;';
+    document.body.appendChild(t); requestAnimationFrame(()=>{ t.style.opacity='1'; t.style.top='80px'; });
+    setTimeout(()=>{ t.style.opacity='0'; setTimeout(()=>{ try{t.remove()}catch(_){}} ,320); }, 1800);
+  }catch(e){} }
+  function _refreshSuitors(){ try{
+    const sc=document.getElementById('suitorsScreen'); if(sc&&sc.classList.contains('on')&&typeof window.prideOpenSuitors==='function') window.prideOpenSuitors();
+    const sd=document.getElementById('suitorDetail'); if(sd&&sd.classList.contains('on')&&window.__prideOpenSuitorId&&typeof window.prideOpenSuitor==='function') window.prideOpenSuitor(window.__prideOpenSuitorId);
+  }catch(e){} }
+  window.prideAddXp = function(id, n){ if(!id) return 0; if(!meta.suitors[id]) meta.suitors[id]={}; const s=meta.suitors[id];
+    const before=_levelOf(s.xp||0); s.xp=Math.max(0,(s.xp||0)+(+n||0)); const after=_levelOf(s.xp); save();
+    if(after>before) _miniToast('Seviye '+after+' 🎉'); _refreshSuitors(); return s.xp; };
+  // (Discovery: suitor | fact text) — reveal a specific fact, grant XP, may level up
+  window.prideDiscoverFact = function(id, fact){ if(!id||!fact) return false; if(!meta.suitors[id]) meta.suitors[id]={};
+    const s=meta.suitors[id]; s.discList=s.discList||[]; const f=(''+fact).trim(); if(!f) return false;
+    if(s.discList.indexOf(f)>=0){ s.discovered=true; save(); _refreshSuitors(); return false; }
+    s.discList.push(f); s.discovered=true;
+    const before=_levelOf(s.xp||0); s.xp=Math.max(0,(s.xp||0)+(window.PRIDE_DISCOVERY_XP||8)); const after=_levelOf(s.xp);
+    save(); if(after>before) _miniToast('Seviye '+after+' 🎉'); _refreshSuitors(); return true; };
+  window.prideDiscList = function(id){ return (meta.suitors[id]&&meta.suitors[id].discList)||[]; };
+  window.prideItems = function(){ return meta.items||{}; };
+  window.prideAddItem = function(itemId){ if(!itemId) return; meta.items=meta.items||{}; meta.items[itemId]=(meta.items[itemId]||0)+1; save(); };
+
+  // ---- Faz 3 — episode log + chapter-end dashboard ----
+  window.prideEpiLog = [];
+  window.prideEpiBase = null;
+  window.prideEpiReset = function(){ window.prideEpiLog=[]; window.prideEpiBase={ scandal:meta.scandal||0, allure:meta.allure||0 }; };
+  window.prideEpiRecord = function(kind, parts){ try{ window.prideEpiLog.push({kind:kind, parts:(parts||[]).slice()}); }catch(e){} };
+  window.prideEpiSummary = function(){
+    const log=window.prideEpiLog||[]; const base=window.prideEpiBase||{scandal:meta.scandal||0,allure:meta.allure||0};
+    const d=n=>parseInt(String(n||'').replace(/[^\-0-9]/g,''),10)||0;
+    const sum={ traits:[], discoveries:[], xp:{}, relation:{},
+      scandal:meta.scandal||0, allure:meta.allure||0,
+      scandalDelta:(meta.scandal||0)-(base.scandal||0), allureDelta:(meta.allure||0)-(base.allure||0) };
+    log.forEach(e=>{ const p=e.parts||[];
+      if(e.kind==='trait'){ const nm=p[1]||p[0]; if(nm) sum.traits.push(nm); }
+      else if(e.kind==='discovery'){ if(p.length>=2){ sum.discoveries.push(p.slice(1).join(' | ')); const sid=(p[0]||'').trim(); if(sid) sum.xp[sid]=(sum.xp[sid]||0)+(window.PRIDE_DISCOVERY_XP||8); } else if(p[0]) sum.discoveries.push(p[0]); }
+      else if(e.kind==='xp'){ const id=(p[0]||'').trim(); sum.xp[id]=(sum.xp[id]||0)+d(p[1]); }
+      else if(e.kind==='relation'){ const id=(p[0]||'').trim(); sum.relation[id]=(sum.relation[id]||0)+d(p[2]); }
+    });
+    return sum;
+  };
+  window.prideEpiDashboard = function(title, onContinue){
+    const s=window.prideEpiSummary();
+    const nameOf=id=>(typeof window.prideSuitorName==='function'?window.prideSuitorName(id):id);
+    const lvlOf=id=>(typeof window.prideSuitorLevel==='function'?window.prideSuitorLevel(id):null);
+    const esc=t=>String(t).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+    const bar=(label,val,delta,color)=>{ const dl=delta>0?('+'+delta):(''+delta);
+      return '<div class="ed-meter"><div class="ed-mrow"><span class="ed-mlabel">'+label+'</span>'
+        +'<span class="ed-mval">'+val+(delta?(' <b class="'+(delta>0?'up':'dn')+'">'+dl+'</b>'):'')+'</span></div>'
+        +'<div class="ed-mbar"><span style="width:'+Math.max(0,Math.min(100,val))+'%;background:'+color+'"></span></div></div>'; };
+    const chips=arr=>arr.length?arr.map(t=>'<span class="ed-chip">'+esc(t)+'</span>').join(''):'<span class="ed-empty">—</span>';
+    const bonds=Object.keys(s.xp).length?Object.keys(s.xp).map(id=>{
+      const rel=s.relation[id]?(' · Trust +'+s.relation[id]):'';
+      const lv=lvlOf(id); return '<div class="ed-bond"><span class="ed-bname">'+esc(nameOf(id))+'</span>'
+        +'<span class="ed-bxp">+'+s.xp[id]+' XP'+(lv?(' · Lv '+lv):'')+rel+'</span></div>'; }).join('')
+      :'<div class="ed-empty">—</div>';
+    let ov=document.getElementById('prideEpiDash'); if(ov) ov.remove();
+    ov=document.createElement('div'); ov.id='prideEpiDash';
+    ov.innerHTML=''
+      +'<div class="ed-card">'
+      +  '<div class="ed-eyebrow">Chapter complete</div>'
+      +  '<div class="ed-title">'+esc(title||'')+'</div>'
+      +  '<div class="ed-sec">'+bar('Scandal',s.scandal,s.scandalDelta,'linear-gradient(90deg,#d1445f,#f08aa0)')
+      +      bar('Allure',s.allure,s.allureDelta,'linear-gradient(90deg,#e09a3f,#f4cf8a)')+'</div>'
+      +  '<div class="ed-h">Your decisions</div><div class="ed-chips">'+chips(s.traits)+'</div>'
+      +  '<div class="ed-h">Discovered</div><div class="ed-chips">'+chips(s.discoveries)+'</div>'
+      +  '<div class="ed-h">Bonds deepened</div><div class="ed-bonds">'+bonds+'</div>'
+      +  '<button type="button" class="ed-cont">Continue</button>'
+      +'</div>';
+    document.body.appendChild(ov);
+    requestAnimationFrame(()=>ov.classList.add('on'));
+    // NOTE: scope to THIS overlay — id "edContinue" is also used by the
+    // 1984 end-dashboard's hidden "Generate my Reel" button, so a global
+    // getElementById would bind the handler to the wrong (dead) element
+    // and the visible Continue would do nothing on tap.
+    const contBtn = ov.querySelector('.ed-cont');
+    if (contBtn) contBtn.addEventListener('click',()=>{ ov.classList.remove('on'); setTimeout(()=>{try{ov.remove()}catch(e){}},260); if(typeof onContinue==='function') onContinue(); });
+  };
+
+  // ---- Faz 4 — shared "choose one path" decision screen ----
+  // paths: [{ cover, title, desc, actionLabel }]   onPick(index, path)
+  window.pridePathChoice = function(paths, onPick, opts){
+    paths = paths || []; opts = opts || {};
+    const esc=t=>String(t==null?'':t).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+    let ov=document.getElementById('pridePathChoice'); if(ov) ov.remove();
+    ov=document.createElement('div'); ov.id='pridePathChoice';
+    const cards=paths.map((p,i)=>{
+      const side = (i % 2 === 0) ? 'fig-left' : 'fig-right';   // alternate: 1st left, 2nd right
+      const fig  = p.figure || p.cover || '';                  // suitor cut-out (falls back to cover)
+      return ''
+      +'<div class="pc-card '+side+'">'
+      +  '<div class="pc-bg"'+(p.cover?(' style="background-image:url(\''+p.cover+'\')"'):'')+'></div>'
+      +  (fig?('<div class="pc-fig" style="background-image:url(\''+fig+'\')"></div>'):'')
+      +  '<div class="pc-content">'
+      +    '<div class="pc-title">'+esc(p.title)+'</div>'
+      +    '<div class="pc-desc">'+esc(p.desc)+'</div>'
+      +    '<button type="button" class="pc-act" data-i="'+i+'">'+esc(p.actionLabel||'Choose this')+'</button>'
+      +  '</div>'
+      +'</div>';
+    }).join('');
+    const hasTimer = (typeof opts.remaining==='number' && opts.remaining>0);
+    const fmt = s => (window.prideFmtTime ? window.prideFmtTime(s) : (s+'s'));
+    ov.innerHTML='<div class="pc-wrap">'
+      + '<button type="button" class="pc-close" aria-label="Close">✕</button>'
+      + '<div class="pc-head"><div class="pc-warn">You can only choose one</div>'
+      +   (hasTimer?('<div class="pc-timer">Decide in '+fmt(opts.remaining)+'</div>'):'')
+      + '</div>'
+      + '<div class="pc-cards">'+cards+'</div></div>';
+    document.body.appendChild(ov);
+    requestAnimationFrame(()=>ov.classList.add('on'));
+    let tick=null;
+    const shut=()=>{ if(tick){clearInterval(tick);tick=null;} ov.classList.remove('on'); setTimeout(()=>{try{ov.remove()}catch(e){}},260); };
+    // live countdown sub-text while the screen is open
+    if(hasTimer){ let rem=opts.remaining|0; const el=ov.querySelector('.pc-timer');
+      tick=setInterval(()=>{ rem--; if(el) el.textContent='Decide in '+fmt(Math.max(0,rem)); if(rem<=0){ shut(); } }, 1000); }
+    ov.querySelector('.pc-close').addEventListener('click', shut);
+    ov.querySelectorAll('.pc-act').forEach(b=>b.addEventListener('click',()=>{
+      const i=+b.dataset.i; shut();
+      if(typeof onPick==='function') onPick(i, paths[i]);
+    }));
+    return ov;
+  };
+
+  // ---- Faz 4 — dynamic unlocks + exclusive pair groups ----
+  window.prideForceOpen  = function(){ meta.forceOpen  = meta.forceOpen  || []; return meta.forceOpen; };
+  window.prideDeclinedEps= function(){ meta.declinedEps= meta.declinedEps|| []; return meta.declinedEps; };
+  window.pridePairs      = function(){ meta.pairs      = meta.pairs      || {}; return meta.pairs; };
+  // Parse (Unlock: id [| group=NAME] [| kind=side] [| title=..] [| desc=..] [| cover=..]) — bare tokens: image→cover, else title then desc
+  window.prideScanUnlocks = function(txt){
+    const out=[]; const re=/\(\s*Unlock\s*:\s*([^)]*)\)/gi; let m;
+    while((m=re.exec(txt||''))){ const parts=m[1].split('|').map(s=>s.trim()).filter(Boolean); if(!parts.length) continue;
+      const u={ id:parts[0] };
+      for(let i=1;i<parts.length;i++){ const p=parts[i]; const kv=p.match(/^(\w+)\s*=\s*([\s\S]+)$/);
+        if(kv && ['group','kind','title','desc','cover','timer'].includes(kv[1].toLowerCase())) u[kv[1].toLowerCase()]=kv[2].trim();
+        else if(/\.(png|jpe?g|webp)$/i.test(p)) u.cover=p;
+        else if(!u.title) u.title=p; else if(!u.desc) u.desc=p; }
+      out.push(u); }
+    return out;
+  };
+  window.prideApplyUnlocks = function(list){
+    if(!Array.isArray(list)||!list.length) return;
+    meta.forceOpen=meta.forceOpen||[]; meta.pairs=meta.pairs||{}; meta.declinedEps=meta.declinedEps||[];
+    list.forEach(u=>{ if(!u||!u.id) return; if(meta.declinedEps.indexOf(u.id)>=0) return;
+      if(meta.forceOpen.indexOf(u.id)<0) meta.forceOpen.push(u.id);
+      if(u.group){ const g=meta.pairs[u.group]||(meta.pairs[u.group]={members:[],display:{},chosen:null,kind:u.kind||'main'});
+        if(g.members.indexOf(u.id)<0) g.members.push(u.id);
+        g.display[u.id]={title:u.title||'',desc:u.desc||'',cover:u.cover||''}; if(u.kind) g.kind=u.kind;
+        if(u.timer!=null){ const t=parseInt(u.timer,10); if(t>0){ g.timer=t; if(typeof g.remaining!=='number') g.remaining=t; } } }
+    });
+    save();
+  };
+  // Same-tur branch elimination: when an EPISODE is completed, the OTHER
+  // active EPISODES in the same tur vanish (declined) — we took another
+  // branch. Exempt: timer(side) pairs, and non-episode types (interactive /
+  // short-story) which are handled elsewhere and always stay.
+  window.prideEliminateSiblings = function(id){
+    const master = window.__mapLocs || []; const E = master.find(l=>l.id===id);
+    if(!E || E.type!=='episode' || typeof E.tier!=='number') return;
+    const done = new Set((window.prideCompleted&&window.prideCompleted())||[]);
+    meta.declinedEps=meta.declinedEps||[]; meta.forceOpen=meta.forceOpen||[];
+    let changed=false;
+    master.forEach(L=>{
+      if(L.type!=='episode' || L.id===id || L.tier!==E.tier) return;   // same-tur episodes only
+      if(done.has(L.id)) return;                                        // already played → keep (✓)
+      const g = (typeof window.pridePairOf==='function') ? window.pridePairOf(L.id) : null;
+      if(g && g.kind==='side') return;                                  // timer pair exempt
+      if(meta.declinedEps.indexOf(L.id)<0){ meta.declinedEps.push(L.id); changed=true; }
+      const k=meta.forceOpen.indexOf(L.id); if(k>=0){ meta.forceOpen.splice(k,1); changed=true; }
+    });
+    if(changed) save();
+  };
+  // "NEW" badge bookkeeping for interactive locations: record the completion
+  // count when it first opens; show NEW only while that count is unchanged
+  // (i.e. for exactly one tur, until the next episode completes).
+  window.prideMarkNewOpen = function(id){ meta.newSince=meta.newSince||{};
+    if(meta.newSince[id]==null){ meta.newSince[id]=(((window.prideCompleted&&window.prideCompleted())||[]).length); save(); } };
+  window.prideIsNew = function(id){ if(!meta.newSince||meta.newSince[id]==null) return false;
+    const done=((window.prideCompleted&&window.prideCompleted())||[]).length; return done<=meta.newSince[id]; };
+  // Which (unchosen) pair group does this episode belong to? null if none.
+  window.pridePairOf = function(id){ meta.pairs=meta.pairs||{}; for(const gk in meta.pairs){ const g=meta.pairs[gk]; if(g && !g.chosen && (g.members||[]).indexOf(id)>=0) return Object.assign({group:gk}, g); } return null; };
+  // Commit a choice: chosen stays open, the rest of the group are declined + removed.
+  window.pridePickPath = function(group, chosenId){
+    meta.pairs=meta.pairs||{}; const g=meta.pairs[group]; if(!g) return;
+    g.chosen=chosenId; meta.declinedEps=meta.declinedEps||[]; meta.forceOpen=meta.forceOpen||[];
+    (g.members||[]).forEach(id=>{ if(id!==chosenId){ if(meta.declinedEps.indexOf(id)<0) meta.declinedEps.push(id);
+      const k=meta.forceOpen.indexOf(id); if(k>=0) meta.forceOpen.splice(k,1);
+      try{ if(typeof window.pridePathConsequence==='function') window.pridePathConsequence(group,id); }catch(e){} } }); // consequence hook (Faz 4 sonrası)
+    save();
+  };
+  // CASE 2 — session timer for side-pairs (ticks only while the map is visible)
+  window.prideFmtTime = s => { s=Math.max(0,s|0); const m=Math.floor(s/60), ss=s%60; return m+':'+(ss<10?'0':'')+ss; };
+  window.prideSideExpire = function(group){ const g=(meta.pairs||{})[group]; if(!g||g.chosen||g.expired) return;
+    meta.declinedEps=meta.declinedEps||[]; meta.forceOpen=meta.forceOpen||[];
+    (g.members||[]).forEach(id=>{ if(meta.declinedEps.indexOf(id)<0) meta.declinedEps.push(id); const k=meta.forceOpen.indexOf(id); if(k>=0) meta.forceOpen.splice(k,1);
+      try{ if(typeof window.pridePathConsequence==='function') window.pridePathConsequence(group,id); }catch(e){} });
+    g.expired=true; save(); try{ if(window.prideRefreshMapLocks) window.prideRefreshMapLocks(); }catch(e){} };
+  let __prideSideTimer=null;
+  window.prideSideTickStart = function(){ if(__prideSideTimer) return; __prideSideTimer=setInterval(()=>{
+    if(!document.body.classList.contains('flow-map')) return;   // only tick while the map screen is showing
+    const P=meta.pairs||{}; let changed=false; const expired=[];
+    for(const gk in P){ const g=P[gk]; if(!g||g.chosen||g.expired||g.kind!=='side') continue;
+      if(typeof g.remaining!=='number') g.remaining=g.timer||180;
+      g.remaining=Math.max(0,g.remaining-1); changed=true;
+      (g.members||[]).forEach(id=>{ const pin=document.querySelector('#mapScreen .map-hotspot[data-poi="'+id+'"]'); const b=pin&&pin.querySelector('.fork-badge'); if(b) b.textContent=window.prideFmtTime(g.remaining); });
+      if(g.remaining<=0) expired.push(gk);
+    }
+    if(changed) save();
+    expired.forEach(gk=>window.prideSideExpire(gk));
+  },1000); };
   document.addEventListener('DOMContentLoaded', render); render();
 })();
 </script>
@@ -30088,17 +31331,21 @@ body.pride-hud-on #pridePcHud{ display:none !important; }
   const levelOf=xp=> xp>=500?4:xp>=250?3:xp>=100?2:1;
   const nextThresh=lvl=> [100,250,500,999][lvl-1]||999;
   const prevThresh=lvl=> [0,100,250,500][lvl-1]||0;
+  // discovered-in-play facts (Faz 1) + effective known count
+  const discListOf=id=> (typeof window.prideDiscList==='function'?window.prideDiscList(id):[]) || [];
+  const knownCount=(id,s,db)=> Math.min(db.total||0, (s.known||0)+discListOf(id).length);
   // seed runtime state on first open
   function state(id){ const m=window.prideMeta; m.suitors=m.suitors||{}; if(!m.suitors[id]) m.suitors[id]={}; return m.suitors[id]; }
   function seed(){
+    // Suitors start FULLY LOCKED — each unlocks when its bound episode completes
+    // (map-locations `suitor` → prideDiscover on prideMarkComplete) or a script's
+    // (Discover: id). Stats below apply once unlocked.
     const seeds={
-      // ---- 5 unlocked ----
-      mr_darcy:{discovered:true,status:'available',xp:120,desire:35,trust:20,affection:28,dDesire:2,dTrust:1,dAffection:-2,known:6,loc:'Netherfield'},
-      mr_bingley:{discovered:true,status:'courting',xp:60,desire:40,trust:55,affection:50,dDesire:1,dTrust:2,dAffection:3,known:9,loc:'Netherfield'},
-      lord_ravenscar:{discovered:true,status:'available',xp:45,desire:60,trust:12,affection:22,dDesire:4,dTrust:-1,dAffection:1,known:3,loc:'The Assembly'},
-      capt_vane:{discovered:true,status:'available',xp:30,desire:38,trust:30,affection:26,dDesire:2,dTrust:2,dAffection:0,known:4,loc:'Meryton'},
-      mr_fenwick:{discovered:true,status:'available',xp:90,desire:20,trust:50,affection:62,dDesire:0,dTrust:1,dAffection:2,known:8,loc:'Longbourn'},
-      // ---- 7 locked ----
+      mr_darcy:{discovered:false,status:'available',xp:120,desire:35,trust:20,affection:28,dDesire:2,dTrust:1,dAffection:-2,known:6,loc:'Netherfield'},
+      mr_bingley:{discovered:false,status:'courting',xp:60,desire:40,trust:55,affection:50,dDesire:1,dTrust:2,dAffection:3,known:9,loc:'Netherfield'},
+      lord_ravenscar:{discovered:false,status:'available',xp:45,desire:60,trust:12,affection:22,dDesire:4,dTrust:-1,dAffection:1,known:3,loc:'The Assembly'},
+      capt_vane:{discovered:false,status:'available',xp:30,desire:38,trust:30,affection:26,dDesire:2,dTrust:2,dAffection:0,known:4,loc:'Meryton'},
+      mr_fenwick:{discovered:false,status:'available',xp:90,desire:20,trust:50,affection:62,dDesire:0,dTrust:1,dAffection:2,known:8,loc:'Longbourn'},
       mr_wickham:{discovered:false}, mr_collins:{discovered:false},
       sir_ashbourne:{discovered:false}, mr_devereux:{discovered:false},
       mr_hale:{discovered:false}, ens_pryce:{discovered:false}, mr_quill:{discovered:false} };
@@ -30120,11 +31367,12 @@ body.pride-hud-on #pridePcHud{ display:none !important; }
     }
     const lvl=levelOf(s.xp);
     const xpInto=(s.xp||0)-prevThresh(lvl), xpSpan=nextThresh(lvl)-prevThresh(lvl); const xpPct=Math.round(Math.min(100,xpInto/xpSpan*100));
-    const dPct=Math.round(Math.min(100,(s.known||0)/(db.total||1)*100));
+    const kc=knownCount(id,s,db);
+    const dPct=Math.round(Math.min(100,kc/(db.total||1)*100));
     const loc=db.bg?('<div class="su-loc" style="background-image:'+BG(db.bg)+'"></div>'):'<div class="su-loc"></div>';
     const rings='<div class="su-rings">'
       +'<div class="su-ring bond" style="--p:'+xpPct+'"><span class="rl"><span class="rk">LV</span><span class="rt">'+lvl+'</span></span></div>'
-      +'<div class="su-ring disc" style="--p:'+dPct+'"><span class="rl"><span class="rk">'+DISC_IC+'</span><span class="rc">'+(s.known||0)+'/'+db.total+'</span></span></div>'
+      +'<div class="su-ring disc" style="--p:'+dPct+'"><span class="rl"><span class="rk">'+DISC_IC+'</span><span class="rc">'+kc+'/'+db.total+'</span></span></div>'
       +'</div>';
     const stTag=s.status?('<span class="su-tag st-'+s.status+'">'+(BADGE[s.status]||s.status)+'</span>'):'';
     const locTag=s.loc?('<span class="su-tag">'+PIN+s.loc+'</span>'):'';
@@ -30148,6 +31396,7 @@ body.pride-hud-on #pridePcHud{ display:none !important; }
   function meterBox(k,label,val,d){ return '<div class="sd-m3 '+k+'"><div class="m3-top"><span class="m3-ico">'+M_ICO[k]+'</span><span class="m3-name">'+label+'</span>'+delta(d)+'</div>'
     +'<div class="m3-label">'+mLabel(k,val)+'</div></div>'; }
   function openDetail(id){
+    window.__prideOpenSuitorId=id;
     const db=DB[id], s=state(id), nf=info(id); const lvl=levelOf(s.xp);
     document.getElementById('sdLoc').style.backgroundImage=db.bg?BG(db.bg):'none';
     document.getElementById('sdFig').style.backgroundImage=FIG(id);
@@ -30172,12 +31421,15 @@ body.pride-hud-on #pridePcHud{ display:none !important; }
         +'<div class="q-ov"><span class="q-t">'+q.t+'</span><span class="q-s">'+(locked?('Locked · Lv '+q.lvl):cat)+'</span></div></div>'; }).join('');
 
     // discovery rail: discovery lead (round progress) + known facts + lock
-    const known=Math.min(s.known||0, (nf.facts||[]).length);
-    const discPct=Math.round((s.known||0)/(db.total||1)*100);
+    const dl=discListOf(id);
+    const authoredKnown=Math.min(s.known||0, (nf.facts||[]).length);
+    const kc=knownCount(id,s,db);
+    const discPct=Math.round(Math.min(100,kc/(db.total||1)*100));
     const discBox='<div class="sd-box lead-disc"><span class="lb-k">Discovery</span>'
-      +'<div class="ringp disc" style="--p:'+discPct+'"><span class="rc"><b>'+(s.known||0)+'</b><small>/'+db.total+'</small></span></div></div>';
-    let factBoxes=(nf.facts||[]).slice(0,known).map(f=>'<div class="sd-box sd-fbox"><span class="f-t">'+f+'</span></div>').join('');
-    const remaining=(db.total||0)-(s.known||0);
+      +'<div class="ringp disc" style="--p:'+discPct+'"><span class="rc"><b>'+kc+'</b><small>/'+db.total+'</small></span></div></div>';
+    let factBoxes=(nf.facts||[]).slice(0,authoredKnown).map(f=>'<div class="sd-box sd-fbox"><span class="f-t">'+f+'</span></div>').join('');
+    factBoxes+=dl.map(f=>'<div class="sd-box sd-fbox" style="border-color:rgba(143,227,245,.5)"><span class="f-t">'+f+'</span></div>').join('');
+    const remaining=(db.total||0)-kc;
     if(remaining>0) factBoxes+='<div class="sd-box sd-fbox locked">'+LOCK_SVG+'<span class="f-t">'+remaining+' more to discover</span></div>';
 
     document.getElementById('sdBody').innerHTML=
@@ -30217,6 +31469,8 @@ body.pride-hud-on #pridePcHud{ display:none !important; }
   function closeIntro(){ const ov=document.getElementById('suitorIntro'); if(ov) ov.classList.remove('on'); const cb=_introDone; _introDone=null; if(typeof cb==='function') cb(); }
 
   window.prideOpenSuitors=openSuitors; window.prideOpenSuitor=openDetail;
+  window.prideSuitorName=id=>(DB[id]&&DB[id].name)||id;
+  window.prideSuitorLevel=id=>levelOf((state(id).xp)||0);
   document.addEventListener('DOMContentLoaded',()=>{
     const c=document.getElementById('suClose'); if(c) c.addEventListener('click',closeSuitors);
     const b=document.getElementById('sdBack'); if(b) b.addEventListener('click',closeDetail);
@@ -30275,7 +31529,27 @@ body.pride-hud-on #pridePcHud{ display:none !important; }
 <script>
 (function setupCastStage(){
   const CHAR='worlds/pride-and-prejudice/characters/';
-  window.CAST_LAYOUTS = window.CAST_LAYOUTS || {};
+  // Built-in convo presets so AUTHORED episodes (which don't ship a [layouts]
+  // block) still position figures. Script-defined presets override these.
+  window.__DEFAULT_CAST_LAYOUTS = {
+    convo_two: { bg:{mode:'convo'}, slots:{
+      left:  {pos:'17%,109%', size:'112%', drop:'200', enter:'slide-l', turn:'18',  dur:'0.55s', ease:'out'},
+      right: {pos:'83%,109%', size:'112%', drop:'200', enter:'slide-r', turn:'-18', dur:'0.55s', ease:'out'} } },
+    convo_three: { bg:{mode:'convo'}, slots:{
+      left:  {pos:'17%,109%', size:'112%', drop:'200', enter:'slide-l', turn:'18',  dur:'0.55s', ease:'out'},
+      center:{pos:'50%,109%', size:'112%', drop:'200', enter:'rise',    turn:'0',   dur:'0.55s', ease:'out'},
+      right: {pos:'83%,109%', size:'112%', drop:'200', enter:'slide-r', turn:'-18', dur:'0.55s', ease:'out'} } },
+    // STATIC two-shot: BOTH figures stay on screen (left + right), facing inward.
+    // Not a convo (no alternating); castSpeak just brightens the speaker. Used by npc encounters.
+    pair_two: { slots:{
+      left:  {pos:'26%,100%', size:'74%', drop:'0', enter:'slide-l', turn:'12',  dur:'0.5s', ease:'out'},
+      right: {pos:'74%,100%', size:'74%', drop:'0', enter:'slide-r', turn:'-12', dur:'0.5s', ease:'out'} } },
+    // SOLO: one figure, centred, framed roughly waist-up (sits low so it doesn't fill
+    // the frame). Used by pc encounters (you meet ONE person; the PC is the viewer).
+    solo: { slots:{
+      center:{pos:'50%,100%', size:'80%', drop:'0', enter:'fade', turn:'0', dur:'0.5s', ease:'out'} } }
+  };
+  window.CAST_LAYOUTS = Object.assign({}, window.__DEFAULT_CAST_LAYOUTS, window.CAST_LAYOUTS || {});
   let curLayout=null, curMap=null, curConvo=false, curConvoStyles=null, curConvoSide=null;
 
   // ---- parse the [layouts] … [/layouts] preset block out of a script ----
@@ -30379,10 +31653,34 @@ body.pride-hud-on #pridePcHud{ display:none !important; }
   // ---- highlight / reveal the speaking figure ----
   window.castSpeak=function(speaker){
     const st=document.getElementById('castStage'); if(!st||!document.body.classList.contains('cast-on')) return;
-    const k=figKey(speaker); const kt=k.split('_')[0];
+    // cast figures are keyed by character FOLDER (mr_darcy); the speaker key is
+    // canonical (darcy). Map speaker→folder so the SPEAKING figure is matched.
+    let k=figKey(speaker); try{ if(window.PRIDE_ACTORS && window.PRIDE_ACTORS[speaker]) k=figKey(window.PRIDE_ACTORS[speaker]); }catch(e){}
+    const kt=k.split('_')[0];
     const figs=[...st.querySelectorAll('.cast-fig')];
     const isMatch=f=>{ const fk=f.dataset.key||''; return (fk===k)||(kt.length>2&&fk.split('_')[0]===kt); };
     const anyMatch=figs.some(isMatch);
+
+    // ENCOUNTER: reliable shot/reverse-shot. Show ONLY the current speaker's figure
+    // (centred); hide the other(s). So the on-screen person always matches the speaker
+    // label — Arabella's lines show Arabella, his lines show him. Narrative beats
+    // (no speaker match) keep whoever was last on screen.
+    if(window.__prideEncounterMode){
+      // Loose match: the render passes a canonical name (e.g. "bingley") while the fig
+      // key is a folder id (e.g. "mr_bingley"). Strip honorifics + compare by containment.
+      const strip=s=>String(s||'').replace(/^(mr|mrs|miss|sir|lord|capt|ens|dr|master)_/,'');
+      const kb=strip(k);
+      const matchEnc=f=>{ const fk=f.dataset.key||''; const fb=strip(fk);
+        return fk===k || fb===kb || fk.indexOf(kb)>=0 || kb.indexOf(fb)>=0; };
+      const anyEnc=figs.some(matchEnc);
+      if(!anyEnc) return;   // narrative beat → keep whoever is on screen
+      figs.forEach(f=>{ const m=matchEnc(f);
+        try{ f.getAnimations().forEach(a=>{ try{a.cancel();}catch(_){} }); }catch(_){}
+        f.classList.toggle('speaking', m); f.classList.remove('dim');
+        f.style.setProperty('--op', m?'1':'0');
+        f.style.setProperty('--dx','0px'); f.style.setProperty('--dy','0px'); f.style.setProperty('--sc','1'); });
+      return;
+    }
 
     if(curConvo){
       if(!anyMatch) return;                       // narrative beat → keep the current speaker on screen
@@ -30423,10 +31721,15 @@ body.pride-hud-on #pridePcHud{ display:none !important; }
     }
 
     figs.forEach(f=>{
-      if(!anyMatch){ f.classList.remove('speaking','dim'); f.style.setProperty('--sc','1'); return; }
+      if(!anyMatch){ f.classList.remove('speaking','dim'); f.style.setProperty('--sc','1');
+        // Encounters: the PC (Arabella) speaks with no figure of her own — keep the
+        // OTHER cast member(s) fully visible instead of letting the stage go empty.
+        if(window.__prideEncounterMode){ f.style.setProperty('--op','1'); f.style.setProperty('--dx','0px'); f.style.setProperty('--dy','0px'); }
+        return; }
       const m=isMatch(f);
       f.classList.toggle('speaking',m); f.classList.toggle('dim',!m);
       f.style.setProperty('--sc', m?'1.03':'0.98');
+      if(window.__prideEncounterMode){ f.style.setProperty('--op','1'); f.style.setProperty('--dx','0px'); f.style.setProperty('--dy','0px'); }
     });
   };
 
@@ -32548,6 +33851,522 @@ body.pride-sketch .scene-bubble, body.pride-sketch #choicePanel, body.pride-sket
   });
 })();
 </script>
+
+<!-- ===== MAP LIFE: harita-üstü diyalog + avatar tap + karşılaşma ===== -->
+<style id="pride-maplife-css">
+  /* interest icon over an encounter cluster */
+  .ml-interest{ position:absolute; transform:translate(-50%,-120%); z-index:20; width:26px; height:26px; border-radius:50%;
+    display:grid; place-items:center; font:700 14px/1 system-ui; color:#fff; cursor:pointer;
+    background:linear-gradient(135deg,#e0668a,#8b7bd8); border:2px solid #fff; box-shadow:0 3px 10px rgba(0,0,0,.55);
+    animation:mlPop .3s ease, mlBob 2s ease-in-out infinite .3s; }
+  .ml-interest.k-love{ background:linear-gradient(135deg,#e0668a,#c8477a); }
+  .ml-interest.k-gossip{ background:linear-gradient(135deg,#8b7bd8,#5d51a8); }
+  .ml-interest.k-question{ background:linear-gradient(135deg,#5ec9a8,#2a8f7a); }
+  .ml-interest.k-pc{ border-color:#f0c46a; box-shadow:0 0 0 2px rgba(240,196,106,.55),0 3px 10px rgba(0,0,0,.55); }
+  /* anchored to an avatar element (top-centre, above the head) so it tracks the walker */
+  .ml-interest.ml-anchored{ left:50%; top:0; }
+  @keyframes mlPop{ from{ transform:translate(-50%,-120%) scale(.4); opacity:0; } }
+  @keyframes mlBob{ 0%,100%{ margin-top:0; } 50%{ margin-top:-4px; } }
+  /* map dialog (bottom sheet over the map) */
+  #prideMapDlg{ position:fixed; left:0; right:0; bottom:0; z-index:9500; transform:translateY(110%);
+    transition:transform .3s cubic-bezier(.22,1,.36,1); pointer-events:none; }
+  #prideMapDlg.on{ transform:translateY(0); pointer-events:auto; }
+  #prideMapDlg .mld-card{ margin:0 12px 14px; background:linear-gradient(160deg,#1c1730,#141019);
+    border:1px solid rgba(183,156,240,.28); border-radius:18px; box-shadow:0 -8px 30px rgba(0,0,0,.5); padding:14px 14px 16px;
+    position:relative; }
+  #prideMapDlg .mld-close{ position:absolute; top:10px; right:10px; width:30px; height:30px; border-radius:50%;
+    background:rgba(255,255,255,.1); border:1px solid rgba(255,255,255,.2); color:#fff; font:400 15px/1 system-ui; cursor:pointer; }
+  #prideMapDlg .mld-head{ display:flex; align-items:center; gap:11px; margin-bottom:10px; }
+  #prideMapDlg .mld-av{ width:52px; height:52px; border-radius:50%; background:#2a1f38 center/cover no-repeat; flex:none; border:2px solid rgba(255,255,255,.85); }
+  #prideMapDlg.k-suitor .mld-av{ border-color:#f0c46a; }
+  #prideMapDlg .mld-nm{ font:800 17px/1.1 "Playfair Display",Georgia,serif; color:#f3eeff; }
+  #prideMapDlg .mld-kind{ font:700 10px Inter,system-ui; letter-spacing:.12em; text-transform:uppercase; margin-top:3px; color:#9a90b4; }
+  #prideMapDlg.k-suitor .mld-kind{ color:#f0c46a; }
+  #prideMapDlg .mld-line{ min-height:44px; font:500 14px/1.45 Inter,system-ui; color:#e7deff; cursor:pointer; }
+  #prideMapDlg .mld-hint{ font:600 10px Inter; color:#6b6480; margin-top:6px; text-align:right; }
+  #prideMapDlg .mld-choices{ display:flex; flex-direction:column; gap:7px; margin-top:10px; }
+  #prideMapDlg .mld-opt{ text-align:left; padding:10px 13px; border-radius:12px; border:1px solid rgba(183,156,240,.28);
+    background:rgba(255,255,255,.05); color:#eae6f5; font:600 13px Inter; cursor:pointer; }
+  #prideMapDlg .mld-opt:active{ transform:scale(.98); border-color:rgba(224,102,138,.6); }
+  /* ===== ENCOUNTER MODE: an overlay ON TOP of the REAL live map. The actual
+     #mapScreen (pins, walkers, current position) stays behind, darkened by a veil;
+     the speaker figure + dialog UI sit above it. Not a fake map image. ===== */
+  /* pure dark veil over whatever is really behind (the live map) */
+  #prideEncBg{ position:fixed; inset:0; display:none; z-index:360; pointer-events:none;
+    background:linear-gradient(to top, rgba(4,3,8,.9) 0%, rgba(5,4,11,.8) 36%, rgba(6,5,13,.6) 70%, rgba(7,6,15,.5) 100%); }
+  body.pride-encounter #prideEncBg{ display:block; animation:prideEncIn .45s ease both; }
+  @keyframes prideEncIn{ from{ opacity:0; } to{ opacity:1; } }
+  /* keep the REAL map visible behind (it's normally display:none without flow-map),
+     but frozen — taps go to the dialog on top, not the map */
+  body.pride-encounter #mapScreen{ display:block !important; }
+  body.pride-encounter #mapScreen .map-avatar,
+  body.pride-encounter #mapScreen .map-hotspot,
+  body.pride-encounter #mapScreen .ml-interest,
+  body.pride-encounter #mapScreen .map-world{ pointer-events:none !important; }
+  /* kill the episode photo backdrop + scene layers so they can't cover the map */
+  body.pride-encounter #backdrop,
+  body.pride-encounter #cutsceneLayer,
+  body.pride-encounter #narrativeSceneLayer,
+  body.pride-encounter .vignette{ display:none !important; }
+  /* hide the floating chrome buttons (map coins/list/shop, avatar HUD, episode
+     logbook/eye/talk column, restart) so the overlay reads cleanly over the dimmed
+     map — the map art, pins and walkers still show behind the veil */
+  body.pride-encounter #peObj,
+  body.pride-encounter #peIcons,
+  body.pride-encounter #topControls,
+  body.pride-encounter .map-top-actions,
+  body.pride-encounter #pcMapHud,
+  body.pride-encounter #fpCancel,
+  body.pride-encounter .fp-back,
+  body.pride-encounter .map-toggle{ display:none !important; }
+  /* the top-left back arrow is unwanted on the map screen too (only needed inside
+     free-explore, which isn't flow-map) */
+  body.flow-map #fpCancel{ display:none !important; }
+  /* END screen: hide the dialog box so the centered Continue pill never overlaps text */
+  body.pride-encounter #dialogBox.end{ display:none !important; }
+  /* encounter figures swap instantly to the current speaker (no 0.4s opacity lag) */
+  body.pride-encounter #castStage .cast-fig{ transition:transform .3s ease, filter .3s ease !important; }
+  /* the whole encounter stack sits ABOVE the real map (#mapScreen z:300) + veil (z:360) */
+  body.pride-encounter #castStage{ z-index:370 !important; }
+  body.pride-encounter #stage{ z-index:372 !important; }
+  body.pride-encounter #dialogBox{ z-index:390 !important; }
+  body.pride-encounter #choicePanel{ z-index:395 !important; }
+</style>
+<div id="prideMapDlg"><div class="mld-card">
+  <button class="mld-close" type="button" aria-label="Close">✕</button>
+  <div class="mld-head"><div class="mld-av" id="mldAv"></div><div><div class="mld-nm" id="mldNm"></div><div class="mld-kind" id="mldKind"></div></div></div>
+  <div class="mld-line" id="mldLine"></div>
+  <div class="mld-hint" id="mldHint">devam için dokun ›</div>
+  <div class="mld-choices" id="mldChoices" style="display:none"></div>
+</div></div>
+<div id="prideEncBg" aria-hidden="true"></div>
+<script>
+(function prideMapLife(){
+  const SUIT=new Set(['mr_darcy','mr_bingley','mr_wickham','mr_collins','lord_ravenscar','sir_ashbourne','capt_vane','mr_devereux','mr_hale','mr_fenwick','ens_pryce','mr_quill']);
+  const FIG=id=>"worlds/pride-and-prejudice/characters/"+id+"/appearances/pride.png";
+  const nameOf=id=>{ try{ if(typeof window.prideSuitorName==='function'){ const n=window.prideSuitorName(id); if(n&&n!==id) return n; } }catch(e){}
+    return id.replace(/_/g,' ').replace(/\b\w/g,c=>c.toUpperCase()); };
+  const dlg=document.getElementById('prideMapDlg');
+  const shut=()=>{ dlg.classList.remove('on'); try{ if(window.prideSetBusy) window.prideSetBusy(null); }catch(e){} };
+  dlg.querySelector('.mld-close').addEventListener('click',shut);
+
+  // Unified map dialog: opts = { id, kind, lines:[str], choices:[{t,onPick}], onDone }
+  window.prideMapDialog=function(opts){ opts=opts||{}; const lines=opts.lines||[]; let i=0;
+    dlg.classList.toggle('k-suitor', opts.kind==='suitor');
+    document.getElementById('mldAv').style.backgroundImage="url('"+FIG(opts.id)+"')";
+    document.getElementById('mldNm').textContent=opts.title||nameOf(opts.id);
+    document.getElementById('mldKind').textContent=opts.kindLabel||(opts.kind==='suitor'?'Suitor':'Acquaintance');
+    const lineEl=document.getElementById('mldLine'), hintEl=document.getElementById('mldHint'), chEl=document.getElementById('mldChoices');
+    chEl.style.display='none'; chEl.innerHTML='';
+    function showChoices(){ if(!opts.choices||!opts.choices.length){ shut(); if(opts.onDone) opts.onDone(); return; }
+      hintEl.style.display='none'; chEl.style.display='';
+      opts.choices.forEach(o=>{ const b=document.createElement('button'); b.className='mld-opt'; b.textContent=o.t;
+        b.addEventListener('click',()=>{ shut(); if(o.onPick) o.onPick(); if(opts.onDone) opts.onDone(); }); chEl.appendChild(b); }); }
+    function step(){ if(i>=lines.length){ showChoices(); return; } lineEl.textContent=lines[i]; i++; hintEl.style.display=(i>=lines.length&&(!opts.choices||!opts.choices.length))?'none':''; hintEl.textContent=(i>=lines.length)?'':'devam için dokun ›'; }
+    lineEl.onclick=step; step();
+    dlg.classList.add('on');
+    return dlg;
+  };
+
+  // Tap a walking avatar → route to the DEFINED encounter engine (no invented UI).
+  // pc encounter for this character first; else a nearby npc encounter they're in.
+  function avEls(){ const world=document.querySelector('#mapScreen .map-world'); if(!world) return [];
+    return [...world.querySelectorAll('.map-avatar.pride-avatar')].filter(a=>{ const s=getComputedStyle(a); return s.display!=='none' && parseFloat(s.opacity||'1')>0.4; }); }
+  function centerOf(a){ const r=a.getBoundingClientRect(); return {cx:r.left+r.width/2, cy:r.top+r.height/2}; }
+  function findNearbyNpcFor(id){ const els=avEls(); const me=els.find(a=>a.dataset.cid===id); if(!me) return null; const mc=centerOf(me);
+    let best=null, bestD=1e9;
+    for(const a of els){ if(a===me) continue; const c=centerOf(a); const d=Math.hypot(mc.cx-c.cx, mc.cy-c.cy); if(d>90) continue;
+      const enc=findEncounterNpc(id, a.dataset.cid); if(enc && d<bestD){ best=enc; bestD=d; } }
+    return best; }
+  // Ambient lines used only when no authored encounter exists — rendered through the
+  // SAME encounter engine (darkened-map mini-episode), never the old bottom-sheet.
+  const PICK=a=>a[Math.floor(Math.random()*a.length)];
+  const GREET_SUITOR=['Miss Frost. You walk out early.','A pleasure to find you here.','I had hoped our paths might cross.'];
+  const GREET_NPC=['Oh — good day to you!','A fine day for a turn about the town.','Have you heard the latest from Meryton?'];
+  const REPLY_US=['Good day to you.','So it would seem.','Indeed — and a fair one.'];
+  const MEET_LINES=[
+    ['A word with you, if I may.','Of course — walk with me.'],
+    ['You have heard, I suppose?','I have heard a great many things.'],
+    ['We were just speaking of the ball.','Were you indeed.']
+  ];
+  // Build a minimal, VALID encounter DSL (folder-id speakers → alias → bubbles). No
+  // choices, so it simply tap-advances to the end and returns to the map.
+  function genPcEnc(id, kind){
+    const line = kind==='suitor'?PICK(GREET_SUITOR):PICK(GREET_NPC);
+    const script='(Situation: enc_gen_'+id+' | A Chance Meeting | Your paths cross on the road)\n'
+      +'[ui:cast layout=convo_two]\n'
+      +'[cast: left=arabella_frost right='+id+']\n'
+      +id+': '+line+'\n'
+      +'arabella_frost: '+PICK(REPLY_US)+'\n';
+    return { id:'gen_pc_'+id, mode:'pc', who:[id], type:'whisper', title:nameOf(id), script };
+  }
+  function genNpcEnc(a,b){
+    const pair=PICK(MEET_LINES);
+    const script='(Situation: enc_gen_'+a+'_'+b+' | An Encounter | A moment on the road)\n'
+      +'[ui:cast layout=convo_two]\n'
+      +'[cast: left='+a+' right='+b+']\n'
+      +a+': '+pair[0]+'\n'
+      +b+': '+pair[1]+'\n';
+    return { id:'gen_npc_'+a+'_'+b, mode:'npc', who:[a,b], type:'whisper', title:nameOf(a)+' & '+nameOf(b), script };
+  }
+  window.prideAvatarTap=function(id, kind){
+    const el=document.querySelector('#mapScreen .map-avatar[data-cid="'+id+'"]');
+    const em = el && el.dataset.encmode;   // set by the sim on a road pause: 'npc' (meet) | 'pc' (lone stop)
+    // (1) MEET of two characters → we are NOT in the scene: play the OBSERVED exchange
+    //     (no player choices). Authored npc script if one exists, else a generated one.
+    if(em==='npc'){
+      const partner = el.dataset.partner;
+      const enc = findEncounterNpc(id, partner) || genNpcEnc(id, partner);
+      window.pridePlayEncounter(enc); return;
+    }
+    // (2) LONE character on the road, or one docked at a location → OUR conversation.
+    //     Authored pc encounter (with choices) if one exists, else a light generated one.
+    const enc = findEncounterPc(id) || genPcEnc(id, kind);
+    window.pridePlayEncounter(enc);
+  };
+
+  // ---- DEFINED encounters (data-driven from encounters.json) ----
+  const TYPE_ICON={ love:{c:'k-love',g:'♥'}, gossip:{c:'k-gossip',g:'…'}, question:{c:'k-question',g:'?'}, whisper:{c:'',g:'!'} };
+  window.__prideEncounters=window.__prideEncounters||[];
+  fetch('worlds/pride-and-prejudice/encounters.json',{cache:'no-store'}).then(r=>r.ok?r.json():null).then(j=>{ window.__prideEncounters=(j&&j.encounters)||[]; }).catch(()=>{});
+  const firedKey='rai.encFired';
+  const getFired=()=>{ try{ return new Set(JSON.parse(localStorage.getItem(firedKey)||'[]')); }catch(e){ return new Set(); } };
+  const markFired=id=>{ try{ const s=getFired(); s.add(id); localStorage.setItem(firedKey, JSON.stringify([...s])); }catch(e){} };
+  const whoOf=e=> e.who || e.pair || [];   // new schema: who[]; legacy: pair[]
+  function pairMatch(p,a,b){ return p && ((p[0]===a&&p[1]===b)||(p[0]===b&&p[1]===a)); }
+  // NPC↔NPC: two named characters both present, we observe.
+  function findEncounterNpc(a,b){ const fired=getFired();
+    return (window.__prideEncounters||[]).find(e=> (e.mode==='npc'||(!e.mode)) && pairMatch(whoOf(e),a,b) && !(e.once && fired.has(e.id))) || null; }
+  // PC↔character: a single character on the road who will speak to us.
+  function findEncounterPc(id){ const fired=getFired();
+    return (window.__prideEncounters||[]).find(e=> e.mode==='pc' && (whoOf(e)[0]===id) && !(e.once && fired.has(e.id))) || null; }
+
+  let _encTimer=0, _encEls=[];
+  function clearEnc(){ _encEls.forEach(e=>{ try{e.remove();}catch(_){}}); _encEls=[]; }
+  // Attach the interest icon AS A CHILD of the avatar so it tracks the walker every
+  // frame (and disappears with it) — never left floating alone when the character moves.
+  function mkIcon(enc, hostEl){
+    const ic=TYPE_ICON[enc.type]||TYPE_ICON.whisper;
+    const el=document.createElement('div'); el.className='ml-interest ml-anchored '+ic.c+(enc.mode==='pc'?' k-pc':''); el.textContent=ic.g;
+    el.addEventListener('click',(e)=>{ e.stopPropagation(); window.pridePlayEncounter(enc); });
+    hostEl.appendChild(el); _encEls.push(el);
+  }
+  // NOTE: on-map interest icons are now owned by the walker sim (prideMapLife IIFE):
+  // it decides road meets / lone stops (safe-circle gated, 15s dwell) and draws the
+  // 2 allowed icons (whisper bubble / alert). This scanner is retired to avoid double
+  // icons; the encounter engine (pridePlayEncounter) + prideAvatarTap still drive taps.
+  function scanEncounters(){ clearEnc(); }
+
+  // ---- Play a defined encounter as a real (mini) episode ----
+  // Map fades to a dark backdrop (#prideEncBg); the encounter's DSL script runs
+  // through the normal episode engine (cast, narrative, bubbles, choices,
+  // inline consequences). END → applies (Unlock:) + returns to the map.
+  window.pridePlayEncounter=function(enc){
+    if(!enc||!enc.script){ console.warn('[enc] no script', enc&&enc.id); return; }
+    try{ if(window.prideSetBusy) window.prideSetBusy(null); }catch(e){}
+    window.__prideEncounterMode=true; window.__encActive=enc;
+    if(enc.once) markFired(enc.id);
+    // Remember exactly where the map was scrolled when the icon was tapped, so we can
+    // return to the SAME view after the dialog (no drift / re-centering).
+    try{ const sc=document.getElementById('mapScroll'); if(sc) window.__prideMapScroll={l:sc.scrollLeft, t:sc.scrollTop}; }catch(e){}
+    clearEnc(); try{ window.prideStopMapLife&&window.prideStopMapLife(); }catch(e){}
+    const b=document.body;
+    b.dataset.pack='pride';
+    try{ window.__prideEpisodeTitle = enc.title || 'An Encounter'; }catch(e){}
+    // Run as a real mini-episode: leave EVERY flow screen (incl. flow-map) so the
+    // engine treats us as in-dialog (tap-advance, choices all work). The darkened
+    // PRIDE MAP (#prideEncBg) is the scene backdrop; the episode's photo #backdrop
+    // is killed by CSS + forced inline so it can never leak on top.
+    b.classList.remove('flow-intro','flow-form','flow-loading','flow-survey','flow-gallery','flow-addself','flow-final','flow-worlds','flow-date','flow-map','flow-style','flow-wrap','in-1984-flow','pc-firststate','pc-creating');
+    b.classList.add('in-game-locked','pride-encounter');
+    try{ if(window.pcHudHide) window.pcHudHide(); }catch(e){}
+    // clear any lingering cutscene / narrative-scene state from a previous script
+    // (boot sample or a past episode) so it can't paint over the encounter.
+    try{ if(typeof clearCutscene==='function') clearCutscene(); }catch(e){}
+    try{ if(typeof clearNarrativeScene==='function') clearNarrativeScene(); }catch(e){}
+    b.classList.remove('narrative-active','cutscene-active','cutscene-bubble','scene-inner','narrativeScene','ui-narrative','inner','exploring','choosing');
+    // belt-and-suspenders: force the photo backdrop + scene layers off
+    ['backdrop','cutsceneLayer','narrativeSceneLayer'].forEach(function(id){ var e=document.getElementById(id); if(e) e.style.setProperty('display','none','important'); });
+    try{ loadScript(enc.script); }catch(e){ console.warn('[enc] loadScript',e); }   // sets idx=0, __prideScriptUnlocks
+    try{ renderLine(); }catch(e){ console.warn('[enc] render',e); }
+  };
+  window.prideEndEncounter=function(){
+    window.__prideEncounterMode=false; window.__encActive=null;
+    const b=document.body;
+    b.classList.remove('pride-encounter','in-game-locked');
+    // restore the layers we force-hid on entry
+    ['backdrop','cutsceneLayer','narrativeSceneLayer'].forEach(function(id){ var e=document.getElementById(id); if(e) e.style.removeProperty('display'); });
+    try{ if(typeof clearCutscene==='function') clearCutscene(); }catch(e){}
+    try{ if(typeof clearNarrativeScene==='function') clearNarrativeScene(); }catch(e){}
+    try{ b.classList.remove('narrativeScene','scene-inner','cutscene-active','cutscene-bubble','ui-narrative','narrative-active','choosing','exploring','inner'); }catch(e){}
+    try{ if(typeof el!=='undefined' && el.choicePanel) el.choicePanel.classList.remove('open'); }catch(e){}
+    try{ if(typeof showMap==='function') showMap(); }catch(e){}
+    try{ if(window.prideRefreshMapLocks) window.prideRefreshMapLocks(); }catch(e){}
+    try{ if(window.prideSpawnWalkers) window.prideSpawnWalkers(); }catch(e){}
+    try{ window.prideStartMapLife&&window.prideStartMapLife(); }catch(e){}
+    // Restore the pre-encounter scroll so the map reopens exactly where the icon was
+    // tapped (showMap can reflow/reset it — re-apply across a few frames to win).
+    try{ const s=window.__prideMapScroll; if(s){ const sc=document.getElementById('mapScroll');
+      if(sc){ const set=()=>{ sc.scrollLeft=s.l; sc.scrollTop=s.t; }; set(); requestAnimationFrame(set); [60,180,380].forEach(t=>setTimeout(set,t)); } } }catch(e){}
+  };
+  // poll on a light interval while the map is up
+  window.prideStartMapLife=function(){ if(_encTimer) return; _encTimer=setInterval(scanEncounters, 2500); };
+  window.prideStopMapLife=function(){ if(_encTimer){ clearInterval(_encTimer); _encTimer=0; } clearEnc(); };
+  document.addEventListener('DOMContentLoaded', ()=>{ try{ window.prideStartMapLife(); }catch(e){} });
+  try{ window.prideStartMapLife(); }catch(e){}
+})();
+</script>
+
+<!-- ===== ATMOSPHERE: gece/gündüz + yağmur ===== -->
+<style id="pride-atmos-css">
+  #prideNightVeil{ position:absolute; inset:0; z-index:3; pointer-events:none; opacity:0; transition:opacity .8s ease;
+    background:radial-gradient(130% 100% at 50% -10%, rgba(30,40,90,.30), rgba(6,8,26,.68)); mix-blend-mode:multiply; }
+  body.pride-night #prideNightVeil{ opacity:1; }
+  body.pride-night #mapScreen .map-hotspot .dot{ filter:brightness(1.15); }   /* pins pop a touch at night */
+  #prideRain{ position:absolute; inset:0; z-index:8; pointer-events:none; opacity:0; transition:opacity .6s ease; overflow:hidden;
+    background:linear-gradient(180deg, rgba(30,40,70,.16), rgba(18,24,48,.30)); }
+  body.pride-rain #prideRain{ opacity:1; }
+  #prideRain::before{ content:''; position:absolute; inset:-25%;
+    background-image:repeating-linear-gradient(74deg, rgba(200,214,255,0) 0 6px, rgba(200,214,255,.20) 6px 7px);
+    animation:prideRainMove .45s linear infinite; }
+  @keyframes prideRainMove{ to{ transform:translate(-14px,46px); } }
+  body.pride-rain #mapScreen .map-avatar.sim-npc{ display:none !important; }   /* fewer folk in the rain (suitors brave it) */
+  /* fog — soft, translucent, textured haze inside the painted region (map-fog.json).
+     Screen-blended so it lightens (mist) instead of greying; you still see the map. */
+  #prideFog{ position:absolute; inset:0; z-index:2; pointer-events:none; width:100%; height:100%;
+    transition:opacity 1s ease; opacity:0; filter:blur(2px); }
+  body.pc-firststate #prideFog, body.pc-creating #prideFog{ display:none; }
+  /* fog is STATIC (no per-frame filter re-raster). On an unlock reveal the ONE
+     dissolving layer spreads outward to the edges and fades — others stay put. */
+  #prideFog g.fog-dissolve{ transform-box:fill-box; transform-origin:center;
+    animation:prideFogDissolve 1.6s ease-out forwards; }
+  @keyframes prideFogDissolve{ 0%{ transform:scale(1); opacity:1; } 100%{ transform:scale(1.7); opacity:0; } }
+</style>
+<script>
+(function prideAtmos(){
+  window.prideTimeOfDay = window.prideTimeOfDay || 'day';
+  window.prideWeather   = window.prideWeather   || 'clear';
+  function ensure(){ const ms=document.getElementById('mapScreen'); if(!ms) return null;
+    if(getComputedStyle(ms).position==='static') ms.style.position='relative';
+    if(!document.getElementById('prideNightVeil')){ const v=document.createElement('div'); v.id='prideNightVeil'; ms.appendChild(v); }
+    if(!document.getElementById('prideRain')){ const r=document.createElement('div'); r.id='prideRain'; ms.appendChild(r); }
+    return ms; }
+  window.prideSetTime=function(t){ window.prideTimeOfDay=(t==='night')?'night':'day'; ensure();
+    document.body.classList.toggle('pride-night', window.prideTimeOfDay==='night');
+    try{ if(window.prideRefreshMapLocks) window.prideRefreshMapLocks(); }catch(e){} };   // re-apply time-locks
+  window.prideSetWeather=function(w){ window.prideWeather=(w==='rain')?'rain':'clear'; ensure();
+    document.body.classList.toggle('pride-rain', window.prideWeather==='rain'); };
+  // Fog — author-painted misty regions (map-tracer 🌫 Sis modu → map-fog.json), but
+  // rendered as real drifting CLOUD texture (feTurbulence) clipped to the painted
+  // region — so it reads as mist, not a flat paint blob.
+  const FOGNS='http://www.w3.org/2000/svg';
+  let _fogData=null, _fogLoaded=false;   // _fogData: [{locId, mask}]
+  let _fogForce=new Set();               // locIds held visible (static) even though unlocked
+  let _fogDissolve=new Set();            // locIds currently playing the spread+fade dissolve
+  // A location-tied fog lifts once that location is open (pin present + not locked).
+  function isLocOpen(locId){ if(!locId) return false;
+    const h=document.querySelector('#mapScreen .map-hotspot[data-poi="'+locId+'"]'); if(!h) return false;
+    return !(h.classList.contains('pin-locked')||h.classList.contains('pin-eplock')||h.classList.contains('pride-locked')); }
+  // PERF: cost is constant regardless of how many fog layers exist. All visible fog
+  // masks are UNIONED into one mask, painted by ONE static cloud (feTurbulence). No
+  // per-layer filters and NO animation — animating a feTurbulence-filtered layer over
+  // a 3072px map re-runs the filter every frame and freezes panning.
+  function applyFog(){ const world=document.querySelector('#mapScreen .map-world'); if(!world) return;
+    let fog=document.getElementById('prideFog');
+    if(fog && fog.tagName && fog.tagName.toLowerCase()!=='svg'){ fog.remove(); fog=null; }   // migrate old DIV fog
+    if(!fog){ fog=document.createElementNS(FOGNS,'svg'); fog.id='prideFog'; fog.setAttribute('viewBox','0 0 100 100'); fog.setAttribute('preserveAspectRatio','none'); world.appendChild(fog); }
+    fog.style.opacity='1';
+    // DISSOLVING fogs = currently playing the spread+fade (each in its own animating group).
+    const dissolving=(_fogData||[]).filter(f=>f && f.mask && _fogDissolve.has(f.locId));
+    // STEADY fogs = shown statically: still-locked OR held (_fogForce), and NOT dissolving.
+    const steady=(_fogData||[]).filter(f=>f && f.mask && !_fogDissolve.has(f.locId) && (!isLocOpen(f.locId) || _fogForce.has(f.locId)));
+    if(!steady.length && !dissolving.length){ fog.innerHTML=''; return; }
+    const cloud='<filter id="prideCloud" x="-10%" y="-10%" width="120%" height="120%" color-interpolation-filters="sRGB">'
+      +'<feTurbulence type="fractalNoise" baseFrequency="0.016 0.022" numOctaves="3" seed="11" stitchTiles="stitch" result="n"/>'
+      +'<feColorMatrix in="n" type="matrix" values="0 0 0 0 0.9  0 0 0 0 0.93  0 0 0 0 0.98  0 0 0 0.22 0.95"/>'
+      +'<feGaussianBlur stdDeviation="0.7"/></filter>'
+      +'<filter id="prideFogSoft" x="-25%" y="-25%" width="150%" height="150%"><feGaussianBlur stdDeviation="2"/></filter>';
+    let defs='<defs>'+cloud;
+    let body='';
+    if(steady.length){
+      defs+='<mask id="prideFogRegion" maskUnits="userSpaceOnUse" x="0" y="0" width="100" height="100"><g filter="url(#prideFogSoft)">'
+        + steady.map(f=>'<image href="'+f.mask+'" x="0" y="0" width="100" height="100" preserveAspectRatio="none"/>').join('')
+        +'</g></mask>';
+      body+='<g mask="url(#prideFogRegion)"><rect x="-2" y="-2" width="104" height="104" filter="url(#prideCloud)"/></g>';
+    }
+    dissolving.forEach((f,i)=>{ const mid='prideFogDiss'+i;
+      defs+='<mask id="'+mid+'" maskUnits="userSpaceOnUse" x="0" y="0" width="100" height="100"><g filter="url(#prideFogSoft)">'
+        +'<image href="'+f.mask+'" x="0" y="0" width="100" height="100" preserveAspectRatio="none"/></g></mask>';
+      body+='<g class="fog-dissolve" mask="url(#'+mid+')"><rect x="-2" y="-2" width="104" height="104" filter="url(#prideCloud)"/></g>';
+    });
+    defs+='</defs>';
+    fog.innerHTML=defs+body;
+  }
+  function _pinEl(locId){ return document.querySelector('#mapScreen .map-hotspot[data-poi="'+locId+'"]'); }
+  // Hold a location's fog visible (static) even though it just unlocked — so the map
+  // returns WITH the fog already in place (no clear-first flash / pop-in). The pin +
+  // its label are hidden meanwhile, so they only appear once the fog clears.
+  window.prideHoldFog=function(locId){ if(!locId) return; _fogForce.add(locId); applyFog();
+    const p=_pinEl(locId); if(p){ p.style.transition='none'; p.style.opacity='0'; } };
+  // Then dissolve it: spread to the edges + fade (its own .fog-dissolve group). Other
+  // fogs stay put. Once the fog is gone, the pin + label fade in.
+  window.prideDisperseFog=function(locId){ if(!locId) return;
+    _fogForce.delete(locId); _fogDissolve.add(locId); applyFog();     // start spread+fade
+    setTimeout(()=>{ _fogDissolve.delete(locId); applyFog();
+      const p=_pinEl(locId); if(p){ p.style.transition='opacity .8s ease'; p.style.opacity='1'; } }, 1700);
+  };
+  function normalizeFog(j){ if(!j) return [];
+    if(Array.isArray(j.fogs)) return j.fogs.filter(f=>f&&f.mask).map(f=>({locId:f.locId||null, mask:f.mask}));
+    if(j.mask) return [{locId:null, mask:j.mask}];   // legacy single-mask
+    return []; }
+  // Called by prideRefreshMapLocks (also on unlock changes) → re-checks which fogs lifted.
+  window.prideUpdateFog=function(){
+    if(!_fogLoaded){ _fogLoaded=true;
+      fetch('worlds/pride-and-prejudice/map-fog.json',{cache:'no-store'}).then(r=>r.ok?r.json():null)
+        .then(j=>{ _fogData=normalizeFog(j); applyFog(); }).catch(()=>applyFog());
+    } else applyFog();
+  };
+  document.addEventListener('DOMContentLoaded', ensure); ensure();
+})();
+</script>
 <!-- ===== /PRIDE SKETCH ===== -->
+
+<!-- ===== UNLOCK CINEMATIC: a location's reveal video before returning to the map ===== -->
+<style id="pride-unlock-cine-css">
+  #prideUnlockCine{ position:fixed; inset:0; z-index:12000; background:#000; display:none; }
+  #prideUnlockCine.on{ display:block; }
+  #prideUnlockCine #pucVid{ position:absolute; inset:0; width:100%; height:100%; object-fit:cover; background:#000; }
+  #prideUnlockCine #pucGrad{ position:absolute; inset:0; pointer-events:none;
+    background:linear-gradient(to top, rgba(4,3,8,.9) 0%, rgba(4,3,8,.35) 34%, rgba(4,3,8,0) 60%); }
+  #prideUnlockCine #pucText{ position:absolute; left:0; right:0; bottom:9%; text-align:center; padding:0 24px;
+    opacity:0; transform:translateY(14px); transition:opacity .7s ease, transform .7s ease; }
+  #prideUnlockCine #pucText.show{ opacity:1; transform:none; }
+  #prideUnlockCine .puc-kicker{ font:800 12px/1 Inter,system-ui,sans-serif; letter-spacing:.3em; text-transform:uppercase; color:#f0c46a; margin-bottom:10px; }
+  #prideUnlockCine .puc-title{ font:800 clamp(26px,7vw,40px)/1.08 "Playfair Display",Georgia,serif; color:#fff; text-shadow:0 3px 20px rgba(0,0,0,.75); margin-bottom:20px; }
+  #prideUnlockCine #pucCont{ padding:13px 44px; border:none; border-radius:999px; background:linear-gradient(120deg,#e0668a,#8b7bd8);
+    color:#fff; font:800 15px Inter,system-ui,sans-serif; cursor:pointer; box-shadow:0 8px 26px rgba(0,0,0,.55); }
+  #prideUnlockCine #pucCont:active{ transform:scale(.97); }
+</style>
+<div id="prideUnlockCine" aria-hidden="true">
+  <video id="pucVid" playsinline preload="auto"></video>
+  <div id="pucGrad"></div>
+  <div id="pucText"><div class="puc-kicker">Unlocked</div><div class="puc-title" id="pucTitle"></div><button id="pucCont" type="button">Continue</button></div>
+</div>
+<script>
+(function prideUnlockCine(){
+  // Per-location reveal videos. Add more as art lands: id → mp4 path.
+  const VIDEOS={ 'rosings-park':'worlds/pride-and-prejudice/unlocks/rosings-park.mp4' };
+  const titleOf=id=>{ try{ const L=(window.__mapLocs||[]).find(x=>x.id===id); if(L&&L.title) return L.title; }catch(e){}
+    return String(id||'').replace(/[-_]/g,' ').replace(/\b\w/g,c=>c.toUpperCase()); };
+  // Given the just-completed episode's unlock list, is there a location with a video?
+  window.prideUnlockVideoFor=function(unlocks){
+    const ids=(unlocks||[]).map(u=>typeof u==='string'?u:(u&&u.id)).filter(Boolean);
+    for(const id of ids){ if(VIDEOS[id]) return {locId:id, url:VIDEOS[id]}; }
+    return null;
+  };
+  window.pridePlayUnlockCinematic=function(locId, url, onContinue){
+    const ov=document.getElementById('prideUnlockCine'); if(!ov){ if(onContinue) onContinue(); return; }
+    const vid=ov.querySelector('#pucVid'), txt=ov.querySelector('#pucText'), cont=ov.querySelector('#pucCont');
+    ov.querySelector('#pucTitle').textContent=titleOf(locId);
+    txt.classList.remove('show');
+    // Muted autoplay is always allowed → guarantees playback (no black frame); unmute once rolling.
+    vid.loop=false; vid.muted=true; vid.setAttribute('muted',''); vid.setAttribute('autoplay',''); vid.setAttribute('playsinline','');
+    ov.classList.add('on'); ov.setAttribute('aria-hidden','false');
+    let shown=false; const reveal=()=>{ if(shown) return; shown=true; txt.classList.add('show'); };
+    // Title + Continue arrive near the end; freeze the final frame by PAUSING just
+    // before the end (no seek — seeking on end resets/loops the clip).
+    vid.ontimeupdate=()=>{ const d=vid.duration||0;
+      if(vid.currentTime>=4 || (d && vid.currentTime>=d-1.2)) reveal();
+      if(d && vid.currentTime>=d-0.08){ try{ vid.pause(); }catch(e){} } };
+    vid.onended=()=>{ reveal(); try{ vid.pause(); }catch(e){} };
+    vid.onerror=()=>{ reveal(); };
+    const done=()=>{ ov.classList.remove('on'); ov.setAttribute('aria-hidden','true'); try{ vid.pause(); vid.removeAttribute('src'); }catch(e){} if(typeof onContinue==='function') onContinue(); };
+    cont.onclick=done;
+    // don't load()+play() synchronously — load aborts play. play on canplay instead.
+    const start=()=>{ vid.oncanplay=null;   // play ONCE (freeze-frame seek must not re-trigger → loop)
+      const g=vid.play(); if(g&&g.then) g.then(()=>{ try{ vid.muted=false; }catch(e){} }).catch(()=>{}); };
+    vid.oncanplay=start; vid.src=url; if(vid.readyState>=2) start();
+    setTimeout(reveal, 6000);   // safety: reveal even if the video stalls
+  };
+})();
+</script>
+<!-- ===== CHARACTER UNLOCK: a suitor's reveal video + name / origin / traits ===== -->
+<style id="pride-char-unlock-css">
+  #prideCharUnlock{ position:fixed; inset:0; z-index:12050; background:#000; display:none; }
+  #prideCharUnlock.on{ display:block; }
+  #prideCharUnlock #pcuVid{ position:absolute; inset:0; width:100%; height:100%; object-fit:cover; background:#000; }
+  #prideCharUnlock #pcuGrad{ position:absolute; inset:0; pointer-events:none;
+    background:linear-gradient(to top, rgba(4,3,8,.94) 0%, rgba(4,3,8,.55) 22%, rgba(4,3,8,0) 46%); }
+  #prideCharUnlock #pcuText{ position:absolute; left:0; right:0; bottom:6%; text-align:center; padding:0 22px; }
+  /* each line reveals with a soft fade-up; .show is added staggered in the last second */
+  #prideCharUnlock .pcu-line{ opacity:0; transform:translateY(14px); transition:opacity .55s ease, transform .55s ease; }
+  #prideCharUnlock .pcu-line.show{ opacity:1; transform:none; }
+  #prideCharUnlock .pcu-kicker{ font:800 11px/1 Inter,system-ui,sans-serif; letter-spacing:.32em; text-transform:uppercase; color:#f0c46a; margin-bottom:8px; }
+  #prideCharUnlock .pcu-name{ font:800 clamp(28px,8vw,42px)/1.05 "Playfair Display",Georgia,serif; color:#fff; text-shadow:0 3px 22px rgba(0,0,0,.8); margin-bottom:9px; }
+  #prideCharUnlock .pcu-sub{ font:500 13.5px/1.4 Inter,system-ui,sans-serif; color:#d9d0ee; margin-bottom:14px; }
+  #prideCharUnlock .pcu-traits{ display:flex; gap:9px; justify-content:center; flex-wrap:wrap; margin-bottom:20px; }
+  #prideCharUnlock .pcu-trait{ font:700 12px/1 Inter,system-ui,sans-serif; letter-spacing:.08em; text-transform:uppercase; color:#f3eeff;
+    background:rgba(183,156,240,.16); border:1px solid rgba(240,196,106,.55); border-radius:999px; padding:8px 15px; }
+  #prideCharUnlock #pcuCont{ padding:13px 46px; border:none; border-radius:999px; background:linear-gradient(120deg,#e0668a,#8b7bd8);
+    color:#fff; font:800 15px Inter,system-ui,sans-serif; cursor:pointer; box-shadow:0 8px 26px rgba(0,0,0,.55); }
+  #prideCharUnlock #pcuCont:active{ transform:scale(.97); }
+</style>
+<div id="prideCharUnlock" aria-hidden="true">
+  <video id="pcuVid" playsinline preload="auto"></video>
+  <div id="pcuGrad"></div>
+  <div id="pcuText">
+    <div class="pcu-line pcu-kicker" id="pcuKicker">Acquaintance made</div>
+    <div class="pcu-line pcu-name" id="pcuName"></div>
+    <div class="pcu-line pcu-sub" id="pcuSub"></div>
+    <div class="pcu-line pcu-traits" id="pcuTraits"></div>
+    <div class="pcu-line"><button id="pcuCont" type="button">Continue</button></div>
+  </div>
+</div>
+<script>
+(function prideCharUnlock(){
+  // Per-character unlock cards. video co-located under characters/<id>/unlock.mp4.
+  // Edit sub / traits per character; the player will supply a different video for each.
+  const CHARS={
+    'mr_darcy':{ video:'worlds/pride-and-prejudice/characters/mr_darcy/unlock.mp4',
+      name:'Mr Darcy', sub:'Of Pemberley, Derbyshire · ten thousand a year', traits:['Proud','Devoted'] }
+  };
+  window.prideCharUnlockData=CHARS;   // exposed so it can be extended/edited elsewhere
+  window.prideHasCharUnlock=id=>!!CHARS[id];
+  window.pridePlayCharUnlock=function(charId, onContinue){
+    const c=CHARS[charId]; const ov=document.getElementById('prideCharUnlock');
+    if(!c || !ov){ if(typeof onContinue==='function') onContinue(); return; }
+    const vid=ov.querySelector('#pcuVid');
+    ov.querySelector('#pcuName').textContent=c.name||'';
+    ov.querySelector('#pcuSub').textContent=c.sub||'';
+    const tr=ov.querySelector('#pcuTraits'); tr.innerHTML='';
+    (c.traits||[]).slice(0,2).forEach(t=>{ const s=document.createElement('span'); s.className='pcu-trait'; s.textContent=t; tr.appendChild(s); });
+    // reset reveal state
+    const lines=[...ov.querySelectorAll('.pcu-line')]; lines.forEach(l=>l.classList.remove('show'));
+    // MUTED autoplay is allowed everywhere (no gesture needed) → guarantees the clip
+    // actually plays instead of sitting black; we try to unmute once it's rolling.
+    vid.loop=false; vid.muted=true; vid.setAttribute('muted',''); vid.setAttribute('autoplay',''); vid.setAttribute('playsinline','');
+    ov.classList.add('on'); ov.setAttribute('aria-hidden','false');
+    let shown=false;
+    const reveal=()=>{ if(shown) return; shown=true; lines.forEach((l,i)=>setTimeout(()=>l.classList.add('show'), i*160)); };   // staggered fade-up
+    // Text appears in the LAST second; freeze on the final frame by PAUSING just before
+    // the end (no seek — seeking on end resets/loops the clip).
+    vid.ontimeupdate=()=>{ const d=vid.duration||0; if(!d) return;
+      if(vid.currentTime>=d-1) reveal();
+      if(vid.currentTime>=d-0.08){ try{ vid.pause(); }catch(e){} } };
+    vid.onended=()=>{ reveal(); try{ vid.pause(); }catch(e){} };
+    vid.onerror=()=>{ reveal(); };   // never leave the player stuck if the file fails
+    const done=()=>{ ov.classList.remove('on'); ov.setAttribute('aria-hidden','true'); try{ vid.pause(); vid.removeAttribute('src'); }catch(e){} if(typeof onContinue==='function') onContinue(); };
+    ov.querySelector('#pcuCont').onclick=done;
+    // IMPORTANT: don't call load() then play() synchronously — load() aborts the play()
+    // (AbortError) and the clip sits black. Set src, then play once it can actually play.
+    const start=()=>{ vid.oncanplay=null;   // play ONCE — later seeks (freeze-frame) must not re-trigger play → loop
+      const g=vid.play(); if(g&&g.then) g.then(()=>{ try{ vid.muted=false; }catch(e){} }).catch(()=>{}); };
+    vid.oncanplay=start;
+    vid.src=c.video;
+    if(vid.readyState>=2) start();
+    setTimeout(reveal, 11000);   // safety reveal if the clip stalls
+  };
+})();
+</script>
 </body>
 </html>

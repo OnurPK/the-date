@@ -1,0 +1,15 @@
+{
+  "name": "Miss Vere",
+  "folder": "miss_vere",
+  "archetype": "The Proud Beauty",
+  "appearance": "An elegant, cool-mannered young lady of fashion, beautiful and aware of it, dressed at the height of taste.",
+  "definition": "A well-connected young lady of good family and better opinion of herself, accustomed to being the finest thing in any room. Proud, decorative and quick to condescend, she measures newcomers by their settlements.",
+  "voice": "Cool and gracious on the surface, faintly condescending beneath; her civility is a way of keeping others at their proper distance.",
+  "traits": [
+    "Proud",
+    "Fashionable",
+    "Aloof"
+  ],
+  "brief": "",
+  "created": "2026-08-28T01:31:41.178Z"
+}

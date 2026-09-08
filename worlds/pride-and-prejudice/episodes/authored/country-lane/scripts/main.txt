@@ -1,0 +1,183 @@
+(Situation: intro | A Walk in Solitude | Arabella enjoys a quiet stroll on a country lane)
+[bg:intro=sunny_country_lane.png]
+[cast: left=arabella_frost]
+Arabella: Ah, such a splendid afternoon. The sky is a canvas of cerulean blue, and the air is kissed by the gentle breath of spring.
+[bg:cutscene=arabella_senior_lady.png]
+Arabella: How pleasant it is to escape the confines of the drawing room, even if only for a brief encounter with nature.
+[ui:cast layout=convo_two]
+[cast: left=arabella_frost right=elderly_gentleman]
+Elderly-Gentleman: Good day, Miss. The daisies seem to bow in reverence to you.
+Arabella: And a fine day to you, sir. The countryside holds such simple joys.
+Elderly-Gentleman: Indeed, though beware the whimsy of English weather.
+[bg:cutscene=bird_pair.png]
+Arabella: Oh, look there! A pair of finches dancing amidst the branches.
+Elderly-Gentleman: A charming sight, Miss. Nature's own waltz.
+Arabella: Truly, it is these moments that fill the heart with gladness.
+
+(Situation: sudden_storm | A Turn in the Weather | A sudden storm interrupts Arabella's walk)
+[bg:explore=stormy_country_lane.png]
+[ui:cast layout=convo_two]
+[cast: left=arabella_frost right=elderly_gentleman]
+Arabella: Heavens, the sky darkens with alarming speed! I must find shelter, lest I am soaked through.
+Elderly-Gentleman: The clouds gather with ominous intent. It is wise to seek refuge.
+[bg:cutscene=rain_begins.png]
+Arabella: The first drops have begun to fall, like pearls from the sky.
+Elderly-Gentleman: Come, let us hasten our steps. There is an inn not far.
+Arabella: I fear my attire is ill-suited to withstand such a deluge.
+[bg:cutscene=lightning_flash.png]
+Elderly-Gentleman: A bolt from the heavens! We must quicken our pace.
+Arabella: Yes, every moment counts. May fortune guide our path.
+
+(Situation: ensign_rescue | The Officer's Arrival | Ensign Pryce offers aid)
+[bg:cutscene=carriage_arrival.png]
+[ui:bubble]
+Arabella: The lane is becoming a torrent of mud.
+[ui:cast layout=convo_two]
+[cast: left=arabella_frost right=ens_pryce]
+Ensign-Pryce: Miss, you look in need of assistance. Please, allow my carriage to offer refuge from this tempest.
+Arabella: Your presence is indeed timely, Ensign.
+[bg:cutscene=carriage_interior.png]
+Ensign-Pryce: I assure you, Miss, the carriage is at your service.
+Arabella: The storm worsens by the minute. What fortune led you here?
+Ensign-Pryce: Chance, perhaps, or the will of providence.
+(Choice:2)
+Arabella: I shall accept your offer, trusting in your honor. [trait: Trusting] [main]
+Arabella: With caution, I shall enter, still wary of unforeseen circumstances. [trait: Cautious]
+
+(IfChoice:0)
+Arabella: Your act of chivalry is most welcome, Ensign.
+Ensign-Pryce: It is but the duty of a gentleman, Miss.
+Mechanics: (Relation: ens_pryce | trust | +1) (XP: ens_pryce | +2)
+
+(IfChoice:1)
+Arabella: I enter with a mind prepared for the unexpected, Ensign.
+Ensign-Pryce: Quite wise, Miss. Preparedness is a virtue.
+Mechanics: (Discovery: ens_pryce | tactical insight) (XP: ens_pryce | +2)
+(EndIf)
+
+[bg:cutscene=carriage_interior.png]
+Ensign-Pryce: May I know the name of the lady I have the honor to shelter?
+Arabella: Time enough for names, perhaps, once the thunder has passed.
+(Choice:2)
+Arabella: I am Arabella Frost — and I thank you plainly for your kindness. [trait: Warm] [main]
+Arabella: A lady keeps a little mystery, Ensign. You may call me Miss. [trait: Reserved]
+
+(IfChoice:0)
+Ensign-Pryce: Then I am doubly fortunate, Miss Frost — in the meeting and the name.
+Mechanics: (Relation: ens_pryce | trust | +1) (XP: ens_pryce | +2)
+
+(IfChoice:1)
+Ensign-Pryce: A mystery it shall remain, then. I confess it only sharpens my curiosity.
+Mechanics: (Allure: +1) (XP: ens_pryce | +1)
+(EndIf)
+
+(Situation: the_choice | An Unexpected Acquaintance | Arabella decides her response)
+[ui:cast layout=convo_three]
+[cast: left=arabella_frost center=ens_pryce right=elderly_gentleman]
+Arabella: We appear to be safely ensconced from the elements now, Ensign Pryce.
+Ensign-Pryce: Indeed, Miss Frost. The storm's fury is best observed from within sturdy walls.
+Elderly-Gentleman: Once or twice I have seen such weather, yet never so swift a transformation.
+[bg:cutscene=carriage_ride.png]
+Arabella: And speaking of promises, we must mind the proprieties.
+Elderly-Gentleman: Quite so. Yet in such circumstances, may a modicum of leniency be granted.
+(Choice:3)
+Arabella: Thank you, Sir, your offer is as timely as it is gallant. [trait: Bold]
+Arabella: I shall accept with gratitude, though we must mind propriety. [trait: Graceful] [main]
+Arabella: I will accept, yet I shall remain observant of my companion. [trait: Observant]
+
+(IfChoice:0)
+Ensign-Pryce: A frankness I admire, Miss. It is rare and refreshing.
+Mechanics: (Scandal: +2) (Allure: +1)
+
+(IfChoice:1)
+Ensign-Pryce: Of course, Miss. Rest assured, my intentions are purely honorable.
+Mechanics: (Relation: ens_pryce | trust | +1) (XP: ens_pryce | +3)
+
+(IfChoice:2)
+Ensign-Pryce: A discerning gaze is a valuable asset in any circumstance.
+Mechanics: (Discovery: ens_pryce | a telling detail) (XP: ens_pryce | +3)
+(EndIf)
+
+[cast: left=arabella_frost center=ens_pryce right=elderly_gentleman]
+Elderly-Gentleman: A young officer, out riding in such a tempest — you are far from your barracks, sir.
+Ensign-Pryce: Duty sends a soldier down strange roads, sir.
+(Choice:2)
+Arabella: Tell me, Ensign — what regiment claims so gallant an officer? [trait: Curious] [main]
+Arabella: I shall not pry into a soldier's errands. [trait: Demure]
+
+(IfChoice:0)
+Ensign-Pryce: The ——shire militia, Miss, lately quartered near Brighton.
+Mechanics: (Discovery: ens_pryce | Brighton posting) (XP: ens_pryce | +2)
+
+(IfChoice:1)
+Ensign-Pryce: You are kind to spare me the interrogation, Miss.
+Mechanics: (Relation: ens_pryce | trust | +1) (XP: ens_pryce | +1)
+(EndIf)
+
+[bg:cutscene=carriage_ride.png]
+Arabella: The rain drums upon the roof like a restless heart.
+Ensign-Pryce: A fine thought, Miss. Shall we let the miles pass in conversation, or in companionable quiet?
+(Choice:2)
+Arabella: Let us talk — the road is shorter with good company. [trait: Sociable] [main]
+Arabella: A little quiet suits me; the storm speaks enough for us both. [trait: Composed]
+
+(IfChoice:0)
+Ensign-Pryce: Then talk we shall, and gladly.
+Mechanics: (Relation: ens_pryce | trust | +1) (XP: ens_pryce | +2)
+
+(IfChoice:1)
+Ensign-Pryce: As you wish, Miss. Silence, well kept, is its own courtesy.
+Mechanics: (Allure: +1) (XP: ens_pryce | +1)
+(EndIf)
+
+(Situation: the_cloak | A Token of Comfort | Ensign Pryce lends Arabella a keepsake)
+[bg:cutscene=cloak_sharing.png]
+[ui:cast layout=convo_two]
+[cast: left=arabella_frost right=ens_pryce]
+Ensign-Pryce: Please, take this cloak. It shall stave off the chill until we reach shelter.
+Arabella: Your generosity is noted, Sir. I shall care for it until it may be returned.
+[bg:cutscene=cloak_wrapped.png]
+Arabella: The craftsmanship is exquisite. Is it a family heirloom?
+Ensign-Pryce: Indeed, passed down through generations.
+Arabella: Such a treasure you trust me with—I am humbled.
+(Choice:2)
+Arabella: I shall treasure the cloak and its legacy. [trait: Sentimental] [main]
+Arabella: I accept it as a practical necessity, nothing more. [trait: Pragmatic]
+
+(IfChoice:0)
+Ensign-Pryce: I am reassured it is in good hands.
+Mechanics: (Relation: ens_pryce | trust | +2) (XP: ens_pryce | +3)
+
+(IfChoice:1)
+Ensign-Pryce: As you say, Miss. Our needs must outweigh sentiment.
+Mechanics: (Allure: +1) (XP: ens_pryce | +2)
+(EndIf)
+
+[bg:cutscene=cloak_wrapped.png]
+Ensign-Pryce: When the storm has passed, how shall the cloak find its way back to me?
+Arabella: A fair question, Ensign — and one that decides whether we meet again.
+(Choice:2)
+Arabella: I shall return it to you myself, that I may thank you properly. [trait: Forward] [main]
+Arabella: I shall send it by a servant, as propriety demands. [trait: Proper]
+
+(IfChoice:0)
+Ensign-Pryce: Then I shall count the days until that meeting, Miss Frost.
+Mechanics: (Relation: ens_pryce | trust | +1) (XP: ens_pryce | +3)
+
+(IfChoice:1)
+Ensign-Pryce: Very correct, Miss. Propriety is never wasted.
+Mechanics: (Allure: +1) (XP: ens_pryce | +1)
+(EndIf)
+
+(Situation: ending | Arrival at Shelter | The carriage finds refuge)
+[bg:ending=country_inn.png]
+[cast: left=arabella_frost right=ens_pryce]
+Arabella: Our journey was swift and, thanks to you, quite sheltered from the storm's fury.
+[bg:cutscene=inn_door.png]
+Ensign-Pryce: I am pleased to have been of service, Miss Frost. May we meet again under sunnier skies.
+Arabella: The inn awaits us with the promise of warmth and hospitality.
+[bg:cutscene=inn_lounge.png]
+Ensign-Pryce: This inn seems a snug haven, does it not?
+Arabella: It does. A quiet corner to reflect upon our adventure.
+Ensign-Pryce: Until our paths cross once more, Miss Frost.
+Arabella: Until then, Ensign Pryce. Safe travels.

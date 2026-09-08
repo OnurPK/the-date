@@ -1,0 +1,22 @@
+{
+  "name": "Mr. Thomas Fenwick",
+  "folder": "mr_fenwick",
+  "archetype": "The Childhood Love",
+  "appearance": "A gentle, handsome young man of modest means, soft brown hair and warm hazel eyes, an open honest face and a plain dark coat slightly worn at the cuffs — no jewels, a shy tender smile.",
+  "definition": "A country curate's son with no land and no fortune — only a modest living and an old, old promise. The boy from next door, grown gentle and true, he has nothing to offer but a whole heart and the memory of who you were before the world got complicated.",
+  "voice": "Warm, earnest and unpolished, sincerity without strategy; he speaks plainly of feeling and cannot dissemble.",
+  "traits": [
+    "Devoted",
+    "Earnest",
+    "Sincere"
+  ],
+  "brief": "",
+  "created": "2026-08-28T01:31:41.173Z",
+  "suitor": true,
+  "discoveries": [
+    "You knew him as a child.",
+    "Would give his last shilling away.",
+    "Blushes when you catch his eye.",
+    "Kept something you gave him long ago."
+  ]
+}

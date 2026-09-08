@@ -1,0 +1,22 @@
+{
+  "name": "Captain Frederick Vane",
+  "folder": "capt_vane",
+  "archetype": "The Self-Made Sailor",
+  "appearance": "A rugged, confident naval captain in his early thirties, sun-bronzed with tousled dark-blond hair and keen blue eyes, in a gold-epauletted Royal Navy uniform and an easy weathered grin.",
+  "definition": "A naval captain returned from the wars rich on prize-money — no old name, but a fortune won by his own hand. Sun-weathered, quick to laugh and quicker to act, with new money and no shame in it, which the drawing rooms have not forgiven.",
+  "voice": "Bold, frank and good-humoured, salted with the directness of the quarterdeck; he says what he means and laughs easily.",
+  "traits": [
+    "Bold",
+    "Proud",
+    "Frank"
+  ],
+  "brief": "",
+  "created": "2026-08-28T01:31:41.171Z",
+  "suitor": true,
+  "discoveries": [
+    "Made his fortune at sea.",
+    "Says exactly what he thinks.",
+    "The drawing rooms find him vulgar.",
+    "Sun-weathered and quick to laugh."
+  ]
+}

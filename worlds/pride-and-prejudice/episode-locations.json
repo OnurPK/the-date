@@ -1,0 +1,134 @@
+{
+  "locations": [
+    {
+      "id": "netherfield-ball",
+      "title": "The Netherfield Ball",
+      "x": 83.7,
+      "y": 43.9,
+      "episode": "the-newcomer/the-netherfield-ball",
+      "order": 1,
+      "requires": null
+    },
+    {
+      "id": "longbourn",
+      "title": "Longbourn",
+      "x": 45.6,
+      "y": 63.4,
+      "episode": "the-newcomer/a-caller-at-the-house",
+      "order": 2,
+      "requires": null
+    },
+    {
+      "id": "lucas-lodge",
+      "title": "Lucas Lodge",
+      "x": 22.8,
+      "y": 53.9,
+      "episode": null,
+      "order": 3,
+      "requires": null
+    },
+    {
+      "id": "meryton",
+      "title": "Meryton",
+      "x": 90.7,
+      "y": 77.5,
+      "episode": null,
+      "order": 3,
+      "requires": null
+    },
+    {
+      "id": "pemberley",
+      "title": "Pemberley",
+      "x": 69.1,
+      "y": 32,
+      "episode": null,
+      "order": 3,
+      "requires": null
+    },
+    {
+      "id": "rosings-park",
+      "title": "Rosings Park",
+      "x": 11.3,
+      "y": 71.4,
+      "episode": "authored/rosings-park",
+      "order": 2,
+      "requires": null,
+      "route": [
+        [
+          11.3,
+          71.4
+        ],
+        [
+          13.6,
+          74.3
+        ],
+        [
+          16,
+          71.3
+        ],
+        [
+          17.9,
+          68.3
+        ],
+        [
+          22.6,
+          62.9
+        ]
+      ]
+    },
+    {
+      "id": "brighton-seaside",
+      "title": "Brighton Seaside",
+      "x": 49.6,
+      "y": 47.4,
+      "episode": "authored/brighton-seaside",
+      "order": 4,
+      "requires": null,
+      "route": [
+        [
+          49.6,
+          47.4
+        ],
+        [
+          52.8,
+          44.6
+        ],
+        [
+          54.6,
+          41.3
+        ],
+        [
+          55.4,
+          35
+        ]
+      ]
+    },
+    {
+      "id": "country-lane",
+      "title": "Country Lane",
+      "x": 57,
+      "y": 22.7,
+      "episode": "authored/country-lane",
+      "order": 4,
+      "requires": null,
+      "route": [
+        [
+          57,
+          22.7
+        ],
+        [
+          57,
+          27.6
+        ],
+        [
+          55.5,
+          31.2
+        ],
+        [
+          56,
+          38.4
+        ]
+      ]
+    }
+  ]
+}

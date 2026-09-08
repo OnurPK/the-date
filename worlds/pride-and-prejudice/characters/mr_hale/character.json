@@ -1,0 +1,21 @@
+{
+  "name": "Mr. Augustus Hale",
+  "folder": "mr_hale",
+  "archetype": "The New Money",
+  "appearance": "A robust, sharp-eyed young man of new wealth, close-cropped auburn hair and strong features, in a slightly-too-fine plum coat and a heavy gold watch-chain, standing with defiant assurance.",
+  "definition": "Heir to a great manufacturing fortune from the north — no coat of arms, but more ready money than half the peerage. Modern, restless and unimpressed by titles, he buys what old families merely inherit and knows exactly how it grates on them.",
+  "voice": "Blunt, quick and unsentimental, impatient with ceremony; he talks money and results where others talk pedigree.",
+  "traits": [
+    "Ambitious",
+    "Blunt",
+    "Modern"
+  ],
+  "brief": "",
+  "created": "2026-08-28T01:31:41.173Z",
+  "suitor": true,
+  "discoveries": [
+    "Owns three manufactories.",
+    "Unimpressed by old titles.",
+    "Buys what others inherit."
+  ]
+}

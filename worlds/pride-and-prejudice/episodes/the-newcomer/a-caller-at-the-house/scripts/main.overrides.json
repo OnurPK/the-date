@@ -2,7 +2,7 @@
   "42": {
     "x": "83%",
     "y": "109",
-    "size": "112%",
+    "size": "114%",
     "drop": "200",
     "turn": "-18",
     "pan": "50",
@@ -23,12 +23,19 @@
         "dur": "0.4",
         "ease": "out",
         "dir": "left"
+      },
+      {
+        "type": "filter",
+        "mode": "grayscale",
+        "amount": "",
+        "dur": "",
+        "ease": "out"
       }
     ],
     "poses": [
       {
-        "w": 10,
-        "image": "proud_boast",
+        "w": 6,
+        "image": "appraising",
         "transition": "cut"
       }
     ]
@@ -40,7 +47,7 @@
     "drop": "200",
     "turn": "18",
     "pan": "50",
-    "flip": "1",
+    "flip": "-1",
     "anim": [
       {
         "type": "enter",
@@ -68,9 +75,34 @@
     ]
   },
   "44": {
+    "x": "87%",
+    "y": "109",
+    "size": "112%",
+    "drop": "200",
+    "turn": "18",
+    "pan": "50",
+    "flip": "-1",
+    "anim": [
+      {
+        "type": "enter",
+        "mode": "slide",
+        "amount": "70",
+        "dur": "0.55",
+        "ease": "out",
+        "dir": "right"
+      },
+      {
+        "type": "exit",
+        "mode": "fade",
+        "amount": "",
+        "dur": "0.4",
+        "ease": "out",
+        "dir": "left"
+      }
+    ],
     "poses": [
       {
-        "w": 6,
+        "w": 13,
         "image": "smirk",
         "transition": "cut"
       }

@@ -318,3 +318,8 @@ Narrative: The carriage lamps shrink down the lane. One caller met, one man take
 [ui:bubble]
 Arabella: One. And the map of my future has so many more names left to fill.
 (Quest: Sir Henry is known. Return to the map — new suitors await discovery.)
+
+# Fork — bölüm bitince açılacaklar
+(Unlock: short-stories | title=Short Stories)
+(Unlock: the-apothecary | title=The Apothecary)
+(Unlock: lucas-lodge | title=Lucas Lodge)

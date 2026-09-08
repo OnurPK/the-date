@@ -1,0 +1,15 @@
+{
+  "name": "Mrs. Frost",
+  "folder": "mrs_frost",
+  "archetype": "The Worried Mother",
+  "appearance": "A well-meaning, anxious matron whose smiles never quite settle, forever calculating her daughter's prospects at the marriage table.",
+  "definition": "Arabella's mother — her anxieties live at the marriage table, and a small dowry and a clever, uncompromising daughter give her endless cause for worry. She loves Arabella and fears for her in equal, exhausting measure.",
+  "voice": "Fretful and coaxing, quick to hope and quicker to despair; she urges prudence in a daughter constitutionally unable to supply it.",
+  "traits": [
+    "Anxious",
+    "Well-Meaning",
+    "Prudent"
+  ],
+  "brief": "",
+  "created": "2026-08-28T01:31:41.177Z"
+}

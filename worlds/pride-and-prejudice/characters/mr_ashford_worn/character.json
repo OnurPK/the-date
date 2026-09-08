@@ -1,0 +1,15 @@
+{
+  "name": "Mr. Ashford (Careworn)",
+  "folder": "mr_ashford_worn",
+  "archetype": "The Fallen-on-Hard-Times Gentleman",
+  "appearance": "The same gentleman diminished — a coat gone shabby at the seams, a tired, anxious face, the polish of prosperity rubbed away.",
+  "definition": "Mr. Ashford after misfortune: property lost or dwindled, the easy respectability now a struggle to keep up appearances. Careworn and proud, he clings to the manners of a station he can no longer afford.",
+  "voice": "Guarded and strained, courtesy worn thin over worry; he deflects questions of circumstance with weary dignity.",
+  "traits": [
+    "Careworn",
+    "Proud",
+    "Diminished"
+  ],
+  "brief": "",
+  "created": "2026-08-28T01:31:41.180Z"
+}

@@ -1,0 +1,15 @@
+{
+  "name": "Julian Vane",
+  "folder": "julian_vane",
+  "archetype": "The Idle Younger Brother",
+  "appearance": "A polished, indolent young gentleman with the Vane good looks worn more carelessly — fashionable dress, a languid, amused air.",
+  "definition": "A younger relation of Captain Vane's line who never went to sea — charming, idle, and content to spend a fortune he did not earn. He drifts through drawing rooms trading on the family name and his own easy looks.",
+  "voice": "Languid and teasing, all surface charm and lazy irony; he flirts as reflex and commits to nothing.",
+  "traits": [
+    "Idle",
+    "Charming",
+    "Feckless"
+  ],
+  "brief": "",
+  "created": "2026-08-28T01:31:41.177Z"
+}

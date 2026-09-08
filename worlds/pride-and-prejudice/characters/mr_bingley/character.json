@@ -1,0 +1,24 @@
+{
+  "name": "Mr. Bingley",
+  "folder": "mr_bingley",
+  "archetype": "The Warm Host",
+  "appearance": "Youthful, bright-faced and easy, dressed with cheerful good taste; a man who dances every dance and means every smile.",
+  "definition": "Sunny, impulsive, and governed by the warmth of the present moment. A young man of large fortune newly settled at Netherfield, devoted to Jane and delighted by everyone. His amiability is his charm and his flaw both — safe with all, and therefore easily led by the friends he trusts.",
+  "voice": "Unguarded and immediate — cheerful bursts in buoyant sentences, free of irony, every thought safe to share and every listener a friend.",
+  "traits": [
+    "Amiability",
+    "Pliability",
+    "Sincerity"
+  ],
+  "brief": "",
+  "created": "2026-08-28T01:31:41.163Z",
+  "suitor": true,
+  "discoveries": [
+    "Falls in love at every ball.",
+    "Lets Darcy think for him.",
+    "No ancient seat to his name.",
+    "Adored by the whole neighbourhood.",
+    "His sisters guard him closely.",
+    "Would marry tomorrow if let."
+  ]
+}
