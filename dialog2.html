@@ -29185,7 +29185,7 @@ console.log('%c[caller] Episode 1 ready — run startCaller()', 'color:#e7b24c')
       body.style.transition='opacity .22s ease'; body.style.opacity='0';
       setTimeout(done||(()=>{}),450);
     } }
-  function openDetail(c, coverEl){ fill(c); setMode(false); sizeHero(); const s=$('pcsScroll'); s.scrollTop=0; const hero=$('pcsHero'); hero.style.height='100%'; hero.classList.remove('collapsed');
+  function openDetail(c, coverEl){ fill(c); setMode(false); try{ preloadRevealClips(c); }catch(e){} sizeHero(); const s=$('pcsScroll'); s.scrollTop=0; const hero=$('pcsHero'); hero.style.height='100%'; hero.classList.remove('collapsed');
     const from=coverEl.getBoundingClientRect(); $('pcs-roster').classList.remove('active'); $('pcs-detail').classList.add('active'); morph(hero, s, from, false); figIntro();
   }
   function closeDetail(){ const s=$('pcsScroll'); s.scrollTop=0; const hero=$('pcsHero'); hero.style.height='100%'; hero.classList.remove('collapsed');
@@ -29258,16 +29258,23 @@ console.log('%c[caller] Episode 1 ready — run startCaller()', 'color:#e7b24c')
     v.addEventListener('playing',()=>{ if(v.requestVideoFrameCallback) v.requestVideoFrameCallback(()=>swap()); setTimeout(swap,450); },{once:true});
     v.addEventListener('ended',()=>{ try{ v.pause(); }catch(e){} if(onEnd) onEnd(); });
     v.addEventListener('error',()=>{ try{ v.remove(); }catch(e){} if(onEnd) onEnd(); });
-    v.src=BASE+'characters/'+c.portrait+'/'+name+'.webm'; fig.appendChild(v); playRetry(v, 4, ()=>{ if(onEnd) onEnd(); }); return v; }
+    v.src=clipSrc('characters/'+c.portrait+'/'+name+'.webm'); fig.appendChild(v); playRetry(v, 4, ()=>{ if(onEnd) onEnd(); }); return v; }
   // play() with retries — Chrome rejects transiently for freshly-added / near-invisible video-only media
   function playRetry(v, n, onFail){ const p=v.play(); if(p&&p.catch) p.catch(()=>{ if(n>0 && v.isConnected) setTimeout(()=>playRetry(v,n-1,onFail), 600); else if(onFail) onFail(); }); }
+  // Reveal clips are fetched into blob URLs when the sequence starts, so every later src swap paints instantly
+  // (on a remote host the swap otherwise waits a network round-trip → a frame of missing curtain / figure).
+  const CLIP_BLOB={};
+  function preloadClip(rel){ if(CLIP_BLOB[rel]) return; CLIP_BLOB[rel]='pending';
+    fetch(BASE+rel,{cache:'force-cache'}).then(r=>{ if(!r.ok) throw new Error(r.status); return r.blob(); }).then(b=>{ CLIP_BLOB[rel]=URL.createObjectURL(b); }).catch(()=>{ delete CLIP_BLOB[rel]; }); }
+  function clipSrc(rel){ const u=CLIP_BLOB[rel]; return (u && u!=='pending') ? u : BASE+rel; }
+  function preloadRevealClips(c){ if(!c||!c.portrait) return; ['characters/'+c.portrait+'/walk_away.webm','characters/'+c.portrait+'/you/entrance.webm','pc-select/fx/curtain_close.webm','pc-select/fx/curtain_open.webm'].forEach(preloadClip); }
   function curtainClose(onEnd){ const root=$('pcsel'); if(!root) return null; let v=document.getElementById('pcsCurtain');
     if(!v){ v=document.createElement('video'); v.id='pcsCurtain'; v.muted=true; v.playsInline=true; v.preload='auto';
       v.style.cssText='position:absolute;left:0;top:0;width:100%;height:100%;object-fit:cover;object-position:top center;z-index:8;pointer-events:none;transform:translateY(-38%);transition:transform 1.1s cubic-bezier(.3,.9,.3,1);'; root.appendChild(v); }
     v.addEventListener('ended',()=>{ try{ v.pause(); }catch(e){} if(onEnd) onEnd(); },{once:true});
     v.addEventListener('playing',()=>{ v.style.transform='translateY(0)'; },{once:true});   // the generated clip pops in → glide it down instead
-    v.src=BASE+'pc-select/fx/curtain_close.webm'; playRetry(v, 4, ()=>{ if(onEnd) onEnd(); }); return v; }
-  function curtainRemove(){ const v=document.getElementById('pcsCurtain'); if(v){ try{ v.pause(); }catch(e){} v.remove(); } }
+    v.src=clipSrc('pc-select/fx/curtain_close.webm'); playRetry(v, 4, ()=>{ if(onEnd) onEnd(); }); return v; }
+  function curtainRemove(){ ['pcsCurtain','pcsCurtainOld'].forEach(id=>{ const v=document.getElementById(id); if(v){ try{ v.pause(); }catch(e){} v.remove(); } }); }
   // "Make her you": UI slides off + stage floor fades in → she walks to the curtain while the floor text
   // ("Becoming someone…" + spark) appears → curtain closes → callback (curtain stays until pcCurtainRemove()).
   const RV_LINES=['Giving you a wound worth having…','Sharpening the wit that will outlast the room…','Lighting the candle you will be remembered by…'];
@@ -29295,9 +29302,14 @@ console.log('%c[caller] Episode 1 ready — run startCaller()', 'color:#e7b24c')
       rvRot=setInterval(()=>{ li=(li+1)%RV_LINES.length; sub.style.opacity='0'; setTimeout(()=>{ sub.textContent=RV_LINES[li]; sub.style.opacity='1'; },330); }, 2400); }
     else { root.classList.remove('revealing','rv-text'); } }
   // curtain opens (reversed clip) → then removed
-  function curtainOpen(onEnd){ const root=$('pcsel'); let v=document.getElementById('pcsCurtain'); if(!root) return null;
-    if(!v){ v=document.createElement('video'); v.id='pcsCurtain'; v.muted=true; v.playsInline=true; v.preload='auto';
-      v.style.cssText='position:absolute;left:0;top:0;width:100%;height:100%;object-fit:cover;object-position:top center;z-index:8;pointer-events:none;'; root.appendChild(v); }
+  function curtainOpen(onEnd){ const root=$('pcsel'); if(!root) return null;
+    // fresh element on top of the closed curtain (swapping src on the same element blanks it until the new clip decodes)
+    const closed=document.getElementById('pcsCurtain'); if(closed) closed.id='pcsCurtainOld';
+    const v=document.createElement('video'); v.id='pcsCurtain'; v.muted=true; v.playsInline=true; v.preload='auto';
+    v.style.cssText='position:absolute;left:0;top:0;width:100%;height:100%;object-fit:cover;object-position:top center;z-index:9;pointer-events:none;'; root.appendChild(v);
+    const dropOld=()=>{ const o=document.getElementById('pcsCurtainOld'); if(o){ try{ o.pause(); }catch(e){} o.remove(); } };
+    if(v.requestVideoFrameCallback) v.requestVideoFrameCallback(()=>v.requestVideoFrameCallback(()=>setTimeout(dropOld,80))); else v.addEventListener('playing',()=>setTimeout(dropOld,120),{once:true});
+    setTimeout(dropOld, 2500);   // safety
     // The clip's last frames pop out (it's the closing clip reversed) → glide the whole curtain UP over the final
     // second instead, then remove it once the glide ends.
     let gone=false; const finish=()=>{ if(gone) return; gone=true; try{ v.remove(); }catch(e){} if(onEnd) onEnd(); };
@@ -29305,7 +29317,7 @@ console.log('%c[caller] Episode 1 ready — run startCaller()', 'color:#e7b24c')
     const lift=()=>{ if(lifting) return; lifting=true; v.style.transform='translateY(-48%)'; v.style.opacity='0'; setTimeout(finish, 1750); };
     let lifting=false; v.addEventListener('timeupdate',()=>{ const d=v.duration; if(isFinite(d) && d>0 && v.currentTime>=d-1.5) lift(); });
     v.addEventListener('ended',lift,{once:true});
-    v.src=BASE+'pc-select/fx/curtain_open.webm'; playRetry(v, 4, finish); return v; }
+    v.src=clipSrc('pc-select/fx/curtain_open.webm'); playRetry(v, 4, finish); return v; }
   // the transformed sprite (characters/<portrait>/you/pride.png) placed exactly where the walk clip left her
   function showYou(){ const fig=$('pcsFig'), c=curChar; if(!fig||!c) return;
     fig.querySelectorAll('video.hfig-idle').forEach(v=>{ try{ v.pause(); v.remove(); }catch(e){} });
@@ -29340,8 +29352,9 @@ console.log('%c[caller] Episode 1 ready — run startCaller()', 'color:#e7b24c')
     v.addEventListener('ended',()=>{ try{ v.pause(); }catch(e){} });
     v.addEventListener('error',()=>{ v.remove(); showYou(); if(onReady) onReady(null); });
     setTimeout(()=>{ if(!primed && v.isConnected && !v.error){ prime(); } }, 2500);   // safety: never stall behind the curtain
-    v.src=BASE+'characters/'+c.portrait+'/you/entrance.webm'; fig.appendChild(v); fig.style.backgroundImage='none'; return v; }
+    v.src=clipSrc('characters/'+c.portrait+'/you/entrance.webm'); fig.appendChild(v); fig.style.backgroundImage='none'; return v; }
   window.pcRevealSequence=function(done){
+    preloadRevealClips(curChar);
     revealUi(true);
     const idle=$('pcsFig').querySelector('video.hfig-idle'); const waitIdle=(cb)=>{ if(!idle || idle.ended || !idle.duration) return cb(); const left=Math.max(0,(idle.duration-idle.currentTime)*1000); let done=false; const go=()=>{ if(done) return; done=true; cb(); }; idle.addEventListener('ended',go,{once:true}); setTimeout(go, left+150); };
     setTimeout(()=>waitIdle(()=>{ heroClip('walk_away', ()=>curtainClose(()=>{   // (after the hero has grown AND the idle clip reached its last frame)
