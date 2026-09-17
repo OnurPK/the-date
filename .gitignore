@@ -55,6 +55,9 @@ docs/_shots/
 **/_mockups/
 
 # per-player face-swapped sprites (generated)
-worlds/pride-and-prejudice/characters/*/you/
+worlds/pride-and-prejudice/characters/*/you/*
+# demo reveal assets (needed on Railway): the swapped Arabella + her entrance clip
+!worlds/pride-and-prejudice/characters/arabella_frost/you/entrance.webm
+!worlds/pride-and-prejudice/characters/arabella_frost/you/pride.png
 worlds/pride-and-prejudice/characters/arabella_you/
 worlds/pride-and-prejudice/pc-select/fig_arabella_you.webp
