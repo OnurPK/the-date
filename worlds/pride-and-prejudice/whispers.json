@@ -1,0 +1,23 @@
+{
+  "_note": "Whisper = episode bitince (after=pin id) kendiliğinden açılan kısa diyalog (mode pc, encounter UI). who=konuşan NPC, focus=bitince kamera+pin nabzı, script=episode DSL. Tek sefer, tur başına 1. Editör: Story map → düğüm → \"Onboarding · whisper\".",
+  "whispers": [
+    {
+      "id": "w_mother_start",
+      "after": "start",
+      "who": "mrs_frost",
+      "focus": "netherfield-ball",
+      "priority": 20,
+      "title": "Your mother, at the door",
+      "script": "[cast: left=mrs_frost]\nMrs-Frost: There you are. The Bingleys' carriage has been past twice this morning, and you are still not dressed for anything.\nArabella: I am dressed for reading, Mama. It is a costume like any other.\nMrs-Frost: Netherfield gives a ball tonight. The whole county will be there — and, I am told, a gentleman with ten thousand a year who has not yet learned to be bored.\nArabella: Then I shall go and teach him.\nMrs-Frost: Go and be seen, child. The rest will follow."
+    },
+    {
+      "id": "w_netherfield_morning_after",
+      "after": "netherfield-ball",
+      "who": "charlotte_lucas",
+      "focus": "netherfield-house",
+      "priority": 10,
+      "title": "The morning after",
+      "script": "(Situation: w_after_ball | The morning after | Charlotte on the lane)\n[ui:narrative]\nNarrative: Oo Lucas falls in beside you with the air of a woman about to be useful.\n[ui:cast layout=convo_two]\n[cast: left=arabella_frost right=charlotte_lucas]\nCharlotte-Lucas: Well. The whole county saw you last night. If it is gossip you want, the high street is a crush by noon.\n[ui:multi]\n(Choice:2)\nArabella: I have gossip enough at home, thank you. [trait: Reserved]\nArabella: Gossip — or company? [trait: Curious]\n(IfChoice:0)\nCharlotte-Lucas: Then come to Lucas Lodge. Quieter — and my father wants the story from you, not the street.\nMechanics: (Relation: charlotte_lucas | trust | +1)\n(EndIf)\n(IfChoice:1)\nCharlotte-Lucas: If it is a husband you want, there is no better place for new faces. Half the regiment buys its gloves there. But start with us — Lucas Lodge, before noon.\nMechanics: (Allure: +1)\n(EndIf)"
+    }
+  ]
+}

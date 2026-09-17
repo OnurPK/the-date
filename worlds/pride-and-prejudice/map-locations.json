@@ -5,8 +5,8 @@
       "id": "netherfield-ball",
       "title": "The Netherfield Ball",
       "type": "episode",
-      "x": 83.7,
-      "y": 43.9,
+      "x": 79.9,
+      "y": 44,
       "unlockedBy": null,
       "episode": "the-newcomer/the-netherfield-ball",
       "order": 1,
@@ -21,8 +21,8 @@
       "id": "longbourn",
       "title": "Longbourn",
       "type": "episode",
-      "x": 45.6,
-      "y": 63.4,
+      "x": 46.2,
+      "y": 60.6,
       "unlockedBy": null,
       "episode": "the-newcomer/a-caller-at-the-house",
       "order": 2,
@@ -30,14 +30,19 @@
       "sx": 37.5741399762752,
       "sy": 213,
       "tier": 2,
-      "suitor": "sir_ashbourne"
+      "suitor": "sir_ashbourne",
+      "missed": {
+        "who": "mrs_bennet",
+        "bg": "episodes/the-newcomer/a-caller-at-the-house/cutscenes/arrival.png",
+        "script": "Mrs-Bennet: I waited all day. The table was laid at four, and Kitty ran to the window at every carriage. Why did you not come?\nMechanics: (Relation: mrs_bennet | trust | -1)"
+      }
     },
     {
       "id": "lucas-lodge",
       "title": "Lucas Lodge",
       "type": "episode",
-      "x": 22.8,
-      "y": 53.9,
+      "x": 26.3,
+      "y": 55.3,
       "unlockedBy": null,
       "episode": null,
       "order": 3,
@@ -100,8 +105,8 @@
       "id": "meryton",
       "title": "Meryton",
       "type": "episode",
-      "x": 90.7,
-      "y": 77.5,
+      "x": 80.7,
+      "y": 74.3,
       "unlockedBy": null,
       "episode": null,
       "order": 3,
@@ -115,8 +120,8 @@
       "id": "pemberley",
       "title": "Pemberley",
       "type": "episode",
-      "x": 69.1,
-      "y": 32,
+      "x": 69,
+      "y": 35.6,
       "unlockedBy": null,
       "episode": null,
       "order": 3,
@@ -130,38 +135,18 @@
       "id": "rosings-park",
       "title": "Rosings Park",
       "type": "episode",
-      "x": 11.3,
-      "y": 71.4,
+      "x": 30.3,
+      "y": 28.1,
       "unlockedBy": null,
       "episode": "authored/rosings-park",
-      "route": [
-        [
-          11.3,
-          71.4
-        ],
-        [
-          13.6,
-          74.3
-        ],
-        [
-          16,
-          71.3
-        ],
-        [
-          17.9,
-          68.3
-        ],
-        [
-          22.6,
-          62.9
-        ]
-      ],
       "order": 2,
       "appearsAfter": null,
       "sx": 58.65954922894424,
       "sy": 200,
       "tier": 2,
-      "suitor": "mr_darcy"
+      "suitor": "mr_darcy",
+      "passesTime": true,
+      "lifespan": 4
     },
     {
       "id": "short-stories",
@@ -176,73 +161,87 @@
     },
     {
       "id": "the-parsonage",
-      "title": "The Parsonage",
+      "title": "Hunsford Parsonage",
       "type": "interactive",
-      "x": 55.7,
-      "y": 33.9,
+      "x": 55.8,
+      "y": 38.4,
       "unlockedBy": null,
       "appearsAfter": null,
       "sx": 18.289658147309392,
       "sy": 217.36673625608907,
       "order": 2,
-      "tier": 2
+      "tier": 2,
+      "home": "mr_collins",
+      "icon": "house",
+      "kind": "Parsonage · Day",
+      "desc": "A neat, humble parsonage in the shadow of Rosings, its garden laid out by the hand of Lady Catherine's advice and its shelves by her sermons.",
+      "visit": {
+        "low": "Mr Collins receives you in the parlour beneath a portrait of Lady Catherine, and bows in its direction as often as yours.\n\"You find us very humble — very humble indeed — though her ladyship was so good as to approve the chimney-piece.\"",
+        "mid": "He has a tour prepared: the garden, the second-best bedroom, the exact spot from which Rosings may be glimpsed between the trees.\n\"Her ladyship remarked upon you. I hardly know how to convey the honour.\"",
+        "high": "He has been practising a speech; you can tell by the way he keeps glancing at his cuff.\n\"I have — that is, her ladyship and I have — no, I have thoughts. Considerable thoughts. Will you walk in the garden?\"",
+        "empty": "The maid curtseys. \"Mr Collins is gone up to Rosings, miss. He goes up whenever he is sent for, and sometimes when he is not.\""
+      }
     },
     {
       "id": "circulating-library",
       "title": "Circulating Library",
       "type": "interactive",
-      "x": 61.7,
-      "y": 77.2,
+      "x": 65.3,
+      "y": 76.4,
       "unlockedBy": null,
       "appearsAfter": null,
       "sx": 27.024695352097478,
       "sy": 437.32289491997216,
       "order": 4,
-      "tier": 4
+      "tier": 4,
+      "icon": "library"
     },
     {
       "id": "tea-room",
       "title": "Tea Room",
       "type": "interactive",
-      "x": 63.5,
-      "y": 59.2,
+      "x": 60,
+      "y": 63.2,
       "unlockedBy": null,
       "appearsAfter": null,
       "sx": 65.53434702900896,
       "sy": 326,
-      "tier": 3
+      "tier": 3,
+      "icon": "cafe"
     },
     {
       "id": "the-apothecary",
       "title": "The Apothecary",
       "type": "interactive",
-      "x": 42,
-      "y": 52,
+      "x": 42.1,
+      "y": 50.9,
       "unlockedBy": null,
       "appearsAfter": null,
       "sx": 27.768791113986847,
       "sy": 369.6527487821851,
-      "tier": 4
+      "tier": 4,
+      "icon": "flask"
     },
     {
       "id": "the-tavern",
       "title": "The Tavern",
       "type": "interactive",
-      "x": 75.9,
-      "y": 63,
+      "x": 80.5,
+      "y": 64.2,
       "unlockedBy": null,
       "appearsAfter": null,
       "sx": 50.77105575326216,
       "sy": 369.5594989561587,
       "order": 3,
-      "tier": 4
+      "tier": 4,
+      "icon": "mug"
     },
     {
       "id": "brighton-camp",
       "title": "Brighton Camp",
       "type": "interactive",
-      "x": 38.6,
-      "y": 81.4,
+      "x": 43,
+      "y": 78.5,
       "unlockedBy": null,
       "appearsAfter": null,
       "sx": 51.76318343578129,
@@ -275,28 +274,10 @@
       "id": "brighton-seaside",
       "title": "Brighton Seaside",
       "type": "episode",
-      "x": 49.6,
-      "y": 47.4,
+      "x": 55.6,
+      "y": 45.5,
       "unlockedBy": null,
       "episode": "authored/brighton-seaside",
-      "route": [
-        [
-          49.6,
-          47.4
-        ],
-        [
-          52.8,
-          44.6
-        ],
-        [
-          54.6,
-          41.3
-        ],
-        [
-          55.4,
-          35
-        ]
-      ],
       "order": 4,
       "sx": 88.61209964412812,
       "sy": 439,
@@ -310,33 +291,235 @@
       "title": "Country Lane",
       "type": "episode",
       "x": 57,
-      "y": 22.7,
+      "y": 24.2,
       "unlockedBy": null,
       "episode": "authored/country-lane",
-      "route": [
-        [
-          57,
-          22.7
-        ],
-        [
-          57,
-          27.6
-        ],
-        [
-          55.5,
-          31.2
-        ],
-        [
-          56,
-          38.4
-        ]
-      ],
       "order": 4,
       "sx": 69.57295373665481,
       "sy": 439,
       "tier": 4,
       "suitor": "ens_pryce",
       "desc": "A storm, an empty road, and Ensign Pryce’s carriage the only shelter."
+    },
+    {
+      "id": "darcy-house",
+      "type": "interactive",
+      "unlockedBy": null,
+      "appearsAfter": null,
+      "order": 5,
+      "title": "Darcy House",
+      "x": 75.4,
+      "y": 22,
+      "home": "mr_darcy",
+      "icon": "house",
+      "kind": "Town House · Any hour",
+      "desc": "A tall, silent house of grey stone; the shutters half-closed, the knocker polished daily and rarely used.",
+      "visit": {
+        "low": "A footman looks you over twice before he lets you past the door.\nThe hall is cold, the portraits colder. Mr Darcy receives you standing, and does not ask you to sit.",
+        "mid": "The footman knows your name now, and does not make you wait.\nMr Darcy is in the library. He closes his book with a finger still marking the page — a small courtesy, from him.",
+        "high": "The door opens before you knock. Someone was watching the road.\nMr Darcy meets you in the hall himself, and there is a fire lit in the small parlour that is never used for company.",
+        "empty": "The footman regrets that Mr Darcy is from home.\nHe does not say where. He never does."
+      }
+    },
+    {
+      "id": "netherfield-house",
+      "type": "interactive",
+      "unlockedBy": null,
+      "appearsAfter": null,
+      "order": 6,
+      "title": "Netherfield House",
+      "x": 84.2,
+      "y": 36.8,
+      "home": "mr_bingley",
+      "icon": "house",
+      "kind": "Country House · Any hour",
+      "desc": "Bingley's rented seat — every window lit, every door open, a house that has never once been quiet.",
+      "visit": {
+        "low": "A maid shows you into a drawing room still strewn with the wreckage of last night's cards.\nMr Bingley bounds in, apologising for everything and remembering your name on the second try.",
+        "mid": "Mr Bingley is halfway down the stairs before the maid has finished announcing you.\n\"Capital! You will stay to tea — no, you will stay to dinner. I insist, and Caroline will pretend to.\"",
+        "high": "The dogs know you. That is the true measure of welcome at Netherfield.\nMr Bingley has saved you a chair by the fire and a piece of gossip he swore to no one he would keep.",
+        "empty": "The house is unusually still. Mr Bingley rode out at dawn, the maid says, and took the whole party with him."
+      }
+    },
+    {
+      "id": "officers-quarters",
+      "type": "interactive",
+      "unlockedBy": null,
+      "appearsAfter": null,
+      "order": 7,
+      "title": "Officers' Quarters",
+      "x": 76.4,
+      "y": 82.5,
+      "home": "mr_wickham",
+      "icon": "house",
+      "kind": "Billet · Any hour",
+      "desc": "A cramped set of rooms above a saddler's, smelling of boot-black and brandy, with a bed that is never made and a debt at every shop below.",
+      "visit": {
+        "low": "A corporal smirks as he points you up the stairs. Ladies do not usually call here.\nMr Wickham is in his shirtsleeves and charming about it, which is somehow worse.",
+        "mid": "Mr Wickham has clearly tidied — a coat over the worst of the chaos, a chair wiped with his sleeve.\n\"You honour a poor soldier,\" he says, and for a moment almost seems to mean it.",
+        "high": "He is waiting on the landing, hat in hand, as if he had been about to come and find you.\n\"I was just thinking of you. That is not a line. Well — it is, but it is also true.\"",
+        "empty": "The corporal shrugs. \"Out. Cards, or a creditor, or a lady. Sometimes all three, miss.\""
+      }
+    },
+    {
+      "id": "ravenscar-hall",
+      "type": "interactive",
+      "unlockedBy": null,
+      "appearsAfter": null,
+      "order": 8,
+      "title": "Ravenscar Hall",
+      "x": 83.1,
+      "y": 6.1,
+      "home": "lord_ravenscar",
+      "icon": "house",
+      "kind": "Great House · Night",
+      "desc": "A black-fronted hall on the northern ridge, half its windows dark, the other half burning too late into the night.",
+      "visit": {
+        "low": "The doors are opened by a servant who does not speak. The hall is vast, unlit, and smells faintly of gunpowder and roses.\nLord Ravenscar watches you cross the whole length of it before he says a word.",
+        "mid": "A single candle is brought for you; the rest of the house stays dark.\n\"You came alone,\" he observes. \"Brave. Or careless. I have not decided which I prefer.\"",
+        "high": "The lamps are lit tonight — all of them. The servant almost smiles.\nLord Ravenscar is at the pianoforte, playing something he will later deny he wrote for you.",
+        "empty": "The silent servant shakes his head. His lordship is not at home.\nSomewhere below, a clock strikes an hour that cannot possibly be right."
+      }
+    },
+    {
+      "id": "ashbourne-court",
+      "type": "interactive",
+      "unlockedBy": null,
+      "appearsAfter": null,
+      "order": 9,
+      "title": "Ashbourne Court",
+      "x": 14.5,
+      "y": 54.1,
+      "home": "sir_ashbourne",
+      "icon": "house",
+      "kind": "Country Seat · Day",
+      "desc": "A square, sensible house in a well-kept park; roses at the door, ledgers in order, and a widower's quiet at the heart of it.",
+      "visit": {
+        "low": "The housekeeper is kind, correct, and a little surprised at your calling.\nSir Henry rises from his estate books and offers you the good chair, as he would offer it to anyone.",
+        "mid": "The housekeeper has the tea already laid, and your preferred cake.\nSir Henry is in the garden with the roses. He shows you the one he has been saving to name.",
+        "high": "The children's voices carry from the lawn. They stop when they see you — then start again, louder, running to the gate.\nSir Henry comes out slowly, wiping his hands, and does not hide what is in his face.",
+        "empty": "The housekeeper is sorry — Sir Henry is with his steward, out at the far farms. \"He will be sorry too, miss. He always is.\""
+      }
+    },
+    {
+      "id": "the-anchorage",
+      "type": "interactive",
+      "unlockedBy": null,
+      "appearsAfter": null,
+      "order": 10,
+      "title": "The Anchorage",
+      "x": 33.8,
+      "y": 76.3,
+      "home": "capt_vane",
+      "icon": "house",
+      "kind": "Villa · Day",
+      "desc": "A new white villa built with prize-money, all glass and gilt and a telescope on the roof, which the county finds unforgivable.",
+      "visit": {
+        "low": "The door is answered by a one-armed sailor who calls you \"ma'am\" and bellows your name up the stairwell.\nCaptain Vane appears with a chart under one arm and a grin he does not bother to soften.",
+        "mid": "The captain has bought a carpet since your last visit, and wants very badly to know if it is the right one.\n\"Be honest. Everyone else lies to me out of pity or spite.\"",
+        "high": "He is on the roof with the telescope, and has it trained on the road you came by.\n\"Saw you at the bridge. I'd have come down, but I wanted to watch you walk the whole way.\"",
+        "empty": "The sailor shakes his head. \"Gone to the coast to look at a ship, ma'am. Always a ship.\""
+      }
+    },
+    {
+      "id": "devereux-lodgings",
+      "type": "interactive",
+      "unlockedBy": null,
+      "appearsAfter": null,
+      "order": 11,
+      "title": "Devereux's Lodgings",
+      "x": 66.8,
+      "y": 55.1,
+      "home": "mr_devereux",
+      "icon": "house",
+      "kind": "Rooms · Any hour",
+      "desc": "Two rented rooms above the milliner, furnished like a Paris salon in miniature — the last of a great house, packed into a trunk.",
+      "visit": {
+        "low": "The milliner's girl shows you up with barely concealed envy.\nMonsieur Devereux bows over your hand as though the ceiling were painted, and the two rooms a palace.",
+        "mid": "There is real coffee today, and a story about how he came by it that changes each time.\n\"Sit. Tell me the news of your terrible little town. I adore it.\"",
+        "high": "He has opened the window to the street so he might hear you coming.\n\"I was composing a letter to you,\" he says, \"and now I need not finish it. Tragedy. Sit.\"",
+        "empty": "The milliner's girl sighs. \"Gone out, miss. Somebody's carriage. He's always in somebody's carriage.\""
+      }
+    },
+    {
+      "id": "hale-house",
+      "type": "interactive",
+      "unlockedBy": null,
+      "appearsAfter": null,
+      "order": 12,
+      "title": "Hale House",
+      "x": 59.4,
+      "y": 14.6,
+      "home": "mr_hale",
+      "icon": "house",
+      "kind": "New Mansion · Day",
+      "desc": "Raw brick and plate glass, built in a season and furnished in a week; the county calls it vulgar and cannot stop looking at it.",
+      "visit": {
+        "low": "Everything in the hall is new, and expensive, and slightly too large.\nMr Hale comes out of a study full of drawings and looks at you the way he looks at a machine he has not yet understood.",
+        "mid": "He has had a chair made — for you, he says, though he says it as if it were a business matter.\n\"Tell me what is wrong with this room. Everyone else is too polite, and I am paying for polite.\"",
+        "high": "The workmen have gone; the house is, for once, quiet. He meets you at the gate.\n\"I built all this to be looked at. I did not expect to want it looked at by one person only.\"",
+        "empty": "A foreman touches his cap. \"Master's at the works, miss. Or the bank. Or shouting at somebody in London.\""
+      }
+    },
+    {
+      "id": "fenwick-cottage",
+      "type": "interactive",
+      "unlockedBy": null,
+      "appearsAfter": null,
+      "order": 13,
+      "title": "The Curate's Cottage",
+      "x": 40.5,
+      "y": 64.1,
+      "home": "mr_fenwick",
+      "icon": "house",
+      "kind": "Cottage · Any hour",
+      "desc": "A low cottage under an old pear tree, the gate you climbed as a child, the same dog's grandchild asleep on the step.",
+      "visit": {
+        "low": "The pear tree is taller. Everything else is exactly as it was, which is somehow harder.\nMr Fenwick opens the door himself and says your name as though he had been saving it.",
+        "mid": "There is bread on the table and ink on his cuff, and he is trying to hide both.\n\"You needn't knock. You never used to.\"",
+        "high": "The dog knows you first, and then the man, and neither one pretends otherwise.\n\"Come in. Sit where you always sat. Nothing has moved — I would not let it.\"",
+        "empty": "The door is on the latch, as it always was. A note on the table: gone to the sick at the mill — back by dusk."
+      }
+    },
+    {
+      "id": "militia-billet",
+      "type": "interactive",
+      "unlockedBy": null,
+      "appearsAfter": null,
+      "order": 14,
+      "title": "Ensign Pryce's Billet",
+      "x": 51.9,
+      "y": 89.3,
+      "home": "ens_pryce",
+      "icon": "house",
+      "kind": "Billet · Any hour",
+      "desc": "A narrow attic room let to a militia ensign: a cot, a sword, his mother's letters, and a candle burned to the socket over a book of honour.",
+      "visit": {
+        "low": "The landlady is scandalised. The ensign is more so — he cannot think where you might sit.\nHe offers the cot, the floor, and finally his own coat spread over a trunk.",
+        "mid": "He has borrowed a chair from the landlady and polished his boots for the second time today.\n\"I have nothing to offer you but — I have nothing to offer you. Will you stay anyway?\"",
+        "high": "He is at the window; he has been at the window for an hour.\n\"I wrote my mother about you,\" he says, going red to the ears. \"She wishes to know if you are real.\"",
+        "empty": "The landlady sniffs. \"Drilling, miss. Or on picket. Or writing that poor mother of his.\""
+      }
+    },
+    {
+      "id": "the-garret",
+      "type": "interactive",
+      "unlockedBy": null,
+      "appearsAfter": null,
+      "order": 15,
+      "title": "The Garret",
+      "x": 73,
+      "y": 66.1,
+      "home": "mr_quill",
+      "icon": "house",
+      "kind": "Attic · Night",
+      "desc": "A leaking attic above the bookseller, papered with verses, warmed by nothing, and — the poet insists — the only honest room in the county.",
+      "visit": {
+        "low": "The bookseller points upward without looking up. The stairs are steep and the last one missing.\nMr Quill is on the floor amid pages, and greets you as if you were a rhyme he had just found.",
+        "mid": "He has cleared a chair — by putting its contents on the bed — and lit his only candle for you.\n\"Do not look at the ceiling. It is not leaking. It is weeping. There is a difference, and I have written it down.\"",
+        "high": "A new poem is pinned to the door. It has your name in it, badly hidden.\n\"You were not meant to see that yet. You were meant to see it in a hundred years, in a book.\"",
+        "empty": "The bookseller shrugs. \"Out walking, miss. He says the poems come from the hills. The rent comes from nowhere.\""
+      }
     }
   ]
 }

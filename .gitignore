@@ -48,3 +48,13 @@ proof-of-concept-*/
 worlds/pride-and-prejudice/_archive/
 docs/product-review-*.html
 docs/dialog-ui-*.html
+docs/pin-moodboard*.html
+docs/_shots/
+
+# AI UI mockups (generated, not part of the game)
+**/_mockups/
+
+# per-player face-swapped sprites (generated)
+worlds/pride-and-prejudice/characters/*/you/
+worlds/pride-and-prejudice/characters/arabella_you/
+worlds/pride-and-prejudice/pc-select/fig_arabella_you.webp

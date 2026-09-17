@@ -214,13 +214,34 @@ function openaiJson(pathname, payload) {
 }
 
 // multipart POST for the images/edits endpoint (with one or more reference images)
-function openaiImageEdit(prompt, refAbs, size) {
-  const refList = Array.isArray(refAbs) ? refAbs : [refAbs];
+const OPENAI_IMAGE_MODELS = new Set(['gpt-image-1', 'gpt-image-2', 'gpt-image-2.5-flare', 'gpt-image-2.5-sunburst']);
+// Server-wide image default, set from the editor's model picker (persisted, gitignored).
+// Resolution order: request.model → this file → OPENAI_IMAGE_MODEL (.env) → gpt-image-2.
+const IMG_PREF_PATH = path.join(ROOT, '_config', 'image-model.local.json');
+function readImgPref() { try { return JSON.parse(fs.readFileSync(IMG_PREF_PATH, 'utf8')); } catch (e) { return {}; } }
+function writeImgPref(o) { fs.mkdirSync(path.dirname(IMG_PREF_PATH), { recursive: true }); fs.writeFileSync(IMG_PREF_PATH, JSON.stringify(o, null, 2)); }
+function imgPrefProvider() { const p = readImgPref(); return p.provider === 'freepik' ? 'freepik' : 'openai'; }
+function pickImageModel(m) { m = String(m || '').trim(); if (OPENAI_IMAGE_MODELS.has(m)) return m;
+  const p = readImgPref(); return OPENAI_IMAGE_MODELS.has(p.model) ? p.model : IMAGE_MODEL; }
+// GET /api/image-model → current default; POST {provider, model} → set it
+async function handleImageModel(req, res) {
+  if (req.method === 'POST') {
+    const b = await readJsonBody(req);
+    const provider = b.provider === 'freepik' ? 'freepik' : 'openai';
+    const model = OPENAI_IMAGE_MODELS.has(String(b.model || '')) ? String(b.model) : null;
+    writeImgPref({ provider, model, updated: new Date().toISOString() });
+  }
+  const p = readImgPref();
+  return sendJson(res, 200, { provider: imgPrefProvider(), model: p.model || null, effectiveModel: pickImageModel(null), envModel: IMAGE_MODEL, freepik: !!FREEPIK_KEY });
+}
+function openaiImageEdit(prompt, refAbs, size, model, opts) {
+  const refList = Array.isArray(refAbs) ? refAbs : [refAbs]; opts = opts || {};
   return new Promise((resolve, reject) => {
     const boundary = '----author' + Date.now();
     const parts = [];
     const add = (s) => parts.push(Buffer.from(s));
-    add(`--${boundary}\r\nContent-Disposition: form-data; name="model"\r\n\r\n${IMAGE_MODEL}\r\n`);
+    add(`--${boundary}\r\nContent-Disposition: form-data; name="model"\r\n\r\n${model || IMAGE_MODEL}\r\n`);
+    if (opts.transparent) { add(`--${boundary}\r\nContent-Disposition: form-data; name="background"\r\n\r\ntransparent\r\n`); add(`--${boundary}\r\nContent-Disposition: form-data; name="output_format"\r\n\r\npng\r\n`); }
     add(`--${boundary}\r\nContent-Disposition: form-data; name="prompt"\r\n\r\n${prompt}\r\n`);
     add(`--${boundary}\r\nContent-Disposition: form-data; name="size"\r\n\r\n${size}\r\n`);
     refList.forEach((p, i) => {
@@ -301,8 +322,17 @@ async function handleAuthorScript(req, res) {
 //   Generates one image and writes it to relPath (under worlds/). ref = optional
 //   character folder to use its pride.png as the style reference.
 async function handleGenAsset(req, res) {
-  if (!OPENAI_KEY) return sendJson(res, 400, { error: 'Set OPENAI_API_KEY in the dev-server environment' });
   const b = await readJsonBody(req);
+  // provider:'freepik' → Mystic (first ref's pride.png becomes the STYLE reference; Mystic has no identity ref)
+  const provider = b.provider ? String(b.provider) : imgPrefProvider();   // no provider given → editor's pick
+  if (provider === 'freepik') {
+    if (!FREEPIK_KEY) return sendJson(res, 400, { error: 'Set FREEPIK_API_KEY in .env (restart the dev server)' });
+    const refs0 = Array.isArray(b.refs) ? b.refs : (b.ref ? [b.ref] : []);
+    const styleRef = refs0.map(r => 'worlds/pride-and-prejudice/characters/' + String(r || '').trim() + '/appearances/pride.png').find(p => worldsAbs(p)) || null;
+    req._json = Object.assign({}, b, { styleRef: b.styleRef || styleRef, model: b.model || process.env.FREEPIK_MYSTIC_MODEL || 'realism', resolution: b.resolution || process.env.FREEPIK_RESOLUTION || '2k' });
+    return handleFreepikGenerate(req, res);
+  }
+  if (!OPENAI_KEY) return sendJson(res, 400, { error: 'Set OPENAI_API_KEY in the dev-server environment' });
   const relPath = String(b.relPath || '').trim();
   const prompt  = String(b.prompt || '').trim();
   const size    = String(b.size || '1440x2560');
@@ -315,16 +345,156 @@ async function handleGenAsset(req, res) {
   if (!isInsideRoot(abs)) return sendJson(res, 403, { error: 'escapes root' });
   try {
     let j;
+    // refPaths = extra reference images by worlds/… path (UI screenshots, style boards…)
+    const refPaths = Array.isArray(b.refPaths) ? b.refPaths.map(worldsAbs).filter(Boolean) : [];
     const refAbss = refs
       .map(r => path.join(ROOT, 'worlds', 'pride-and-prejudice', 'characters', r, 'appearances', 'pride.png'))
-      .filter(p => fs.existsSync(p));
-    if (refAbss.length) j = await openaiImageEdit(prompt, refAbss, size);
-    else j = await openaiJson('/v1/images/generations', { model: IMAGE_MODEL, prompt, size });
+      .filter(p => fs.existsSync(p)).concat(refPaths);
+    const model = pickImageModel(b.model);
+    if (refAbss.length) j = await openaiImageEdit(prompt, refAbss, size, model, { transparent: !!b.transparent });
+    else j = await openaiJson('/v1/images/generations', Object.assign({ model, prompt, size }, b.transparent ? { background: 'transparent', output_format: 'png' } : {}));
     const b64 = j.data && j.data[0] && j.data[0].b64_json;
     if (!b64) return sendJson(res, 502, { error: 'no image returned' });
     fs.mkdirSync(path.dirname(abs), { recursive: true });
     fs.writeFileSync(abs, Buffer.from(b64, 'base64'));
-    return sendJson(res, 200, { ok: true, path: relPath });
+    return sendJson(res, 200, { ok: true, path: relPath, model });
+  } catch (e) { return sendJson(res, 502, { error: String(e.message || e) }); }
+}
+
+// ───────────────────────────────────────────────────────────────
+// Freepik / Magnific image generation (key from FREEPIK_API_KEY in .env).
+// Freepik's API was rebranded Magnific — same endpoints; we send both header
+// names and let FREEPIK_API_BASE pick the host. Async pattern: POST → task_id,
+// poll GET /{task-id} until COMPLETED (no webhook: localhost isn't reachable).
+// ───────────────────────────────────────────────────────────────
+const FREEPIK_KEY  = process.env.FREEPIK_API_KEY || process.env.MAGNIFIC_API_KEY || '';
+const FREEPIK_BASE = (process.env.FREEPIK_API_BASE || 'https://api.freepik.com').replace(/\/$/, '');
+const FREEPIK_ASPECTS = { square_1_1:1, classic_4_3:4/3, traditional_3_4:3/4, widescreen_16_9:16/9, social_story_9_16:9/16,
+  smartphone_horizontal_20_9:20/9, smartphone_vertical_9_20:9/20, standard_3_2:3/2, portrait_2_3:2/3, horizontal_2_1:2, vertical_1_2:0.5, social_5_4:5/4, social_post_4_5:4/5 };
+function freepikAspectFor(size) {   // '1440x2560' → nearest enum
+  const m = /^(\d+)x(\d+)$/.exec(String(size || '')); if (!m) return 'square_1_1';
+  const r = parseInt(m[1], 10) / parseInt(m[2], 10); let best = 'square_1_1', bd = 1e9;
+  for (const [k, v] of Object.entries(FREEPIK_ASPECTS)) { const d = Math.abs(Math.log(v / r)); if (d < bd) { bd = d; best = k; } }
+  return best;
+}
+function freepikReq(method, pathname, payload) {
+  return new Promise((resolve, reject) => {
+    const u = new URL(FREEPIK_BASE + pathname);
+    const body = payload ? Buffer.from(JSON.stringify(payload)) : null;
+    const headers = { 'x-freepik-api-key': FREEPIK_KEY, 'x-magnific-api-key': FREEPIK_KEY, 'Accept': 'application/json' };
+    if (body) { headers['Content-Type'] = 'application/json'; headers['Content-Length'] = body.length; }
+    const req = https.request({ hostname: u.hostname, path: u.pathname + u.search, method, headers }, (r) => {
+      let d = ''; r.on('data', c => d += c); r.on('end', () => {
+        let j = null; try { j = JSON.parse(d); } catch (e) {}
+        if (r.statusCode >= 400) return reject(new Error((j && (j.message || (j.problem && j.problem.message))) || ('HTTP ' + r.statusCode + ' ' + d.slice(0, 200))));
+        if (!j) return reject(new Error('bad response: ' + d.slice(0, 200)));
+        resolve(j);
+      });
+    });
+    req.on('error', reject); if (body) req.write(body); req.end();
+  });
+}
+function httpsGetBuffer(url, hops) {
+  return new Promise((resolve, reject) => {
+    https.get(url, (r) => {
+      if ([301, 302, 303, 307, 308].includes(r.statusCode) && r.headers.location && (hops || 0) < 5) { r.resume(); return resolve(httpsGetBuffer(r.headers.location, (hops || 0) + 1)); }
+      if (r.statusCode >= 400) { r.resume(); return reject(new Error('download HTTP ' + r.statusCode)); }
+      const chunks = []; r.on('data', c => chunks.push(c)); r.on('end', () => resolve({ buf: Buffer.concat(chunks), type: r.headers['content-type'] || '' }));
+    }).on('error', reject);
+  });
+}
+// Run one Mystic task to completion. opts: {prompt, model, aspect, resolution, engine, creative, styleRefAbs, structureRefAbs, adherence, hdr, structureStrength}
+async function freepikMystic(opts) {
+  const payload = { prompt: opts.prompt, resolution: opts.resolution || '2k', aspect_ratio: opts.aspect || 'square_1_1', filter_nsfw: true };
+  if (opts.model && opts.model !== 'default') payload.model = opts.model;
+  if (opts.engine) payload.engine = opts.engine;
+  if (typeof opts.creative === 'number') payload.creative_detailing = Math.max(0, Math.min(100, opts.creative | 0));
+  if (opts.styleRefAbs) { payload.style_reference = fs.readFileSync(opts.styleRefAbs).toString('base64'); if (typeof opts.adherence === 'number') payload.adherence = opts.adherence; if (typeof opts.hdr === 'number') payload.hdr = opts.hdr; }
+  if (opts.structureRefAbs) { payload.structure_reference = fs.readFileSync(opts.structureRefAbs).toString('base64'); if (typeof opts.structureStrength === 'number') payload.structure_strength = opts.structureStrength; }
+  const start = await freepikReq('POST', '/v1/ai/mystic', payload);
+  const id = start && start.data && start.data.task_id; if (!id) throw new Error('no task id');
+  const t0 = Date.now();
+  while (Date.now() - t0 < 4 * 60 * 1000) {
+    await new Promise(r => setTimeout(r, 3000));
+    const st = await freepikReq('GET', '/v1/ai/mystic/' + id);
+    const d = (st && st.data) || {};
+    if (d.status === 'COMPLETED') { const url = d.generated && d.generated[0]; if (!url) throw new Error('completed without image'); return { url, task_id: id }; }
+    if (d.status === 'FAILED') throw new Error('Mystic task failed');
+  }
+  throw new Error('Mystic timeout');
+}
+// Resolve a worlds/… relative path (image file) to an absolute path or null.
+function worldsAbs(rel) {
+  rel = String(rel || '').trim(); if (!/^worlds\/[a-z0-9_/.\- ]+\.(png|jpg|jpeg|webp)$/i.test(rel)) return null;
+  const abs = path.join(ROOT, rel); return (isInsideRoot(abs) && fs.existsSync(abs)) ? abs : null;
+}
+// GET /api/freepik/status → { configured }
+function handleFreepikStatus(req, res) { return sendJson(res, 200, { configured: !!FREEPIK_KEY, base: FREEPIK_BASE }); }
+// POST /api/freepik/generate  { prompt, relPath, size?|aspect?, resolution?, model?, engine?, creative?, styleRef?, structureRef?, adherence?, hdr?, structureStrength? }
+//   Generates with Mystic, downloads the result and writes it to relPath (under worlds/).
+async function handleFreepikGenerate(req, res) {
+  if (!FREEPIK_KEY) return sendJson(res, 400, { error: 'Set FREEPIK_API_KEY in .env (restart the dev server)' });
+  const b = req._json || await readJsonBody(req);
+  const relPath = String(b.relPath || '').trim(); const prompt = String(b.prompt || '').trim();
+  if (!/^worlds\/[a-z0-9_/.-]+\.(png|jpg|jpeg|webp)$/i.test(relPath)) return sendJson(res, 400, { error: 'bad relPath' });
+  if (!prompt) return sendJson(res, 400, { error: 'prompt required' });
+  const abs = path.join(ROOT, relPath); if (!isInsideRoot(abs)) return sendJson(res, 403, { error: 'escapes root' });
+  try {
+    const out = await freepikMystic({
+      prompt, model: b.model, engine: b.engine, creative: (b.creative == null ? undefined : +b.creative),
+      aspect: b.aspect || freepikAspectFor(b.size), resolution: b.resolution || '2k',
+      styleRefAbs: worldsAbs(b.styleRef), structureRefAbs: worldsAbs(b.structureRef),
+      adherence: (b.adherence == null ? undefined : +b.adherence), hdr: (b.hdr == null ? undefined : +b.hdr), structureStrength: (b.structureStrength == null ? undefined : +b.structureStrength) });
+    const img = await httpsGetBuffer(out.url);
+    fs.mkdirSync(path.dirname(abs), { recursive: true }); fs.writeFileSync(abs, img.buf);
+    return sendJson(res, 200, { ok: true, path: relPath, task_id: out.task_id, contentType: img.type, bytes: img.buf.length });
+  } catch (e) { return sendJson(res, 502, { error: String(e.message || e) }); }
+}
+
+// ───────────────────────────────────────────────────────────────
+// Higgsfield (images + video) — key from .env: HF_API_KEY (single value; "id:secret" if the console
+// gives a pair) or HF_API_KEY_ID + HF_API_KEY_SECRET. Async: POST model path → request_id → poll status.
+// ───────────────────────────────────────────────────────────────
+const HF_AUTH = (() => { const one = String(process.env.HF_API_KEY || '').trim(); const id = String(process.env.HF_API_KEY_ID || '').trim(), sec = String(process.env.HF_API_KEY_SECRET || '').trim();
+  if (id && sec) return id + ':' + sec; return one; })();
+function hfReq(method, urlStr, payload) {
+  return new Promise((resolve, reject) => {
+    const u = new URL(urlStr); const body = payload ? Buffer.from(JSON.stringify(payload)) : null;
+    const headers = { 'Authorization': 'Key ' + HF_AUTH, 'Accept': 'application/json' };
+    if (body) { headers['Content-Type'] = 'application/json'; headers['Content-Length'] = body.length; }
+    const req = https.request({ hostname: u.hostname, path: u.pathname + u.search, method, headers }, (r) => {
+      let d = ''; r.on('data', c => d += c); r.on('end', () => { let j = null; try { j = JSON.parse(d); } catch (e) {}
+        if (r.statusCode >= 400) return reject(new Error((j && (j.detail || j.message || j.error)) ? JSON.stringify(j.detail || j.message || j.error).slice(0, 300) : ('HTTP ' + r.statusCode + ' ' + d.slice(0, 200))));
+        if (!j) return reject(new Error('bad response: ' + d.slice(0, 200))); resolve(j); }); });
+    req.on('error', reject); if (body) req.write(body); req.end();
+  });
+}
+// GET /api/higgsfield/status → { configured }
+function handleHfStatus(req, res) { return sendJson(res, 200, { configured: !!HF_AUTH }); }
+// POST /api/higgsfield/generate { model:"higgsfield-ai/soul/v2/standard", body:{prompt,…}, relPath:"worlds/…/x.mp4|png" }
+//   Submits, polls until completed (max 10 min), downloads the first images[]/videos[]/video url to relPath.
+async function handleHfGenerate(req, res) {
+  if (!HF_AUTH) return sendJson(res, 400, { error: 'Set HF_API_KEY in .env (restart the dev server)' });
+  const b = await readJsonBody(req);
+  const model = String(b.model || '').trim().replace(/^\/+/, ''); const relPath = String(b.relPath || '').trim();
+  if (!/^[a-z0-9][a-z0-9_\-\/.]*$/i.test(model)) return sendJson(res, 400, { error: 'bad model path' });
+  if (!/^worlds\/[a-z0-9_/.-]+\.(png|jpg|jpeg|webp|mp4|webm|mov)$/i.test(relPath)) return sendJson(res, 400, { error: 'bad relPath' });
+  const abs = path.join(ROOT, relPath); if (!isInsideRoot(abs)) return sendJson(res, 403, { error: 'escapes root' });
+  const payload = (b.body && typeof b.body === 'object') ? b.body : { prompt: String(b.prompt || '') };
+  try {
+    const start = await hfReq('POST', 'https://api.higgsfield.ai/' + model, payload);
+    const statusUrl = start.status_url || ('https://api.higgsfield.ai/requests/' + start.request_id + '/status');
+    const t0 = Date.now(); let st = start;
+    while (!['completed', 'failed', 'nsfw', 'canceled'].includes(st.status)) {
+      if (Date.now() - t0 > 10 * 60 * 1000) return sendJson(res, 504, { error: 'timeout', request_id: start.request_id });
+      await new Promise(r => setTimeout(r, 4000)); st = await hfReq('GET', statusUrl);
+    }
+    if (st.status !== 'completed') return sendJson(res, 502, { error: 'status ' + st.status, request_id: start.request_id, detail: st });
+    const url = (st.images && st.images[0] && st.images[0].url) || (st.videos && st.videos[0] && st.videos[0].url) || (st.video && st.video.url) || st.url;
+    if (!url) return sendJson(res, 502, { error: 'no output url', detail: st });
+    const out = await httpsGetBuffer(url);
+    fs.mkdirSync(path.dirname(abs), { recursive: true }); fs.writeFileSync(abs, out.buf);
+    return sendJson(res, 200, { ok: true, path: relPath, request_id: start.request_id, contentType: out.type, bytes: out.buf.length });
   } catch (e) { return sendJson(res, 502, { error: String(e.message || e) }); }
 }
 
@@ -340,27 +510,84 @@ function handleEpLocs(req, res) { return sendJson(res, 200, readEpLocs()); }
 // that file, always reflect the master. requires === unlockedBy.
 function mirrorEpLoc() {
   const m = readMapLocs();
-  const eps = (m.locations || []).filter(l => l.type === 'episode').map(l => Object.assign(
+  const eps = (m.locations || []).filter(l => l.type === 'episode').map(l => (
     { id: l.id, title: l.title || l.id, x: l.x, y: l.y, episode: l.episode || null,
-      order: (typeof l.order === 'number' ? l.order : null), requires: l.unlockedBy || null },
-    l.route ? { route: l.route } : {}));
+      order: (typeof l.order === 'number' ? l.order : null), requires: l.unlockedBy || null }));
   writeEpLocs({ locations: eps });
 }
 
-async function handleAddLocation(req, res) {
+// POST /api/author/location-upsert — create or update ONE map location (Map Tracer).
+//   { id, title?, type?('episode'|'interactive'), desc?, kind?, icon?, x?, y?, tier?, passesTime?, lifespan?, suitor? }
+//   Only the fields present in the body are touched; x/y is the SINGLE source of the
+//   pin position (map-roads.json locOverrides is retired). New ids get an order slot
+//   and a locations/<id>/explore folder.
+const LOC_TYPES = ['episode', 'interactive'];
+const PIN_ICONS = ['cafe', 'library', 'store', 'mug', 'flask', 'house'];
+const VISIT_TIERS = ['low', 'mid', 'high', 'empty'];
+async function handleLocationUpsert(req, res) {
   const b = await readJsonBody(req);
-  const id = String(b.id || '').trim(), title = String(b.title || '').trim();
+  const id = String(b.id || '').trim().toLowerCase();
+  if (!/^[a-z0-9][a-z0-9-]*$/.test(id)) return sendJson(res, 400, { error: 'id must be slug-safe (a-z, 0-9, -)' });
+  const m = readMapLocs(); m.locations = m.locations || [];
+  let loc = m.locations.find(l => l.id === id); const created = !loc;
+  if (created) {
+    if (!LOC_TYPES.includes(b.type)) return sendJson(res, 400, { error: 'type must be episode or interactive' });
+    const maxOrder = Math.max(0, ...m.locations.filter(l => typeof l.order === 'number').map(l => l.order));
+    loc = { id, title: id, type: b.type, x: 50, y: 50, unlockedBy: null, appearsAfter: null, order: maxOrder + 1 };
+    if (b.type === 'episode') { loc.episode = null; loc.passesTime = true; loc.lifespan = 4; }
+    m.locations.push(loc);
+  }
+  if ('title' in b) loc.title = String(b.title || '').trim() || loc.title || id;
+  if ('type' in b && LOC_TYPES.includes(b.type)) loc.type = b.type;
+  if ('desc' in b) loc.desc = String(b.desc || '').trim() || undefined;
+  if ('kind' in b) loc.kind = String(b.kind || '').trim() || undefined;          // POI sheet sub-title e.g. "Coffee House · Day"
+  if ('icon' in b) loc.icon = PIN_ICONS.includes(b.icon) ? b.icon : undefined;   // interactive pin glyph
+  if ('suitor' in b) loc.suitor = String(b.suitor || '').trim() || undefined;
+  if ('home' in b) loc.home = String(b.home || '').trim() || undefined;               // suitor home: owner id — opens with the suitor, owner idles here
+  if ('visit' in b) { const v = (b.visit && typeof b.visit === 'object') ? b.visit : {}; const out = {};
+    VISIT_TIERS.forEach(t => { const txt = String(v[t] || '').trim(); if (txt) out[t] = txt; });
+    loc.visit = Object.keys(out).length ? out : undefined; }                           // visit narration by relationship tier (low/mid/high) + empty
+  // Consequence when this EPISODE is missed (declined for a sibling / slot passed): {who, bg, script}
+  // → plays in the whisper UI on the turn change that seals the miss (prideEndFlow).
+  if ('missed' in b) { const m = (b.missed && typeof b.missed === 'object') ? b.missed : null;
+    const out = m ? { who:String(m.who||'').trim(), bg:String(m.bg||'').trim(), script:String(m.script||'').trim() } : null;
+    loc.missed = (out && out.script) ? out : undefined; }
+  // Optional cover image for Map Events (polaroid) — relative to worlds/pride-and-prejudice/
+  if ('cover' in b) loc.cover = String(b.cover || '').trim() || undefined;
   const x = Number(b.x), y = Number(b.y);
-  const route = Array.isArray(b.route) ? b.route.filter(p => Array.isArray(p) && p.length === 2).map(p => [Number(p[0]), Number(p[1])]) : [];
-  if (!/^[a-z0-9][a-z0-9-]*$/i.test(id)) return sendJson(res, 400, { error: 'id must be slug-safe' });
-  if (route.length < 2) return sendJson(res, 400, { error: 'route needs at least 2 waypoints' });
-  const m = readMapLocs();
-  if ((m.locations || []).some(l => l.id === id)) return sendJson(res, 400, { error: 'location id exists' });
-  const maxOrder = Math.max(0, ...(m.locations || []).filter(l => l.type === 'episode' && typeof l.order === 'number').map(l => l.order));
-  m.locations.push({ id, title: title || id, type: 'episode', x: isFinite(x) ? x : 50, y: isFinite(y) ? y : 50, unlockedBy: null, episode: null, route, order: maxOrder + 1 });
+  if ('x' in b && isFinite(x)) loc.x = Math.round(Math.max(0, Math.min(100, x)) * 10) / 10;
+  if ('y' in b && isFinite(y)) loc.y = Math.round(Math.max(0, Math.min(100, y)) * 10) / 10;
+  if ('tier' in b) { const t = parseInt(b.tier, 10); loc.tier = (isFinite(t) && t >= 1) ? t : undefined; }
+  if ('passesTime' in b) loc.passesTime = (b.passesTime === false) ? false : true;
+  if ('lifespan' in b) { const n = parseInt(b.lifespan, 10); loc.lifespan = (isFinite(n) && n >= 0) ? n : 4; }
+  if (loc.route) delete loc.route;   // legacy approach route — walkers use map-roads.json now
+  Object.keys(loc).forEach(k => { if (loc[k] === undefined) delete loc[k]; });
   writeMapLocs(m); mirrorEpLoc();
-  fs.mkdirSync(path.join(ROOT, 'worlds', 'pride-and-prejudice', 'locations', id, 'explore'), { recursive: true });
-  return sendJson(res, 200, { ok: true, location: id });
+  if (created) fs.mkdirSync(path.join(ROOT, 'worlds', 'pride-and-prejudice', 'locations', id, 'explore'), { recursive: true });
+  return sendJson(res, 200, { ok: true, created, location: loc });
+}
+
+// POST /api/author/location-delete { id } — removes the location record, its
+//   road attachments (loc:<id> edges) and any fog-layer binding. Folders + scripts
+//   on disk are left untouched.
+async function handleLocationDelete(req, res) {
+  const b = await readJsonBody(req);
+  const id = String(b.id || '').trim();
+  const m = readMapLocs();
+  const before = (m.locations || []).length;
+  m.locations = (m.locations || []).filter(l => l.id !== id);
+  if (m.locations.length === before) return sendJson(res, 404, { error: 'no such location' });
+  m.locations.forEach(l => { if (l.unlockedBy === id) l.unlockedBy = null; if (l.appearsAfter === id) l.appearsAfter = null;
+    if (Array.isArray(l.unlocks)) l.unlocks = l.unlocks.filter(u => (u && u.id) !== id); });
+  writeMapLocs(m); mirrorEpLoc();
+  try { const r = JSON.parse(fs.readFileSync(ROADS_PATH, 'utf8')); const k = 'loc:' + id;
+    if (r.roads && Array.isArray(r.roads.edges)) r.roads.edges = r.roads.edges.filter(e => e[0] !== k && e[1] !== k);
+    if (r.locOverrides) delete r.locOverrides[id];
+    fs.writeFileSync(ROADS_PATH, JSON.stringify(r, null, 2)); } catch (e) {}
+  try { const f = JSON.parse(fs.readFileSync(FOG_PATH, 'utf8')); let ch = false;
+    (f.fogs || []).forEach(g => { if (g.locId === id) { g.locId = null; ch = true; } });
+    if (ch) fs.writeFileSync(FOG_PATH, JSON.stringify(f)); } catch (e) {}
+  return sendJson(res, 200, { ok: true });
 }
 
 // POST /api/author/suggest-locations { brief, existing:[] } → AI suggests new spots
@@ -543,7 +770,7 @@ function handleStoryMap(req,res){
     // Rule B — no script → auto "placeholder".
     const hasScript = l.type==='episode' ? scriptExistsFor(l) : true;
     const mode = (l.type==='episode' && !hasScript) ? 'placeholder' : (l.mode||'');
-    return {id:l.id,title:l.title||l.id,type:l.type,x:l.x,y:l.y,sx:(typeof l.sx==='number'?l.sx:null),sy:(typeof l.sy==='number'?l.sy:null),tier:(typeof l.tier==='number'?l.tier:null),order:(typeof l.order==='number'?l.order:null),mode:mode,hasScript:hasScript,suitor:l.suitor||null,episode:l.episode||null,unlockedBy:l.unlockedBy||null,appearsAfter:l.appearsAfter||null,time:(l.time||'any'),archived:!!l.archived};
+    return {id:l.id,title:l.title||l.id,type:l.type,x:l.x,y:l.y,sx:(typeof l.sx==='number'?l.sx:null),sy:(typeof l.sy==='number'?l.sy:null),tier:(typeof l.tier==='number'?l.tier:null),order:(typeof l.order==='number'?l.order:null),mode:mode,hasScript:hasScript,suitor:l.suitor||null,episode:l.episode||null,unlockedBy:l.unlockedBy||null,appearsAfter:l.appearsAfter||null,time:(l.time||'any'),passesTime:(l.passesTime!==false),lifespan:(typeof l.lifespan==='number'?l.lifespan:4),archived:!!l.archived};
   });
   const visible=new Set(nodes.map(n=>n.id));
   const staticEdges=[]; locs.forEach(l=>{ const src=l.unlockedBy||l.appearsAfter; if(src && visible.has(src) && visible.has(l.id)) staticEdges.push({from:src,to:l.id}); });   // gate = unlockedBy or appearsAfter
@@ -561,7 +788,7 @@ function handleStoryMap(req,res){
     }
     if(!unlocks.length) return;
     const groups={};
-    unlocks.forEach(u=>{ if(!visible.has(u.id)) return;   // drop edges to hidden phantom nodes (e.g. meryton)
+    unlocks.forEach(u=>{ if(!visible.has(u.id) && !String(u.id||'').startsWith('ui:')) return;   // drop edges to hidden phantom nodes (e.g. meryton); keep UI-pack targets (ui:*)
       const key=u.group||('__solo_'+u.id); const g=(groups[key]=groups[key]||{group:u.group||'',kind:u.kind||'main',timer:u.timer||'',members:[]});
       g.members.push({id:u.id,title:u.title||'',desc:u.desc||'',cover:u.cover||''}); if(u.kind)g.kind=u.kind; if(u.timer)g.timer=u.timer; });
     Object.keys(groups).forEach(k=>{ if(!groups[k].members.length) return; forks.push(Object.assign({source:l.id, grouped:!!groups[k].group}, groups[k])); });
@@ -624,6 +851,15 @@ async function handleClearUnlock(req,res){
 }
 
 // ---- Full map-location manifest (all 4 tiers: episode / interactive / short-story / onboarding) ----
+// ---- Whispers (onboarding-style sequences that auto-play after an episode) ----
+// worlds/pride-and-prejudice/whispers.json { whispers:[ {id, after:<episode pin id>, who, focus?, priority?, title?, script} ] }
+const WHISPER_PATH = path.join(ROOT, 'worlds', 'pride-and-prejudice', 'whispers.json');
+function handleWhispers(req, res){ let j={whispers:[]}; try{ j=JSON.parse(fs.readFileSync(WHISPER_PATH,'utf8')); }catch(e){} return sendJson(res, 200, j); }
+async function handleSaveWhispers(req, res){ const b=await readJsonBody(req); const arr=Array.isArray(b.whispers)?b.whispers:[];
+  const note='Whisper = episode bitince (after=pin id) kendiliğinden açılan kısa diyalog (mode pc, encounter UI). who=konuşan NPC, focus=bitince kamera+pin nabzı, script=episode DSL. Tek sefer, tur başına 1. Editör: Story map → düğüm → "Onboarding · whisper".';
+  try{ fs.writeFileSync(WHISPER_PATH, JSON.stringify({ _note:note, whispers:arr }, null, 2)+'\n'); }catch(e){ return sendJson(res,500,{error:'write failed'}); }
+  return sendJson(res, 200, { ok:true, count:arr.length }); }
+
 // ---- Encounters (defined 2-character map encounters) ----
 const ENC_PATH = path.join(ROOT, 'worlds', 'pride-and-prejudice', 'encounters.json');
 function handleEncounters(req, res){ let j={encounters:[]}; try{ j=JSON.parse(fs.readFileSync(ENC_PATH,'utf8')); }catch(e){} return sendJson(res, 200, j); }
@@ -656,14 +892,13 @@ async function handleSaveFog(req, res){ const b=await readJsonBody(req);
 
 // ---- Road network (map-tracer graph): persisted so edits survive + are shareable ----
 const ROADS_PATH = path.join(ROOT, 'worlds', 'pride-and-prejudice', 'map-roads.json');
-function handleRoads(req, res){ let j=null; try{ j=JSON.parse(fs.readFileSync(ROADS_PATH,'utf8')); }catch(e){} return sendJson(res, 200, j||{roads:{nodes:[],edges:[]},regions:[],locOverrides:{}}); }
+function handleRoads(req, res){ let j=null; try{ j=JSON.parse(fs.readFileSync(ROADS_PATH,'utf8')); }catch(e){} return sendJson(res, 200, j||{roads:{nodes:[],edges:[]},regions:[]}); }
 async function handleSaveRoads(req, res){ const b=await readJsonBody(req);
   const roads = (b.roads && Array.isArray(b.roads.nodes) && Array.isArray(b.roads.edges)) ? b.roads : {nodes:[],edges:[]};
   const o = {
-    _note: "Yürüme yol ağı (graph) — map-tracer.html ile çizildi. nodes:[{id,x,y}] yol joint'leri (yüzde koordinat), edges:[[a,b]] bağlantılar. 'loc:<id>' kenarları o lokasyon pin'ine attach demektir. regions = renkli bölgeler; locOverrides = tracer'da taşınan lokasyon konumları.",
+    _note: "Yürüme yol ağı (graph) — map-tracer.html ile çizildi. nodes:[{id,x,y}] yol joint'leri (yüzde koordinat), edges:[[a,b]] bağlantılar. 'loc:<id>' kenarları o lokasyon pin'ine attach demektir. regions = renkli bölgeler. Lokasyon konumları map-locations.json'da (tek kaynak).",
     roads,
     regions: Array.isArray(b.regions) ? b.regions : [],
-    locOverrides: (b.locOverrides && typeof b.locOverrides==='object') ? b.locOverrides : {},
     updated: new Date().toISOString()
   };
   try{ fs.writeFileSync(ROADS_PATH, JSON.stringify(o, null, 2)); }catch(e){ return sendJson(res,500,{error:'write failed'}); }
@@ -715,6 +950,8 @@ async function handleMapLocationsSave(req, res) {
     if ('unlockedBy' in e) loc.unlockedBy = e.unlockedBy || null;
     if ('appearsAfter' in e) loc.appearsAfter = e.appearsAfter || null;
     if ('time' in e) { const T=['day','night','dawn','sunset','any']; loc.time = (T.includes(e.time) && e.time!=='any' && e.time!=='day') ? e.time : null; }   // map mood; day/any → default (null)
+    if ('passesTime' in e) loc.passesTime = (e.passesTime === false) ? false : true;                  // time model: does this episode consume its slot?
+    if ('lifespan' in e) { const n = parseInt(e.lifespan, 10); loc.lifespan = (isFinite(n) && n >= 0) ? n : 4; }   // days a non-time-passing episode stays
     if (typeof e.order === 'number') loc.order = e.order; });
   writeMapLocs(m); mirrorEpLoc();
   return sendJson(res, 200, { ok: true });
@@ -906,7 +1143,7 @@ function streamFile(filePath, res) {
   const ext = path.extname(filePath).toLowerCase();
   const mime = MIME[ext] || 'application/octet-stream';
   // no-store + no validators = browser can NEVER serve a stale copy (dev only)
-  res.writeHead(200, { 'content-type': mime, 'cache-control': 'no-store, no-cache, must-revalidate, max-age=0', 'pragma': 'no-cache', 'expires': '0' });
+  res.writeHead(200, { 'content-type': mime, 'cache-control': 'no-store, no-cache, must-revalidate, max-age=0', 'pragma': 'no-cache', 'expires': '0', 'access-control-allow-origin': '*' });   // CORS: lets tools (e.g. a Miro tab) fetch local assets
   fs.createReadStream(filePath).pipe(res);
 }
 
@@ -931,10 +1168,16 @@ const server = http.createServer(async (req, res) => {
     if (req.method === 'GET'  && parsed.pathname === '/api/list-appearances') return handleListAppearances(req, res, parsed);
     if (req.method === 'POST' && parsed.pathname === '/api/author/script') return handleAuthorScript(req, res);
     if (req.method === 'POST' && parsed.pathname === '/api/author/gen-asset') return handleGenAsset(req, res);
+    if (req.method === 'GET'  && parsed.pathname === '/api/freepik/status') return handleFreepikStatus(req, res);
+    if (req.method === 'GET'  && parsed.pathname === '/api/higgsfield/status') return handleHfStatus(req, res);
+    if (req.method === 'POST' && parsed.pathname === '/api/higgsfield/generate') return handleHfGenerate(req, res);
+    if ((req.method === 'GET' || req.method === 'POST') && parsed.pathname === '/api/image-model') return handleImageModel(req, res);
+    if (req.method === 'POST' && parsed.pathname === '/api/freepik/generate') return handleFreepikGenerate(req, res);
     if (req.method === 'GET'  && parsed.pathname === '/api/author/asset-status') return handleAssetStatus(req, res, parsed);
     if (req.method === 'GET'  && parsed.pathname === '/api/author/world') return handleAuthorWorld(req, res);
     if (req.method === 'GET'  && parsed.pathname === '/api/author/episode-locations') return handleEpLocs(req, res);
-    if (req.method === 'POST' && parsed.pathname === '/api/author/add-location') return handleAddLocation(req, res);
+    if (req.method === 'POST' && parsed.pathname === '/api/author/location-upsert') return handleLocationUpsert(req, res);
+    if (req.method === 'POST' && parsed.pathname === '/api/author/location-delete') return handleLocationDelete(req, res);
     if (req.method === 'POST' && parsed.pathname === '/api/author/assign-episode') return handleAssignEpisode(req, res);
     if (req.method === 'GET'  && parsed.pathname === '/api/author/episodes') return handleEpisodesList(req, res);
     if (req.method === 'POST' && parsed.pathname === '/api/author/episodes-save') return handleEpisodesSave(req, res);
@@ -954,6 +1197,8 @@ const server = http.createServer(async (req, res) => {
     if (req.method === 'POST' && parsed.pathname === '/api/author/commit-character') return handleCommitCharacter(req, res);
     if (req.method === 'POST' && parsed.pathname === '/api/author/delete-character') return handleDeleteCharacter(req, res);
     if (req.method === 'POST' && parsed.pathname === '/api/author/suggest-locations') return handleSuggestLocations(req, res);
+    if (req.method === 'GET'  && parsed.pathname === '/api/author/whispers') return handleWhispers(req, res);
+    if (req.method === 'POST' && parsed.pathname === '/api/author/whispers') return handleSaveWhispers(req, res);
     if (req.method === 'GET'  && parsed.pathname === '/api/author/encounters') return handleEncounters(req, res);
     if (req.method === 'POST' && parsed.pathname === '/api/author/encounters') return handleSaveEncounters(req, res);
     if (req.method === 'GET'  && parsed.pathname === '/api/author/map-fog') return handleFog(req, res);

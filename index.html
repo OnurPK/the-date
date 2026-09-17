@@ -135,6 +135,9 @@
     z-index: 10;
   }
 
+  /* 📸 Shot: while capturing, the phone corners are squared so the PNG has no rounded edges */
+  body.shot-square .phone, body.shot-square .screen, body.shot-square #gameFrame { border-radius: 0 !important; }
+  body.shot-square .phone::before, body.shot-square .phone::after { display: none !important; }
   /* Console pill — slightly distinct so it reads as a tool, not a size. */
   .size-pill.console-pill {
     border-color: rgba(155,127,255,0.45);
@@ -566,6 +569,7 @@
   <button class="size-pill active" data-w="390" data-h="844">14</button>
   <button class="size-pill" data-w="430" data-h="932">Max</button>
   <button class="size-pill console-pill" id="btnConsole" type="button" title="Show GPT request/response">⌘ Console</button>
+  <button class="size-pill" id="btnShot" type="button" title="Save a full-resolution PNG of the phone screen (first click asks to share this tab)">📸 Shot</button>
 </div>
 
 <!-- Right-side inspector panel: shows the most recent GPT-4o vision
@@ -737,40 +741,12 @@
         </div>
         <div class="au-field">
           <div class="au-flabel">&nbsp;</div>
-          <button id="auAddLoc" class="au-mini" type="button">+ New location on map</button>
+          <button id="auAddLoc" class="au-mini" type="button">📍 New location in Map Tracer ↗</button>
         </div>
         <label class="au-brief">Brief <textarea id="auBrief" rows="4" placeholder="Who calls, what happens, the emotional turn, 1-2 choices…"></textarea></label>
         <button id="auGen" class="au-primary" type="button">✨ Generate script</button>
         <span id="auGenStatus" class="au-status"></span>
       </div>
-      </div>
-    </div>
-    <div id="auMapView">
-      <div class="au-mv-head">
-        <button id="auMvBack" class="au-mini" type="button">‹ Back</button>
-        <span class="au-mv-title">Place location & draw walking route</span>
-        <span id="auMvHint" class="au-status">1) İlk tıklama = konum pini (sabit kalır). 2) Sonraki tıklamalar = ona giden yürüme yolu.</span>
-        <span id="auMvVer" style="margin-left:auto;font:600 10px monospace;color:#7fd">map-v8</span>
-        <span id="auMvDbg" style="font:600 10px monospace;color:#fd7;margin-left:10px"></span>
-      </div>
-      <div class="au-mv-main">
-        <div class="au-mv-mapwrap" id="auMvWrap">
-          <img id="auMvImg" src="worlds/pride-and-prejudice/map.jpg" alt="map">
-          <div id="auMvStage">
-            <svg id="auMvSvg" preserveAspectRatio="none"></svg>
-            <div id="auMvPins"></div>
-          </div>
-        </div>
-        <div class="au-mv-side">
-          <div class="au-flabel">New location</div>
-          <input id="auLocTitle" type="text" placeholder="Title e.g. Rosings Park">
-          <input id="auLocId" type="text" placeholder="id e.g. rosings-park">
-          <button id="auSuggest" class="au-mini" type="button">✨ AI suggest places</button>
-          <div id="auSuggestions" class="au-suggests"></div>
-          <div class="au-mv-route">Waypoints: <b id="auWpCount">0</b> <button id="auWpUndo" class="au-mini" type="button">Undo</button> <button id="auWpClear" class="au-mini" type="button">Clear</button></div>
-          <button id="auLocSave" class="au-primary" type="button">Save location</button>
-          <span id="auLocStatus" class="au-status"></span>
-        </div>
       </div>
     </div>
     <div id="auCharView">
@@ -829,7 +805,7 @@
       </div>
       <div id="auResAssets" class="au-res-main" style="display:none;">
         <div class="au-res-left">
-          <div class="au-flabel">Assets <button id="auScan" class="au-mini" type="button">Rescan</button> <button id="auGenAll" class="au-mini" type="button">Generate all</button></div>
+          <div class="au-flabel">Assets <button id="auScan" class="au-mini" type="button">Rescan</button> <button id="auGenAll" class="au-mini" type="button">Generate all</button> <select id="auProvider" class="au-mini" title="Image model"><option value="openai">OpenAI · default (.env)</option><option value="openai:gpt-image-2">OpenAI · gpt-image-2</option><option value="openai:gpt-image-2.5-flare">OpenAI · 2.5 Flare (fast)</option><option value="openai:gpt-image-2.5-sunburst">OpenAI · 2.5 Sunburst (edits)</option><option value="freepik">Freepik · Mystic</option></select></div>
           <div id="auAssets" class="au-assets"></div>
         </div>
         <div class="au-res-right au-asset-preview" id="auAssetPreview"><div class="au-status" style="margin:auto">Bir asset seç → önizleme</div></div>
@@ -1353,6 +1329,7 @@
   // ---- Karşılaşmalar (encounters.json) editörü ----
   let ENC=[];
   const ENC_TYPES=['whisper','gossip','question','love'];
+  const ENC_TRIGGERS=[{v:'',l:'— yok (yolda rastgele)'},{v:'map-first',l:'haritaya ilk giriş'},{v:'turn',l:'tur N'},{v:'unlock',l:'lokasyon açılınca'},{v:'discover',l:'suitor keşfedilince'},{v:'episode-done',l:'episode bitince'},{v:'idle',l:'haritada N sn boş'},{v:'scandal',l:'scandal ≥ N'},{v:'allure',l:'allure ≥ N'}];
   function encStatus(m){ const s=gid('auEncStatus'); if(s){ s.textContent=m||''; if(m) setTimeout(()=>{ if(s.textContent===m) s.textContent=''; },1400); } }
   function loadEncounters(){ fetch('/api/author/encounters').then(r=>r.json()).then(j=>{ ENC=(j&&j.encounters)||[]; renderEnc(); })
       .catch(()=>{ gid('auEncList').innerHTML='<div class="au-status" style="padding:14px">Yüklenemedi — dev-server’ı yeniden başlat (/api/author/encounters).</div>'; }); }
@@ -1365,7 +1342,7 @@
     const opts=charOpts();
     if(!ENC.length){ box.innerHTML='<div class="au-status" style="padding:14px">Karşılaşma yok. “+ Karşılaşma” ile ekle.</div>'; return; }
     ENC.forEach((e,ei)=>{ const c=document.createElement('div'); c.className='au-enc-card';
-      const mode=e.mode||'npc'; const who=encWho(e);
+      const mode=e.mode||'npc'; const who=encWho(e); const tr=e.trigger||{};
       const sel=(v,cur)=>'<option value="'+v+'"'+(v===cur?' selected':'')+'>'+v+'</option>';
       const whoSel=side=>'<select class="enc-w" data-side="'+side+'">'+opts.map(o=>sel(o,who[side])).join('')+'</select>';
       const modeSel='<select class="enc-mode">'
@@ -1378,7 +1355,7 @@
         +'<label class="enc-once"><input type="checkbox" class="enc-onceck"'+(e.once?' checked':'')+'> once</label>'
         +'<button class="enc-del" title="sil">✕</button></div>'
         +'<textarea class="enc-script" spellcheck="false" placeholder="'+ENC_DSL_HINT.replace(/"/g,'&quot;')+'">'+((e.script||'').replace(/</g,'&lt;'))+'</textarea>'
-        +'<div class="enc-ch-head" style="opacity:.7">pc: tek karakter yolda + ikon → bizle konuşur, seçimler bizim. npc: iki karakter + ikon → dialoglarını izleriz. Sonuçlar script içindeki tag’lerle.</div>';
+        +'<div class="enc-ch-head" style="opacity:.7">pc: tek karakter yolda + ikon → bizle konuşur, seçimler bizim. npc: iki karakter + ikon → dialoglarını izleriz. Sonuçlar script içindeki tag’lerle. (Episode sonrası otomatik diyaloglar için Story map → düğüm → “Onboarding · whisper”.)</div>';
       const modeEl=c.querySelector('.enc-mode');
       modeEl.addEventListener('change',()=>{ const pc=modeEl.value==='pc';
         c.querySelector('.enc-amp').style.display=pc?'none':'';
@@ -1393,7 +1370,8 @@
       const o={ id:c.querySelector('.enc-id').value.trim()||('enc_'+Math.random().toString(36).slice(2,6)),
         mode, who, type:c.querySelector('.enc-t').value,
         script:c.querySelector('.enc-script').value };
-      if(c.querySelector('.enc-onceck').checked) o.once=true; return o; }); }
+      if(c.querySelector('.enc-onceck').checked) o.once=true;
+      return o; }); }
   gid('auEncAdd').addEventListener('click',()=>{ const o=charOpts(); const L=o[0]||'mr_darcy', R=o[1]||'elizabeth_bennet';
     ENC.push({ id:'enc_'+Math.random().toString(36).slice(2,6), mode:'npc', who:[L,R], type:'whisper',
       script:'(Situation: enc_new | Başlık | kısa açıklama)\n[ui:narrative]\nNarrative: Sahneyi kuran kısa anlatı.\n[ui:cast layout=pair_two]\n[cast: left='+L+' right='+R+']\n'+L.replace(/_/g,'-')+': İlk replik.\n'+R.replace(/_/g,'-')+': Cevap.\n[ui:multi]\n(Choice:2)\nArabella: Seçim A\nArabella: Seçim B\n(IfChoice:0)\n[ui:narrative]\nNarrative: A sonucu.\nMechanics: (Allure: +1)\n(EndIf)\n(IfChoice:1)\n[ui:narrative]\nNarrative: B sonucu.\nMechanics: (Scandal: +1)\n(EndIf)' }); renderEnc(); });
@@ -1524,96 +1502,18 @@
   gid('auCvGen').addEventListener('click',genCharacter);
   gid('auCvRetry').addEventListener('click',genCharacter);
 
-  // ---------- full map builder (place pin + draw walking route) ----------
-  let dest=null;  // destination pin (the location marker) — set by FIRST click, then stays put
-  let wps=[];     // walking-route waypoints as content-% [{x,y}] — the path leading to dest
-  // Size #auMvStage (overlay container for pins+svg) to the EXACT visible image box.
-  // The <img> fills the wrap with object-fit:contain, so we replicate that letterbox math once and pin the stage to it — overlays then align regardless of window shape.
-  function syncStage(){
-    const wrap=gid('auMvWrap'), img=gid('auMvImg'), stage=gid('auMvStage'); if(!wrap||!img||!stage)return;
-    const nW=img.naturalWidth||16, nH=img.naturalHeight||9, ar=nW/nH;
-    const availW=wrap.clientWidth, availH=wrap.clientHeight; if(!availW||!availH)return;
-    let w,h; if(availW/availH > ar){ h=availH; w=h*ar; } else { w=availW; h=w/ar; }
-    stage.style.left=((availW-w)/2)+'px'; stage.style.top=((availH-h)/2)+'px';
-    stage.style.width=w+'px'; stage.style.height=h+'px';
-  }
-  // coordinates are % of the STAGE box (== visible image content box)
-  function imgPctFromEvent(e){ syncStage(); const r=gid('auMvStage').getBoundingClientRect(); if(!r.width||!r.height)return null;
-    let x=100*(e.clientX-r.left)/r.width, y=100*(e.clientY-r.top)/r.height;
-    const inB = x>=-0.5&&x<=100.5&&y>=-0.5&&y<=100.5;
-    x=Math.max(0,Math.min(100,x)); y=Math.max(0,Math.min(100,y));
-    return { x:+x.toFixed(1), y:+y.toFixed(1), inB }; }
-  function openMapBuilder(){ gid('auMapView').classList.add('on'); dest=null; wps=[]; gid('auLocId').value=''; gid('auLocTitle').value=''; gid('auSuggestions').innerHTML=''; gid('auLocStatus').textContent='';
-    // image may not be decoded yet on first open — sync now and again after load/layout
-    syncStage(); requestAnimationFrame(syncStage);
-    const im=gid('auMvImg'); if(im && !im.complete){ im.addEventListener('load',()=>{ syncStage(); renderMap(); },{once:true}); }
-    renderMap(); }
-  window.addEventListener('resize',()=>{ if(gid('auMapView').classList.contains('on')){ syncStage(); renderMap(); } });
-  gid('auAddLoc').addEventListener('click',openMapBuilder);
-  gid('auMvBack').addEventListener('click',()=>gid('auMapView').classList.remove('on'));
-
-  // drag any pin/waypoint — `apply` writes the new {x,y} back to the right slot
-  function makeDraggable(el, apply){
-    el.addEventListener('pointerdown',(ev)=>{ ev.preventDefault(); ev.stopPropagation();
-      el.setPointerCapture&&el.setPointerCapture(ev.pointerId); el.dataset.drag='1';
-      const move=(m)=>{ const p=imgPctFromEvent(m); if(!p)return; apply({x:p.x,y:p.y}); renderMap(); };
-      const up=()=>{ document.removeEventListener('pointermove',move); document.removeEventListener('pointerup',up); };
-      document.addEventListener('pointermove',move); document.addEventListener('pointerup',up);
-    });
-  }
-
-  function renderMap(){
-    syncStage();
-    const pins=gid('auMvPins'); pins.innerHTML='';
-    // existing locations
-    epLocs.forEach(l=>{ const d=document.createElement('div'); d.className='au-mvpin '+(l.episode?'taken':'free'); d.style.left=l.x+'%'; d.style.top=l.y+'%';
-      d.innerHTML='<div class="d"></div><div class="lb">'+(l.title||l.id)+(l.episode?' ✓':'')+'</div>'; pins.appendChild(d); });
-    // route waypoints (small dots, draggable) — the path leading to the destination
-    wps.forEach((w,i)=>{ const el=document.createElement('div'); el.className='au-wp';
-      el.style.left=w.x+'%'; el.style.top=w.y+'%'; makeDraggable(el,(np)=>{ wps[i]=np; }); pins.appendChild(el); });
-    // destination pin (the location marker) — stays where first placed; draggable to fine-tune
-    if(dest){ const el=document.createElement('div'); el.className='au-mvpin newpin';
-      el.innerHTML='<div class="d"></div><div class="lb">'+(gid('auLocTitle').value||'new')+'</div>';
-      el.style.left=dest.x+'%'; el.style.top=dest.y+'%'; makeDraggable(el.querySelector('.d'),(np)=>{ dest=np; }); pins.appendChild(el); }
-    // route polyline: starts AT the destination pin, then the waypoints in draw order —
-    // so the FIRST waypoint added connects to the pin (viewBox 0..100 = %)
-    const path = dest ? [dest, ...wps] : [...wps];
-    const svg=gid('auMvSvg'); svg.setAttribute('viewBox','0 0 100 100');
-    let d=''; path.forEach((w,i)=>{ d+=(i?'L':'M')+w.x+' '+w.y+' '; });
-    svg.innerHTML = path.length>1? '<path d="'+d+'" fill="none" stroke="#e0a0c0" stroke-width="0.6" stroke-dasharray="1.6 1.2" vector-effect="non-scaling-stroke"/>':'';
-    gid('auWpCount').textContent = (dest?1:0)+wps.length;
-  }
-  gid('auMvImg').addEventListener('click',(e)=>{ if(e.target&&e.target.dataset&&e.target.dataset.drag){ delete e.target.dataset.drag; return; } const p=imgPctFromEvent(e); if(!p||!p.inB)return;
-    const r=gid('auMvStage').getBoundingClientRect(); const dbg=gid('auMvDbg'); if(dbg) dbg.textContent='click '+Math.round(e.clientX)+','+Math.round(e.clientY)+' → '+p.x+'%,'+p.y+'% | stage '+Math.round(r.width)+'x'+Math.round(r.height)+' @'+Math.round(r.left)+','+Math.round(r.top);
-    if(!dest){ dest={x:p.x,y:p.y}; gid('auLocStatus').textContent='📍 pin kondu — şimdi ona giden yürüme yolunu tıklayarak çiz'; }  // FIRST click = the pin, stays put
-    else { wps.push({x:p.x,y:p.y}); }                                                                                    // later clicks = route waypoints
-    renderMap(); });
-  gid('auWpUndo').addEventListener('click',()=>{ if(wps.length) wps.pop(); else dest=null; renderMap(); });
-  gid('auWpClear').addEventListener('click',()=>{ dest=null; wps=[]; renderMap(); });
-  gid('auLocTitle').addEventListener('input',renderMap);
-
-  gid('auSuggest').addEventListener('click',()=>{ gid('auLocStatus').textContent='thinking…';
-    fetch('/api/author/suggest-locations',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({brief:gid('auBrief').value.trim(), existing:epLocs.map(l=>l.title||l.id)})})
-      .then(r=>r.json()).then(j=>{ gid('auLocStatus').textContent=''; const box=gid('auSuggestions'); box.innerHTML='';
-        (j.suggestions||[]).forEach(s=>{ const b=document.createElement('button'); b.type='button'; b.className='au-suggest'; b.innerHTML='<b>'+s.title+'</b> <span class="sn">'+(s.note||'')+'</span>';
-          b.addEventListener('click',()=>{ gid('auLocTitle').value=s.title||''; gid('auLocId').value=(s.id||s.title||'').toLowerCase().replace(/[^a-z0-9-]+/g,'-');
-            // drop the movable destination pin (AI position if given, else map center)
-            dest = (typeof s.x==='number'&&typeof s.y==='number') ? {x:s.x,y:s.y} : {x:50,y:50};
-            gid('auLocStatus').textContent='📍 pin kondu — sürükleyerek yerini ayarla, sonra ona giden yolu tıklayarak çiz'; renderMap(); }); box.appendChild(b); });
-        if(!(j.suggestions||[]).length) gid('auLocStatus').textContent=j.error||'no suggestions'; })
-      .catch(e=>{ gid('auLocStatus').textContent='error'; });
-  });
-
-  gid('auLocSave').addEventListener('click',()=>{
-    const id=(gid('auLocId').value||'').trim().toLowerCase().replace(/[^a-z0-9-]+/g,'-'); const title=(gid('auLocTitle').value||'').trim();
-    if(!id){ gid('auLocStatus').textContent='id required'; return; }
-    if(!dest){ gid('auLocStatus').textContent='önce haritaya tıklayıp pini koy'; return; }
-    if(wps.length<1){ gid('auLocStatus').textContent='pine giden yürüme yolunu çiz: en az 1 nokta tıkla'; return; }
-    const route=[[dest.x,dest.y], ...wps.map(w=>[w.x,w.y])];  // pin first, then waypoints (first waypoint touches the pin)
-    fetch('/api/author/add-location',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({id,title,x:dest.x,y:dest.y,route})})
-      .then(r=>r.json()).then(j=>{ if(!j.ok){ gid('auLocStatus').textContent=j.error||'error'; return; } gid('auMapView').classList.remove('on'); reloadLocations(); setTimeout(()=>{ gid('auLocation').value=id; },400); })
-      .catch(e=>{ gid('auLocStatus').textContent='error'; });
-  });
+  // ---------- Locations live in Map Tracer (pin + road attach + fog). The Create tab only picks one. ----------
+  // Open the tracer in its own tab; when the author comes back, refresh the dropdown and
+  // pre-select the location they just created (the tracer posts its id via localStorage).
+  gid('auAddLoc').addEventListener('click',()=>{ try{ localStorage.removeItem('rai.lastNewLoc'); }catch(e){} window.open('map-tracer.html?new=1','rai-map-tracer'); });
+  function refreshLocsOnReturn(){ fetch('/api/author/episode-locations').then(r=>r.json()).then(j=>{ epLocs=(j.locations||[]);
+      const free=epLocs.filter(l=>!l.episode); const sel=gid('auLocation'); const prev=sel.value;
+      sel.innerHTML = free.length ? free.map(l=>'<option value="'+l.id+'">'+(l.title||l.id)+'</option>').join('') : '<option value="">(no free episode spots — create one in Map Tracer)</option>';
+      let want=null; try{ want=localStorage.getItem('rai.lastNewLoc'); }catch(e){}
+      if(want && free.some(l=>l.id===want)){ sel.value=want; try{ localStorage.removeItem('rai.lastNewLoc'); }catch(e){} } else if(prev && free.some(l=>l.id===prev)) sel.value=prev;
+    }).catch(()=>{}); }
+  window.addEventListener('focus',refreshLocsOnReturn);
+  document.addEventListener('visibilitychange',()=>{ if(!document.hidden) refreshLocsOnReturn(); });
 
   // ---------- Result view (full overlay: Script | Assets tabs) ----------
   let resFull='', resSits=[], resPre='', resSel=new Set();
@@ -1748,9 +1648,23 @@
     rows.forEach(r=>{ if(ids.includes(r.id)){ r.group=grp; r.kind=side?'side':'main'; r.timer=(side&&timer)?String(timer):''; } }); storyMultiSel.clear(); saveUnlocks(src,rows); }
   function unpairSelected(){ const ids=[...storyMultiSel]; if(!ids.length)return; const src=commonSource(ids); if(!src)return; const rows=srcUnlocks(src.id); rows.forEach(r=>{ if(ids.includes(r.id)) r.group=''; }); storyMultiSel.clear(); saveUnlocks(src,rows); }
   const STORY_LANE_H=132;
+  // ---- Time model (mirrors dialog2 prideClock): tur = (day, slot). Tur1 = Mon 23 May Morning,
+  //      Tur2 = Mon Night, Tur3 = Tue Morning … Keep SLOTS in sync with the game. ----
+  const TIME_SLOTS=[{id:'morning',label:'Morning'},{id:'night',label:'Night'}];
+  const TIME_START=new Date(2022,4,23);   // 23 May (a Monday); year is internal
+  function turTimeLabel(tur){ const n=TIME_SLOTS.length; const day=Math.floor((tur-1)/n), slot=((tur-1)%n+n)%n;
+    const d=new Date(TIME_START); d.setDate(d.getDate()+day);
+    const DOW=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'], MON=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    return { text: DOW[d.getDay()]+' '+d.getDate()+' '+MON[d.getMonth()]+' · '+TIME_SLOTS[slot].label, night: TIME_SLOTS[slot].id==='night', day, slot }; }
+  function saveEpisodeTimeFlags(id, flags){   // {passesTime, lifespan}
+    fetch('/api/author/map-locations-save',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({locations:[Object.assign({id},flags)]})})
+      .then(()=>{ try{ const fr=document.getElementById('gameFrame'); if(fr&&fr.contentWindow) fr.contentWindow.postMessage({type:'refreshMapLocks'},'*'); }catch(e){} }); }
   function renderStory(){
     const cv=gid('auStoryCanvas'); if(!cv||!STORY) return; bindStoryKeys(); cv.innerHTML='';
-    const nodes=STORY.nodes||[]; const W=cv.clientWidth||620; const role=roleMap();
+    // Canvas shows EPISODES only: tur = time slot, and only episodes live on the clock.
+    // Interactive locations / short stories / UI packs open instantly on completion →
+    // they're managed in the inspector's "Unlock olanlar" list, not drawn here.
+    const nodes=(STORY.nodes||[]).filter(n=>n.type==='episode'); const W=cv.clientWidth||620; const role=roleMap();
     const NW=130, NH=38; const depth=computeDepth();
     // TIER = order (tek doğru). order yoksa: eski sy'den ya da edge-derinliğinden türet, sonra order'a yaz (migrasyon).
     const laneOf = n => (typeof n.tier==='number' && n.tier>0) ? (n.tier-1) : (typeof n.sy==='number' ? Math.max(0,Math.round(n.sy/STORY_LANE_H)) : (depth[n.id]||0));
@@ -1767,7 +1681,14 @@
       if(!(typeof n.tier==='number' && n.tier>0)){ n.tier=li+1; saveStoryPos(n.id, undefined, n.tier); }   // migrate: mevcut düzeni tier'a yaz
     });
     let lanes='';
-    for(let i=0;i<LANES;i++){ const y=i*laneH; if(i>0) lanes+='<line x1="0" y1="'+y+'" x2="'+W+'" y2="'+y+'" stroke="rgba(255,255,255,.09)" stroke-width="1"/>'; lanes+='<text x="8" y="'+(y+16)+'" fill="rgba(255,255,255,.32)" font-size="10" font-family="Inter,system-ui">Tur '+(i+1)+'</text>'; }
+    for(let i=0;i<LANES;i++){ const y=i*laneH; const tl=turTimeLabel(i+1);   // tur = time slot: "Mon 23 May · Morning"
+      // lane background = the actual day / night map art (faint) + a tint, so the tur reads as a time of day
+      const img = tl.night ? 'worlds/pride-and-prejudice/map_night.jpeg' : 'worlds/pride-and-prejudice/map.jpg';
+      lanes+='<image href="'+img+'" x="0" y="'+y+'" width="'+W+'" height="'+laneH+'" preserveAspectRatio="xMidYMid slice" opacity="'+(tl.night?'.22':'.16')+'"/>'
+        +'<rect x="0" y="'+y+'" width="'+W+'" height="'+laneH+'" fill="'+(tl.night?'rgba(12,8,28,.55)':'rgba(40,30,10,.30)')+'"/>';
+      if(i>0) lanes+='<line x1="0" y1="'+y+'" x2="'+W+'" y2="'+y+'" stroke="rgba(255,255,255,.12)" stroke-width="1"/>';
+      lanes+='<text x="8" y="'+(y+16)+'" fill="rgba(255,255,255,.4)" font-size="10" font-family="Inter,system-ui">Tur '+(i+1)+'</text>'
+        +'<text x="46" y="'+(y+16)+'" fill="'+(tl.night?'#c6b6f0':'#f0c46a')+'" font-size="10" font-weight="700" font-family="Inter,system-ui">'+(tl.night?'☾ ':'☀ ')+tl.text+'</text>'; }
     let edges='';
     (STORY.staticEdges||[]).forEach(e=>{ const p=pos[e.from],q=pos[e.to]; if(!p||!q)return; const sel=storyEdgeSel&&storyEdgeSel.staticTo===e.to; const base='x1="'+p.cx+'" y1="'+p.cy+'" x2="'+q.cx+'" y2="'+q.cy+'"';
       edges+='<line '+base+' stroke="'+(sel?'#fff':'#888780')+'" stroke-width="'+(sel?4:2)+'" marker-end="url(#sar)"/>'
@@ -1820,19 +1741,39 @@
     box.innerHTML='<div class="au-insp-h">'+(n.title||n.id)+'</div><div class="au-insp-id">'+n.id+(n.mode==='placeholder'?' · placeholder':(n.episode?'':' · script yok'))+'</div>';
     // ---- Time-of-day (map mood): this episode's `time` paints the map background ----
     if(n.type==='episode'){
-      const secT=document.createElement('div'); secT.className='au-insp-sec'; secT.textContent='Zaman (harita moodu)'; box.appendChild(secT);
-      const tsel=document.createElement('select'); tsel.style.cssText='width:100%;padding:7px 9px;border-radius:8px;background:rgba(0,0,0,.28);color:#eae6f5;border:1px solid rgba(183,156,240,.28);font:600 12px Inter,system-ui;';
-      [['day','Gündüz (map.jpg)'],['dawn','Gün doğumu'],['sunset','Gün batımı'],['night','Gece']].forEach(o=>{
-        const op=document.createElement('option'); op.value=o[0]; op.textContent=o[1]; if((n.time||'day')===o[0]||((n.time==='any'||!n.time)&&o[0]==='day')) op.selected=true; tsel.appendChild(op); });
-      tsel.addEventListener('change',()=>{ n.time=tsel.value; saveEpisodeTime(n.id, tsel.value); });
-      box.appendChild(tsel);
-      const th=document.createElement('div'); th.className='au-status'; th.style.marginTop='6px'; th.textContent='Bu episode aktif olduğunda harita bu zamanın görseline döner.'; box.appendChild(th);
+      // (per-episode "harita moodu" selector removed: the map's day/night now follows the
+      //  clock slot of the tur — see "Zaman modeli" below)
+      // ---- Time model: when does it live on the map? ----
+      const secTm=document.createElement('div'); secTm.className='au-insp-sec'; secTm.textContent='Zaman modeli'; box.appendChild(secTm);
+      const tl=(typeof n.tier==='number'&&n.tier>0)?turTimeLabel(n.tier):null;
+      const when=document.createElement('div'); when.className='au-status'; when.style.marginBottom='8px';
+      when.innerHTML = tl ? ('Belirir: <b style="color:'+(tl.night?'#c6b6f0':'#f0c46a')+'">Tur '+n.tier+' · '+tl.text+'</b>') : 'Tur atanmamış (story map\'te bir şeride sürükle).'; box.appendChild(when);
+      const row=document.createElement('label'); row.style.cssText='display:flex;align-items:center;gap:9px;font:600 13px Inter,system-ui;color:#eae6f5;cursor:pointer;';
+      const cb=document.createElement('input'); cb.type='checkbox'; cb.checked=(n.passesTime!==false); cb.style.cssText='width:16px;height:16px;accent-color:#e0668a;';
+      const cbTxt=document.createElement('span'); cbTxt.textContent='Zamanı geçirir (dilimi harcar)'; row.appendChild(cb); row.appendChild(cbTxt); box.appendChild(row);
+      const lifeRow=document.createElement('div'); lifeRow.style.cssText='display:flex;align-items:center;gap:8px;margin-top:8px;font:600 12px Inter,system-ui;color:#9a90b4;';
+      const lifeIn=document.createElement('input'); lifeIn.type='number'; lifeIn.min='0'; lifeIn.max='60'; lifeIn.value=(typeof n.lifespan==='number'?n.lifespan:4);
+      lifeIn.style.cssText='width:64px;padding:6px 8px;border-radius:8px;background:rgba(0,0,0,.28);color:#eae6f5;border:1px solid rgba(183,156,240,.28);font:600 13px Inter;';
+      lifeRow.innerHTML='<span>Ömür (gün)</span>'; lifeRow.appendChild(lifeIn); const lifeHint=document.createElement('span'); lifeHint.textContent='belirdikten sonra haritada kalır'; lifeRow.appendChild(lifeHint); box.appendChild(lifeRow);
+      const syncLife=()=>{ lifeRow.style.opacity = cb.checked ? '.35' : '1'; lifeIn.disabled = cb.checked; };
+      syncLife();
+      cb.addEventListener('change',()=>{ n.passesTime=cb.checked; syncLife(); saveEpisodeTimeFlags(n.id,{passesTime:cb.checked, lifespan:parseInt(lifeIn.value,10)||0}); });
+      lifeIn.addEventListener('change',()=>{ n.lifespan=parseInt(lifeIn.value,10)||0; saveEpisodeTimeFlags(n.id,{passesTime:cb.checked, lifespan:n.lifespan}); });
+      const tmHint=document.createElement('div'); tmHint.className='au-status'; tmHint.style.marginTop='7px';
+      tmHint.textContent='Geçiren: sadece kendi diliminde oynanır; birini bitirince aynı dilimdeki diğer geçirenler yok olur; dilim geçince kaybolur. Geçirmeyen: ömrü boyunca kalır.'; box.appendChild(tmHint);
     }
-    const secOpen=document.createElement('div'); secOpen.className='au-insp-sec'; secOpen.textContent='Çıkan branch (çizgi)'; box.appendChild(secOpen);
+    // Unlock rows split by target kind: EPISODE targets = story branches (lines on the
+    // canvas); everything else (interactive locations, short stories, UI packs) =
+    // "Unlock olanlar" — they open the moment this episode completes, no day needed.
+    const isEpTarget = id => { const t=nodeById(id); return !!(t && t.type==='episode'); };
+    const epRows = rows.filter(u=>isEpTarget(u.id));
+    const otherRows = rows.filter(u=>!isEpTarget(u.id));
+    const secOpen=document.createElement('div'); secOpen.className='au-insp-sec'; secOpen.textContent='Çıkan branch (çizgi) — episode\'lar'; box.appendChild(secOpen);
     if(!n.episode){ const w=document.createElement('div'); w.className='au-status'; w.textContent='Bu düğümün scriptʼi yok; branch eklemek için önce script üret.'; box.appendChild(w); }
     const rowsBox=document.createElement('div');
-    function collectAndSave(){ const rs=[...rowsBox.querySelectorAll('.au-srow')].map(r=>({ id:r.dataset.id, kind:r.querySelector('.sr-kind').value, group:r.querySelector('.sr-group').value.trim(), timer:(r.querySelector('.sr-timer')?r.querySelector('.sr-timer').value.trim():''), title:r.dataset.title||'', desc:r.dataset.desc||'', cover:r.dataset.cover||'' })); saveUnlocks(n, rs); }
-    rows.forEach(u=>{ const r=document.createElement('div'); r.className='au-srow'; r.dataset.id=u.id; r.dataset.title=u.title; r.dataset.desc=u.desc; r.dataset.cover=u.cover;
+    // merged save: episode rows come from the DOM (editable kind/group/timer), other rows from state
+    function collectAndSave(){ const rs=[...rowsBox.querySelectorAll('.au-srow')].map(r=>({ id:r.dataset.id, kind:r.querySelector('.sr-kind').value, group:r.querySelector('.sr-group').value.trim(), timer:(r.querySelector('.sr-timer')?r.querySelector('.sr-timer').value.trim():''), title:r.dataset.title||'', desc:r.dataset.desc||'', cover:r.dataset.cover||'' })); saveUnlocks(n, rs.concat(otherRows)); }
+    epRows.forEach(u=>{ const r=document.createElement('div'); r.className='au-srow'; r.dataset.id=u.id; r.dataset.title=u.title; r.dataset.desc=u.desc; r.dataset.cover=u.cover;
       r.innerHTML='<div class="sr-top"><span class="sr-name">'+((nodeById(u.id)||{}).title||u.id)+'</span><button class="sr-del" title="sil">✕</button></div>'
         +'<div class="sr-line"><select class="sr-kind"><option value="main"'+(u.kind!=='side'?' selected':'')+'>Ana çatal</option><option value="side"'+(u.kind==='side'?' selected':'')+'>Süreli</option></select>'
         +'<input class="sr-group" placeholder="grup (pair=aynı)" value="'+(u.group||'').replace(/"/g,'&quot;')+'">'
@@ -1842,10 +1783,104 @@
       const tm=r.querySelector('.sr-timer'); if(tm) tm.addEventListener('change',collectAndSave);
       r.querySelector('.sr-del').addEventListener('click',()=>{ r.remove(); collectAndSave(); });
       rowsBox.appendChild(r); });
-    if(!rows.length){ const e=document.createElement('div'); e.className='au-status'; e.textContent='—  (başka düğüme sürükleyerek ekle)'; rowsBox.appendChild(e); }
+    if(!epRows.length){ const e=document.createElement('div'); e.className='au-status'; e.textContent='—  (başka episode\'a sürükleyerek ekle)'; rowsBox.appendChild(e); }
     box.appendChild(rowsBox);
+    // ---- "Unlock olanlar": non-episode things this episode opens on completion ----
+    const secUn=document.createElement('div'); secUn.className='au-insp-sec'; secUn.textContent='Unlock olanlar'; box.appendChild(secUn);
+    const unBox=document.createElement('div');
+    const UI_PACKS=[ {id:'ui:onboarding',title:'UI · Onboarding'}, {id:'ui:short-stories',title:'UI · Short Stories şeridi'}, {id:'ui:store',title:'UI · Mağaza'}, {id:'ui:suitors',title:'UI · Suitors ekranı'}, {id:'ui:map-encounters',title:'UI · Harita karşılaşmaları'} ];
+    const titleOfUnlock = id => { if(id.startsWith('ui:')){ const p=UI_PACKS.find(x=>x.id===id); return p?p.title:id; } const t=nodeById(id); return t?(t.title||t.id):id; };
+    const kindOfUnlock  = id => id.startsWith('ui:') ? 'UI' : ((nodeById(id)||{}).type==='short-story' ? 'Short' : 'Lokasyon');
+    otherRows.forEach((u,i)=>{ const r=document.createElement('div'); r.className='au-srow';
+      r.innerHTML='<div class="sr-top"><span class="sr-name">'+titleOfUnlock(u.id)+' <span class="au-insp-chip" style="margin-left:6px">'+kindOfUnlock(u.id)+'</span></span><button class="sr-del" title="kaldır">✕</button></div>';
+      r.querySelector('.sr-del').addEventListener('click',()=>{ const rest=otherRows.filter(x=>x.id!==u.id); saveUnlocks(n, epRows.concat(rest)); });
+      unBox.appendChild(r); });
+    if(!otherRows.length){ const e=document.createElement('div'); e.className='au-status'; e.textContent='— (bu episode bitince açılan lokasyon / short / UI yok)'; unBox.appendChild(e); }
+    // add row: dropdown of every non-episode node + UI packs (already-added ones excluded)
+    const addRow=document.createElement('div'); addRow.style.cssText='display:flex;gap:6px;margin-top:8px;';
+    const sel=document.createElement('select'); sel.style.cssText='flex:1;min-width:0;padding:7px 8px;border-radius:8px;background:rgba(0,0,0,.28);color:#eae6f5;border:1px solid rgba(183,156,240,.28);font:600 12px Inter;';
+    const have=new Set(otherRows.map(u=>u.id));
+    const cands=[].concat((STORY.nodes||[]).filter(x=>x.type!=='episode' && !have.has(x.id)).map(x=>({id:x.id,title:(x.type==='short-story'?'Short · ':'Lokasyon · ')+(x.title||x.id)})), UI_PACKS.filter(p=>!have.has(p.id)));
+    sel.innerHTML='<option value="">+ seç…</option>'+cands.map(c=>'<option value="'+c.id+'">'+c.title+'</option>').join('');
+    const addBtn=document.createElement('button'); addBtn.type='button'; addBtn.textContent='Ekle'; addBtn.style.cssText='padding:7px 12px;border-radius:8px;border:none;background:linear-gradient(120deg,#e0668a,#8b7bd8);color:#fff;font:700 12px Inter;cursor:pointer;';
+    addBtn.addEventListener('click',()=>{ const id=sel.value; if(!id) return; const row={id,group:'',kind:'main',timer:'',title:titleOfUnlock(id),desc:'',cover:''}; saveUnlocks(n, epRows.concat(otherRows,[row])); });
+    addRow.appendChild(sel); addRow.appendChild(addBtn); unBox.appendChild(addRow);
+    const unHint=document.createElement('div'); unHint.className='au-status'; unHint.style.marginTop='6px'; unHint.textContent='Gün geçmeden, bu episode tamamlanır tamamlanmaz açılır. Canvas\'ta çizilmez.'; unBox.appendChild(unHint);
+    box.appendChild(unBox);
+    // ---- "Onboarding · whisper": short auto-playing NPC sequence right after this episode ----
+    if(n.type==='episode') renderWhisperSection(box, n);
+    // ---- "Kaçırılırsa · Consequence": plays on the turn change when this episode was missed ----
+    if(n.type==='episode') renderConsequenceSection(box, n);
     const secBy=document.createElement('div'); secBy.className='au-insp-sec'; secBy.textContent='Gelen branch (çizgi)'; box.appendChild(secBy);
     const by=document.createElement('div'); by.innerHTML= openedBy.length ? openedBy.map(o=>'<span class="au-insp-chip">'+o+'</span>').join('') : '<span class="au-status">— (baştan açık / kilitli)</span>'; box.appendChild(by);
+  }
+  // ---- Whispers (whispers.json) — authored per episode node, separate from Karşılaşmalar ----
+  let WHISPERS=null, _whTimer=0;
+  function loadWhispers(cb){ fetch('/api/author/whispers').then(r=>r.json()).then(j=>{ WHISPERS=(j&&j.whispers)||[]; cb&&cb(); })
+    .catch(()=>{ WHISPERS=null; cb&&cb('dev-server’ı yeniden başlat (/api/author/whispers)'); }); }
+  function saveWhispers(statusEl){ clearTimeout(_whTimer); _whTimer=setTimeout(()=>{ if(!WHISPERS) return; if(statusEl) statusEl.textContent='kaydediliyor…';
+    fetch('/api/author/whispers',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({whispers:WHISPERS})}).then(r=>r.json())
+      .then(j=>{ if(statusEl){ statusEl.textContent=j&&j.ok?'kaydedildi ✓':'hata'; setTimeout(()=>{ if(statusEl.textContent!=='kaydediliyor…') statusEl.textContent=''; },1400); }
+        try{ const fr=document.getElementById('gameFrame'); fr&&fr.contentWindow&&fr.contentWindow.prideReloadWhispers&&fr.contentWindow.prideReloadWhispers(); }catch(e){} })
+      .catch(()=>{ if(statusEl) statusEl.textContent='dev-server’ı yeniden başlat'; }); }, 500); }
+  function whisperTemplate(who, epTitle){ const W=who.replace(/_/g,'-').replace(/\b\w/g,c=>c.toUpperCase());
+    return '[cast: left='+who+']\nNarrative: Sahneyi kuran kısa anlatı (isteğe bağlı).\n'+W+': İlk replik — bir ipucu / yönlendirme.\nQ: Seçim sorusu (isteğe bağlı)\n(Choice:2)\nArabella: Seçim A\nArabella: Seçim B\n(IfChoice:0)\n'+W+': A cevabı.\nMechanics: (Allure: +1)\n(EndIf)\n(IfChoice:1)\n'+W+': B cevabı.\nMechanics: (Relation: '+who+' | trust | +1)\n(EndIf)'; }
+  function renderWhisperSection(box, n){
+    const sec=document.createElement('div'); sec.className='au-insp-sec'; sec.innerHTML='Onboarding · whisper <span class="au-status" style="margin-left:6px">bu episode bitince</span>'; box.appendChild(sec);
+    const wrap=document.createElement('div'); box.appendChild(wrap);
+    const status=document.createElement('span'); status.className='au-status';
+    const draw=()=>{ wrap.innerHTML='';
+      if(!WHISPERS){ const e=document.createElement('div'); e.className='au-status'; e.textContent='yükleniyor…'; wrap.appendChild(e); return; }
+      const mine=WHISPERS.filter(w=>w.after===n.id); const opts=charOpts();
+      const locOpts=(STORY.nodes||[]).filter(x=>x.id!==n.id).map(x=>({id:x.id,title:(x.type==='episode'?'Episode · ':x.type==='short-story'?'Short · ':'Lokasyon · ')+(x.title||x.id)}));
+      mine.forEach(w=>{ const r=document.createElement('div'); r.className='au-srow';
+        const selS=(list,cur,blank)=>(blank?'<option value="">'+blank+'</option>':'')+list.map(o=>'<option value="'+(o.id||o)+'"'+((o.id||o)===cur?' selected':'')+'>'+(o.title||o)+'</option>').join('');
+        r.innerHTML='<div class="sr-top"><span class="sr-name">💬 <input class="wh-title" value="'+(w.title||'A word in your ear').replace(/"/g,'&quot;')+'" style="width:150px;padding:4px 6px;border-radius:6px;background:rgba(0,0,0,.28);color:#eae6f5;border:1px solid rgba(183,156,240,.28);font:600 12px Inter"></span><button class="sr-del" title="sil">✕</button></div>'
+          +'<div class="sr-line"><select class="wh-who" title="konuşan">'+selS(opts,w.who)+'</select><select class="wh-focus" title="bitince kamera + pin nabzı">'+selS(locOpts,w.focus||'','odak yok')+'</select></div>'
+          +'<textarea class="wh-script enc-script" spellcheck="false" style="margin-top:6px;min-height:150px;width:100%;box-sizing:border-box">'+String(w.script||'').replace(/</g,'&lt;')+'</textarea>';
+        r.querySelector('.wh-title').addEventListener('change',e=>{ w.title=e.target.value.trim(); saveWhispers(status); });
+        r.querySelector('.wh-who').addEventListener('change',e=>{ w.who=e.target.value; saveWhispers(status); });
+        r.querySelector('.wh-focus').addEventListener('change',e=>{ w.focus=e.target.value||undefined; saveWhispers(status); });
+        r.querySelector('.wh-script').addEventListener('input',e=>{ w.script=e.target.value; saveWhispers(status); });
+        r.querySelector('.sr-del').addEventListener('click',()=>{ if(!confirm('Whisper silinsin mi?')) return; WHISPERS=WHISPERS.filter(x=>x!==w); saveWhispers(status); draw(); });
+        wrap.appendChild(r); });
+      if(!mine.length){ const e=document.createElement('div'); e.className='au-status'; e.textContent='— (bu episode bitince otomatik açılan diyalog yok)'; wrap.appendChild(e); }
+      const addRow=document.createElement('div'); addRow.style.cssText='display:flex;gap:6px;margin-top:8px;align-items:center;';
+      const who=document.createElement('select'); who.style.cssText='flex:1;min-width:0;padding:7px 8px;border-radius:8px;background:rgba(0,0,0,.28);color:#eae6f5;border:1px solid rgba(183,156,240,.28);font:600 12px Inter;';
+      who.innerHTML=opts.map(o=>'<option value="'+o+'"'+(o==='charlotte_lucas'?' selected':'')+'>'+o+'</option>').join('');
+      const add=document.createElement('button'); add.type='button'; add.textContent='+ Whisper'; add.style.cssText='padding:7px 12px;border-radius:8px;border:none;background:linear-gradient(120deg,#e0668a,#8b7bd8);color:#fff;font:700 12px Inter;cursor:pointer;';
+      add.addEventListener('click',()=>{ WHISPERS.push({ id:'w_'+n.id+'_'+Math.random().toString(36).slice(2,5), after:n.id, who:who.value, title:'A word in your ear', priority:10, script:whisperTemplate(who.value, n.title||n.id) }); saveWhispers(status); draw(); });
+      addRow.appendChild(who); addRow.appendChild(add); addRow.appendChild(status); wrap.appendChild(addRow);
+      const hint=document.createElement('div'); hint.className='au-status'; hint.style.marginTop='6px';
+      hint.textContent='Episode bitip harita açılınca: kamera Odak\'a kayar → NPC kendiliğinden gelir (Through-a-Story alt kutusu: büst + cam kutu + seçimler, harita görünür) → bitince pin nabız atar. Büstün yeri [cast: left=…] / [cast: right=…] satırıyla; Arabella\'nın replikleri karşı tarafta çıkar. Satırlar: Narrative: · Konuşan: · Q: (seçim sorusu) · (Choice:N)+Arabella: · (IfChoice:i)…(EndIf) · Mechanics: (Allure:+1)(Scandal:+1)(Relation: id|trust|+1)(XP: id|+2)(Discovery: id|bilgi)(Unlock: loc). Tek sefer, tur başına 1.'; wrap.appendChild(hint); };
+    if(WHISPERS) draw(); else loadWhispers(err=>{ if(err){ wrap.innerHTML='<div class="au-status">'+err+'</div>'; } else draw(); });
+  }
+  // ---- Consequence (episode.missed) — authored per episode node; saved via location-upsert ----
+  function renderConsequenceSection(box, n){
+    const sec=document.createElement('div'); sec.className='au-insp-sec'; sec.innerHTML='Kaçırılırsa · Consequence <span class="au-status" style="margin-left:6px">tur geçince oynar</span>'; box.appendChild(sec);
+    const wrap=document.createElement('div'); box.appendChild(wrap);
+    const status=document.createElement('span'); status.className='au-status';
+    const inp=(cls,val,ph,extra)=>'<input class="'+cls+'" value="'+String(val||'').replace(/"/g,'&quot;')+'" placeholder="'+(ph||'')+'" style="width:100%;padding:6px 8px;border-radius:8px;background:rgba(0,0,0,.28);color:#eae6f5;border:1px solid rgba(183,156,240,.28);font:600 12px Inter;'+(extra||'')+'">';
+    let saveT=0;
+    const draw=(m)=>{ wrap.innerHTML=''; const opts=charOpts(); const who=(m&&m.who)||n.suitor||'';
+      const r=document.createElement('div'); r.className='au-srow';
+      r.innerHTML='<div class="sr-line" style="gap:6px"><select class="cq-who" title="konuşan">'+'<option value="">— konuşan —</option>'+opts.map(o=>'<option value="'+o+'"'+(o===who?' selected':'')+'>'+o+'</option>').join('')+'</select></div>'
+        +'<div style="margin-top:6px">'+inp('cq-bg', m&&m.bg, 'arka plan (worlds/pride-and-prejudice/ altı yol, örn. episodes/…/cutscenes/arrival.png) — boşsa episode cover')+'</div>'
+        +'<textarea class="cq-script enc-script" spellcheck="false" style="margin-top:6px;min-height:130px;width:100%;box-sizing:border-box" placeholder="Mrs-Bennet: I waited all day. Why did you not come?\nMechanics: (Relation: mrs_bennet | trust | -1)">'+String((m&&m.script)||'').replace(/</g,'&lt;')+'</textarea>'
+        +'<div style="display:flex;gap:6px;align-items:center;margin-top:6px"><button class="cq-clear au-mini" type="button">Temizle</button></div>';
+      const save=()=>{ clearTimeout(saveT); saveT=setTimeout(()=>{ const body={ id:n.id, missed:{ who:r.querySelector('.cq-who').value, bg:r.querySelector('.cq-bg').value.trim(), script:r.querySelector('.cq-script').value } };
+        status.textContent='kaydediliyor…';
+        fetch('/api/author/location-upsert',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(body)}).then(x=>x.json())
+          .then(j=>{ status.textContent=j&&j.ok!==false&&!j.error?'kaydedildi ✓':'hata'; setTimeout(()=>{ if(status.textContent!=='kaydediliyor…') status.textContent=''; },1400); try{ notifyGameMap(); }catch(e){} })
+          .catch(()=>{ status.textContent='dev-server’ı yeniden başlat'; }); }, 500); };
+      r.querySelector('.cq-who').addEventListener('change',save); r.querySelector('.cq-bg').addEventListener('change',save); r.querySelector('.cq-script').addEventListener('input',save);
+      r.querySelector('.cq-clear').addEventListener('click',()=>{ if(!confirm('Consequence silinsin mi?')) return; r.querySelector('.cq-script').value=''; r.querySelector('.cq-bg').value=''; save(); });
+      wrap.appendChild(r); wrap.appendChild(status);
+      const hint=document.createElement('div'); hint.className='au-status'; hint.style.marginTop='6px';
+      hint.textContent='Bu episode kaçırılırsa (aynı dilimde başka episode oynandı ya da dilim geçti) sonraki tur geçişinde: arka plan bu görsel olur, konuşan büstüyle konuşur (whisper UI), (Relation: …) satırları ilişki chip’i olarak gösterilir. Tek sefer. Script boşsa consequence yok.'; wrap.appendChild(hint); };
+    wrap.innerHTML='<div class="au-status">yükleniyor…</div>';
+    fetch('/api/author/map-locations').then(r=>r.json()).then(j=>{ const L=((j&&j.locations)||[]).find(x=>x.id===n.id)||{}; draw(L.missed||null); })
+      .catch(()=>{ wrap.innerHTML='<div class="au-status">dev-server’ı yeniden başlat (/api/author/map-locations)</div>'; });
   }
   gid('auResTabScript').addEventListener('click',()=>switchResTab('script'));
   gid('auResTabCodes').addEventListener('click',()=>switchResTab('codes'));
@@ -2313,12 +2348,22 @@
     }
     a.gen='busy';
     let row=rowFor(idx); if(row){ row.classList.add('busy'); row.classList.remove('done'); const btn=row.querySelector('button'); if(btn){ btn.disabled=true; btn.textContent='…'; } }
-    const body={relPath:a.relPath, prompt:a.prompt, size:a.size}; if(a.refs&&a.refs.length) body.refs=a.refs;
+    const pv=((gid('auProvider')||{}).value||'openai').split(':');   // "openai:gpt-image-2.5-flare" → provider + model
+    const body={relPath:a.relPath, prompt:a.prompt, size:a.size, provider:pv[0]}; if(pv[1]) body.model=pv[1]; if(a.refs&&a.refs.length) body.refs=a.refs;
     return fetch('/api/author/gen-asset',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(body)})
       .then(r=>r.json()).then(j=>{ a.gen=j.ok?'done':'err';
         const row=rowFor(idx); if(row){ row.classList.remove('busy'); if(j.ok) row.classList.add('done'); else row.title=j.error||'error'; const btn=row.querySelector('button'); if(btn){ btn.disabled=false; btn.textContent=j.ok?'Regen':'Retry'; } } })
       .catch(e=>{ a.gen='err'; const row=rowFor(idx); if(row){ row.classList.remove('busy'); const btn=row.querySelector('button'); if(btn){ btn.disabled=false; btn.textContent='Retry'; } } });
   }
+  // image provider (remembered); Freepik option disabled until FREEPIK_API_KEY is set in .env
+  // The pick is stored SERVER-side (_config/image-model.local.json) so API calls without an
+  // explicit model (e.g. from Claude) use the same model as the editor.
+  (function(){ const sel=gid('auProvider'); if(!sel) return;
+    const apply=j=>{ if(!j.freepik){ const o=sel.querySelector('[value=freepik]'); o.disabled=true; o.textContent='Freepik (no key)'; }
+      sel.value = j.provider==='freepik' ? 'freepik' : (j.model ? 'openai:'+j.model : 'openai'); if(!sel.value) sel.value='openai';
+      sel.title='Image model · effective: '+(j.provider==='freepik'?'Freepik Mystic':j.effectiveModel); };
+    fetch('/api/image-model').then(r=>r.json()).then(apply).catch(()=>{});
+    sel.addEventListener('change',()=>{ const pv=sel.value.split(':'); fetch('/api/image-model',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({provider:pv[0], model:pv[1]||null})}).then(r=>r.json()).then(apply).catch(()=>{}); }); })();
   let genAllActive=false;
   gid('auGenAll').addEventListener('click',async()=>{ const btn=gid('auGenAll');
     if(genAllActive){ genAllActive=false; btn.textContent='Generate all'; gid('auGenAll').classList.remove('stopping'); return; }  // 2nd click = stop
@@ -2937,6 +2982,88 @@
       }
     });
   }
+
+  // ----- 📸 Shot: full-resolution PNG of the phone screen -----
+  // Uses the tab-capture API (getDisplayMedia, "This tab") so the PNG is a pixel-exact
+  // copy at the display's device pixel ratio (2x on Retina = ~780×1688 for iPhone 14).
+  // The first click asks Chrome to share this tab once; later clicks reuse the stream.
+  (function shotTool(){
+    const btn=document.getElementById('btnShot'); if(!btn) return;
+    let stream=null, video=null;
+    async function ensureStream(){
+      if(stream && stream.active) return stream;
+      stream=await navigator.mediaDevices.getDisplayMedia({ video:{ displaySurface:'browser', frameRate:30 }, audio:false, preferCurrentTab:true, selfBrowserSurface:'include', surfaceSwitching:'exclude', monitorTypeSurfaces:'exclude' });
+      video=document.createElement('video'); video.srcObject=stream; video.muted=true; video.playsInline=true; await video.play();
+      stream.getVideoTracks()[0].addEventListener('ended',()=>{ stream=null; video=null; btn.textContent='📸 Shot'; });
+      btn.textContent='📸 Shot ●';
+      return stream;
+    }
+    // Guess a label from the game's current screen (v2 engine DOM)
+    function detectState(fr){
+      try{
+        const w=fr.contentWindow, d=w.document, b=d.body, on=id=>{ const e=d.getElementById(id); return !!(e&&(e.classList.contains('on')||e.classList.contains('open'))); };
+        if(on('prideUnlockCine')) return 'location-unlock';
+        if(on('prideCharUnlock')) return 'character-intro';
+        if(d.getElementById('prideClockCard')?.classList.contains('vid')||on('prideClockCard')) return 'day-transition';
+        if(on('prideClockSheet')) return 'pass-time';
+        if(on('prideEpiDash')) return 'episode-end';
+        if(on('suitorDetail')) return 'suitor-detail';
+        if(on('suitorsScreen')) return 'suitors';
+        if(on('charChat')) return b.classList.contains('poi-open')?'chat':(d.getElementById('charChat').classList.contains('cc-private')?'chat-private':'chat');
+        if(on('storeSheet')) return 'store';
+        if(on('zoomView')) return 'meryton';
+        if(on('pcsel')) return 'character-select';
+        if(on('poiModal')) return 'poi-card';
+        if(b.classList.contains('pride-encounter')) return 'map-encounter';
+        if(b.classList.contains('in-game-locked')){
+          if(b.classList.contains('fe-open')) return 'episode-explore';
+          if(b.classList.contains('choosing')) return 'episode-choices';
+          if(b.classList.contains('pride-reflect')) return 'episode-reflect';
+          if(b.classList.contains('cutscene-active')) return 'episode-cutscene';
+          if(b.classList.contains('ui-bubble')||b.classList.contains('cast-on')) return 'episode-dialogue';
+          if(b.classList.contains('ui-narrative')) return 'episode-narrative';
+          return 'episode'; }
+        if(b.classList.contains('flow-map')) return 'map-'+(b.classList.contains('pride-tod-night')?'night':b.classList.contains('pride-tod-sunset')?'sunset':b.classList.contains('pride-tod-dawn')?'dawn':'day');
+        if(b.classList.contains('flow-worlds')) return 'worlds';
+        if(b.classList.contains('flow-intro')) return 'splash';
+      }catch(e){}
+      return 'shot';
+    }
+    let shootOpts={ask:false};
+    async function shoot(){
+      try{
+        await ensureStream();
+        // square the phone corners for the capture only (the device bezel rounds them)
+        document.body.classList.add('shot-square');
+        await new Promise(r=>setTimeout(r,220));   // let the picker overlay disappear + a frame to repaint
+        const fr=document.getElementById('gameFrame'); const r=fr.getBoundingClientRect();
+        // Tab capture (Chrome "This Tab") = the viewport; window capture (Safari "Share Window")
+        // = the whole browser window incl. toolbar → pick whichever aspect the frame matches.
+        const va=video.videoWidth/video.videoHeight, ia=window.innerWidth/window.innerHeight, oa=window.outerWidth/window.outerHeight;
+        const win = Math.abs(va-oa) < Math.abs(va-ia);
+        const sx=video.videoWidth/(win?window.outerWidth:window.innerWidth), sy=video.videoHeight/(win?window.outerHeight:window.innerHeight);
+        const ox = win ? (window.outerWidth-window.innerWidth)/2 : 0, oy = win ? (window.outerHeight-window.innerHeight) : 0;
+        const c=document.createElement('canvas'); c.width=Math.round(r.width*sx); c.height=Math.round(r.height*sy);
+        c.getContext('2d').drawImage(video, (r.left+ox)*sx, (r.top+oy)*sy, r.width*sx, r.height*sy, 0, 0, c.width, c.height);
+        // name = running number + what the game is showing (shift-click → type your own)
+        let seq=parseInt(localStorage.getItem('rai.shotSeq')||'0',10)+1; localStorage.setItem('rai.shotSeq',String(seq));
+        let label=detectState(fr);
+        if(shootOpts.ask){ const v=prompt('Screenshot name', label); if(v===null){ seq--; localStorage.setItem('rai.shotSeq',String(seq)); return; } label=v||label; }
+        const name=String(seq).padStart(2,'0')+'-'+label.replace(/[^a-z0-9._-]+/gi,'-').replace(/^-+|-+$/g,'').toLowerCase()+'.png';
+        c.toBlob(b=>{ const a=document.createElement('a'); a.href=URL.createObjectURL(b); a.download=name; a.click(); setTimeout(()=>URL.revokeObjectURL(a.href),2000); },'image/png');
+      }catch(e){ console.warn('[shot]',e); if(e && e.name!=='NotAllowedError') alert('Screenshot failed: '+e.message); }
+      finally{ document.body.classList.remove('shot-square'); }
+    }
+    btn.addEventListener('click', e=>{ shootOpts.ask=!!e.shiftKey; shoot(); });
+    btn.title='Save a full-resolution PNG of the phone screen · auto-named by screen (shift-click to type a name) · ⌘⇧S (⌥⌘⇧S asks for a name)';
+    // keyboard: Cmd/Ctrl+Shift+S
+    // Listen in the editor AND inside the game iframe (focus is usually there after a tap).
+    const onKey=e=>{ if((e.metaKey||e.ctrlKey) && e.shiftKey && (e.code==='KeyS'||e.key.toLowerCase()==='s')){ e.preventDefault(); e.stopPropagation(); shootOpts.ask=e.altKey; shoot(); } };
+    window.addEventListener('keydown', onKey, true);
+    const fr=document.getElementById('gameFrame');
+    const hook=()=>{ try{ fr.contentWindow.removeEventListener('keydown', onKey, true); fr.contentWindow.addEventListener('keydown', onKey, true); }catch(e){} };
+    fr.addEventListener('load', hook); hook();
+  })();
 
   // ----- Console: peek at the iframe's most recent /gift-vision
   // request and response. The dialog.html iframe stashes the full

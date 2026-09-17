@@ -1,5 +1,5 @@
 {
-  "_note": "Yürüme yol ağı (graph) — map-tracer.html ile çizildi. nodes:[{id,x,y}] yol joint'leri (yüzde koordinat), edges:[[a,b]] bağlantılar. 'loc:<id>' kenarları o lokasyon pin'ine attach demektir. regions = renkli bölgeler; locOverrides = tracer'da taşınan lokasyon konumları.",
+  "_note": "Yürüme yol ağı (graph) — map-tracer.html ile çizildi. nodes:[{id,x,y}] yol joint'leri (yüzde koordinat), edges:[[a,b]] bağlantılar. 'loc:<id>' kenarları o lokasyon pin'ine attach demektir. regions = renkli bölgeler. Lokasyon konumları map-locations.json'da (tek kaynak).",
   "roads": {
     "nodes": [
       {
@@ -1926,67 +1926,53 @@
       [
         "loc:rosings-park",
         "n257"
+      ],
+      [
+        "n127",
+        "loc:darcy-house"
+      ],
+      [
+        "n206",
+        "loc:netherfield-house"
+      ],
+      [
+        "n15",
+        "loc:officers-quarters"
+      ],
+      [
+        "n143",
+        "loc:ravenscar-hall"
+      ],
+      [
+        "n103",
+        "loc:ashbourne-court"
+      ],
+      [
+        "n233",
+        "loc:the-anchorage"
+      ],
+      [
+        "n6",
+        "loc:devereux-lodgings"
+      ],
+      [
+        "n157",
+        "loc:hale-house"
+      ],
+      [
+        "n40",
+        "loc:fenwick-cottage"
+      ],
+      [
+        "n43",
+        "loc:militia-billet"
+      ],
+      [
+        "n11",
+        "loc:the-garret"
       ]
     ]
   },
   "regions": [],
-  "locOverrides": {
-    "the-tavern": {
-      "x": 80.5,
-      "y": 64.2
-    },
-    "pemberley": {
-      "x": 69,
-      "y": 35.6
-    },
-    "tea-room": {
-      "x": 60,
-      "y": 63.2
-    },
-    "netherfield-ball": {
-      "x": 79.9,
-      "y": 44
-    },
-    "the-parsonage": {
-      "x": 55.7,
-      "y": 33.8
-    },
-    "country-lane": {
-      "x": 57,
-      "y": 24.2
-    },
-    "circulating-library": {
-      "x": 65.3,
-      "y": 76.4
-    },
-    "longbourn": {
-      "x": 46.2,
-      "y": 60.6
-    },
-    "the-apothecary": {
-      "x": 42.1,
-      "y": 50.9
-    },
-    "lucas-lodge": {
-      "x": 26.3,
-      "y": 55.3
-    },
-    "rosings-park": {
-      "x": 30.3,
-      "y": 28.1
-    },
-    "meryton": {
-      "x": 80.7,
-      "y": 74.3
-    },
-    "brighton-camp": {
-      "x": 43,
-      "y": 78.5
-    },
-    "brighton-seaside": {
-      "x": 55.6,
-      "y": 45.5
-    }
-  },
-  "updated": "2026-09-07T05:48:14.914Z"
+  "updated": "2026-09-09T11:06:42.015Z"
 }

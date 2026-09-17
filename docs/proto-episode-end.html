@@ -1,0 +1,346 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Prototype · Episode end — Dashboard · Consequence · Map Events</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,700;1,600&family=Lora:ital,wght@0,400;0,500;1,400;1,500&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{ --rose:#e0668a; --gold:#e7b24c; --teal:#39c6b0; --violet:#b48cff; --ink:#f4eee1; --mute:#9a90b4; --card:rgba(24,18,34,.78); --line:rgba(255,255,255,.12); }
+  *{ box-sizing:border-box; }
+  html,body{ margin:0; height:100%; background:#0b0810; font-family:Inter,system-ui,sans-serif; color:var(--ink); }
+  body{ display:flex; align-items:center; justify-content:center; gap:40px; min-height:100vh; padding:24px; }
+  .note{ max-width:300px; color:var(--mute); font-size:13px; line-height:1.55; }
+  .note h1{ font:700 20px 'Playfair Display',serif; color:var(--ink); margin:0 0 10px; }
+  .note b{ color:var(--ink); }
+  .note ol{ padding-left:18px; margin:6px 0; }
+  .note .k{ display:inline-block; padding:2px 7px; border:1px solid var(--line); border-radius:6px; font-size:11px; margin:2px 4px 2px 0; }
+  .note .cur{ color:var(--gold); }
+  .phone{ position:relative; width:390px; height:844px; border-radius:44px; overflow:hidden; background:#0d0912; box-shadow:0 0 0 10px #17121d, 0 30px 80px rgba(0,0,0,.7); }
+  .scene{ position:absolute; inset:0; opacity:0; pointer-events:none; transition:opacity .5s ease; }
+  .scene.on{ opacity:1; pointer-events:auto; }
+  .bg{ position:absolute; inset:0; background-size:cover; background-position:center; transition:background-image .5s; }
+  .bg::after{ content:''; position:absolute; inset:0; background:linear-gradient(180deg, rgba(8,5,12,.10) 0%, rgba(8,5,12,.45) 40%, rgba(8,5,12,.94) 74%); }
+  .bg.soft::after{ background:linear-gradient(180deg, rgba(8,5,12,.05) 0%, transparent 35%, rgba(8,5,12,.55) 100%); }
+  /* section label (top) */
+  .lbl{ position:absolute; top:22px; left:22px; right:22px; z-index:3; display:flex; align-items:center; gap:10px; }
+  .lbl .t{ font-weight:800; font-size:10.5px; letter-spacing:.3em; text-transform:uppercase; color:rgba(255,255,255,.7); }
+  .lbl .dots{ margin-left:auto; display:flex; gap:5px; }
+  .lbl .dots i{ width:22px; height:3px; border-radius:2px; background:rgba(255,255,255,.22); }
+  .lbl .dots i.on{ background:var(--rose); }
+  /* dashboard body */
+  .body{ position:absolute; left:0; right:0; bottom:0; z-index:2; padding:0 22px 24px; }
+  .eyebrow{ font-weight:800; font-size:11px; letter-spacing:.28em; text-transform:uppercase; color:var(--gold); margin-bottom:8px; }
+  h2{ font:700 32px/1.05 'Playfair Display',serif; margin:0 0 16px; letter-spacing:.01em; }
+  .card{ background:var(--card); border:1px solid var(--line); border-radius:16px; padding:14px 16px; -webkit-backdrop-filter:blur(18px); backdrop-filter:blur(18px); margin-bottom:10px; }
+  .btn{ display:block; width:100%; margin-top:16px; padding:15px; border:none; border-radius:14px; background:linear-gradient(120deg,#e0668a,#8b7bd8); color:#fff; font:700 15px Inter; cursor:pointer; box-shadow:0 10px 26px rgba(224,102,138,.28); }
+  .rv{ opacity:0; transform:translateY(10px); transition:opacity .5s ease, transform .5s ease; }
+  .scene.on .rv{ opacity:1; transform:none; }
+  .scene.on .rv:nth-of-type(2){ transition-delay:.15s } .scene.on .rv:nth-of-type(3){ transition-delay:.3s } .scene.on .rv:nth-of-type(4){ transition-delay:.45s }
+  /* trait card */
+  .trait{ display:flex; gap:14px; align-items:center; }
+  .trait .ic{ flex:none; width:58px; height:58px; border-radius:14px; background-size:cover; background-position:center; border:1px solid rgba(231,178,76,.45); box-shadow:0 6px 16px rgba(0,0,0,.4); }
+  .trait .t{ flex:1; min-width:0; }
+  .trait .nm{ font:700 17px 'Playfair Display',serif; }
+  .trait .st{ font-weight:800; font-size:10px; letter-spacing:.2em; text-transform:uppercase; margin-top:2px; }
+  .trait .st.up{ color:var(--teal); } .trait .st.dn{ color:var(--rose); }
+  .trait .bar{ margin-top:8px; height:6px; border-radius:3px; background:rgba(255,255,255,.12); position:relative; overflow:hidden; }
+  .trait .bar b{ position:absolute; left:0; top:0; bottom:0; border-radius:3px; background:var(--teal); width:0; transition:width 1.1s cubic-bezier(.2,.8,.2,1) .3s; }
+  .trait .bar b.dn{ background:var(--rose); }
+  .trait .bar u{ position:absolute; top:0; bottom:0; left:0; width:0; background:rgba(255,255,255,.3); transition:width 1.1s cubic-bezier(.2,.8,.2,1); }
+  .trait .why{ font:italic 400 12.5px/1.4 Lora,serif; color:#bfb3d1; margin-top:6px; }
+  /* relationship card */
+  .rel{ display:flex; gap:14px; align-items:center; }
+  .rel .pic{ flex:none; width:64px; height:64px; border-radius:16px; background-size:cover; background-position:top center; border:1px solid var(--line); }
+  .rel .t{ flex:1; min-width:0; }
+  .rel .nm{ font:700 17px 'Playfair Display',serif; }
+  .rel .dim{ font-weight:800; font-size:10px; letter-spacing:.2em; text-transform:uppercase; color:var(--mute); margin-top:2px; }
+  .steps{ display:flex; align-items:center; gap:6px; margin-top:8px; flex-wrap:wrap; }
+  .steps span{ font-weight:700; font-size:12px; padding:5px 9px; border-radius:8px; background:rgba(255,255,255,.06); border:1px solid var(--line); color:#bfb3d1; }
+  .steps span.now{ color:#fff; border-color:rgba(224,102,138,.7); background:rgba(224,102,138,.18); }
+  .steps span.was{ text-decoration:line-through; opacity:.6; }
+  .steps i{ color:var(--rose); font-style:normal; font-weight:800; }
+  .steps.t span.now{ border-color:rgba(57,198,176,.7); background:rgba(57,198,176,.16); } .steps.t i{ color:var(--teal); }
+  .steps.a span.now{ border-color:rgba(180,140,255,.7); background:rgba(180,140,255,.16); } .steps.a i{ color:var(--violet); }
+  .rel .q{ font:italic 400 12.5px/1.4 Lora,serif; color:#bfb3d1; margin-top:6px; }
+  /* global meters */
+  .meter{ display:flex; align-items:center; gap:12px; margin:10px 0; }
+  .meter .lb{ width:70px; font-weight:700; font-size:13px; }
+  .meter .bar{ flex:1; height:6px; border-radius:3px; background:rgba(255,255,255,.12); overflow:hidden; position:relative; }
+  .meter .bar b{ position:absolute; left:0; top:0; bottom:0; border-radius:3px; width:0; transition:width 1.2s cubic-bezier(.2,.8,.2,1) .25s; }
+  .meter .bar b.rose{ background:var(--rose); } .meter .bar b.gold{ background:var(--gold); }
+  .meter .bar u{ position:absolute; top:0; bottom:0; left:0; width:0; background:rgba(255,255,255,.28); transition:width 1.2s cubic-bezier(.2,.8,.2,1); }
+  .meter .v{ width:54px; text-align:right; font-weight:800; font-size:14px; font-variant-numeric:tabular-nums; }
+  .meter .v small{ font-size:11px; color:var(--rose); margin-left:4px; } .meter .v small.g{ color:var(--gold); }
+  .why{ font:italic 400 12.5px/1.4 Lora,serif; color:#bfb3d1; margin:0 0 6px 82px; }
+
+  /* ===== dialogue box (1:1 with the game's #pcWhisper .ps-dlg) ===== */
+  .dlg{ position:absolute; left:0; right:0; bottom:0; z-index:5; cursor:pointer; overflow:visible; padding:20px 22px 20px 162px; padding-bottom:22px; min-height:132px;
+    background:linear-gradient(180deg, rgba(250,248,255,.62) 0%, rgba(244,241,252,.82) 100%); color:#3a2e46; -webkit-backdrop-filter:blur(30px) saturate(160%); backdrop-filter:blur(30px) saturate(160%); border-top:1px solid rgba(255,255,255,.62); }
+  .dlg.side-r{ padding:20px 162px 20px 22px; }
+  .dlg .fig{ position:absolute; left:-104px; bottom:-278px; height:660px; aspect-ratio:.5; background-size:contain; background-repeat:no-repeat; background-position:bottom center; z-index:2; pointer-events:none;
+    -webkit-mask-image:linear-gradient(to bottom, rgba(0,0,0,1) 0%, rgba(0,0,0,1) 45%, rgba(0,0,0,0) 62%); mask-image:linear-gradient(to bottom, rgba(0,0,0,1) 0%, rgba(0,0,0,1) 45%, rgba(0,0,0,0) 62%); filter:drop-shadow(0 6px 14px rgba(0,0,0,.55)); }
+  .dlg.side-r .fig{ left:auto; right:-104px; }
+  .dlg .sp{ font-weight:800; font-size:11px; letter-spacing:.14em; text-transform:uppercase; color:#c0466a; margin-bottom:6px; }
+  .dlg .tx{ font-size:15px; line-height:1.32; color:#3a2e46; }
+  .dlg .cont{ position:absolute; right:18px; bottom:12px; font-size:13px; color:#8b7bd8; animation:psTap 1.5s ease-in-out infinite; }
+  @keyframes psTap{ 0%,100%{ transform:translateX(0); opacity:.5 } 50%{ transform:translateX(4px); opacity:1 } }
+  /* polaroid variant: photo of the place instead of a bust */
+  .dlg.polaroid{ padding-left:150px; }
+  .dlg .pola{ position:absolute; left:18px; bottom:22px; width:112px; padding:7px 7px 22px; background:#f7f2ea; box-shadow:0 10px 24px rgba(0,0,0,.45); transform:rotate(-5deg); z-index:2; }
+  .dlg .pola i{ display:block; height:98px; background-size:cover; background-position:center; }
+  .dlg .pola b{ position:absolute; left:0; right:0; bottom:5px; text-align:center; font:600 10px 'Lora',serif; color:#5a4a5e; font-style:italic; }
+  .dlg .narr{ font:500 15px/1.36 Lora,serif; color:#3a2e46; }
+  .dlg .cta{ margin-top:8px; font-weight:800; font-size:11px; letter-spacing:.14em; text-transform:uppercase; color:#8b7bd8; }
+  /* consequence: relationship change chip inside the box */
+  .dlg .chg{ display:inline-flex; align-items:center; gap:8px; margin-top:10px; padding:7px 10px; border-radius:10px; background:rgba(58,46,70,.08); border:1px solid rgba(58,46,70,.14); font-weight:700; font-size:12px; }
+  .dlg .chg em{ font-style:normal; color:#c0466a; }
+  .dlg .chg .pp{ width:22px; height:22px; border-radius:50%; background-size:cover; background-position:top center; }
+
+  /* ===== map (scene group C) ===== */
+  .map{ position:absolute; inset:0; overflow:hidden; }
+  .map .world{ position:absolute; left:0; top:0; width:1266px; height:844px; background:url('../worlds/pride-and-prejudice/map.jpg') center/cover; transition:transform 1.3s cubic-bezier(.4,0,.2,1); will-change:transform; }
+  .map .veil{ position:absolute; inset:0; pointer-events:none; background:linear-gradient(180deg, rgba(8,5,12,.15) 0%, transparent 30%, transparent 55%, rgba(8,5,12,.45) 100%); }
+  .pin{ position:absolute; transform:translate(-50%,-50%) scale(0); transition:transform .7s cubic-bezier(.2,1.4,.3,1); z-index:2; }
+  .pin.on{ transform:translate(-50%,-50%) scale(1); }
+  .pin .tok{ width:44px; height:44px; margin:0 auto; border-radius:12px; transform:rotate(45deg); background:linear-gradient(135deg,#f3d27a,#b8862b); box-shadow:0 8px 18px rgba(0,0,0,.5), inset 0 0 0 2px rgba(255,255,255,.45); display:grid; place-items:center; }
+  .pin .tok span{ transform:rotate(-45deg); font-size:20px; }
+  .pin .seal{ width:56px; height:56px; margin:0 auto; border-radius:50%; background:radial-gradient(circle at 35% 30%, #f28fb0, #b6355d 70%); box-shadow:0 8px 20px rgba(0,0,0,.5), inset 0 0 0 3px rgba(255,255,255,.25); display:grid; place-items:center; font:700 20px 'Playfair Display',serif; color:#fff; animation:breathe 2.2s ease-in-out infinite; }
+  @keyframes breathe{ 0%,100%{ box-shadow:0 8px 20px rgba(0,0,0,.5), inset 0 0 0 3px rgba(255,255,255,.25), 0 0 0 0 rgba(242,143,176,.6) } 50%{ box-shadow:0 8px 20px rgba(0,0,0,.5), inset 0 0 0 3px rgba(255,255,255,.25), 0 0 0 14px rgba(242,143,176,0) } }
+  .pin .lb{ margin-top:8px; padding:5px 9px; border-radius:8px; background:rgba(14,10,18,.85); color:#fff; font-weight:800; font-size:10.5px; letter-spacing:.14em; text-transform:uppercase; white-space:nowrap; }
+  .pin .ring{ position:absolute; left:50%; top:22px; width:44px; height:44px; margin:-22px 0 0 -22px; border-radius:50%; border:2px solid #f0c46a; box-shadow:0 0 18px rgba(240,196,106,.55); pointer-events:none; animation:ring 1.3s ease-out infinite; }
+  .pin.seal-pin .ring{ top:28px; }
+  @keyframes ring{ 0%{ transform:scale(.55); opacity:1 } 100%{ transform:scale(2.1); opacity:0 } }
+  .hud{ position:absolute; top:22px; left:16px; right:16px; z-index:3; display:flex; gap:8px; align-items:center; transition:opacity .4s; }
+  .hud .pill{ padding:8px 12px; border-radius:14px; background:rgba(20,12,26,.62); border:1px solid rgba(255,255,255,.18); font-weight:800; font-size:10.5px; letter-spacing:.12em; text-transform:uppercase; color:#eae6f5; }
+  .hud .pill small{ display:block; font-size:9px; color:var(--mute); letter-spacing:.14em; }
+  .hud .av{ margin-left:auto; width:46px; height:46px; border-radius:13px; background:url('../worlds/pride-and-prejudice/characters/arabella_frost/appearances/pride.png') top/cover; border:2px solid rgba(255,255,255,.6); }
+  .fin{ position:absolute; left:0; right:0; bottom:26px; text-align:center; z-index:3; font-weight:800; font-size:10.5px; letter-spacing:.24em; text-transform:uppercase; color:rgba(255,255,255,.55); }
+
+  /* ===== graphic dashboard ===== */
+  .body.g{ bottom:0; padding:0 18px 30px; }
+  .gh{ text-align:center; margin-bottom:18px; }
+  .gh h2{ margin:0; }
+  .g2{ display:flex; gap:12px; }
+  .g2 > div{ flex:1; min-width:0; }
+  .tap{ text-align:center; margin-top:22px; font-weight:800; font-size:10.5px; letter-spacing:.24em; text-transform:uppercase; color:rgba(255,255,255,.5); animation:tapPulse 1.6s ease-in-out infinite; }
+  @keyframes tapPulse{ 0%,100%{ opacity:.45 } 50%{ opacity:1 } }
+  /* trait cards */
+  .tcard{ position:relative; border-radius:18px; overflow:hidden; background:#1a1424; border:1px solid var(--line); aspect-ratio:.72; box-shadow:0 18px 40px rgba(0,0,0,.5); text-align:center; }
+  .tcard .art{ position:absolute; inset:0; background-size:cover; background-position:center; opacity:.85; }
+  .tcard::after{ content:''; position:absolute; inset:0; background:linear-gradient(180deg, rgba(10,6,14,.05) 20%, rgba(10,6,14,.92) 78%); }
+  .tcard > *:not(.art){ position:relative; z-index:1; }
+  .tcard .big{ margin-top:14px; font-weight:900; font-size:30px; line-height:1; text-shadow:0 4px 18px rgba(0,0,0,.6); }
+  .tcard.up .big{ color:var(--teal); } .tcard.dn .big{ color:var(--rose); }
+  .tcard .nm{ font:700 22px 'Playfair Display',serif; margin-top:96px; }
+  .tcard .st{ font-weight:800; font-size:10px; letter-spacing:.24em; text-transform:uppercase; margin-top:4px; }
+  .tcard.up .st{ color:var(--teal); } .tcard.dn .st{ color:var(--rose); }
+  .pips, .lv{ display:flex; justify-content:center; gap:5px; margin:12px 0 16px; }
+  .pips i, .lv i{ width:22px; height:6px; border-radius:3px; background:rgba(255,255,255,.14); }
+  .pips i.f, .lv i.f{ background:rgba(255,255,255,.55); }
+  .pips i.new{ background:var(--teal); box-shadow:0 0 12px var(--teal); animation:pipIn .6s cubic-bezier(.2,1.4,.3,1) .5s both; }
+  .pips i.lost{ background:var(--rose); animation:pipOut 1s ease .5s both; }
+  @keyframes pipIn{ from{ transform:scaleX(0); opacity:0 } to{ transform:scaleX(1); opacity:1 } }
+  @keyframes pipOut{ 0%{ background:rgba(255,255,255,.55) } 60%{ background:var(--rose) } 100%{ background:rgba(224,102,138,.28) } }
+  /* relationship cards */
+  .rcard{ border-radius:18px; background:var(--card); border:1px solid var(--line); padding:18px 10px 14px; text-align:center; -webkit-backdrop-filter:blur(18px); backdrop-filter:blur(18px); box-shadow:0 18px 40px rgba(0,0,0,.45); }
+  .rcard .med{ position:relative; width:104px; height:104px; margin:0 auto; border-radius:50%; background-size:220%; background-position:50% 6%; border:3px solid rgba(231,178,76,.75); box-shadow:0 10px 26px rgba(0,0,0,.55), 0 0 0 6px rgba(231,178,76,.14); }
+  .rcard .med b{ position:absolute; right:-6px; bottom:-4px; min-width:38px; padding:6px 8px; border-radius:999px; font-weight:900; font-size:14px; color:#fff; border:2px solid #1a1424; animation:pop .8s cubic-bezier(.2,1.4,.3,1) .5s both; }
+  .rcard.a .med b{ background:var(--violet); } .rcard.r .med b{ background:var(--rose); }
+  @keyframes pop{ 0%{ transform:scale(.4); opacity:0 } 100%{ transform:scale(1); opacity:1 } }
+  .rcard .nm{ font:700 18px 'Playfair Display',serif; margin-top:12px; }
+  .rcard .st{ font-weight:800; font-size:10px; letter-spacing:.24em; text-transform:uppercase; color:var(--mute); margin-top:3px; }
+  .rcard.a .lv i.new{ background:var(--violet); box-shadow:0 0 12px var(--violet); animation:pipIn .6s cubic-bezier(.2,1.4,.3,1) .5s both; }
+  .rcard.a .lv i.new + i.new{ animation-delay:.8s; }
+  .rcard.r .lv i.new{ background:var(--rose); box-shadow:0 0 12px var(--rose); animation:pipIn .6s cubic-bezier(.2,1.4,.3,1) .5s both; }
+  .rcard .lv{ margin:12px 0 10px; }
+  .rcard .stage{ display:inline-block; padding:6px 12px; border-radius:999px; font-weight:800; font-size:12px; border:1px solid var(--line); background:rgba(255,255,255,.06); }
+  .rcard.a .stage{ color:var(--violet); border-color:rgba(180,140,255,.5); } .rcard.r .stage{ color:var(--rose); border-color:rgba(224,102,138,.5); }
+  /* gauges */
+  .gcard{ border-radius:18px; background:var(--card); border:1px solid var(--line); padding:14px 10px 16px; text-align:center; -webkit-backdrop-filter:blur(18px); backdrop-filter:blur(18px); box-shadow:0 18px 40px rgba(0,0,0,.45); }
+  .gauge{ width:100%; height:auto; display:block; }
+  .gauge .trk{ fill:none; stroke:rgba(255,255,255,.12); stroke-width:9; stroke-linecap:round; }
+  .gauge .arc{ fill:none; stroke-width:9; stroke-linecap:round; stroke-dasharray:157; stroke-dashoffset:157; transition:stroke-dashoffset 1.3s cubic-bezier(.2,.8,.2,1) .35s; }
+  .gauge .arc.rose{ stroke:var(--rose); filter:drop-shadow(0 0 6px rgba(224,102,138,.7)); } .gauge .arc.gold{ stroke:var(--gold); filter:drop-shadow(0 0 6px rgba(231,178,76,.7)); }
+  .gcard .num{ font:700 40px/1 'Playfair Display',serif; margin-top:-8px; }
+  .gcard .num small{ font:800 13px Inter; color:var(--rose); margin-left:4px; vertical-align:middle; } .gcard .num small.g{ color:var(--gold); }
+  .gcard .st{ font-weight:800; font-size:10.5px; letter-spacing:.22em; text-transform:uppercase; color:var(--mute); margin-top:8px; }
+
+  .rail{ position:absolute; right:14px; top:88px; z-index:3; display:flex; flex-direction:column; gap:11px; }
+  .rail i{ width:44px; height:44px; border-radius:50%; display:grid; place-items:center; font-style:normal; font-size:18px; color:#fff; background:rgba(20,12,26,.55); border:1px solid rgba(255,255,255,.22); -webkit-backdrop-filter:blur(10px); backdrop-filter:blur(10px); box-shadow:0 6px 16px rgba(0,0,0,.4); }
+  .rail i.home{ color:var(--gold); }
+  .rail i.glow{ animation:homeGlow 1.4s ease-in-out infinite; }
+  @keyframes homeGlow{ 0%,100%{ box-shadow:0 6px 16px rgba(0,0,0,.4), 0 0 0 0 rgba(231,178,76,.6) } 50%{ box-shadow:0 6px 16px rgba(0,0,0,.4), 0 0 0 12px rgba(231,178,76,0) } }
+  .inter{ position:absolute; inset:0; z-index:3; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; padding:0 30px; }
+  .inter .k{ font-weight:800; font-size:11px; letter-spacing:.3em; text-transform:uppercase; color:var(--gold); margin-bottom:14px; }
+  .inter .t{ font:700 38px/1.05 'Playfair Display',serif; }
+  .inter .d{ margin-top:10px; font:italic 500 16px Lora,serif; color:#cfc4df; }
+</style>
+</head>
+<body>
+<div class="note">
+  <h1>Episode end</h1>
+  <b>A · Dashboard</b> — outro arka planı, 3 sayfa next-next:
+  <ol><li>Traits — 2 trait, Progress / Stress</li><li>Relationships — 2 kişi, en fazla 2 seviye</li><li>Global — Scandal, Allure</li></ol>
+  <b>Map Event (aynı tur)</b> — "Unlock olanlar" / yatay ok: dashboard'dan hemen sonra harita kayar → pin → polaroid.<br><br>
+  <b>Harita serbest</b> → ⌂ ile zaman geçer (interlude).<br><br>
+  <b>B · Consequence</b> — tur geçince: kaçırılan episode'un sahibi konuşur, ilişki değişimi.<br><br>
+  <b>Map Event (yeni tur)</b> — turu gelen episode: kayar → "x is inviting you" → harita.<br><br>
+  <span class="k">tap / → = ileri</span><span class="k">R = baştan</span><br>
+  <div id="where" style="margin-top:10px"></div>
+</div>
+
+<div class="phone" id="phone">
+
+  <!-- ===== A · DASHBOARD (over the outro still) — graphic, minimal text ===== -->
+  <section class="scene on" data-name="A1 · Dashboard — Traits">
+    <div class="bg" style="background-image:url('../worlds/pride-and-prejudice/episodes/the-newcomer/the-netherfield-ball/cutscenes/carriage-night.jpg')"></div>
+    <div class="lbl"><span class="t">Dashboard</span><span class="dots"><i class="on"></i><i></i><i></i></span></div>
+    <div class="body g">
+      <div class="gh rv"><div class="eyebrow">Traits</div><h2>Who you became</h2></div>
+      <div class="g2 rv">
+        <div class="tcard up"><div class="art" style="background-image:url('../worlds/pride-and-prejudice/pc-select/trait_candor.webp')"></div>
+          <div class="big">▲</div><div class="nm">Candor</div><div class="st">Progress</div>
+          <div class="pips"><i class="f"></i><i class="f"></i><i class="f"></i><i class="new"></i><i></i></div></div>
+        <div class="tcard dn"><div class="art" style="background-image:url('../worlds/pride-and-prejudice/pc-select/trait_charm.webp')"></div>
+          <div class="big">▼</div><div class="nm">Charm</div><div class="st">Stress</div>
+          <div class="pips"><i class="f"></i><i class="f"></i><i class="lost"></i><i></i><i></i></div></div>
+      </div>
+      <div class="tap rv">Tap to continue</div>
+    </div>
+  </section>
+
+  <section class="scene" data-name="A2 · Dashboard — Relationships">
+    <div class="bg" style="background-image:url('../worlds/pride-and-prejudice/episodes/the-newcomer/the-netherfield-ball/cutscenes/carriage-night.jpg')"></div>
+    <div class="lbl"><span class="t">Dashboard</span><span class="dots"><i class="on"></i><i class="on"></i><i></i></span></div>
+    <div class="body g">
+      <div class="gh rv"><div class="eyebrow">Relationships</div><h2>Who noticed you</h2></div>
+      <div class="g2 rv">
+        <div class="rcard a"><div class="med" style="background-image:url('../worlds/pride-and-prejudice/characters/mr_bingley/appearances/pride.png')"><b>+2</b></div>
+          <div class="nm">Mr Bingley</div><div class="st">Affection</div>
+          <div class="lv"><i class="f"></i><i class="f"></i><i class="new"></i><i class="new"></i><i></i></div>
+          <div class="stage">Regard</div></div>
+        <div class="rcard r"><div class="med" style="background-image:url('../worlds/pride-and-prejudice/characters/mr_darcy/appearances/pride.png')"><b>+1</b></div>
+          <div class="nm">Mr Darcy</div><div class="st">Desire</div>
+          <div class="lv"><i class="f"></i><i class="new"></i><i></i><i></i><i></i></div>
+          <div class="stage">Curiosity</div></div>
+      </div>
+      <div class="tap rv">Tap to continue</div>
+    </div>
+  </section>
+
+  <section class="scene" data-name="A3 · Dashboard — Global">
+    <div class="bg" style="background-image:url('../worlds/pride-and-prejudice/episodes/the-newcomer/the-netherfield-ball/cutscenes/carriage-night.jpg')"></div>
+    <div class="lbl"><span class="t">Dashboard</span><span class="dots"><i class="on"></i><i class="on"></i><i class="on"></i></span></div>
+    <div class="body g">
+      <div class="gh rv"><div class="eyebrow">Meryton</div><h2>What the county says</h2></div>
+      <div class="g2 rv">
+        <div class="gcard">
+          <svg viewBox="0 0 120 70" class="gauge"><path d="M10 62 A50 50 0 0 1 110 62" class="trk"/><path d="M10 62 A50 50 0 0 1 110 62" class="arc rose" data-len="157" data-to="0.08"/></svg>
+          <div class="num">8<small>+2</small></div><div class="st">🔥 Scandal</div></div>
+        <div class="gcard">
+          <svg viewBox="0 0 120 70" class="gauge"><path d="M10 62 A50 50 0 0 1 110 62" class="trk"/><path d="M10 62 A50 50 0 0 1 110 62" class="arc gold" data-len="157" data-to="0.40"/></svg>
+          <div class="num">40<small class="g">+5</small></div><div class="st">✦ Allure</div></div>
+      </div>
+      <div class="tap rv">Tap to continue</div>
+    </div>
+  </section>
+
+  <!-- ===== C · MAP EVENTS ===== -->
+  <section class="scene" data-name="C1 · Map Event — same turn (Tea Room · Unlock olanlar)">
+    <div class="map"><div class="world" id="world1">
+        <div class="pin" id="pinTea" style="left:60%;top:63.2%"><div class="tok"><span>☕</span></div><div class="lb">Tea Room</div><div class="ring"></div></div>
+      </div><div class="veil"></div></div>
+    <div class="hud"><div class="pill">23 May<small>Monday</small></div><div class="pill">🔥 Scandal</div><div class="pill">✦ Allure</div><div class="av"></div></div>
+    <div class="rail"><i>♡</i><i>▦</i><i class="home">⌂</i></div>
+    <div class="dlg polaroid" id="dlgTea" style="opacity:0;transition:opacity .5s .2s">
+      <div class="pola"><i style="background-image:url('../worlds/pride-and-prejudice/map_zoom01.jpeg')"></i><b>Tea Room</b></div>
+      <div class="narr">Where the officers take their gossip with sugar. The door has been open to you since the ball — someone must have mentioned your name.</div>
+      <div class="cta">Now you can visit the Tea Room · Continue</div>
+      <div class="cont">&#9656;</div></div>
+  </section>
+
+  <section class="scene" data-name="D · Map — free (tap ⌂ = pass time)">
+    <div class="map"><div class="world" id="worldD" style="transform:translate(-564.6px,0)">
+        <div class="pin on" style="left:60%;top:63.2%"><div class="tok"><span>☕</span></div><div class="lb">Tea Room</div></div>
+        <div class="pin on seal-pin" style="left:79.9%;top:44%"><div class="seal" style="background:radial-gradient(circle at 35% 30%,#8a8698,#4a4656 70%);animation:none">✓</div><div class="lb">Netherfield</div></div>
+        <div class="pin on seal-pin" style="left:46.2%;top:60.6%"><div class="seal" style="background:radial-gradient(circle at 35% 30%,#8a8698,#4a4656 70%);animation:none;border:2px dashed rgba(255,255,255,.4)">🔒</div><div class="lb">Longbourn</div></div>
+      </div><div class="veil"></div></div>
+    <div class="hud"><div class="pill">23 May<small>Monday</small></div><div class="pill">🔥 Scandal</div><div class="pill">✦ Allure</div><div class="av"></div></div>
+    <div class="rail"><i>♡</i><i>▦</i><i class="home glow">⌂</i></div>
+    <div class="fin">Free on the map · Longbourn locked (missed) · tap ⌂ to pass time</div>
+  </section>
+
+  <section class="scene" data-name="T · Time passes (interlude)">
+    <div class="bg" style="background-image:url('../worlds/pride-and-prejudice/map_night.jpeg'); filter:blur(6px) brightness(.5)"></div>
+    <div class="inter"><div class="k">Night time →</div><div class="t">The next morning</div><div class="d">24 May · Tuesday · Morning</div><div class="tap" style="margin-top:34px">Tap to continue</div></div>
+  </section>
+
+  <!-- ===== B · CONSEQUENCE (missed by your choice) ===== -->
+  <section class="scene" data-name="B · Consequence — after time passed (Mrs Bennet)">
+    <div class="bg soft" style="background-image:url('../worlds/pride-and-prejudice/episodes/the-newcomer/a-caller-at-the-house/cutscenes/arrival.png')"></div>
+    <div class="lbl"><span class="t">Consequence</span></div>
+    <div class="dlg side-r"><div class="fig" style="background-image:url('../worlds/pride-and-prejudice/characters/mrs_bennet/appearances/pride.png')"></div>
+      <div class="sp">Mrs Bennet</div>
+      <div class="tx">I waited all day. The table was laid at four, and Kitty ran to the window at every carriage. Why did you not come?</div>
+      <div class="chg"><span class="pp" style="background-image:url('../worlds/pride-and-prejudice/characters/mrs_bennet/appearances/pride.png')"></span>Your relationship with Mrs Bennet changed · <em>Trust −1</em></div>
+      <div class="cont">&#9656;</div></div>
+  </section>
+
+  <section class="scene" data-name="C2 · Map Event — next turn (Lucas Lodge)">
+    <div class="map"><div class="world" id="world2">
+        <div class="pin on" style="left:60%;top:63.2%"><div class="tok"><span>☕</span></div><div class="lb">Tea Room</div></div>
+        <div class="pin seal-pin" id="pinLucas" style="left:26.3%;top:55.3%"><div class="seal">II</div><div class="lb">Lucas Lodge</div><div class="ring"></div></div>
+      </div><div class="veil"></div></div>
+    <div class="hud"><div class="pill">24 May<small>Tuesday</small></div><div class="pill">🔥 Scandal</div><div class="pill">✦ Allure</div><div class="av"></div></div>
+    <div class="dlg polaroid" id="dlgLucas" style="opacity:0;transition:opacity .5s .2s">
+      <div class="pola"><i style="background-image:url('../worlds/pride-and-prejudice/episodes/authored/lucas-lodge/cover.jpg')"></i><b>Lucas Lodge</b></div>
+      <div class="narr">Charlotte is inviting you. Her father wants the story from you, not the street — and Charlotte wants to watch you tell it.</div>
+      <div class="cta">Tuesday morning · Continue</div>
+      <div class="cont">&#9656;</div></div>
+  </section>
+
+  <section class="scene" data-name="C3 · Back on the map">
+    <div class="map"><div class="world" id="world3" style="transform:translate(-465px,0)">
+        <div class="pin on" style="left:60%;top:63.2%"><div class="tok"><span>☕</span></div><div class="lb">Tea Room</div></div>
+        <div class="pin on seal-pin" style="left:26.3%;top:55.3%"><div class="seal">II</div><div class="lb">Lucas Lodge</div></div>
+        <div class="pin on seal-pin" style="left:79.9%;top:44%"><div class="seal" style="background:radial-gradient(circle at 35% 30%,#8a8698,#4a4656 70%);animation:none">✓</div><div class="lb">Netherfield</div></div>
+      </div><div class="veil"></div></div>
+    <div class="hud"><div class="pill">24 May<small>Tuesday</small></div><div class="pill">🔥 Scandal</div><div class="pill">✦ Allure</div><div class="av"></div></div>
+    <div class="fin">Back on the map · tap to restart</div>
+  </section>
+</div>
+
+<script>
+  const scenes=[...document.querySelectorAll('.scene')]; let i=0;
+  const where=document.getElementById('where');
+  // map camera: world is 1266×844 inside a 390×844 phone → centre (x%,y%) of the world in the viewport
+  function camTo(world, xPct, yPct, instant){ const W=1266, H=844; let tx=195 - W*xPct/100, ty=0; tx=Math.max(390-W, Math.min(0, tx));
+    if(instant){ world.style.transition='none'; world.style.transform='translate('+tx+'px,'+ty+'px)'; world.offsetHeight; world.style.transition=''; }
+    else world.style.transform='translate('+tx+'px,'+ty+'px)'; }
+  let timers=[]; const later=(fn,ms)=>timers.push(setTimeout(fn,ms));
+  function enter(k){
+    timers.forEach(clearTimeout); timers=[];
+    const s=scenes[k];
+    // animated bars: reset then grow
+    s.querySelectorAll('[data-w]').forEach(e=>{ e.style.width='0'; }); s.querySelectorAll('.arc').forEach(e=>{ e.style.strokeDashoffset=e.dataset.len; });
+    requestAnimationFrame(()=>requestAnimationFrame(()=>{ s.querySelectorAll('[data-w]').forEach(e=>{ e.style.width=e.dataset.w; }); s.querySelectorAll('.arc').forEach(e=>{ e.style.strokeDashoffset=String(e.dataset.len*(1-e.dataset.to)); }); }));
+    if(s.dataset.name.startsWith('C1')){ const w=document.getElementById('world1'), p=document.getElementById('pinTea'), d=document.getElementById('dlgTea');
+      p.classList.remove('on'); d.style.opacity='0'; camTo(w, 79.9, 44, true);                       // start where the ball was
+      later(()=>camTo(w, 60, 63.2), 250);                                                       // 1 · map slides to the place
+      later(()=>p.classList.add('on'), 1500);                                                    // 2 · pin appears
+      later(()=>{ d.style.opacity='1'; }, 2100); }                                               // 3 · polaroid + narrative
+    if(s.dataset.name.startsWith('C2')){ const w=document.getElementById('world2'), p=document.getElementById('pinLucas'), d=document.getElementById('dlgLucas');
+      p.classList.remove('on'); d.style.opacity='0'; camTo(w, 60, 63.2, true);
+      later(()=>camTo(w, 26.3, 55.3), 250);
+      later(()=>p.classList.add('on'), 1500);
+      later(()=>{ d.style.opacity='1'; }, 2100); }
+    where.innerHTML='<span class="cur">▸ '+s.dataset.name+'</span>';
+  }
+  function show(n){ i=(n+scenes.length)%scenes.length; scenes.forEach((s,k)=>s.classList.toggle('on',k===i)); enter(i); }
+  document.getElementById('phone').addEventListener('click', ()=>show(i+1));
+  document.addEventListener('keydown', e=>{ if(e.key==='r'||e.key==='R') show(0); if(e.key==='ArrowRight'||e.key===' ') show(i+1); if(e.key==='ArrowLeft') show(i-1); });
+  enter(0);
+</script>
+</body>
+</html>
