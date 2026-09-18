@@ -28812,12 +28812,97 @@ console.log('%c[caller] Episode 1 ready — run startCaller()', 'color:#e7b24c')
 #pcsel .dcard[data-pos="next2"]{z-index:4; opacity:0; transform:translate(212%,-50%)}
 #pcsel .dcard[data-pos="prev2"]{z-index:4; opacity:0; transform:translate(-212%,-50%)}
 #pcsel .dcard[data-pos="hidden"]{z-index:1; opacity:0; transform:translate(0,-50%)}
+
+/* ══ Tarot deck roster (design B). The card's art box is a WIDTH-scaled viewport onto the detail hero (same bg
+   crop, same sprite anchor, cropped at the knees like the mockup); choosing a card scales that viewport up 1:1 into
+   the scene while its lower part is revealed (clip-path) — nothing inside moves. ══ */
+#pcsel .pcs-scrim{position:absolute; inset:0; z-index:0; pointer-events:none; background:radial-gradient(70% 55% at 50% 40%, rgba(10,7,16,.42) 0, rgba(6,4,10,.82) 100%); -webkit-backdrop-filter:blur(6px) saturate(.8); backdrop-filter:blur(6px) saturate(.8)}
+#pcsel .pcs-deck{perspective:1100px; perspective-origin:50% 42%; overflow:visible; z-index:2}
+#pcsel .dcard{top:50%; left:50%; width:290px; height:486px; margin:-246px 0 0 -145px; border-radius:20px; overflow:visible; background:transparent; border:none; box-shadow:none; transform-style:preserve-3d; transition:transform .62s cubic-bezier(.22,.9,.24,1), filter .62s ease, opacity .62s ease; cursor:grab; will-change:transform}
+#pcsel .dcard .face{position:absolute; inset:0; border-radius:20px; overflow:hidden; background:#f1e7d3 radial-gradient(120% 80% at 50% 0%, rgba(255,255,255,.35), rgba(255,255,255,0) 60%); box-shadow:0 34px 70px rgba(0,0,0,.65), 0 0 0 1px rgba(120,90,40,.25); transition:opacity .35s ease}
+#pcsel.overmap .dcard{box-shadow:none}
+/* aged-cream margin, thin gold line just inside it */
+#pcsel .dcard .face::before{content:""; position:absolute; inset:8px; border-radius:14px; border:1px solid #cfae5a; box-shadow:inset 0 0 0 1px rgba(255,255,255,.5); pointer-events:none; z-index:4}
+#pcsel .dcard .cover{position:absolute; inset:auto; left:15px; top:15px; width:260px; height:352px; border-radius:11px; overflow:hidden; background:#2a2230; box-shadow:inset 0 0 0 1px rgba(120,90,40,.35)}
+/* the art box holds a scaled copy of the detail hero (same bg cover, same 72% sprite box, same anchors); resting scale
+   s0 shows her to the hands; on choose it pushes in to s = ART_W/W (then the box grows 1:1 into the scene) */
+#pcsel .dcard .mini{position:absolute; left:50%; top:0; width:var(--W); height:var(--H); margin-left:calc(var(--W) / -2); transform-origin:50% 0; transform:scale(var(--s0)); transition:transform .32s cubic-bezier(.4,0,.2,1)}
+#pcsel .dcard .mini .cbg{position:absolute; top:0; bottom:0; left:-30%; right:-30%; background-size:auto 100%; background-position:center top}   /* = the hero's cover crop (image is wider than the phone → scaled by height), painted wider so it fills the box at s0 */
+#pcsel .dcard .mini .cfig{position:absolute; inset:0; background-repeat:no-repeat}   /* size/anchor inline (full-height box so the sprite is never clipped) */
+#pcsel .dcard.chosen .mini, #pcsel .dcard.opening .mini, #pcsel .dcard.zoomed .mini{transform:scale(var(--s))}
+#pcsel .dcard.snap .mini{transition:none}
+#pcsel .dcard .cover::after{content:""; position:absolute; inset:0; background:linear-gradient(180deg,rgba(0,0,0,.06),rgba(0,0,0,0) 30%,rgba(20,12,24,.38) 100%); pointer-events:none}
+/* gilded acanthus corner (generated, keyed): one asset mirrored into the four corners, overlapping the art edge slightly */
+#pcsel .dcard .orn{position:absolute; width:76px; height:76px; z-index:5; pointer-events:none; background:url('worlds/pride-and-prejudice/pc-select/orn_corner.webp') 0 0/contain no-repeat; filter:drop-shadow(0 1px 1px rgba(80,50,0,.35))}
+#pcsel .dcard .orn.tl{left:5px; top:5px} #pcsel .dcard .orn.tr{right:5px; top:5px; transform:scaleX(-1)}
+#pcsel .dcard .orn.bl{left:5px; bottom:5px; transform:scaleY(-1)} #pcsel .dcard .orn.br{right:5px; bottom:5px; transform:scale(-1)}
+#pcsel .dcard .cfoot{position:absolute; left:15px; right:15px; bottom:13px; height:104px; padding:0 22px; text-align:center; color:#2b2130; z-index:5}
+#pcsel .dcard .plaque{position:absolute; left:50%; top:-15px; transform:translateX(-50%); padding:6px 18px 5px; border-radius:6px; background:linear-gradient(180deg,#f0d47c,#c9a24a 55%,#a8842a); color:#3a2a08; font:800 9.5px/1 Inter,system-ui,sans-serif; letter-spacing:.28em; text-transform:uppercase; white-space:nowrap; box-shadow:0 2px 6px rgba(0,0,0,.35), inset 0 0 0 1px rgba(120,80,10,.45), inset 0 0 0 2px rgba(255,240,200,.55)}
+#pcsel .dcard .plaque::before, #pcsel .dcard .plaque::after{content:""; position:absolute; top:50%; width:34px; height:1px; background:linear-gradient(90deg,rgba(201,162,74,0),#c9a24a); margin-top:-.5px}
+#pcsel .dcard .plaque::before{right:100%; margin-right:5px} #pcsel .dcard .plaque::after{left:100%; margin-left:5px; transform:scaleX(-1)}
+#pcsel .dcard .nm{font:700 26px/1.1 "Playfair Display",Georgia,serif; margin:20px 0 4px; white-space:nowrap; color:#241b26}
+#pcsel .dcard .beats{font:italic 500 12px/1.3 Lora,Georgia,serif; color:#4e4352; padding:0}
+#pcsel .dcard .beats::after{content:"\2740"; display:block; margin-top:5px; font:400 10px/1 serif; color:#c9a24a}
+#pcsel .dcard .shine{position:absolute; inset:0; border-radius:20px; background:linear-gradient(115deg,rgba(255,255,255,0) 30%,rgba(255,255,255,.18) 45%,rgba(255,255,255,0) 60%); background-size:260% 100%; mix-blend-mode:screen; opacity:0; pointer-events:none; z-index:6}
+#pcsel .dcard[data-pos="front"]{z-index:6; opacity:1; transform:translate3d(0,0,0) rotateY(0) scale(1); filter:none}
+#pcsel .dcard[data-pos="next"]{z-index:5; opacity:1; transform:translate3d(134px,22px,-170px) rotateY(-26deg) rotateZ(5deg) scale(.86); filter:brightness(.5) saturate(.75)}
+#pcsel .dcard[data-pos="prev"]{z-index:5; opacity:1; transform:translate3d(-134px,22px,-170px) rotateY(26deg) rotateZ(-5deg) scale(.86); filter:brightness(.5) saturate(.75)}
+#pcsel .dcard[data-pos="next2"]{z-index:4; opacity:.6; transform:translate3d(200px,56px,-380px) rotateY(-36deg) rotateZ(9deg) scale(.72); filter:brightness(.3)}
+#pcsel .dcard[data-pos="prev2"]{z-index:4; opacity:.6; transform:translate3d(-200px,56px,-380px) rotateY(36deg) rotateZ(-9deg) scale(.72); filter:brightness(.3)}
+#pcsel .dcard[data-pos="hidden"]{z-index:1; opacity:0; transform:translate3d(0,80px,-500px) scale(.6)}
+#pcsel.overmap .dcard[data-pos="next"], #pcsel.overmap .dcard[data-pos="prev"]{opacity:1}
+#pcsel .dcard.drag{transition:none}
+/* choosing: pop + light sweep, then the art viewport grows into the scene; frame + deck fade */
+#pcsel .dcard.chosen{transform:translate3d(0,-14px,90px) scale(1.04) !important; z-index:9}
+#pcsel .dcard.chosen .shine{opacity:1; animation:pcsSweep .9s ease-out 1}
+@keyframes pcsSweep{0%{background-position:120% 0} 100%{background-position:-40% 0}}
+#pcsel .pcs-deck.opening .dcard:not(.chosen):not(.zooming){opacity:0 !important}
+#pcsel .dcard.opening .face{opacity:0}
+#pcsel .pcs-deck.opening .dcard.chosen{transition:transform .5s cubic-bezier(.6,0,.15,1)}
+/* camera into the card: the whole card scales so its art box becomes the screen; the art box stretches down to the
+   full hero height, the copy inside pushes in to 1:1, and the frame/foot/ornaments fade as they leave the screen */
+#pcsel .dcard.zooming{z-index:9; transition:transform .9s cubic-bezier(.5,0,.1,1); cursor:default}
+#pcsel .dcard.zooming{height:var(--cardH, 486px); transition:transform .9s cubic-bezier(.5,0,.1,1), height .9s cubic-bezier(.5,0,.1,1)}   /* the card grows as one piece: art, frame and foot together */
+#pcsel .dcard.zooming .orn, #pcsel .dcard.zooming .shine{opacity:0; transition:opacity .45s ease .1s}
+#pcsel .dcard.zooming .cover{height:var(--coverH, 352px); transition:height .9s cubic-bezier(.5,0,.1,1); box-shadow:none; border-radius:0}
+#pcsel .dcard.zooming .cover::after{opacity:0; transition:opacity .4s ease}
+#pcsel .dcard.zooming .mini{transform:scale(var(--s)); transition:transform .9s cubic-bezier(.5,0,.1,1)}
+#pcsel .dcard.zooming.snap, #pcsel .dcard.zooming.snap .cover, #pcsel .dcard.zooming.snap .mini, #pcsel .dcard.zooming.snap .orn{transition:none}
+#pcsel #pcs-roster.opening .pcs-rtop, #pcsel #pcs-roster.opening .pcs-rfoot{opacity:0; transition:opacity .3s ease}
+#pcsel .pcs-deck.opening{z-index:30}   /* the zooming card passes over the header/footer */
+/* while the card flies in, the hero shows the static sprite (identical to the card art); the idle clip fades in only after the switch */
+#pcsel.no-idle #pcsFig video.hfig-idle{opacity:.02 !important}
+/* another outfit is worn: the default-look idle clips (including ones mounted later by the rotation) stay hidden */
+#pcsel.outfit-on #pcsFig video.hfig-idle{opacity:0 !important; transition:opacity .3s ease}
+#pcsel #pcs-detail .hero .hname{z-index:6}
+#pcsel.idle-fade #pcsFig video.hfig-idle{transition:opacity .55s ease}
+/* scene UI entrance after the card lands: info cards slide in from the right, name / footer / close fade in (staggered) */
+#pcsel #pcs-detail.entering .d-cards{transform:translateX(90px); opacity:0; transition:none}
+#pcsel #pcs-detail.entering .hero .hname, #pcsel #pcs-detail.entering .d-footer, #pcsel #pcs-detail.entering .dclose{opacity:0; transition:none}
+#pcsel #pcs-detail.entered .d-cards{transition:transform .7s cubic-bezier(.2,.8,.2,1) .05s, opacity .5s ease .05s}
+#pcsel #pcs-detail.entered .hero .hname{transition:opacity .55s ease .2s}
+#pcsel #pcs-detail.entered .d-footer{transition:opacity .5s ease .35s, transform .6s cubic-bezier(.4,0,.2,1)}
+#pcsel #pcs-detail.entered .dclose{transition:opacity .5s ease .45s}
+#pcsel #pcs-detail.morphing{background:transparent}
+#pcsel #pcs-detail.morphing .dclose{opacity:0}
+/* header + footer in the deck style */
+#pcsel .pcs-rtop{position:relative; z-index:5; padding-top:calc(env(safe-area-inset-top,0px) + 34px)}
+#pcsel .pcs-kick{display:none}
+#pcsel .pcs-h1, #pcsel.overmap .pcs-h1{color:#fff; font-weight:700; font-size:26px; margin-top:26px; text-shadow:0 2px 18px rgba(0,0,0,.6)}
+#pcsel .pcs-rfoot{position:relative; z-index:5; padding:0 16px 48px}
+#pcsel.overmap .pcs-rfoot{padding-bottom:calc(env(safe-area-inset-bottom,0px) + 48px)}
+#pcsel .pcs-dots{display:none}
+#pcsel .pcs-play{width:100%; margin:0 0 12px; padding:19px; border:none; border-radius:22px; cursor:pointer; background:linear-gradient(120deg,#e0668a,#8b7bd8); color:#fff; font:700 18px/1 "Playfair Display",Georgia,serif; box-shadow:0 12px 28px rgba(139,123,216,.35)}
+#pcsel.switch .pcs-play{display:none}
+#pcsel .pcs-create-text, #pcsel.overmap .pcs-create-text{display:block; width:72%; margin:0 auto; padding:15px; border-radius:22px; background:rgba(14,10,20,.55); border:1px solid rgba(255,255,255,.28); color:#fff; font:700 15px/1 "Playfair Display",Georgia,serif; box-shadow:none; -webkit-backdrop-filter:blur(14px); backdrop-filter:blur(14px)}
 /* detail */
 #pcsel .hero{position:absolute; top:0; left:0; right:0; height:72%; overflow:hidden; z-index:5; background:#12101a; will-change:transform,border-radius,height}
 #pcsel .hero .hbg{position:absolute; top:0; left:0; width:100%; height:var(--hmax,100%); background-size:cover; background-position:center}
-#pcsel .hero .hfig{position:absolute; top:0; left:0; width:100%; height:var(--hmax,100%); background-size:auto 112%; background-position:54% calc(100% + 200px); background-repeat:no-repeat; filter:drop-shadow(0 12px 28px rgba(0,0,0,.5)); overflow:visible}   /* overflow visible: feet are not clipped at the old sheet line */
+#pcsel .hero .hfig{position:absolute; top:0; left:0; width:100%; height:100%; background-size:auto 112%; background-position:54% calc(100% + 200px); background-repeat:no-repeat; overflow:visible}   /* overflow visible: feet are not clipped at the old sheet line */
 #pcsel .hero .hbg{height:100%}
-#pcsel .hero.avatar-edit .hfig-idle{display:none}   /* face picker edits the static sprite */
+/* edit mode: the figure (sprite + clips + outfit layers) zooms in on her, and eases back on cancel; clips keep playing */
+#pcsel .hero .hfig{transition:transform .6s cubic-bezier(.4,0,.2,1); transform-origin:50% 21%}
+#pcsel .hero.avatar-edit .hfig{transform:scale(1.65)}   /* head & shoulders, a little room around */
 /* ===== detail: horizontal info cards instead of the white sheet (name + epithet stay on the hero) ===== */
 #pcsel #pcs-detail .d-scroll{display:none}
 #pcsel #pcs-detail{background:#12101a}
@@ -28837,7 +28922,7 @@ console.log('%c[caller] Episode 1 ready — run startCaller()', 'color:#e7b24c')
 #pcsel .d-card.bio .p{font:italic 500 19px/1.38 Lora,Georgia,serif; color:#efe8f5; -webkit-line-clamp:3}
 
 /* ===== "Make her you" reveal: UI slides off, the stage floor takes the whole screen ===== */
-#pcsel .hero{transition:height .7s cubic-bezier(.4,0,.2,1)}
+/* (hero height no longer animates: the scene is always full-height; the old collapse-on-scroll is retired) */
 #pcsel.revealing .hero{height:100% !important}
 #pcsel.revealing .hero .hfig{height:100% !important; overflow:visible}
 #pcsel .hero .hbg2{position:absolute; top:0; left:0; width:100%; height:100%; background-size:cover; background-position:center bottom; opacity:0; transition:opacity .45s ease}
@@ -28846,6 +28931,85 @@ console.log('%c[caller] Episode 1 ready — run startCaller()', 'color:#e7b24c')
 #pcsel.revealing .d-scroll, #pcsel.revealing .d-footer{transform:translateY(110%); opacity:0; pointer-events:none}
 #pcsel .hero .hname, #pcsel .hero .face-arrow{transition:opacity .4s ease}
 #pcsel.revealing .hero .hname, #pcsel.revealing .hero .face-arrow{opacity:0; pointer-events:none}
+/* ── "Make her you" step 1: the mirror page (full screen over the detail). Layers, bottom→top:
+   dark base · room reflection (flipped, dimmed) · your photo (oval, at her head's scale) · sheen · room+frame (glass cut out)
+   · candle glow · Arabella from behind (sprite, or characters/<id>/mirror_idle.webm when present) · UI */
+#pcsel .pcs-mirror{position:absolute; inset:0; z-index:40; display:none; background:#0d0a10; overflow:hidden; transform:translateY(100%); transition:transform .55s cubic-bezier(.32,.72,0,1)}   /* slides up from the bottom, slides back down on close */
+#pcsel .pcs-mirror.on{display:block} #pcsel .pcs-mirror.live{transform:translateY(0)}
+#pcsel .pcs-mirror::before{content:""; position:absolute; left:0; right:0; top:0; height:30%; z-index:2; pointer-events:none; background:linear-gradient(180deg, rgba(13,10,16,.88) 0%, rgba(13,10,16,.55) 45%, rgba(13,10,16,0) 100%)}   /* header scrim over the wall band */
+#pcsel .pcs-mirror .pm-l{position:absolute; inset:0; background-size:100% auto; background-position:top center; background-repeat:no-repeat; pointer-events:none}
+#pcsel .pcs-mirror .pm-glass{-webkit-mask-image:var(--pm-mask); mask-image:var(--pm-mask); -webkit-mask-size:100% auto; mask-size:100% auto; -webkit-mask-position:top center; mask-position:top center; -webkit-mask-repeat:no-repeat; mask-repeat:no-repeat}
+/* the flip lives on an INNER element: transforming the masked layer itself would flip its glass mask too */
+#pcsel .pcs-mirror .pm-refl i, #pcsel .pcs-mirror .pm-over i{position:absolute; inset:0; display:block; background:var(--pm-room) top center/100% auto no-repeat; transform:scaleX(-1) translateX(-23%)}   /* flipped + shifted so the window's light sits in the glass */
+#pcsel .pcs-mirror .pm-refl i{filter:blur(2.5px) brightness(.5) saturate(.7) contrast(1.05)}
+#pcsel .pcs-mirror.has-photo .pm-refl i{filter:blur(2.5px) brightness(.3) saturate(.6)}
+/* candle glints in the dark glass (empty state), flickering softly */
+#pcsel .pcs-mirror .pm-glint{background:radial-gradient(6% 9% at 24% 44%, rgba(255,214,150,.55), rgba(255,214,150,0) 70%), radial-gradient(5% 8% at 30% 47%, rgba(255,200,130,.45), rgba(255,200,130,0) 70%), radial-gradient(40% 30% at 30% 48%, rgba(255,190,120,.12), rgba(255,190,120,0) 75%); mix-blend-mode:screen; animation:pmGlint 3.2s ease-in-out infinite alternate; transition:opacity 1s ease}
+@keyframes pmGlint{0%{opacity:.75; transform:translateY(0)} 50%{opacity:1} 100%{opacity:.8; transform:translateY(-2px)}}
+#pcsel .pcs-mirror.has-photo .pm-glint{opacity:0}
+/* one bright sweep across the glass when the photo lands */
+#pcsel .pcs-mirror.has-photo .pm-sheen{animation:pmSheen 1.6s ease-out 1 forwards}
+#pcsel .pcs-mirror .pm-refl::after{content:""; position:absolute; inset:0; background:radial-gradient(60% 45% at 50% 40%, rgba(255,214,150,.18), rgba(0,0,0,0) 70%), linear-gradient(180deg, rgba(0,0,0,.15), rgba(0,0,0,.55))}
+#pcsel .pcs-mirror .pm-photo{position:absolute; left:8%; top:calc(24.3% + var(--pm-dy)); width:60%; aspect-ratio:3/4; background-size:cover; background-position:center; opacity:0; transform:scale(1.04); transition:opacity .7s ease, transform .9s cubic-bezier(.2,.8,.2,1); filter:saturate(.9) contrast(1.04) sepia(.14) brightness(.96)}
+#pcsel .pcs-mirror .pm-photo::after{content:""; position:absolute; inset:0; background:linear-gradient(180deg, rgba(10,6,12,.14), rgba(10,6,12,0) 16%)}   /* (the melt into the dark glass is the element's own mask) */
+#pcsel .pcs-mirror.has-photo .pm-photo{opacity:1; transform:none}
+#pcsel .pcs-mirror .pm-guide{position:absolute; left:var(--pm-px); top:calc(var(--pm-py) + var(--pm-dy)); width:var(--pm-pw); height:var(--pm-ph); border-radius:50%; border:2px dotted rgba(231,178,76,.95); box-shadow:0 0 18px rgba(231,178,76,.35), inset 0 0 18px rgba(231,178,76,.15); opacity:0; transition:opacity .5s ease .3s}
+#pcsel .pcs-mirror.has-photo .pm-guide{opacity:1}
+#pcsel .pcs-mirror .pm-sheen{background:linear-gradient(112deg, rgba(255,255,255,0) 38%, rgba(255,240,220,.16) 47%, rgba(255,255,255,.04) 50%, rgba(255,240,220,.12) 53%, rgba(255,255,255,0) 62%); background-size:260% 100%; animation:pmSheen 7s ease-in-out infinite; mix-blend-mode:screen}
+/* the photo arrives out of the haze: blurred and pale → sharp */
+#pcsel .pcs-mirror .pm-photo{filter:blur(9px) saturate(.6) brightness(1.15)}
+#pcsel .pcs-mirror.has-photo .pm-photo{filter:saturate(.9) contrast(1.04) sepia(.14) brightness(.96); transition:opacity .9s ease, transform 1.4s cubic-bezier(.2,.8,.2,1), filter 1.5s ease .15s}
+/* glass depth: inner vignette + a faint reflection of the room over the photo, like real silvered glass */
+#pcsel .pcs-mirror .pm-vig{background:radial-gradient(75% 70% at 50% 45%, rgba(0,0,0,0) 55%, rgba(8,5,10,.55) 100%)}
+#pcsel .pcs-mirror .pm-over{opacity:0; mix-blend-mode:screen; transition:opacity 1.2s ease .4s}
+#pcsel .pcs-mirror.has-photo .pm-over{opacity:.16}
+#pcsel .pcs-mirror .pm-over::after{content:""; position:absolute; inset:0; background:linear-gradient(160deg, rgba(255,245,225,.20) 0%, rgba(255,255,255,0) 45%, rgba(255,255,255,0) 60%, rgba(255,240,220,.10) 100%)}
+@keyframes pmSheen{0%{background-position:120% 0} 55%{background-position:-40% 0} 100%{background-position:-40% 0}}
+#pcsel .pcs-mirror .pm-room{background-image:var(--pm-room)}   /* (the art is extended to the phone's aspect; no fill under it — it would show through the glass hole) */
+#pcsel .pcs-mirror .pm-glow{background:radial-gradient(38% 30% at 18% 62%, rgba(255,190,110,.22), rgba(0,0,0,0) 70%); mix-blend-mode:screen}
+/* figure placed like the mockup: head top at ~21% of the screen, head centred ~77% across, scale = 57% of the height (the card hides her below the waist) */
+#pcsel .pcs-mirror .pm-fig{position:absolute; left:31%; top:calc(27% + var(--pm-dy)); width:85%; aspect-ratio:921/1484; background:var(--pm-fig) center top/contain no-repeat; filter:drop-shadow(0 14px 30px rgba(0,0,0,.55))}   /* no fade: the sprite runs under the button card */
+#pcsel .pcs-mirror .pm-fig video{position:absolute; inset:0; width:100%; height:100%; object-fit:contain; object-position:center top}
+#pcsel .pcs-mirror .pm-hint{position:absolute; left:3%; width:52%; top:calc(53% + var(--pm-dy)); white-space:nowrap; text-align:center; font:500 12px/1.3 Inter,system-ui,sans-serif; color:rgba(255,255,255,.78); text-shadow:0 1px 6px rgba(0,0,0,.8); opacity:0; transition:opacity .5s ease .4s}
+#pcsel .pcs-mirror.has-photo .pm-hint{opacity:1}
+#pcsel .pcs-mirror .pm-top{position:absolute; left:22px; right:70px; top:calc(env(safe-area-inset-top,0px) + 62px); z-index:3}
+#pcsel .pcs-mirror .pm-k{font:800 10px/1 Inter,system-ui,sans-serif; letter-spacing:.28em; text-transform:uppercase; color:#e7b24c; margin-bottom:8px}
+#pcsel .pcs-mirror .pm-t{font:700 30px/1.08 "Playfair Display",Georgia,serif; color:#fff; margin:0 0 8px; text-shadow:0 2px 14px rgba(0,0,0,.7)}
+#pcsel .pcs-mirror .pm-s{font:400 13px/1.45 Inter,system-ui,sans-serif; color:rgba(255,255,255,.82); max-width:290px; text-shadow:0 1px 8px rgba(0,0,0,.8)}
+#pcsel .pcs-mirror .pm-x{position:absolute; right:16px; top:calc(env(safe-area-inset-top,0px) + 56px); z-index:4; width:40px; height:40px; border-radius:50%; display:grid; place-items:center; background:rgba(20,16,26,.72); color:#fff; border:1px solid rgba(255,255,255,.14); cursor:pointer; -webkit-backdrop-filter:blur(10px); backdrop-filter:blur(10px)}
+#pcsel .pcs-mirror .pm-card{position:absolute; left:16px; right:16px; bottom:calc(env(safe-area-inset-bottom,0px) + 18px); z-index:3; padding:14px; border-radius:22px; background:rgba(20,16,26,.66); border:1px solid rgba(255,255,255,.12); -webkit-backdrop-filter:blur(18px); backdrop-filter:blur(18px); box-shadow:0 18px 40px rgba(0,0,0,.45)}
+#pcsel .pcs-mirror .pm-row{display:flex; gap:10px}
+#pcsel .pcs-mirror .pm-btn{flex:1; border:none; cursor:pointer; font:700 16px/1 "Playfair Display",Georgia,serif; color:#fff; padding:17px 14px; border-radius:16px; background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.14); display:flex; align-items:center; justify-content:center; gap:10px}
+#pcsel .pcs-mirror .pm-btn.pri{background:linear-gradient(120deg,#e0668a,#8b7bd8); border-color:transparent; box-shadow:0 12px 26px rgba(139,123,216,.32)}
+#pcsel .pcs-mirror .pm-btn svg{width:20px; height:20px}
+#pcsel .pcs-mirror .pm-stack{display:flex; flex-direction:column; gap:10px}
+#pcsel .pcs-mirror .pm-skip{display:block; width:100%; margin:6px 0 -4px; padding:14px 8px; background:none; border:none; cursor:pointer; text-align:center; font:600 13px/1.2 Inter,system-ui,sans-serif; color:rgba(255,255,255,.66); -webkit-tap-highlight-color:transparent}
+#pcsel .pcs-mirror .pm-skip:active{color:#fff}
+#pcsel .pcs-mirror .pm-foot{margin-top:11px; text-align:center; white-space:nowrap; font:500 11px/1.3 Inter,system-ui,sans-serif; color:rgba(255,255,255,.5)}
+#pcsel .pcs-mirror .pm-foot b{color:rgba(255,255,255,.72); font-weight:600}
+#pcsel .pcs-mirror .pm-empty, #pcsel .pcs-mirror .pm-full{display:none} #pcsel .pcs-mirror:not(.has-photo) .pm-empty{display:block} #pcsel .pcs-mirror.has-photo .pm-full{display:block}
+/* ── "Create your own" step 2: how does your story begin? (full page, slides up like the mirror) ── */
+#pcsel .pcs-createpg{position:absolute; inset:0; z-index:41; display:none; background:#0d0a10; overflow:hidden; transform:translateY(100%); transition:transform .55s cubic-bezier(.32,.72,0,1)}
+#pcsel .pcs-createpg.on{display:block} #pcsel .pcs-createpg.live{transform:translateY(0)}
+#pcsel .pcs-createpg .cp-bg{position:absolute; inset:0; background:url('worlds/pride-and-prejudice/pc-select/bg_floor.webp') center top/cover no-repeat}
+#pcsel .pcs-createpg .cp-bg::after{content:""; position:absolute; inset:0; background:radial-gradient(80% 60% at 50% 45%, rgba(10,7,16,.35) 0, rgba(6,4,10,.8) 100%)}
+#pcsel .pcs-createpg .cp-top{position:absolute; left:24px; right:24px; top:calc(env(safe-area-inset-top,0px) + 150px); text-align:center; z-index:3}
+#pcsel .pcs-createpg .cp-k{font:800 10px/1 Inter,system-ui,sans-serif; letter-spacing:.3em; text-transform:uppercase; color:#e7b24c}
+#pcsel .pcs-createpg .cp-t{font:700 26px/1.12 "Playfair Display",Georgia,serif; color:#fff; margin:10px 0 0; text-shadow:0 2px 18px rgba(0,0,0,.7)}
+#pcsel .pcs-createpg .cp-cards{position:absolute; left:16px; right:16px; top:50%; transform:translateY(-44%); z-index:3; display:flex; flex-direction:column; gap:16px}
+#pcsel .pcs-createpg .cp-card{position:relative; display:flex; align-items:stretch; gap:14px; width:100%; padding:12px; border:none; border-radius:16px; text-align:left; cursor:pointer; background:#f1e7d3 radial-gradient(120% 80% at 50% 0%, rgba(255,255,255,.35), rgba(255,255,255,0) 60%); box-shadow:0 22px 50px rgba(0,0,0,.55); color:#241b26; -webkit-tap-highlight-color:transparent; transition:transform .18s ease}
+#pcsel .pcs-createpg .cp-card:active{transform:scale(.985)}
+#pcsel .pcs-createpg .cp-card::before{content:""; position:absolute; inset:6px; border-radius:11px; border:1px solid #cfae5a; pointer-events:none}
+#pcsel .pcs-createpg .cp-card .orn{position:absolute; width:34px; height:34px; z-index:2; pointer-events:none; background:url('worlds/pride-and-prejudice/pc-select/orn_corner.webp') 0 0/contain no-repeat}
+#pcsel .pcs-createpg .cp-card .orn.tl{left:3px; top:3px} #pcsel .pcs-createpg .cp-card .orn.tr{right:3px; top:3px; transform:scaleX(-1)} #pcsel .pcs-createpg .cp-card .orn.bl{left:3px; bottom:3px; transform:scaleY(-1)} #pcsel .pcs-createpg .cp-card .orn.br{right:3px; bottom:3px; transform:scale(-1)}
+#pcsel .pcs-createpg .cp-ill{flex:0 0 112px; height:118px; border-radius:9px; background-size:cover; background-position:center; box-shadow:inset 0 0 0 1px rgba(120,90,40,.35)}
+#pcsel .pcs-createpg .cp-body{flex:1; min-width:0; padding:6px 30px 4px 2px; display:flex; flex-direction:column; justify-content:center}
+#pcsel .pcs-createpg .cp-chip{display:inline-block; align-self:flex-start; padding:5px 12px; border-radius:6px; background:linear-gradient(180deg,#f0d47c,#c9a24a 55%,#a8842a); color:#3a2a08; font:800 8.5px/1 Inter,system-ui,sans-serif; letter-spacing:.26em; text-transform:uppercase; box-shadow:inset 0 0 0 1px rgba(120,80,10,.45), inset 0 0 0 2px rgba(255,240,200,.55)}
+#pcsel .pcs-createpg .cp-name{font:700 21px/1.15 "Playfair Display",Georgia,serif; margin:9px 0 5px}
+#pcsel .pcs-createpg .cp-desc{font:italic 500 12.5px/1.35 Lora,Georgia,serif; color:#4e4352}
+#pcsel .pcs-createpg .cp-arr{position:absolute; right:16px; top:50%; transform:translateY(-50%); font:400 30px/1 "Playfair Display",Georgia,serif; color:#c9a24a}
+#pcsel .pcs-createpg .cp-back{position:absolute; left:14%; right:14%; bottom:calc(env(safe-area-inset-bottom,0px) + 56px); z-index:3; padding:15px; border-radius:22px; background:rgba(14,10,20,.55); border:1px solid rgba(255,255,255,.28); color:#fff; font:700 16px/1 "Playfair Display",Georgia,serif; -webkit-backdrop-filter:blur(14px); backdrop-filter:blur(14px); cursor:pointer}
+#pcsel .pcs-createpg .pm-x, #pcsel .pcs-mirror .pm-x{position:absolute; right:14px; top:calc(env(safe-area-inset-top,0px) + 38px); z-index:10; width:38px; height:38px; border-radius:50%; display:grid; place-items:center; background:rgba(20,12,26,.5); border:1px solid rgba(255,255,255,.3); color:#fff; font-size:15px; cursor:pointer; -webkit-backdrop-filter:none; backdrop-filter:none}   /* = the deck's .pcs-rclose */
 #pcsel .pcs-rv{position:absolute; left:0; right:0; bottom:0; z-index:9; text-align:center; padding:90px 28px max(11%, calc(env(safe-area-inset-bottom,0px) + 70px)); background:linear-gradient(180deg, rgba(8,5,12,0) 0%, rgba(8,5,12,.55) 40%, rgba(8,5,12,.9) 100%); opacity:0; transform:translateY(12px); transition:opacity .6s ease, transform .6s ease; pointer-events:none}
 #pcsel.revealing.rv-text .pcs-rv{opacity:1; transform:none}
 #pcsel .pcs-rv .rv-spark{display:block; margin:0 auto 14px; transform-origin:center; animation:pcsSpark 3s ease-in-out infinite}
@@ -28870,7 +29034,7 @@ console.log('%c[caller] Episode 1 ready — run startCaller()', 'color:#e7b24c')
 #pcsel .htag:active{transform:scale(.95); background:rgba(224,102,138,.32); border-color:#e0668a}
 /* avatar edit: show the face arrows + soften the bottom mask so the fully
    zoomed-out figure isn't cut off inside the veil */
-#pcsel .hero.avatar-edit .face-arrow{display:grid}
+#pcsel .hero.avatar-edit .face-arrow{display:none}
 /* trait-card deck (swipeable) opened from a tag */
 #pcsel .ptd{position:absolute; inset:0; z-index:12; display:none; background:rgba(8,5,12,.74); -webkit-backdrop-filter:blur(7px); backdrop-filter:blur(7px)}
 #pcsel .ptd.on{display:block}
@@ -28897,6 +29061,12 @@ console.log('%c[caller] Episode 1 ready — run startCaller()', 'color:#e7b24c')
 #pcsel .ptd-dots i.on{background:#e0668a; width:18px; border-radius:6px}
 #pcsel .face-arrow{position:absolute; top:38%; z-index:7; width:44px; height:44px; border-radius:50%; background:rgba(20,12,26,.42); border:1px solid rgba(255,255,255,.35); color:#fff; font-size:26px; line-height:1; display:none; place-items:center; cursor:pointer; transition:opacity .2s ease}
 #pcsel .face-arrow.left{left:12px} #pcsel .face-arrow.right{right:12px}
+/* wardrobe arrows (outfit swipe alternative) — only when the character has outfits; hidden while editing / revealing */
+#pcsel .wd-arrow{position:absolute; top:44%; z-index:7; width:40px; height:40px; border-radius:50%; background:rgba(20,12,26,.5); border:1px solid rgba(255,255,255,.28); color:#fff; font-size:24px; line-height:1; display:none; place-items:center; cursor:pointer; -webkit-backdrop-filter:blur(10px); backdrop-filter:blur(10px); opacity:0; transition:opacity .3s ease; -webkit-tap-highlight-color:transparent}
+#pcsel .wd-arrow.left{left:12px} #pcsel .wd-arrow.right{right:12px}
+#pcsel .hero.has-wardrobe .wd-arrow{display:grid; opacity:1}
+#pcsel .hero.avatar-edit .wd-arrow, #pcsel.revealing .wd-arrow, #pcsel #pcs-detail.entering .wd-arrow{opacity:0; pointer-events:none}
+#pcsel .wd-arrow:active{background:rgba(255,255,255,.22)}
 #pcsel .dclose{position:absolute; right:14px; top:18px; z-index:10; width:38px; height:38px; border-radius:50%; background:rgba(255,255,255,.26); border:1px solid rgba(255,255,255,.5); color:#fff; font-size:15px; display:grid; place-items:center; cursor:pointer}
 #pcsel .d-scroll{position:absolute; inset:0; overflow-y:auto; z-index:3; will-change:opacity,transform}
 #pcsel .d-spacer{height:72%; pointer-events:none}
@@ -28930,7 +29100,8 @@ console.log('%c[caller] Episode 1 ready — run startCaller()', 'color:#e7b24c')
 #pcsel .eb-l{display:block; font-size:10px; letter-spacing:.14em; text-transform:uppercase; color:#a17fb0; font-weight:700; margin-bottom:6px}
 #pcsel .btn{flex:1; border:none; cursor:pointer; font-weight:600; font-size:15px; padding:15px; border-radius:16px}
 #pcsel .btn-primary{background:linear-gradient(120deg,#e0668a,#8b7bd8); color:#fff; box-shadow:0 12px 26px rgba(139,123,216,.32)}
-#pcsel .btn-ghost{flex:none; width:54px; background:rgba(255,255,255,.55); color:#b0466a; border:1px solid rgba(120,90,150,.2)}
+#pcsel .btn-ghost{flex:none; width:54px; display:grid; place-items:center; background:rgba(14,10,20,.55); color:#fff; border:1px solid rgba(255,255,255,.28); border-radius:16px; -webkit-backdrop-filter:blur(14px); backdrop-filter:blur(14px)}   /* dark glass, matching the secondary buttons elsewhere */
+#pcsel .btn-ghost:active{background:rgba(255,255,255,.18)}
 /* types */
 #pcsel #pcs-types .dclose, #pcsel #pcs-survey .dback, #pcsel #pcs-types .dback{}
 #pcsel .tp-top{position:relative; z-index:2; padding:40px 22px 10px; text-align:center; flex:none}
@@ -28982,14 +29153,16 @@ console.log('%c[caller] Episode 1 ready — run startCaller()', 'color:#e7b24c')
   <section class="pcs-view active" id="pcs-roster">
     <div class="pcs-rclose" id="pcsRosterClose">&#10005;</div>
     <div class="pcs-rtop"><div class="pcs-kick" id="pcsKick">Entering a world</div><h1 class="pcs-h1" id="pcsH1">Pride &amp; Prejudice</h1></div>
+    <div class="pcs-scrim"></div>
     <div class="pcs-deck" id="pcsDeck"></div>
-    <div class="pcs-rfoot"><button class="pcs-continue" id="pcsContinue">Continue &#8594;</button><button class="pcs-create-text" id="pcsCreateBtn">+ Create new Character</button></div>
+    <div class="pcs-rfoot"><div class="pcs-dots" id="pcsDots"></div><button class="pcs-continue" id="pcsContinue">Continue &#8594;</button><button class="pcs-play" id="pcsPlayCard">Play as Arabella &#10022;</button><button class="pcs-create-text" id="pcsCreateBtn">+ Create your own</button></div>
   </section>
   <section class="pcs-view" id="pcs-detail">
     <div class="dclose" id="pcsDClose">&#10005;</div>
     <div class="hero" id="pcsHero">
       <div class="hbg" id="pcsBg"></div><div class="hfig" id="pcsFig"></div><div class="hveil"></div>
       <button class="face-arrow left" id="pcsFaceL">&#8249;</button><button class="face-arrow right" id="pcsFaceR">&#8250;</button>
+      <button class="wd-arrow left" id="pcsOutL" aria-label="Previous outfit">&#8249;</button><button class="wd-arrow right" id="pcsOutR" aria-label="Next outfit">&#8250;</button>
       <div class="hname"><div class="hname-row"><h2 id="pcsName"></h2><button class="name-edit" id="pcsPencil">&#9998;</button></div><div class="hepi" id="pcsEpi"></div><div class="htags" id="pcsTags"></div></div>
     </div>
     <div class="d-scroll" id="pcsScroll">
@@ -29006,7 +29179,7 @@ console.log('%c[caller] Episode 1 ready — run startCaller()', 'color:#e7b24c')
         <button class="btn btn-primary" id="pcsPlay">Play as this character &#8594;</button>
         <button class="btn btn-ghost" id="pcsDel" title="Remove">&#128465;</button>
         <button class="btn btn-primary" id="pcsSave" style="display:none">Save character &#10022;</button>
-        <button class="btn btn-ghost" id="pcsEditToggle" title="Edit" aria-label="Edit character">&#9998;</button>
+        <button class="btn btn-ghost" id="pcsEditToggle" title="Edit" aria-label="Edit character"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h4l10.5-10.5a2.1 2.1 0 0 0-3-3L5 17v3z"/><path d="M13.5 6.5l3 3"/></svg></button>
       </div>
       <div class="d-editrow" id="pcsEditRow">
         <input class="d-editinput" id="pcsEditInput" type="text" placeholder="Describe this character…" autocomplete="off">
@@ -29031,6 +29204,45 @@ console.log('%c[caller] Episode 1 ready — run startCaller()', 'color:#e7b24c')
     <div class="sv-prog" id="pcsSvProg"></div>
     <div class="sv-fore" id="pcsSvFore"><div class="sv-narr" id="pcsSvNarr"></div><div class="sv-q" id="pcsSvQ"></div><div class="sv-ans" id="pcsSvAns"></div><div class="sv-tap">&#9662; tap to answer</div></div>
   </section>
+  <div class="pcs-mirror" id="pcsMirror" style="--pm-room:url('worlds/pride-and-prejudice/pc-select/mirror_room.webp'); --pm-mask:url('worlds/pride-and-prejudice/pc-select/mirror_glass_mask.png'); --pm-fig:url('worlds/pride-and-prejudice/pc-select/fig_arabella_back.webp'); --pm-px:26.4%; --pm-py:31.6%; --pm-pw:23%; --pm-ph:14.2%; --pm-dy:0px">
+    <div class="pm-l pm-glass pm-refl"><i></i></div>
+    <div class="pm-l pm-glass"><div class="pm-photo" id="pmPhoto"></div><div class="pm-guide"></div></div>
+    <div class="pm-l pm-glass pm-glint"></div>
+    <div class="pm-l pm-glass pm-sheen"></div>
+    <div class="pm-l pm-glass pm-vig"></div>
+    <div class="pm-l pm-glass pm-over"><i></i></div>
+    <div class="pm-l pm-room"></div>
+    <div class="pm-l pm-glow"></div>
+    <div class="pm-fig" id="pmFig"></div>
+    <div class="pm-top"><div class="pm-k">Your likeness</div>
+      <div class="pm-empty"><h2 class="pm-t">Sit for your portrait.</h2><div class="pm-s">Your face becomes hers. The photo is used once and never kept.</div></div>
+      <div class="pm-full"><h2 class="pm-t">That will do nicely.</h2><div class="pm-s">Your photo is used once for the likeness and never stored.</div></div></div>
+    <div class="pm-x" id="pmClose">&#10005;</div>
+    <div class="pm-card">
+      <div class="pm-empty"><div class="pm-stack">
+        <button type="button" class="pm-btn pri" id="pmTake"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg>Take a photo</button>
+        <button type="button" class="pm-btn" id="pmPick"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="5" width="16" height="14" rx="2"/><path d="M4 16l5-5 4 4 3-3 4 4"/><circle cx="16" cy="9" r="1.5"/></svg>Choose from library</button></div>
+        <button type="button" class="pm-skip" id="pmSkip">Continue without a portrait</button></div>
+      <div class="pm-full"><div class="pm-row">
+        <button type="button" class="pm-btn pri" id="pmUse">Use this &#10022;</button>
+        <button type="button" class="pm-btn" id="pmRetake">Retake</button></div>
+        <div class="pm-foot">Takes about <b>30&#8211;60 seconds</b></div></div>
+    </div>
+  </div>
+  <div class="pcs-createpg" id="pcsCreatePage">
+    <div class="cp-bg"></div>
+    <div class="pm-x" id="cpClose">&#10005;</div>
+    <div class="cp-top"><div class="cp-k">Create your own character</div><h2 class="cp-t">How does your story begin?</h2></div>
+    <div class="cp-cards">
+      <button type="button" class="cp-card" data-mode="story"><span class="orn tl"></span><span class="orn tr"></span><span class="orn bl"></span><span class="orn br"></span>
+        <div class="cp-ill" style="background-image:url('worlds/pride-and-prejudice/pc-select/create_story.webp')"></div>
+        <div class="cp-body"><span class="cp-chip">5 min</span><div class="cp-name">Through a Story</div><div class="cp-desc">Shape who you become through the choices you make.</div></div><span class="cp-arr">&#8250;</span></button>
+      <button type="button" class="cp-card" data-mode="stars"><span class="orn tl"></span><span class="orn tr"></span><span class="orn bl"></span><span class="orn br"></span>
+        <div class="cp-ill" style="background-image:url('worlds/pride-and-prejudice/pc-select/create_stars.webp')"></div>
+        <div class="cp-body"><span class="cp-chip">Quick</span><div class="cp-name">Trust the Stars</div><div class="cp-desc">Let your real birth chart shape who you are.</div></div><span class="cp-arr">&#8250;</span></button>
+    </div>
+    <button type="button" class="cp-back" id="cpBack">Back to the heroines</button>
+  </div>
   <div class="pcs-toast" id="pcsToast"></div>
 </div>
 
@@ -29041,6 +29253,16 @@ console.log('%c[caller] Episode 1 ready — run startCaller()', 'color:#e7b24c')
   const AURL=f=>`url('${PCS}${f}')`;
   // Full-body character art (head-to-feet, transparent) for the detail hero.
   const figFull=p=>`url('${BASE}characters/${p}/appearances/pride.png')`;
+  // Still figure for the hero/card. For characters with an idle clip we use the clip's own FIRST FRAME (keyed the same
+  // way, same canvas) placed exactly where the clip is drawn — so the still→clip hand-off is pixel-identical (no edge halo).
+  const IDLE_FIRST={ arabella_frost:{w:720,h:1280} };   // portrait id → frame size of characters/<id>/idle_first.webp
+  function spriteSpec(portrait){ const W=$('pcsel').clientWidth||390, H=$('pcsel').clientHeight||844; const fr=IDLE_FIRST[portrait];
+    if(fr){ const vh=H*0.72*1.12/0.86, vw=vh*fr.w/fr.h;   /* clip box: height vh, bottom 200+.03vh under the 72% hero box, centred at 54% − 16px */
+      const y=0.72*H+200+0.03*vh-vh, x=0.54*W-16-vw/2;
+      return { img:`url('${BASE}characters/${portrait}/idle_first.webp')`, size:'auto '+vh.toFixed(1)+'px', pos:x.toFixed(1)+'px '+y.toFixed(1)+'px' }; }
+    /* no clip: pride.png at 112% of the 72% box, its bottom 200px under it (absolute px so the 100%-tall hfig doesn't clip it) */
+    return { img:figFull(portrait), size:'auto '+(0.8064*H).toFixed(1)+'px', pos:'54% '+(200-0.0864*H).toFixed(1)+'px' }; }
+  function applySprite(el, portrait){ const sp=spriteSpec(portrait); el.style.backgroundImage=sp.img; el.style.backgroundSize=sp.size; el.style.backgroundPosition=sp.pos; }
   let D=null, deckIdx=0, genderTab='woman', frontCoverEl=null, curChar=null, editChar=null, onPlayCb=null;
   let switchMode=false, resumeCb=null, hudEl=null;
   const $=id=>document.getElementById(id);
@@ -29048,7 +29270,7 @@ console.log('%c[caller] Episode 1 ready — run startCaller()', 'color:#e7b24c')
   function toast(h){ const t=$('pcsToast'); t.innerHTML=h; t.classList.add('show'); clearTimeout(t._t); t._t=setTimeout(()=>t.classList.remove('show'),2400); }
   function galleryFor(g){ return (D.galleries[g]||D.galleries.woman); }
   function allChars(){ return D.premade.concat(store.get()); }
-  function filteredChars(){ return allChars(); } /* one deck, all saves — gender is a creation-only setting now */
+  function filteredChars(){ return allChars().filter(c=>!c.gender || c.gender==='woman'); } /* heroines only (player-made ones keep their own gender field) */
 
   /* trait derivation */
   function scoreSurvey(ans,bias){ const s={}; Object.keys(D.traitPool).forEach(k=>s[k]=0);
@@ -29081,23 +29303,26 @@ console.log('%c[caller] Episode 1 ready — run startCaller()', 'color:#e7b24c')
       `<div class="c-micro">${s.playMin?(`<span>${_CLOCK}${fmtPlay(s.playMin)}</span><span class="c-sep">·</span>`):''}<span>Last played ${lastPlayedText(s)}</span></div>`; }
   // Short character-defining lines (placeholders — edit freely). Two are shown,
   // from the character's top-2 traits.
-  const TRAIT_PHRASE={ pride:'Bends for no one', wit:'Says the unsaid', candor:'Speaks plainly, always', warmth:'Warms the coldest room', cunning:'Sees three moves ahead', reserve:'Keeps their own counsel', ambition:'Climbs without apology', charm:'Wins the room at a glance', devotion:'Loyal past all reason' };
+  const TRAIT_PHRASE={ pride:'Bends for no one', wit:'Says the unsaid', candor:'Speaks plainly, always', warmth:'Warms the coldest room', cunning:'Sees three moves ahead', reserve:'Keeps her own counsel', ambition:'Climbs without apology', charm:'Wins the room at a glance', devotion:'Loyal past all reason' };
   function traitPhrases(c){ return (c.traits||[]).slice(0,2).map(k=>TRAIT_PHRASE[k]||capK(k)); }
-  function cardHTML(c){ return `<div class="cover"><div class="cbg" style="background-image:${AURL('bg_floor.webp')};background-position:center 22%"></div><div class="cfig" style="background-image:${AURL('fig_'+c.portrait+'.webp')}"></div></div>`+
-    `<div class="c-veil"></div>`+
-    `<div class="c-cap"><div class="c-nm">${c.name}</div>`+(c.epithet?`<div class="c-epi">${c.epithet}</div>`:'')+
-    `<div class="c-lines">`+traitPhrases(c).map(p=>`<span class="c-line">${p}</span>`).join('')+`</div>`+
-    `<div class="c-bio3">${c.bio||''}</div>`+
-    `<button class="c-continue" type="button" data-continue="1">Continue</button></div>`; }
+  const ORN='<svg viewBox="0 0 58 58" fill="none" stroke="#c9a24a" stroke-width="1.5" stroke-linecap="round"><path d="M5 54V20C5 11 11 5 20 5h34"/><path d="M11 49V22c0-6 4-10 10-10h28"/><path d="M5 30c6 0 10-3 11-9"/><path d="M30 5c0 6-3 10-9 11"/><path d="M16 21c4 3 5 8 3 13"/><path d="M21 16c3 4 8 5 13 3"/><circle cx="17" cy="21" r="2.6" fill="#c9a24a" stroke="none"/><path d="M11 40c2-2 5-2 6 0" /><path d="M40 11c-2 2-2 5 0 6"/></svg>';
+  const ART_W=260, ART_H=352, ART_S0=0.78;   // card art box (px); resting scale of the hero copy (0.78 → waist-up in the card; eases to 1:1 as the card grows)
+  function cardHTML(c){ const W=$('pcsel').clientWidth||390, H=$('pcsel').clientHeight||844, s=ART_W/W;
+    // hero sprite: 112% of the 72%-tall hero box, its bottom 200px under that box → height .8064H, top = 200 − .0864H
+    const sp=spriteSpec(c.portrait);
+    return `<div class="face"><div class="cover"><div class="mini" style="--W:${W}px;--H:${H}px;--s0:${ART_S0};--s:${s.toFixed(4)}"><div class="cbg" style="background-image:${AURL('bg_floor.webp')}"></div><div class="cfig" style="background-image:${sp.img};background-size:${sp.size};background-position:${sp.pos}"></div></div></div>`+   /* identical still + placement to the hero */
+    `<div class="orn tl"></div><div class="orn tr"></div><div class="orn bl"></div><div class="orn br"></div>`+
+    `<div class="cfoot"><div class="plaque">${c.epithet||''}</div><div class="nm">${c.name}</div><div class="beats">${traitPhrases(c).join(' · ')}</div></div></div><div class="shine"></div>`; }
   function renderDeck(){ const deck=$('pcsDeck'); [...deck.querySelectorAll('.dcard')].forEach(e=>e.remove());
     filteredChars().forEach((c,i)=>{ const el=document.createElement('div'); el.className='dcard'; el.innerHTML=cardHTML(c); el.dataset.i=i; deck.appendChild(el);
-      el.addEventListener('click',()=>{ if(!el._moved) openDetail(c, el.querySelector('.cover')); });
-      const cont=el.querySelector('.c-continue'); if(cont) cont.addEventListener('click',(e)=>{ e.stopPropagation(); if(!el._moved) openDetail(c, el.querySelector('.cover')); }); });   // Continue = open the character page (the map opens only from there: Make her you → Play)
+      el.addEventListener('click',()=>{ if(el._moved) return; if(+el.dataset.i!==deckIdx){ deckIdx=+el.dataset.i; positionDeck(); return; } chooseCard(c, el); });
+      const cont=el.querySelector('.c-continue'); if(cont) cont.addEventListener('click',(e)=>{ e.stopPropagation(); if(!el._moved) chooseCard(c, el); }); });   // Continue = open the character page (the map opens only from there: Make her you → Play)
     positionDeck(); attachSwipe(); renderDots(); }
-  function positionDeck(){ [...document.querySelectorAll('#pcsel .dcard')].forEach(el=>{ const i=+el.dataset.i, d=i-deckIdx;
+  function positionDeck(){ const n=filteredChars().length; [...document.querySelectorAll('#pcsel .dcard')].forEach(el=>{ const i=+el.dataset.i; let d=i-deckIdx; if(n>3){ d=((d%n)+n+Math.floor(n/2))%n-Math.floor(n/2); }   // circular: neighbours on both sides
     el.dataset.pos = d===0?'front':d===1?'next':d===-1?'prev':d===2?'next2':d===-2?'prev2':'hidden'; el.style.transform=''; el.style.opacity='';
     if(el.dataset.pos==='front') frontCoverEl=el.querySelector('.cover'); });
-    [...document.querySelectorAll('#pcsDots .rd')].forEach((r,i)=>r.classList.toggle('on', i===deckIdx)); updateContinueLabel(); }
+    [...document.querySelectorAll('#pcsDots .rd')].forEach((r,i)=>r.classList.toggle('on', i===deckIdx)); updateContinueLabel();
+    { const c=filteredChars()[deckIdx], b=$('pcsPlayCard'); if(b) b.innerHTML='Play as '+(c?c.name.split(/\s+/)[0]:'her')+' &#10022;'; } }
   function updateContinueLabel(){ if(!switchMode) return; const c=filteredChars()[deckIdx]; const b=$('pcsContinue'); if(!b) return;
     if(!c){ b.innerHTML='Continue &#8594;'; return; }
     const verb=(c.save&&c.save.progress)?'Continue':'Begin'; b.innerHTML = verb+' as '+c.name+' &#8594;'; }
@@ -29110,29 +29335,29 @@ console.log('%c[caller] Episode 1 ready — run startCaller()', 'color:#e7b24c')
       front=deck.querySelector('.dcard[data-pos="front"]'); nx=deck.querySelector('.dcard[data-pos="next"]'); pv=deck.querySelector('.dcard[data-pos="prev"]');
       noT(front); noT(nx); noT(pv); };
     const mv=e=>{ if(!drag||!front)return; const t=e.touches?e.touches[0]:e; const dx=t.clientX-sx; if(Math.abs(dx)>6)front._moved=true;
-      front.style.transform=`translate(${dx}px,-50%)`;
-      if(nx) nx.style.transform=`translate(calc(106% + ${dx}px),-50%)`;
-      if(pv) pv.style.transform=`translate(calc(-106% + ${dx}px),-50%)`; };
+      const r=Math.max(-1,Math.min(1,dx/180));   // the front card follows the finger with a slight 3D tilt; the deck stays put
+      front.style.transform=`translate3d(${dx}px,${Math.abs(dx)*.12}px,0) rotateY(${-r*18}deg) rotateZ(${r*6}deg) scale(${1-Math.abs(r)*.05})`; };
     const up=e=>{ if(!drag||!front){drag=false;return;} drag=false; const t=e.changedTouches?e.changedTouches[0]:e; const dx=t.clientX-sx; const n=filteredChars().length;
-      clrT(front); clrT(nx); clrT(pv);
-      if(dx<-55&&deckIdx<n-1)deckIdx++; else if(dx>55&&deckIdx>0)deckIdx--; positionDeck(); setTimeout(()=>{if(front)front._moved=false;},60); };
+      clrT(front); clrT(nx); clrT(pv); if(front) front.style.transform='';
+      if(dx<-55) deckIdx=(n>3)?(deckIdx+1)%n:Math.min(n-1,deckIdx+1); else if(dx>55) deckIdx=(n>3)?(deckIdx-1+n)%n:Math.max(0,deckIdx-1); positionDeck(); setTimeout(()=>{if(front)front._moved=false;},60); };
     deck.addEventListener('mousedown',dn); deck.addEventListener('mousemove',mv); window.addEventListener('mouseup',up);
     deck.addEventListener('touchstart',dn,{passive:true}); deck.addEventListener('touchmove',mv,{passive:true}); deck.addEventListener('touchend',up); }
 
   /* detail */
   let HMAX=0; const HMIN=88;
-  function sizeHero(){ const h=Math.round((window.innerHeight||760)*0.72); HMAX=h; const hero=$('pcsHero'); hero.style.height=h+'px'; hero.style.setProperty('--hmax',h+'px'); $('pcsSpacer').style.height=h+'px'; }
-  function onScroll(){ const s=$('pcsScroll'), st=s.scrollTop, hero=$('pcsHero'); const h=Math.max(HMIN,HMAX-st); hero.style.height=h+'px'; hero.classList.toggle('collapsed',(HMAX-h)>(HMAX-HMIN)*0.55);
+  function sizeHero(){ const h=Math.round((window.innerHeight||760)*0.72); HMAX=h; const hero=$('pcsHero'); hero.style.height='100%'; hero.style.setProperty('--hmax',h+'px'); $('pcsSpacer').style.height=h+'px'; }
+  function onScroll(){ return;   // the scene is full-height now (info cards are a fixed row); the old collapse-on-scroll hero is retired
+    const s=$('pcsScroll'), st=s.scrollTop, hero=$('pcsHero'); const h=Math.max(HMIN,HMAX-st); hero.style.height=h+'px'; hero.classList.toggle('collapsed',(HMAX-h)>(HMAX-HMIN)*0.55);
     if(editChar){ const top=st<6; ['pcsFaceL','pcsFaceR','pcsPencil'].forEach(id=>{ const e=$(id); if(e){e.style.opacity=top?'1':'0'; e.style.pointerEvents=top?'auto':'none';} }); } }
   function view(id){ ['pcs-roster','pcs-detail','pcs-types','pcs-survey'].forEach(v=>$(v).classList.toggle('active', v===id)); }
   function setMode(edit){ $('pcsSave').style.display=edit?'block':'none'; $('pcsPlay').style.display=edit?'none':'block'; $('pcsDel').style.display=edit?'none':((curChar&&curChar.byPlayer)?'block':'none'); $('pcsEdit').style.display=edit?'flex':'none';
     $('pcsPencil').style.display=edit?'inline-grid':'none'; $('pcsFaceL').style.display=edit?'grid':'none'; $('pcsFaceR').style.display=edit?'grid':'none';
     if(edit)['pcsFaceL','pcsFaceR','pcsPencil'].forEach(id=>{const e=$(id); if(e){e.style.opacity='1'; e.style.pointerEvents='auto';}}); }
-  function fill(c){ curChar=c; { const _f=document.querySelector('#pcsel .d-footer'); if(_f) _f.classList.remove('editing'); } { const _h=$('pcsHero'); if(_h) _h.classList.remove('avatar-edit'); const _fg=$('pcsFig'); if(_fg){ _fg.style.backgroundSize='auto 112%'; _fg.style.backgroundPosition='54% calc(100% + 200px)'; } }
+  function fill(c){ curChar=c; { const _f=document.querySelector('#pcsel .d-footer'); if(_f) _f.classList.remove('editing'); } { const _h=$('pcsHero'); if(_h) _h.classList.remove('avatar-edit'); const _fg=$('pcsFig'); if(_fg){ const sp=spriteSpec(c.portrait); _fg.style.backgroundSize=sp.size; _fg.style.backgroundPosition=sp.pos; } }
     $('pcsName').contentEditable='false'; $('pcsName').textContent=c.name; $('pcsEpi').textContent=c.epithet||'';
     { const tg=$('pcsTags'); if(tg){ tg.innerHTML=''; (c.traits||[]).slice(0,2).forEach((k,i)=>{ const b=document.createElement('button'); b.type='button'; b.className='htag'; b.textContent=(TRAIT_PHRASE[k]||capK(k)); b.addEventListener('click',(e)=>{ e.stopPropagation(); openTraitDeck(c,i); }); tg.appendChild(b); }); } }
     { const bg=$('pcsBg'); bg.style.backgroundImage=AURL('bg_floor.webp'); bg.style.height=($('pcsel').clientHeight||844)+'px'; bg.style.backgroundPosition='center top'; }   // stage floor, full-screen sized (hero clips it)
-    $('pcsFig').style.backgroundImage=figFull(c.portrait);
+    applySprite($('pcsFig'), c.portrait); $('pcsHero').classList.toggle('has-wardrobe', !!(OUTFITS[c.portrait]&&OUTFITS[c.portrait].length>1));
     try{ idleVideo(c); }catch(e){}
     $('pcsBio').textContent=c.intro||c.bio||'';
     // horizontal info cards (1.5 visible): bio · trait 1 · trait 2 · what drives her · how she carries herself · story sections
@@ -29155,7 +29380,7 @@ console.log('%c[caller] Episode 1 ready — run startCaller()', 'color:#e7b24c')
     // Main button (left of the pencil) = "Make her you" → the reveal flow (walk away → curtain → … designed next).
     // The old play/continue action is kept as window.pcPlayCurrent for the flow's final step.
     window.pcPlayCurrent=()=> switchMode?switchTo(c):choose(c);
-    $('pcsPlay').onclick=()=>{ if(typeof window.pcRevealSequence==='function') window.pcRevealSequence(); };
+    $('pcsPlay').onclick=()=>{ if(typeof window.pcMirrorOpen==='function') window.pcMirrorOpen('reveal'); else if(typeof window.pcRevealSequence==='function') window.pcRevealSequence(); };   // step 1: the mirror (photo) → step 2: the reveal
     $('pcsPlay').innerHTML='Make her you &#10022;';
     $('pcsDel').onclick=()=>{ store.set(store.get().filter(x=>x.id!==c.id)); toast('Character removed.'); if(deckIdx>0)deckIdx--; closeDetail(); renderDeck(); };
   }
@@ -29164,33 +29389,111 @@ console.log('%c[caller] Episode 1 ready — run startCaller()', 'color:#e7b24c')
   // centred horizontally and top-aligned. (Same proven structure as before.)
   function morph(hero, body, from, rev, done){ hero.style.transition='none'; hero.style.transform='none'; hero.style.borderRadius='0'; hero.style.transformOrigin='top left';
     const L=hero.getBoundingClientRect();
-    const s=from.height/L.height;
-    const tx=(from.left+from.width/2) - (L.width*s)/2 - L.left;
+    // scale by WIDTH and anchor top-left: the card art is a top-anchored viewport onto the hero; the part below the
+    // viewport is clipped away at the start and revealed as the scene grows (clip-path animates with the transform)
+    const s=from.width/L.width;
+    const tx=from.left - L.left;
     const ty=from.top - L.top;
     const toCardTf=`translate(${tx}px,${ty}px) scale(${s})`;
+    const clipBottom=Math.max(0, L.height - from.height/s);
+    const toCardClip=`inset(0 0 ${clipBottom.toFixed(1)}px 0 round ${(11/s).toFixed(1)}px)`, fullClip='inset(0 0 0 0 round 0px)';
     if(!rev){
-      hero.style.transform=toCardTf; hero.style.borderRadius='24px';
+      hero.style.transform=toCardTf; hero.style.clipPath=toCardClip; hero.style.webkitClipPath=toCardClip;
       body.style.transition='none'; body.style.opacity='0'; body.style.transform='translateY(26px)';
       void hero.offsetWidth;                 // commit the start state (reflow) before transitioning
-      hero.style.transition='transform .5s cubic-bezier(.6,0,.15,1), border-radius .5s';
-      hero.style.transform='none'; hero.style.borderRadius='0';
-      body.style.transition='opacity .38s ease .16s, transform .46s cubic-bezier(.6,0,.15,1) .12s';
+      hero.style.transition='transform .55s cubic-bezier(.6,0,.15,1), clip-path .55s cubic-bezier(.6,0,.15,1), -webkit-clip-path .55s cubic-bezier(.6,0,.15,1)';
+      hero.style.transform='none'; hero.style.clipPath=fullClip; hero.style.webkitClipPath=fullClip;
+      body.style.transition='opacity .38s ease .2s, transform .46s cubic-bezier(.6,0,.15,1) .14s';
       body.style.opacity='1'; body.style.transform='none';
-      setTimeout(done||(()=>{}),520);
+      setTimeout(()=>{ hero.style.clipPath=''; hero.style.webkitClipPath=''; (done||(()=>{}))(); },570);
     } else {
-      hero.style.transition='none'; hero.style.transform='none'; hero.style.borderRadius='0';
+      hero.style.transition='none'; hero.style.transform='none'; hero.style.clipPath=fullClip; hero.style.webkitClipPath=fullClip;
       void hero.offsetWidth;
-      hero.style.transition='transform .44s cubic-bezier(.5,0,.2,1), border-radius .44s';
-      hero.style.transform=toCardTf; hero.style.borderRadius='24px';
+      hero.style.transition='transform .46s cubic-bezier(.5,0,.2,1), clip-path .46s cubic-bezier(.5,0,.2,1), -webkit-clip-path .46s cubic-bezier(.5,0,.2,1)';
+      hero.style.transform=toCardTf; hero.style.clipPath=toCardClip; hero.style.webkitClipPath=toCardClip;
       body.style.transition='opacity .22s ease'; body.style.opacity='0';
-      setTimeout(done||(()=>{}),450);
+      setTimeout(()=>{ hero.style.clipPath=''; hero.style.webkitClipPath=''; (done||(()=>{}))(); },470);
     } }
-  function openDetail(c, coverEl){ fill(c); setMode(false); try{ preloadRevealClips(c); }catch(e){} sizeHero(); const s=$('pcsScroll'); s.scrollTop=0; const hero=$('pcsHero'); hero.style.height='100%'; hero.classList.remove('collapsed');
-    const from=coverEl.getBoundingClientRect(); $('pcs-roster').classList.remove('active'); $('pcs-detail').classList.add('active'); morph(hero, s, from, false); figIntro();
+  // Camera-into-the-card transform: the target where the card's art box == the screen (hero 1:1). Card transform-origin is
+  // its centre, so we move the centre such that the art box's centre lands where the full-height art would be centred.
+  function cardZoomTarget(card){ const root=$('pcsel').getBoundingClientRect(); const W=root.width, H=root.height; const k=W/ART_W;
+    const deck=$('pcsDeck').getBoundingClientRect(); const cw=card.offsetWidth, ch=card.offsetHeight;
+    const c0x=deck.left-root.left+deck.width/2, c0y=deck.top-root.top+deck.height/2;            // untransformed card centre (left/top 50%, margins -w/2,-h/2 +? )
+    const mt=parseFloat(getComputedStyle(card).marginTop)||-ch/2, ml=parseFloat(getComputedStyle(card).marginLeft)||-cw/2;
+    const cx=c0x+ml+cw/2, cy=c0y+mt+ch/2;
+    const coverH=H/k;                                                                              // art box height (card px) that maps to the full screen
+    const chF=15+coverH+13+104;                                                                     // final card height: art + margins + foot (the whole card grows)
+    const cyF=c0y+mt+chF/2;                                                                         // its centre once grown (margin-top is fixed → the top edge stays put)
+    const coverCy=15+coverH/2; const off=(coverCy-chF/2)*k;                                        // art centre offset from the grown card's centre, scaled
+    const tx=W/2-cx, ty=H/2-off-cyF;
+    return { tf:`translate(${tx.toFixed(2)}px,${ty.toFixed(2)}px) scale(${k.toFixed(4)})`, coverH:coverH.toFixed(1)+'px', cardH:chF.toFixed(1)+'px' }; }
+  // ── Wardrobe: swipe left/right on the hero to change the outfit (same face, same pose; sprites share the idle frame's canvas).
+  // Index 0 = the default look (idle clip); others are still sprites until their own idle clips exist
+  // (characters/<id>/outfits/<name>.webm → hook here later).
+  const OUTFITS={ arabella_frost:['default','ivory','emerald','rose'] };
+  let outfitIdx=0, outfitSeq=0;   // outfitSeq: a clip that finishes loading after a newer choice is discarded
+  function outfitSpec(portrait, idx){ const sp=spriteSpec(portrait); if(!idx) return sp; const name=(OUTFITS[portrait]||[])[idx]; return { img:`url('${BASE}characters/${portrait}/outfits/${name}.webp')`, size:sp.size, pos:sp.pos }; }
+  function setOutfit(idx, dir){ const c=curChar; if(!c) return; const list=OUTFITS[c.portrait]; if(!list) return; idx=((idx%list.length)+list.length)%list.length; if(idx===outfitIdx) return;
+    const fg=$('pcsFig'); const S=$('pcsel').clientHeight||844, H=Math.round(S*0.72), vh=H*1.12/0.86, bottom=-200-0.03*vh+(fg.clientHeight-H); const my=++outfitSeq;
+    // plain cross-fade, nothing slides: whatever is on screen fades out while the new look fades in on the exact same spot
+    const fadeOutOld=()=>{ $('pcsel').classList.toggle('outfit-on', !!idx); fg.querySelectorAll('.hfig-outfit, video.hfig-outfit-vid, .hfig-ghost').forEach(o=>{ if(o._new) return; o.style.transition='opacity .35s ease'; o.style.opacity='0'; setTimeout(()=>{ try{ o.pause&&o.pause(); }catch(e){} o.remove(); },400); }); };   // (the default idle clip is hidden/revealed at the same moment)
+    const still=()=>{ const sp=outfitSpec(c.portrait, idx); const layer=document.createElement('div'); layer.className='hfig-outfit'; layer._new=true;
+      layer.style.cssText=`position:absolute;inset:0;z-index:4;background:${sp.img} ${sp.pos}/${sp.size} no-repeat;opacity:0;transition:opacity .35s ease;pointer-events:none;`; fg.appendChild(layer); void layer.offsetWidth; layer.style.opacity='1'; fadeOutOld(); setTimeout(()=>{ layer._new=false; },450); };
+    if(idx){ const t=document.createElement('video');
+      if(t.canPlayType('video/webm; codecs="vp9"')){   // this outfit's own looping idle clip, mounted exactly where the default idle clip sits
+        const v=document.createElement('video'); v.className='hfig-outfit-vid'; v._new=true; v.muted=true; v.playsInline=true; v.loop=true; v.preload='auto';
+        v.style.cssText='position:absolute;left:calc(54% - 16px);bottom:'+bottom.toFixed(1)+'px;height:'+vh.toFixed(1)+'px;width:auto;transform:translateX(-50%);pointer-events:none;opacity:.02;z-index:5;transition:opacity .35s ease;';
+        let shown=false; const show=()=>{ if(shown) return; shown=true; if(my!==outfitSeq){ try{ v.pause(); }catch(e){} v.remove(); return; } v.style.opacity='1'; fadeOutOld(); setTimeout(()=>{ v._new=false; },450); };   // fade in only once the clip has painted (unless a newer choice superseded it)
+        if(v.requestVideoFrameCallback) v.requestVideoFrameCallback(()=>v.requestVideoFrameCallback(show)); v.addEventListener('playing',()=>setTimeout(show,260),{once:true});
+        v.addEventListener('error',()=>{ v.remove(); if(my===outfitSeq) still(); },{once:true});   // no clip → the still
+        v.src=BASE+'characters/'+c.portrait+'/outfits/'+list[idx]+'.webm'; fg.appendChild(v); playRetry(v, 4, null);
+      } else still();
+    } else { fadeOutOld(); }   // back to the default look: the idle clip underneath is revealed as the outfit fades
+    outfitIdx=idx; try{ localStorage.setItem('rai.outfit.'+c.id, list[idx]); }catch(_){}
   }
-  function closeDetail(){ const s=$('pcsScroll'); s.scrollTop=0; const hero=$('pcsHero'); hero.style.height='100%'; hero.classList.remove('collapsed');
-    const from=frontCoverEl?frontCoverEl.getBoundingClientRect():{left:44,top:150,width:300,height:340};
-    morph(hero, s, from, true, ()=>{ $('pcs-detail').classList.remove('active'); $('pcs-roster').classList.add('active'); hero.style.transition='none'; hero.style.transform='none'; hero.style.borderRadius='0'; s.style.opacity='1'; s.style.transform='none'; setMode(false); editChar=null; }); }
+  function resetOutfit(){ outfitIdx=0; $('pcsel').classList.remove('outfit-on'); const fg=$('pcsFig'); if(fg){ fg.querySelectorAll('.hfig-outfit, video.hfig-outfit-vid').forEach(o=>{ try{ o.pause&&o.pause(); }catch(e){} o.remove(); }); } }
+  { const bl=$('pcsOutL'), br=$('pcsOutR'); if(bl) bl.addEventListener('click',e=>{ e.stopPropagation(); setOutfit(outfitIdx-1,-1); }); if(br) br.addEventListener('click',e=>{ e.stopPropagation(); setOutfit(outfitIdx+1,1); }); }
+  { const hero=$('pcsHero'); if(hero){ let sx=0, sy=0, drag=false, moved=false;
+      hero.addEventListener('pointerdown',e=>{ if(hero.classList.contains('avatar-edit')||$('pcsel').classList.contains('revealing')) return; if(e.target.closest('button,.dclose,.htag')) return; drag=true; moved=false; sx=e.clientX; sy=e.clientY; });
+      hero.addEventListener('pointermove',e=>{ if(!drag) return; if(Math.abs(e.clientX-sx)>8) moved=true; });
+      const end=e=>{ if(!drag) return; drag=false; const dx=e.clientX-sx, dy=e.clientY-sy; if(Math.abs(dx)>48 && Math.abs(dx)>Math.abs(dy)*1.3){ setOutfit(outfitIdx+(dx<0?1:-1), dx<0?1:-1); } };
+      hero.addEventListener('pointerup',end); hero.addEventListener('pointercancel',()=>{ drag=false; }); } }
+  window.__pcZoomTarget=cardZoomTarget;   // (debug/test hook)
+  function openDetail(c, coverEl){ resetOutfit(); fill(c); setMode(false); try{ preloadRevealClips(c); }catch(e){} sizeHero(); const s=$('pcsScroll'); s.scrollTop=0; const hero=$('pcsHero'); hero.style.height='100%'; hero.classList.remove('collapsed');
+    const card=coverEl.closest('.dcard'), deck=$('pcsDeck');
+    if(!card){ $('pcs-roster').classList.remove('active'); $('pcs-detail').classList.add('active'); return; }
+    // the camera flies into the card; the detail (identical pixels at the end) is switched on underneath at the last frame
+    $('pcsel').classList.add('no-idle');
+    const t=cardZoomTarget(card); card.classList.remove('chosen'); card.classList.add('zooming'); card.style.setProperty('--coverH', t.coverH); card.style.setProperty('--cardH', t.cardH); card.style.transform=t.tf;
+    if(deck) deck.classList.add('opening'); $('pcs-roster').classList.add('opening');
+    hero.style.transform='none'; hero.style.clipPath=''; s.style.transition='none'; s.style.opacity='0'; s.style.transform='translateY(26px)';
+    setTimeout(()=>{ const det=$('pcs-detail'); det.classList.add('active','entering'); void s.offsetWidth; s.style.transition='opacity .38s ease, transform .46s cubic-bezier(.6,0,.15,1)'; s.style.opacity='1'; s.style.transform='none';
+      // UI comes in after the scene has landed (cards from the right, the rest fades)
+      setTimeout(()=>{ det.classList.remove('entering'); det.classList.add('entered'); setTimeout(()=>det.classList.remove('entered'),1400); }, 120);
+      // restart the idle clip from its first frame (= the sprite's pose) so the video takes over without a pose jump
+      try{ const fg=$('pcsFig'); [...fg.querySelectorAll('video.hfig-idle, .hfig-ghost')].forEach(v=>{ try{ v.pause&&v.pause(); }catch(e){} v.remove(); });
+        // ghost = the sprite as its own layer (same geometry as the hfig background) so it can fade OUT while the clip fades IN
+        const g=document.createElement('div'); g.className='hfig-ghost'; { const sp=spriteSpec(c.portrait); g.style.cssText='position:absolute;inset:0;z-index:3;background:'+sp.img+' '+sp.pos+'/'+sp.size+' no-repeat;pointer-events:none;transition:opacity .32s ease;'; } fg.appendChild(g); fg.style.backgroundImage='none';   // ON TOP of the clip: it fades out over an already fully-opaque, identical frame → no halo
+        idleVideo(c,'idle'); }catch(e){}
+      setTimeout(()=>$('pcsel').classList.remove('no-idle'),60);
+      // as the zoom lands: once the clip's first frame is on screen underneath, the sprite on top fades out (.32s) → the still picture 'comes alive'
+      { const t0=Date.now(); const tick=()=>{ const fg=$('pcsFig'), v=fg.querySelector('video.hfig-idle'), g=fg.querySelector('.hfig-ghost'); if(!g) return; if((v && v.style.opacity==='1') || Date.now()-t0>1200){ setTimeout(()=>{ g.style.opacity='0'; setTimeout(()=>g.remove(),380); }, 32); } else setTimeout(tick,16); }; setTimeout(tick,16); }
+      setTimeout(()=>{ $('pcs-roster').classList.remove('active','opening'); if(deck) deck.classList.remove('opening'); card.classList.add('snap'); card.classList.remove('zooming'); card.style.transform=''; card.style.removeProperty('--coverH'); card.style.removeProperty('--cardH'); setTimeout(()=>card.classList.remove('snap'),60); }, 80);
+    }, 910);
+  }
+  // "Play as …" / tap: pop + light sweep on the front card, then zoom
+  function chooseCard(c, el){ el=el||document.querySelector('#pcsel .dcard[data-pos="front"]'); if(!el) return; openDetail(c, el.querySelector('.cover')); }   // straight into the zoom, no pause
+  function closeDetail(){ resetOutfit(); const s=$('pcsScroll'); s.scrollTop=0; const hero=$('pcsHero'); hero.style.height='100%'; hero.classList.remove('collapsed');
+    const fc=frontCoverEl?frontCoverEl.closest('.dcard'):null;
+    if(fc){ // camera pulls back out of the card: park the card in the zoomed pose (no transition), reveal the roster, then let it ease back to its place
+      const t=cardZoomTarget(fc); fc.classList.add('zooming','snap'); fc.style.setProperty('--coverH', t.coverH); fc.style.setProperty('--cardH', t.cardH); fc.style.transform=t.tf; $('pcsDeck').classList.add('opening'); $('pcs-roster').classList.add('active','opening'); void fc.offsetWidth;
+      s.style.transition='opacity .2s ease'; s.style.opacity='0';
+      setTimeout(()=>{ $('pcs-detail').classList.remove('active'); fc.classList.remove('snap'); void fc.offsetWidth; fc.classList.remove('zooming'); fc.style.transform=''; fc.style.removeProperty('--coverH'); fc.style.removeProperty('--cardH'); $('pcsDeck').classList.remove('opening'); $('pcs-roster').classList.remove('opening');
+        setTimeout(()=>{ hero.style.transition='none'; hero.style.transform='none'; hero.style.borderRadius='0'; s.style.opacity='1'; s.style.transform='none'; setMode(false); editChar=null; }, 800); }, 180);
+      return; }
+    $('pcs-roster').classList.add('active'); $('pcs-detail').classList.add('morphing');
+    const from=frontCoverEl?frontCoverEl.getBoundingClientRect():{left:65,top:200,width:260,height:352};
+    morph(hero, s, from, true, ()=>{ $('pcs-detail').classList.remove('active','morphing'); hero.style.transition='none'; hero.style.transform='none'; hero.style.borderRadius='0'; s.style.opacity='1'; s.style.transform='none'; setMode(false); editChar=null; }); }
 
   // ---- trait cards (swipeable) + progress/stress ----
   function traitCardHTML(c,k){ const t=(D.traitPool&&D.traitPool[k])||{}; const lv=(c.traitLevels&&c.traitLevels[k])||{progress:0,stress:0};
@@ -29229,9 +29532,9 @@ console.log('%c[caller] Episode 1 ready — run startCaller()', 'color:#e7b24c')
     if(!name || avail.indexOf(name)<0){ const prev=fig.querySelector('video.hfig-idle'); const prevName=prev&&prev.dataset.clip; const pick=avail.filter(n=>n!==prevName); name=(pick.length?pick:avail)[Math.floor(Math.random()*(pick.length?pick:avail).length)]; }
     let old=fig.querySelector('video.hfig-idle'); if(old && old.dataset.pid!==id){ try{ old.remove(); }catch(e){} old=null; }   // another character's clip → drop at once
     const mount=()=>{ if(!curChar || curChar.portrait!==id) return; const v=document.createElement('video'); v.className='hfig-idle'; v.dataset.clip=name; v.dataset.pid=id; v.muted=true; v.playsInline=true; v.loop=false; v.preload='auto';
-      const H=fig.clientHeight||600; const vh=H*1.12/0.86; v.style.cssText='position:absolute;left:54%;bottom:'+(-200-0.03*vh).toFixed(1)+'px;height:'+vh.toFixed(1)+'px;width:auto;transform:translateX(-50%);pointer-events:none;opacity:.02;';   // (not 0: Chrome pauses fully-invisible video-only media)
+      const H=Math.round(($('pcsel').clientHeight||844)*0.72); const vh=H*1.12/0.86; v.style.cssText='position:absolute;left:calc(54% - 16px);bottom:'+(-200-0.03*vh+(fig.clientHeight-H)).toFixed(1)+'px;height:'+vh.toFixed(1)+'px;width:auto;transform:translateX(-50%);pointer-events:none;opacity:.02;';   // (not 0: Chrome pauses fully-invisible video-only media)
       // show after the 2nd presented frame, then drop the previous clip a frame later (same pose → seamless)
-      let shown=false; const show=()=>{ if(shown) return; shown=true; v.style.opacity='1'; fig.style.backgroundImage='none'; setTimeout(()=>{ fig.querySelectorAll('video.hfig-idle').forEach(o=>{ if(o!==v){ try{ o.pause(); o.remove(); }catch(e){} } }); }, 80); };
+      let shown=false; const show=()=>{ if(shown) return; shown=true; v.style.opacity='1'; const root=$('pcsel'); if(!(root&&(root.classList.contains('no-idle')||root.classList.contains('idle-fade')))) fig.style.backgroundImage='none'; /* (during the card→scene hand-off the sprite stays until the clip has faded in) */ setTimeout(()=>{ fig.querySelectorAll('video.hfig-idle').forEach(o=>{ if(o!==v){ try{ o.pause(); o.remove(); }catch(e){} } }); }, 80); };
       v.addEventListener('playing',()=>{ if(v.requestVideoFrameCallback) v.requestVideoFrameCallback(()=>v.requestVideoFrameCallback(show)); setTimeout(show,450); },{once:true});   // (timer = safety when frame callbacks don't fire)
       v.addEventListener('ended',()=>{ try{ v.pause(); }catch(e){} setTimeout(()=>{ if(v.isConnected && !$('pcsel').classList.contains('revealing') && curChar && curChar.portrait===id) idleVideo(c); }, 2500); });   // rest, then the next random clip
       v.addEventListener('error',()=>{ IDLE_OK[id][name]=false; try{ v.remove(); }catch(e){} if(!fig.querySelector('video.hfig-idle')){ const rest=IDLE_POOL.filter(n=>IDLE_OK[id][n]!==false); if(rest.length) idleVideo(c); else fig.style.backgroundImage=figFull(c.portrait); } });
@@ -29248,10 +29551,10 @@ console.log('%c[caller] Episode 1 ready — run startCaller()', 'color:#e7b24c')
     const rev=$('pcsel').classList.contains('revealing');
     // card layout: match the static sprite (112% of the hero, feet +200px below). reveal layout: full-screen stage,
     // figure ≈78% of the screen, feet on the boards ~6% above the bottom edge.
-    let vh, bottom; if(rev){ const S=$('pcsel').clientHeight||844; vh=S*0.78/0.86; bottom=(0.06*S-0.03*vh); } else { const H=fig.clientHeight||600; vh=H*1.12/0.86; bottom=-200-0.03*vh; }
+    let vh, bottom; if(rev){ const S=$('pcsel').clientHeight||844; vh=S*0.78/0.86; bottom=(0.06*S-0.03*vh); /* (rev clips are mounted on rvLayout top/h anyway) */ } else { const H=Math.round(($('pcsel').clientHeight||844)*0.72); vh=H*1.12/0.86; bottom=-200-0.03*vh+(fig.clientHeight-H); }
     if(rev && rvLayout && name==='walk_away'){   // continue exactly where the idle clip is (top-anchored, same size/centre)
       v.style.cssText='position:absolute;left:'+rvLayout.cx.toFixed(1)+'px;top:'+rvLayout.top.toFixed(1)+'px;height:'+rvLayout.h.toFixed(1)+'px;width:auto;transform:translateX(-50%);pointer-events:none;opacity:.02;transition:opacity .25s ease;'; }
-    else v.style.cssText='position:absolute;left:'+(rev?'50%':'54%')+';bottom:'+bottom.toFixed(1)+'px;height:'+vh.toFixed(1)+'px;width:auto;transform:translateX(-50%);pointer-events:none;opacity:.02;transition:opacity .25s ease;';
+    else v.style.cssText='position:absolute;left:'+(rev?'50%':'calc(54% - 16px)')+';bottom:'+bottom.toFixed(1)+'px;height:'+vh.toFixed(1)+'px;width:auto;transform:translateX(-50%);pointer-events:none;opacity:.02;transition:opacity .25s ease;';
     // hand-over without a flicker: wait until the new clip has actually PRESENTED a frame, show it, and only
     // then (a frame later) drop the old clip underneath — the two frames are identical, so nothing pops.
     let swapped=false; const swap=()=>{ if(swapped) return; swapped=true; v.style.transition='none'; v.style.opacity='1'; setTimeout(()=>{ fig.style.backgroundImage='none'; fig.querySelectorAll('video.hfig-idle').forEach(o=>{ if(o!==v){ try{ o.pause(); o.remove(); }catch(e){} } }); }, 80); };
@@ -29365,7 +29668,43 @@ console.log('%c[caller] Episode 1 ready — run startCaller()', 'color:#e7b24c')
     })); }), 750);                                                                  // UI out + stage up first
     setTimeout(()=>{ $('pcsel').classList.add('rv-text'); }, 1500);                 // floor text while she walks
   };
-  window.pcRevealReset=function(){ curtainRemove(); revealUi(false); const c=curChar; if(c) fill(c); };   // back to the card
+  // ── Mirror page: photo for the likeness. Opens from "Make her you"; "Use this" hands the photo to the reveal.
+  let pmInput=null; window.__pcYouPhoto=window.__pcYouPhoto||null;
+  function pmEnsureInput(){ if(pmInput) return pmInput; pmInput=document.createElement('input'); pmInput.type='file'; pmInput.accept='image/*'; pmInput.style.display='none'; document.body.appendChild(pmInput);
+    pmInput.addEventListener('change',()=>{ const f=pmInput.files&&pmInput.files[0]; if(f){ const r=new FileReader(); r.onload=e=>pmSetPhoto(e.target.result); r.readAsDataURL(f); } pmInput.value=''; }); return pmInput; }
+  function pmSetPhoto(dataUrl){ const m=$('pcsMirror'); window.__pcYouPhoto=dataUrl||null; const ph=$('pmPhoto'); ph.style.backgroundImage=dataUrl?('url("'+dataUrl+'")'):'';
+    // (mask set inline: Chrome drops the stylesheet mask on this composited layer until a style write touches it)
+    const mk='linear-gradient(180deg,#000 0,#000 70%,rgba(0,0,0,0) 100%)'; /* the selfie (headroom · head · torso) fills the glass and melts into it at the bottom */ ph.style.webkitMaskImage=mk; ph.style.maskImage=mk;   // the photo box is as tall as the photo → the melt is relative to it
+    if(dataUrl){ const im=new Image(); im.onload=()=>{ if(im.naturalWidth&&im.naturalHeight) ph.style.aspectRatio=im.naturalWidth+'/'+im.naturalHeight; }; im.src=dataUrl; }
+    m.classList.toggle('has-photo', !!dataUrl); }
+  function pmFig(c){ const fig=$('pmFig'); if(!fig) return; [...fig.querySelectorAll('video')].forEach(v=>v.remove());
+    // looping back-view clip when the character has one (characters/<id>/mirror_idle.webm); otherwise the sprite stays
+    const id=c&&c.portrait; if(!id) return; const t=document.createElement('video'); if(!t.canPlayType('video/webm; codecs="vp9"')) return;
+    const v=document.createElement('video'); v.muted=true; v.playsInline=true; v.loop=true; v.preload='auto'; v.style.opacity='0';
+    v.addEventListener('loadeddata',()=>{ fig.style.backgroundImage='none'; v.style.opacity='1'; const pr=v.play(); if(pr&&pr.catch) pr.catch(()=>{}); },{once:true});
+    v.addEventListener('error',()=>{ v.remove(); },{once:true}); v.src=BASE+'characters/'+id+'/mirror_idle.webm'; fig.appendChild(v); }
+  let pmMode='reveal';   // 'reveal' (Make her you → curtain) | 'create' (+ Create your own → how does your story begin?)
+  window.pcMirrorOpen=function(mode){ pmMode=mode||'reveal'; const m=$('pcsMirror'); if(!m) return; pmEnsureInput(); pmSetPhoto(null); pmFig(curChar); m.classList.add('on'); void m.offsetWidth; setTimeout(()=>m.classList.add('live'), 30); };
+  // ── Create page (step 2 of "+ Create your own")
+  window.pcCreateOpen=function(){ const p=$('pcsCreatePage'); if(!p) return; p.classList.add('on'); void p.offsetWidth; setTimeout(()=>p.classList.add('live'), 30); };
+  window.pcCreateClose=function(){ const p=$('pcsCreatePage'); if(!p) return; p.classList.remove('live'); setTimeout(()=>{ if(!p.classList.contains('live')) p.classList.remove('on'); }, 600); };
+  { const on=(id,fn)=>{ const e=$(id); if(e) e.addEventListener('click',fn); };
+    on('cpClose', ()=>window.pcCreateClose()); on('cpBack', ()=>window.pcCreateClose());
+    document.querySelectorAll('#pcsCreatePage .cp-card').forEach(b=>b.addEventListener('click',()=>{ const mode=b.dataset.mode; window.pcCreateClose();
+      setTimeout(()=>{ if(mode==='story'){ window.__psReturnDeck=true; $('pcsel').classList.remove('on'); }   // the story overlay sits under #pcsel → step out of the deck while it plays (psFinish/psExit bring it back)
+        if(typeof window.pcCreateChoose==='function') window.pcCreateChoose(mode); }, 250); })); }
+  window.pcMirrorClose=function(){ const m=$('pcsMirror'); if(!m) return; m.classList.remove('live'); setTimeout(()=>{ if(m.classList.contains('live')) return; m.classList.remove('on'); [...$('pmFig').querySelectorAll('video')].forEach(v=>v.remove()); $('pmFig').style.backgroundImage=''; }, 600); };
+  { const on=(id,fn)=>{ const e=$(id); if(e) e.addEventListener('click',fn); };
+    on('pmClose', ()=>window.pcMirrorClose());
+    on('pmTake', ()=>{ const i=pmEnsureInput(); i.setAttribute('capture','user'); i.click(); });
+    on('pmPick', ()=>{ const i=pmEnsureInput(); i.removeAttribute('capture'); i.click(); });
+    on('pmRetake', ()=>pmSetPhoto(null));
+    // skip the portrait: create flow → straight to 'how does your story begin?'; reveal flow → just play as her
+    on('pmSkip', ()=>{ if(pmMode==='create'){ window.pcCreateOpen(); setTimeout(()=>window.pcMirrorClose(), 380); } else { window.pcMirrorClose(); setTimeout(()=>{ try{ window.pcPlayCurrent&&window.pcPlayCurrent(); }catch(e){} }, 350); } });
+    on('pmUse', ()=>{
+      if(pmMode==='create'){ window.pcCreateOpen(); setTimeout(()=>window.pcMirrorClose(), 380); return; }   // create flow: the story-begins page slides up over the mirror
+      window.pcMirrorClose(); if(typeof window.pcRevealSequence==='function') setTimeout(()=>window.pcRevealSequence(), 350); }); }
+  window.pcRevealReset=function(){ $('pcsel').classList.remove('no-idle','idle-fade'); curtainRemove(); revealUi(false); if(typeof window.pcMirrorClose==='function') window.pcMirrorClose(); if(typeof window.pcCreateClose==='function') window.pcCreateClose(); const c=curChar; if(c) fill(c); };   // back to the card
   window.pcCurtainRemove=curtainRemove;
   function figIntro(){ const fig=$('pcsFig'); if(!fig) return; fig.style.transition='none'; fig.style.transformOrigin='50% 14%'; fig.style.transform='scale(1.18)'; void fig.offsetWidth; fig.style.transition='transform .62s cubic-bezier(.5,0,.15,1)'; fig.style.transform='scale(1)'; }
   // cycle the avatar face (edit-mode side arrows) with a move-out / move-in slide
@@ -29433,7 +29772,7 @@ console.log('%c[caller] Episode 1 ready — run startCaller()', 'color:#e7b24c')
 
   async function ensureData(){ if(D) return D; const r=await fetch(BASE+'characters/pcs.json',{cache:'no-store'}); D=await r.json(); return D; }
   window.pcSelectStart=function(cb){ onPlayCb=cb||null; switchMode=false; ensureData().then(()=>{ genderTab='woman'; deckIdx=0;
-      $('pcsel').classList.remove('switch'); $('pcsKick').textContent='Entering a world'; $('pcsH1').textContent='Pride & Prejudice';
+      $('pcsel').classList.remove('switch'); $('pcsKick').textContent='Pride & Prejudice'; $('pcsH1').textContent='Choose your heroine';
       $('pcsWorldBg').style.backgroundImage=AURL('bg_ballroom.webp');
       view('pcs-roster'); renderDeck(); $('pcsel').classList.add('on'); }).catch(e=>{ console.warn('[pcsel] data load failed',e); const cb2=onPlayCb; onPlayCb=null; if(cb2)cb2(); }); };
 
@@ -29452,7 +29791,7 @@ console.log('%c[caller] Episode 1 ready — run startCaller()', 'color:#e7b24c')
   // a new character, sets __pridePC and drops the player onto the full map.
   window.pcSelectFirst=function(){ onPlayCb=null; switchMode=false; ensureData().then(()=>{ genderTab='woman'; deckIdx=0;
       $('pcsel').classList.remove('switch'); $('pcsel').classList.add('overmap'); document.body.classList.add('pc-firststate');
-      $('pcsKick').textContent='Pride & Prejudice'; $('pcsH1').textContent='Create Your Character';
+      $('pcsKick').textContent='Pride & Prejudice'; $('pcsH1').textContent='Choose your heroine';
       view('pcs-roster'); renderDeck(); $('pcsel').classList.add('on'); }).catch(e=>{ console.warn('[pcsel] first-state',e); }); };
   // Show the avatar HUD on the pride MAP screen. If no character has been
   // chosen yet this session, the map's first state is character selection.
@@ -29731,6 +30070,7 @@ console.log('%c[caller] Episode 1 ready — run startCaller()', 'color:#e7b24c')
   }
   function speakerName(who){ if(!who) return ''; const m={julian_vane:'Julian Vane', mr_ashford:'Mr Ashford', mr_ashford_worn:'Mr Ashford', mr_coyle:'Mr Coyle', miss_vere:'Miss Vere', miss_vere_ruined:'Mrs Ashford', the_father:''}; return m[who] || who.replace(/_/g,' '); }
   function psExit(){ const e=psEl(); if(e) e.classList.remove('on','fig-on','show-narr','show-say','show-choices'); ps=null; document.body.classList.remove('pc-story-on');
+    if(window.__psReturnDeck){ window.__psReturnDeck=false; $('pcsel').classList.add('on'); }   // back to the heroines' deck
     if(!window.__pridePC && typeof window.pcSelectFirst==='function'){ window.pcSelectFirst(); }
     else if(typeof window.showCharCreate==='function'){ window.showCharCreate(); } }
   function buildCharFromScores(scores, answers){
@@ -29765,7 +30105,7 @@ console.log('%c[caller] Episode 1 ready — run startCaller()', 'color:#e7b24c')
     setTimeout(()=>{
       clearInterval(rot);
       if(e) e.classList.remove('on','show-load','fig-on','show-narr','show-say','show-choices');
-      ps=null; document.body.classList.remove('pc-story-on');
+      ps=null; document.body.classList.remove('pc-story-on'); window.__psReturnDeck=false;
       $('pcsel').classList.add('on'); openDetailNew(c);
     }, 6000);
   }
@@ -29777,8 +30117,10 @@ console.log('%c[caller] Episode 1 ready — run startCaller()', 'color:#e7b24c')
   // wire static buttons
   document.addEventListener('DOMContentLoaded', ()=>{
     { const gt=$('pcsGtabs'); if(gt) gt.addEventListener('click', e=>{ const b=e.target.closest('button'); if(b) setGender(b.dataset.g); }); }
-    $('pcsCreateBtn').addEventListener('click', ()=>{ if(typeof window.pcCreateStrip==='function') window.pcCreateStrip(); });
+    // "+ Create your own" → the full-screen photo (mirror) page; the front card's character is the model for the likeness
+    $('pcsCreateBtn').addEventListener('click', ()=>{ const c=filteredChars()[deckIdx]||filteredChars()[0]; if(!c) return; curChar=c; if(typeof window.pcMirrorOpen==='function') window.pcMirrorOpen('create'); });
     $('pcsContinue').addEventListener('click', ()=>{ const c=filteredChars()[deckIdx]; if(c) switchTo(c); });
+    { const pb=$('pcsPlayCard'); if(pb) pb.addEventListener('click', ()=>{ const c=filteredChars()[deckIdx]; const el=document.querySelector('#pcsel .dcard[data-pos="front"]'); if(c) chooseCard(c, el); }); }
     $('pcsRosterClose').addEventListener('click', ()=>{
       if($('pcsel').classList.contains('switch')){ cancelSwitch(); }
       else { hide(); if(typeof window.showWorldPages==='function') window.showWorldPages(); }
@@ -29789,11 +30131,10 @@ console.log('%c[caller] Episode 1 ready — run startCaller()', 'color:#e7b24c')
     // character); the pencil turns into ✕ and reverts on tap. Text is stored on
     // the character for later (regeneration/prompt).
     $('pcsEditToggle').addEventListener('click', ()=>{ const f=$('pcsEditRow').parentElement, inp=$('pcsEditInput'); inp.value=(curChar&&curChar.editNote)||''; f.classList.add('editing');
-      $('pcsHero').classList.add('avatar-edit'); $('pcsFaceL').style.display='grid'; $('pcsFaceR').style.display='grid';   // show side arrows
-      const fig=$('pcsFig'); fig.style.transition='background-size .45s ease, background-position .45s ease'; fig.style.backgroundSize='auto 94%'; fig.style.backgroundPosition='50% bottom';  // edit: grounded (not lowered)
+      $('pcsHero').classList.add('avatar-edit');
       setTimeout(()=>inp.focus(),0); });
     $('pcsEditClose').addEventListener('click', ()=>{ const f=$('pcsEditRow').parentElement; if(curChar) curChar.editNote=$('pcsEditInput').value.trim(); f.classList.remove('editing');
-      $('pcsHero').classList.remove('avatar-edit'); $('pcsFaceL').style.display='none'; $('pcsFaceR').style.display='none'; const fig=$('pcsFig'); fig.style.backgroundSize='auto 112%'; fig.style.backgroundPosition='54% calc(100% + 200px)'; });
+      $('pcsHero').classList.remove('avatar-edit'); $('pcsFaceL').style.display='none'; $('pcsFaceR').style.display='none'; });
     $('pcsEditInput').addEventListener('keydown', e=>{ if(e.key==='Enter'){ e.preventDefault(); $('pcsEditClose').click(); } });
     $('pcsFaceL').addEventListener('click', ()=>cycleFace(-1));
     $('pcsFaceR').addEventListener('click', ()=>cycleFace(1));

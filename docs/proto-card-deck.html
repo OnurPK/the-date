@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Card deck — prototype</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,700;1,500&family=Inter:wght@400;500;600;700;800&family=Lora:ital,wght@1,500&display=swap" rel="stylesheet">
+<style>
+:root{--w:390px;--h:844px}
+html,body{margin:0;background:#0a0710;height:100%;font-family:Inter,system-ui,sans-serif;color:#fff;-webkit-font-smoothing:antialiased}
+.phone{position:relative;width:var(--w);height:var(--h);margin:0 auto;overflow:hidden;background:#0d0a12}
+@media (max-width:420px){.phone{width:100vw;height:100dvh}}
+.bg{position:absolute;inset:-6%;background:url(../worlds/pride-and-prejudice/map.jpg) center 40%/cover no-repeat;filter:blur(7px) brightness(.32) saturate(.75);transform:scale(1.04)}
+.bg::after{content:"";position:absolute;inset:0;background:radial-gradient(70% 55% at 50% 42%,rgba(0,0,0,0) 0,rgba(6,4,10,.55) 100%)}
+.top{position:absolute;left:0;right:0;top:calc(env(safe-area-inset-top,0px) + 44px);text-align:center;z-index:5;pointer-events:none}
+.kick{font:800 10px/1 Inter;letter-spacing:.3em;text-transform:uppercase;color:#e7b24c}
+.kick i{display:block;margin:8px auto 0;width:22px;height:1px;background:linear-gradient(90deg,transparent,#e7b24c,transparent)}
+h1{font:700 34px/1.08 "Playfair Display",Georgia,serif;margin:12px 0 0;text-shadow:0 2px 18px rgba(0,0,0,.6)}
+.x{position:absolute;right:16px;top:calc(env(safe-area-inset-top,0px) + 56px);width:40px;height:40px;border-radius:50%;display:grid;place-items:center;background:rgba(20,16,26,.72);border:1px solid rgba(255,255,255,.14);z-index:6;font-size:16px}
+
+/* ── deck ── */
+.deck{position:absolute;left:0;right:0;top:150px;height:520px;perspective:1100px;perspective-origin:50% 45%}
+.card{position:absolute;left:50%;top:0;width:290px;height:486px;margin-left:-145px;border-radius:18px;transform-style:preserve-3d;
+  transition:transform .62s cubic-bezier(.22,.9,.24,1), filter .62s ease, opacity .62s ease; will-change:transform; cursor:grab; user-select:none; -webkit-user-select:none; touch-action:pan-y}
+.card.drag{transition:none}
+.card .face{position:absolute;inset:0;border-radius:18px;overflow:hidden;background:#efe4cf;box-shadow:0 30px 60px rgba(0,0,0,.6), 0 2px 0 rgba(255,255,255,.25) inset}
+/* aged-cream border + thin gilt double line */
+.card .face::before{content:"";position:absolute;inset:9px;border-radius:12px;border:1.5px solid #c9a24a;box-shadow:0 0 0 3px #efe4cf, 0 0 0 4px #d8b85f;pointer-events:none;z-index:4}
+.card .art{position:absolute;left:13px;right:13px;top:13px;bottom:112px;border-radius:9px;overflow:hidden;background:#2a2230 url(../worlds/pride-and-prejudice/pc-select/bg_floor.webp) center 30%/cover no-repeat}
+.card .art::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,.05),rgba(0,0,0,0) 30%,rgba(20,12,24,.55) 100%)}
+.card .fig{position:absolute;left:50%;bottom:-4%;height:118%;aspect-ratio:1/2;transform:translateX(-50%);background:var(--fig) center bottom/contain no-repeat;filter:drop-shadow(0 10px 18px rgba(0,0,0,.5))}
+.card .ornament{position:absolute;width:44px;height:44px;z-index:5;opacity:.9}
+.card .ornament.tl{left:6px;top:6px} .card .ornament.tr{right:6px;top:6px;transform:scaleX(-1)}
+.card .ornament.bl{left:6px;bottom:6px;transform:scaleY(-1)} .card .ornament.br{right:6px;bottom:6px;transform:scale(-1)}
+.card .foot{position:absolute;left:13px;right:13px;bottom:13px;height:96px;text-align:center;color:#2b2130}
+.card .plaque{position:absolute;left:50%;top:-13px;transform:translateX(-50%);padding:5px 14px;border-radius:5px;background:linear-gradient(180deg,#e9c76a,#b8912f);color:#3a2a08;font:800 9px/1 Inter;letter-spacing:.26em;text-transform:uppercase;white-space:nowrap;box-shadow:0 2px 6px rgba(0,0,0,.35)}
+.card .nm{font:700 26px/1.1 "Playfair Display",Georgia,serif;margin:22px 0 4px}
+.card .beats{font:italic 500 12px/1.3 Lora,Georgia,serif;color:#5b4d5f;padding:0 10px}
+/* shine that follows the tilt */
+.card .shine{position:absolute;inset:0;border-radius:18px;background:linear-gradient(115deg,rgba(255,255,255,0) 30%,rgba(255,255,255,.22) 45%,rgba(255,255,255,0) 60%);mix-blend-mode:screen;opacity:0;transition:opacity .4s;pointer-events:none;z-index:6}
+.card.front .shine{opacity:1}
+/* positions */
+.card[data-pos="0"]{transform:translate3d(0,0,0) rotateY(0) scale(1);z-index:5;filter:none}
+.card[data-pos="1"]{transform:translate3d(118px,26px,-160px) rotateY(-24deg) rotateZ(5deg) scale(.86);z-index:4;filter:brightness(.55) saturate(.8)}
+.card[data-pos="-1"]{transform:translate3d(-118px,26px,-160px) rotateY(24deg) rotateZ(-5deg) scale(.86);z-index:4;filter:brightness(.55) saturate(.8)}
+.card[data-pos="2"]{transform:translate3d(180px,60px,-360px) rotateY(-34deg) rotateZ(9deg) scale(.72);z-index:3;filter:brightness(.35);opacity:.7}
+.card[data-pos="-2"]{transform:translate3d(-180px,60px,-360px) rotateY(34deg) rotateZ(-9deg) scale(.72);z-index:3;filter:brightness(.35);opacity:.7}
+.card[data-pos="far"]{transform:translate3d(0,80px,-500px) scale(.6);opacity:0;z-index:1}
+/* fly-off when chosen */
+.card.chosen{transform:translate3d(0,-40px,120px) scale(1.06) !important;z-index:9}
+.card.chosen .shine{animation:sweep 1.1s ease-out 1}
+@keyframes sweep{0%{background-position:-200% 0}100%{background-position:200% 0}}
+
+.dots{position:absolute;left:0;right:0;top:662px;display:flex;justify-content:center;gap:8px;z-index:5}
+.dots i{width:6px;height:6px;border-radius:50%;background:rgba(255,255,255,.28);transition:all .3s}
+.dots i.on{background:#e88bb1;width:14px;border-radius:3px}
+
+.foot{position:absolute;left:16px;right:16px;bottom:calc(env(safe-area-inset-bottom,0px) + 22px);z-index:5;display:flex;flex-direction:column;gap:10px}
+.btn{border:none;cursor:pointer;font:700 17px/1 "Playfair Display",Georgia,serif;color:#fff;padding:18px;border-radius:18px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.16);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px)}
+.btn.pri{background:linear-gradient(120deg,#e0668a,#8b7bd8);border-color:transparent;box-shadow:0 12px 28px rgba(139,123,216,.35)}
+.btn.pri .n{display:inline-block;min-width:80px;text-align:left}
+</style></head><body>
+<div class="phone">
+  <div class="bg"></div>
+  <div class="top"><div class="kick">Pride &amp; Prejudice<i></i></div><h1>Choose your heroine</h1></div>
+  <div class="x">&#10005;</div>
+  <div class="deck" id="deck"></div>
+  <div class="dots" id="dots"></div>
+  <div class="foot">
+    <button class="btn pri" id="play">Play as <span class="n" id="playName">Arabella</span> &#10022;</button>
+    <button class="btn">+ Create your own</button>
+  </div>
+</div>
+<script>
+const CH=[
+  {id:'marianne', name:'Marianne Kerr', ep:'The Warm Heart', beats:'Warms the coldest room · Speaks plainly, always', fig:'fig_jane_bennet'},
+  {id:'arabella', name:'Arabella Frost', ep:'The Wit', beats:'Says the unsaid · Bends for no one', fig:'fig_arabella_frost'},
+  {id:'cordelia', name:'Cordelia Vane', ep:'The Strategist', beats:'Sees three moves ahead · Keeps her own counsel', fig:'fig_miss_bingley'},
+  {id:'lydia', name:'Harriet Lowe', ep:'The Spark', beats:'Wins the room at a glance · Loyal past all reason', fig:'fig_lydia_bennet'},
+  {id:'charlotte', name:'Eleanor Pryce', ep:'The Observer', beats:'Speaks plainly, always · Climbs without apology', fig:'fig_charlotte_lucas'},
+];
+const ORN='<svg viewBox="0 0 44 44" fill="none" stroke="#c9a24a" stroke-width="1.4"><path d="M4 40V14c0-6 4-10 10-10h26"/><path d="M9 36V18c0-3 2-5 5-5h20"/><circle cx="14" cy="18" r="2.2" fill="#c9a24a" stroke="none"/><path d="M4 22c4 0 6-2 8-6"/></svg>';
+const deck=document.getElementById('deck'), dots=document.getElementById('dots');
+let cur=1;
+CH.forEach((c,i)=>{ const el=document.createElement('div'); el.className='card'; el.dataset.i=i; el.style.setProperty('--fig',`url(../worlds/pride-and-prejudice/pc-select/${c.fig}.webp)`);
+  el.innerHTML=`<div class="face"><div class="art"><div class="fig"></div></div>
+    <div class="ornament tl">${ORN}</div><div class="ornament tr">${ORN}</div><div class="ornament bl">${ORN}</div><div class="ornament br">${ORN}</div>
+    <div class="foot"><div class="plaque">${c.ep}</div><div class="nm">${c.name}</div><div class="beats">${c.beats}</div></div></div><div class="shine"></div>`;
+  deck.appendChild(el); const d=document.createElement('i'); dots.appendChild(d); });
+function layout(){ [...deck.children].forEach((el,i)=>{ let p=i-cur; el.dataset.pos=(Math.abs(p)<=2)?String(p):'far'; el.classList.toggle('front',p===0); });
+  [...dots.children].forEach((d,i)=>d.classList.toggle('on',i===cur)); document.getElementById('playName').textContent=CH[cur].name.split(' ')[0]; }
+layout();
+/* drag / swipe with a springy follow on the front card */
+let sx=0, dx=0, dragging=false, front=null;
+const start=x=>{ front=deck.querySelector('.card.front'); if(!front) return; dragging=true; sx=x; dx=0; front.classList.add('drag'); };
+const move=x=>{ if(!dragging) return; dx=x-sx; const r=Math.max(-1,Math.min(1,dx/180)); front.style.transform=`translate3d(${dx}px,${Math.abs(dx)*.12}px,0) rotateY(${-r*18}deg) rotateZ(${r*6}deg) scale(${1-Math.abs(r)*.05})`; };
+const end=()=>{ if(!dragging) return; dragging=false; front.classList.remove('drag'); front.style.transform='';
+  if(dx<-70 && cur<CH.length-1) cur++; else if(dx>70 && cur>0) cur--; layout(); };
+deck.addEventListener('pointerdown',e=>{ start(e.clientX); deck.setPointerCapture(e.pointerId); });
+deck.addEventListener('pointermove',e=>move(e.clientX));
+deck.addEventListener('pointerup',end); deck.addEventListener('pointercancel',end);
+deck.addEventListener('click',e=>{ if(Math.abs(dx)>6) return; const el=e.target.closest('.card'); if(!el) return; const i=+el.dataset.i; if(i!==cur){ cur=i; layout(); } });
+document.getElementById('play').addEventListener('click',()=>{ const f=deck.querySelector('.card.front'); f.classList.add('chosen'); setTimeout(()=>f.classList.remove('chosen'),1200); });
+window.addEventListener('keydown',e=>{ if(e.key==='ArrowRight'&&cur<CH.length-1){cur++;layout();} if(e.key==='ArrowLeft'&&cur>0){cur--;layout();} });
+</script>
+</body></html>

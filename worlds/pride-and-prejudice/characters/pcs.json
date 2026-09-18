@@ -381,6 +381,40 @@
       "bio": "All surface charm and rehearsed sincerity — a smile you'd trust and a story you shouldn't. He never once acknowledges the calculation beneath the ease.",
       "driver": "To be adored without ever being pinned down, and to always land soft.",
       "manner": "Smooth, confiding, practiced; candour worn as a costume, never spent as truth."
+    },
+    {
+      "id": "pc_harriet",
+      "name": "Harriet Lowe",
+      "epithet": "The Spark",
+      "gender": "woman",
+      "portrait": "lydia_bennet",
+      "traits": [
+        "charm",
+        "devotion",
+        "wit"
+      ],
+      "bg": "terrace",
+      "example": true,
+      "bio": "Laughs first, thinks second, and is forgiven third. Every room is brighter for her being in it — and louder.",
+      "driver": "To be adored, and to deserve it before anyone checks.",
+      "manner": "Quick, warm, a little too loud; she leans in when others lean back."
+    },
+    {
+      "id": "pc_eleanor",
+      "name": "Eleanor Pryce",
+      "epithet": "The Observer",
+      "gender": "woman",
+      "portrait": "charlotte_lucas",
+      "traits": [
+        "candor",
+        "ambition",
+        "reserve"
+      ],
+      "bg": "supper",
+      "example": true,
+      "bio": "Plain-spoken and plain-dressed, and the sharpest arithmetic in Meryton. She knows what a season costs — and what it buys.",
+      "driver": "A house of her own, on her own terms, before the county decides them for her.",
+      "manner": "Steady, dry, unhurried; says the true thing quietly and lets it sit."
     }
   ],
   "types": [
