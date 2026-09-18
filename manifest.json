@@ -2,7 +2,7 @@
   "name": "roles.ai",
   "short_name": "roles.ai",
   "description": "A visual novel dating experience.",
-  "start_url": "/dialog.html",
+  "start_url": "/dialog2.html",
   "scope": "/",
   "display": "standalone",
   "orientation": "portrait",

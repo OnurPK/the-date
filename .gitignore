@@ -64,3 +64,10 @@ worlds/pride-and-prejudice/characters/*/you/*
 **/*_green.mp4
 worlds/pride-and-prejudice/characters/arabella_you/
 worlds/pride-and-prejudice/pc-select/fig_arabella_you.webp
+
+# Capacitor (iOS shell) — build products only; ios/ itself is committed
+ios/App/Pods/
+ios/App/build/
+ios/App/App.xcworkspace/xcuserdata/
+ios/App/App.xcodeproj/xcuserdata/
+ios/DerivedData/
