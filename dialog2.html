@@ -29253,6 +29253,10 @@ console.log('%c[caller] Episode 1 ready — run startCaller()', 'color:#e7b24c')
   const AURL=f=>`url('${PCS}${f}')`;
   // Full-body character art (head-to-feet, transparent) for the detail hero.
   const figFull=p=>`url('${BASE}characters/${p}/appearances/pride.png')`;
+  // Alpha clips: Chrome/Firefox/Edge → VP9 webm; Safari (which plays VP9 but drops its alpha) → HEVC-alpha .mov (hvc1, made on a Mac).
+  const IS_SAFARI=/apple/i.test(navigator.vendor||'') && !/crios|fxios|edgios|chrome/i.test(navigator.userAgent);
+  const CLIP_EXT=IS_SAFARI ? '.mov' : '.webm';
+  function clipOk(){ const t=document.createElement('video'); return IS_SAFARI ? !!(t.canPlayType('video/mp4; codecs="hvc1"')||t.canPlayType('video/mp4; codecs="hvc1.1.6.L93.B0"')||t.canPlayType('video/quicktime')) : !!t.canPlayType('video/webm; codecs="vp9"'); }
   // Still figure for the hero/card. For characters with an idle clip we use the clip's own FIRST FRAME (keyed the same
   // way, same canvas) placed exactly where the clip is drawn — so the still→clip hand-off is pixel-identical (no edge halo).
   const IDLE_FIRST={ arabella_frost:{w:720,h:1280} };   // portrait id → frame size of characters/<id>/idle_first.webp
@@ -29440,13 +29444,13 @@ console.log('%c[caller] Episode 1 ready — run startCaller()', 'color:#e7b24c')
     const still=()=>{ const sp=outfitSpec(c.portrait, idx); const layer=document.createElement('div'); layer.className='hfig-outfit'; layer._new=true;
       layer.style.cssText=`position:absolute;inset:0;z-index:4;background:${sp.img} ${sp.pos}/${sp.size} no-repeat;opacity:0;transition:opacity .35s ease;pointer-events:none;`; fg.appendChild(layer); void layer.offsetWidth; layer.style.opacity='1'; fadeOutOld(); setTimeout(()=>{ layer._new=false; },450); };
     if(idx){ const t=document.createElement('video');
-      if(t.canPlayType('video/webm; codecs="vp9"')){   // this outfit's own looping idle clip, mounted exactly where the default idle clip sits
+      if(clipOk()){   // this outfit's own looping idle clip, mounted exactly where the default idle clip sits
         const v=document.createElement('video'); v.className='hfig-outfit-vid'; v._new=true; v.muted=true; v.playsInline=true; v.loop=true; v.preload='auto';
         v.style.cssText='position:absolute;left:calc(54% - 16px);bottom:'+bottom.toFixed(1)+'px;height:'+vh.toFixed(1)+'px;width:auto;transform:translateX(-50%);pointer-events:none;opacity:.02;z-index:5;transition:opacity .35s ease;';
         let shown=false; const show=()=>{ if(shown) return; shown=true; if(my!==outfitSeq){ try{ v.pause(); }catch(e){} v.remove(); return; } v.style.opacity='1'; fadeOutOld(); setTimeout(()=>{ v._new=false; },450); };   // fade in only once the clip has painted (unless a newer choice superseded it)
         if(v.requestVideoFrameCallback) v.requestVideoFrameCallback(()=>v.requestVideoFrameCallback(show)); v.addEventListener('playing',()=>setTimeout(show,260),{once:true});
         v.addEventListener('error',()=>{ v.remove(); if(my===outfitSeq) still(); },{once:true});   // no clip → the still
-        v.src=BASE+'characters/'+c.portrait+'/outfits/'+list[idx]+'.webm'; fg.appendChild(v); playRetry(v, 4, null);
+        v.src=BASE+'characters/'+c.portrait+'/outfits/'+list[idx]+CLIP_EXT; fg.appendChild(v); playRetry(v, 4, null);
       } else still();
     } else { fadeOutOld(); }   // back to the default look: the idle clip underneath is revealed as the outfit fades
     outfitIdx=idx; try{ localStorage.setItem('rai.outfit.'+c.id, list[idx]); }catch(_){}
@@ -29477,7 +29481,7 @@ console.log('%c[caller] Episode 1 ready — run startCaller()', 'color:#e7b24c')
         idleVideo(c,'idle'); }catch(e){}
       setTimeout(()=>$('pcsel').classList.remove('no-idle'),60);
       // as the zoom lands: once the clip's first frame is on screen underneath, the sprite on top fades out (.32s) → the still picture 'comes alive'
-      { const t0=Date.now(); const tick=()=>{ const fg=$('pcsFig'), v=fg.querySelector('video.hfig-idle'), g=fg.querySelector('.hfig-ghost'); if(!g) return; if((v && v.style.opacity==='1') || Date.now()-t0>1200){ setTimeout(()=>{ g.style.opacity='0'; setTimeout(()=>g.remove(),380); }, 32); } else setTimeout(tick,16); }; setTimeout(tick,16); }
+      { const t0=Date.now(); const tick=()=>{ const fg=$('pcsFig'), v=fg.querySelector('video.hfig-idle'), g=fg.querySelector('.hfig-ghost'); if(!g) return; if(v && v.style.opacity==='1'){ setTimeout(()=>{ g.style.opacity='0'; setTimeout(()=>g.remove(),380); }, 32); } else if(Date.now()-t0>1200){ applySprite(fg, c.portrait); g.remove(); /* no clip (Safari without HEVC-alpha, load error…): the still stays */ } else setTimeout(tick,16); }; setTimeout(tick,16); }
       setTimeout(()=>{ $('pcs-roster').classList.remove('active','opening'); if(deck) deck.classList.remove('opening'); card.classList.add('snap'); card.classList.remove('zooming'); card.style.transform=''; card.style.removeProperty('--coverH'); card.style.removeProperty('--cardH'); setTimeout(()=>card.classList.remove('snap'),60); }, 80);
     }, 910);
   }
@@ -29526,7 +29530,7 @@ console.log('%c[caller] Episode 1 ready — run startCaller()', 'color:#e7b24c')
   const IDLE_POOL=['idle','idle_b','idle_c'];
   function idleVideo(c, name){ const fig=$('pcsFig'); if(!fig) return;
     const id=c&&c.portrait; if(!id) return;
-    const v0=document.createElement('video'); if(!v0.canPlayType('video/webm; codecs="vp9"')) return;   // Safari: no alpha webm → static sprite
+    if(!clipOk()) return;   // Safari: no alpha webm → static sprite
     IDLE_OK[id]=IDLE_OK[id]||{};
     const avail=IDLE_POOL.filter(n=>IDLE_OK[id][n]!==false); if(!avail.length) return;
     if(!name || avail.indexOf(name)<0){ const prev=fig.querySelector('video.hfig-idle'); const prevName=prev&&prev.dataset.clip; const pick=avail.filter(n=>n!==prevName); name=(pick.length?pick:avail)[Math.floor(Math.random()*(pick.length?pick:avail).length)]; }
@@ -29534,14 +29538,14 @@ console.log('%c[caller] Episode 1 ready — run startCaller()', 'color:#e7b24c')
     const mount=()=>{ if(!curChar || curChar.portrait!==id) return; const v=document.createElement('video'); v.className='hfig-idle'; v.dataset.clip=name; v.dataset.pid=id; v.muted=true; v.playsInline=true; v.loop=false; v.preload='auto';
       const H=Math.round(($('pcsel').clientHeight||844)*0.72); const vh=H*1.12/0.86; v.style.cssText='position:absolute;left:calc(54% - 16px);bottom:'+(-200-0.03*vh+(fig.clientHeight-H)).toFixed(1)+'px;height:'+vh.toFixed(1)+'px;width:auto;transform:translateX(-50%);pointer-events:none;opacity:.02;';   // (not 0: Chrome pauses fully-invisible video-only media)
       // show after the 2nd presented frame, then drop the previous clip a frame later (same pose → seamless)
-      let shown=false; const show=()=>{ if(shown) return; shown=true; v.style.opacity='1'; const root=$('pcsel'); if(!(root&&(root.classList.contains('no-idle')||root.classList.contains('idle-fade')))) fig.style.backgroundImage='none'; /* (during the card→scene hand-off the sprite stays until the clip has faded in) */ setTimeout(()=>{ fig.querySelectorAll('video.hfig-idle').forEach(o=>{ if(o!==v){ try{ o.pause(); o.remove(); }catch(e){} } }); }, 80); };
+      let shown=false; const show=()=>{ if(shown || !v.isConnected) return; shown=true; v.style.opacity='1'; const root=$('pcsel'); if(!(root&&(root.classList.contains('no-idle')||root.classList.contains('idle-fade')))) fig.style.backgroundImage='none'; /* (during the card→scene hand-off the sprite stays until the clip has faded in) */ setTimeout(()=>{ if(!v.isConnected) return; fig.querySelectorAll('video.hfig-idle').forEach(o=>{ if(o!==v){ try{ o.pause(); o.remove(); }catch(e){} } }); }, 80); };
       v.addEventListener('playing',()=>{ if(v.requestVideoFrameCallback) v.requestVideoFrameCallback(()=>v.requestVideoFrameCallback(show)); setTimeout(show,450); },{once:true});   // (timer = safety when frame callbacks don't fire)
       v.addEventListener('ended',()=>{ try{ v.pause(); }catch(e){} setTimeout(()=>{ if(v.isConnected && !$('pcsel').classList.contains('revealing') && curChar && curChar.portrait===id) idleVideo(c); }, 2500); });   // rest, then the next random clip
       v.addEventListener('error',()=>{ IDLE_OK[id][name]=false; try{ v.remove(); }catch(e){} if(!fig.querySelector('video.hfig-idle')){ const rest=IDLE_POOL.filter(n=>IDLE_OK[id][n]!==false); if(rest.length) idleVideo(c); else fig.style.backgroundImage=figFull(c.portrait); } });
       // play() can be rejected transiently (background tab: "video-only media paused to save power") —
       // keep the element, the static sprite stays underneath; retry a couple of times, then give up quietly.
       const tryPlay=(n)=>{ const p=v.play(); if(p&&p.catch) p.catch(()=>{ if(n>0 && v.isConnected) setTimeout(()=>tryPlay(n-1), 700); }); };
-      v.src=BASE+'characters/'+id+'/'+name+'.webm'; fig.appendChild(v); tryPlay(3); };
+      v.src=BASE+'characters/'+id+'/'+name+CLIP_EXT; fig.appendChild(v); tryPlay(3); };
     mount(); }
   window.pcIdleVideo=idleVideo; window.pcCurChar=()=>curChar;
   // ---- Reveal sequence building blocks (flow to be designed): walk-away clip in the hero slot, then the
@@ -29561,7 +29565,7 @@ console.log('%c[caller] Episode 1 ready — run startCaller()', 'color:#e7b24c')
     v.addEventListener('playing',()=>{ if(v.requestVideoFrameCallback) v.requestVideoFrameCallback(()=>swap()); setTimeout(swap,450); },{once:true});
     v.addEventListener('ended',()=>{ try{ v.pause(); }catch(e){} if(onEnd) onEnd(); });
     v.addEventListener('error',()=>{ try{ v.remove(); }catch(e){} if(onEnd) onEnd(); });
-    v.src=clipSrc('characters/'+c.portrait+'/'+name+'.webm'); fig.appendChild(v); playRetry(v, 4, ()=>{ if(onEnd) onEnd(); }); return v; }
+    v.src=clipSrc('characters/'+c.portrait+'/'+name+CLIP_EXT); fig.appendChild(v); playRetry(v, 4, ()=>{ if(onEnd) onEnd(); }); return v; }
   // play() with retries — Chrome rejects transiently for freshly-added / near-invisible video-only media
   function playRetry(v, n, onFail){ const p=v.play(); if(p&&p.catch) p.catch(()=>{ if(n>0 && v.isConnected) setTimeout(()=>playRetry(v,n-1,onFail), 600); else if(onFail) onFail(); }); }
   // Reveal clips are fetched into blob URLs when the sequence starts, so every later src swap paints instantly
@@ -29570,13 +29574,13 @@ console.log('%c[caller] Episode 1 ready — run startCaller()', 'color:#e7b24c')
   function preloadClip(rel){ if(CLIP_BLOB[rel]) return; CLIP_BLOB[rel]='pending';
     fetch(BASE+rel,{cache:'force-cache'}).then(r=>{ if(!r.ok) throw new Error(r.status); return r.blob(); }).then(b=>{ CLIP_BLOB[rel]=URL.createObjectURL(b); }).catch(()=>{ delete CLIP_BLOB[rel]; }); }
   function clipSrc(rel){ const u=CLIP_BLOB[rel]; return (u && u!=='pending') ? u : BASE+rel; }
-  function preloadRevealClips(c){ if(!c||!c.portrait) return; ['characters/'+c.portrait+'/walk_away.webm','characters/'+c.portrait+'/you/entrance.webm','pc-select/fx/curtain_close.webm','pc-select/fx/curtain_open.webm'].forEach(preloadClip); }
+  function preloadRevealClips(c){ if(!c||!c.portrait) return; ['characters/'+c.portrait+'/walk_away'+CLIP_EXT,'characters/'+c.portrait+'/you/entrance'+CLIP_EXT,'pc-select/fx/curtain_close'+CLIP_EXT,'pc-select/fx/curtain_open'+CLIP_EXT].forEach(preloadClip); }
   function curtainClose(onEnd){ const root=$('pcsel'); if(!root) return null; let v=document.getElementById('pcsCurtain');
     if(!v){ v=document.createElement('video'); v.id='pcsCurtain'; v.muted=true; v.playsInline=true; v.preload='auto';
       v.style.cssText='position:absolute;left:0;top:0;width:100%;height:100%;object-fit:cover;object-position:top center;z-index:8;pointer-events:none;transform:translateY(-38%);transition:transform 1.1s cubic-bezier(.3,.9,.3,1);'; root.appendChild(v); }
     v.addEventListener('ended',()=>{ try{ v.pause(); }catch(e){} if(onEnd) onEnd(); },{once:true});
     v.addEventListener('playing',()=>{ v.style.transform='translateY(0)'; },{once:true});   // the generated clip pops in → glide it down instead
-    v.src=clipSrc('pc-select/fx/curtain_close.webm'); playRetry(v, 4, ()=>{ if(onEnd) onEnd(); }); return v; }
+    v.src=clipSrc('pc-select/fx/curtain_close'+CLIP_EXT); playRetry(v, 4, ()=>{ if(onEnd) onEnd(); }); return v; }
   function curtainRemove(){ ['pcsCurtain','pcsCurtainOld'].forEach(id=>{ const v=document.getElementById(id); if(v){ try{ v.pause(); }catch(e){} v.remove(); } }); }
   // "Make her you": UI slides off + stage floor fades in → she walks to the curtain while the floor text
   // ("Becoming someone…" + spark) appears → curtain closes → callback (curtain stays until pcCurtainRemove()).
@@ -29620,7 +29624,7 @@ console.log('%c[caller] Episode 1 ready — run startCaller()', 'color:#e7b24c')
     const lift=()=>{ if(lifting) return; lifting=true; v.style.transform='translateY(-48%)'; v.style.opacity='0'; setTimeout(finish, 1750); };
     let lifting=false; v.addEventListener('timeupdate',()=>{ const d=v.duration; if(isFinite(d) && d>0 && v.currentTime>=d-1.5) lift(); });
     v.addEventListener('ended',lift,{once:true});
-    v.src=clipSrc('pc-select/fx/curtain_open.webm'); playRetry(v, 4, finish); return v; }
+    v.src=clipSrc('pc-select/fx/curtain_open'+CLIP_EXT); playRetry(v, 4, finish); return v; }
   // the transformed sprite (characters/<portrait>/you/pride.png) placed exactly where the walk clip left her
   function showYou(){ const fig=$('pcsFig'), c=curChar; if(!fig||!c) return;
     fig.querySelectorAll('video.hfig-idle').forEach(v=>{ try{ v.pause(); v.remove(); }catch(e){} });
@@ -29655,7 +29659,7 @@ console.log('%c[caller] Episode 1 ready — run startCaller()', 'color:#e7b24c')
     v.addEventListener('ended',()=>{ try{ v.pause(); }catch(e){} });
     v.addEventListener('error',()=>{ v.remove(); showYou(); if(onReady) onReady(null); });
     setTimeout(()=>{ if(!primed && v.isConnected && !v.error){ prime(); } }, 2500);   // safety: never stall behind the curtain
-    v.src=clipSrc('characters/'+c.portrait+'/you/entrance.webm'); fig.appendChild(v); fig.style.backgroundImage='none'; return v; }
+    v.src=clipSrc('characters/'+c.portrait+'/you/entrance'+CLIP_EXT); fig.appendChild(v); fig.style.backgroundImage='none'; return v; }
   window.pcRevealSequence=function(done){
     preloadRevealClips(curChar);
     revealUi(true);
@@ -29679,10 +29683,10 @@ console.log('%c[caller] Episode 1 ready — run startCaller()', 'color:#e7b24c')
     m.classList.toggle('has-photo', !!dataUrl); }
   function pmFig(c){ const fig=$('pmFig'); if(!fig) return; [...fig.querySelectorAll('video')].forEach(v=>v.remove());
     // looping back-view clip when the character has one (characters/<id>/mirror_idle.webm); otherwise the sprite stays
-    const id=c&&c.portrait; if(!id) return; const t=document.createElement('video'); if(!t.canPlayType('video/webm; codecs="vp9"')) return;
+    const id=c&&c.portrait; if(!id) return; if(!clipOk()) return;
     const v=document.createElement('video'); v.muted=true; v.playsInline=true; v.loop=true; v.preload='auto'; v.style.opacity='0';
     v.addEventListener('loadeddata',()=>{ fig.style.backgroundImage='none'; v.style.opacity='1'; const pr=v.play(); if(pr&&pr.catch) pr.catch(()=>{}); },{once:true});
-    v.addEventListener('error',()=>{ v.remove(); },{once:true}); v.src=BASE+'characters/'+id+'/mirror_idle.webm'; fig.appendChild(v); }
+    v.addEventListener('error',()=>{ v.remove(); },{once:true}); v.src=BASE+'characters/'+id+'/mirror_idle'+CLIP_EXT; fig.appendChild(v); }
   let pmMode='reveal';   // 'reveal' (Make her you → curtain) | 'create' (+ Create your own → how does your story begin?)
   window.pcMirrorOpen=function(mode){ pmMode=mode||'reveal'; const m=$('pcsMirror'); if(!m) return; pmEnsureInput(); pmSetPhoto(null); pmFig(curChar); m.classList.add('on'); void m.offsetWidth; setTimeout(()=>m.classList.add('live'), 30); };
   // ── Create page (step 2 of "+ Create your own")

@@ -58,6 +58,9 @@ docs/_shots/
 worlds/pride-and-prejudice/characters/*/you/*
 # demo reveal assets (needed on Railway): the swapped Arabella + her entrance clip
 !worlds/pride-and-prejudice/characters/arabella_frost/you/entrance.webm
+!worlds/pride-and-prejudice/characters/arabella_frost/you/entrance.mov
 !worlds/pride-and-prejudice/characters/arabella_frost/you/pride.png
+# green-screen sources of the alpha clips (webm/mov are the shipped versions)
+**/*_green.mp4
 worlds/pride-and-prejudice/characters/arabella_you/
 worlds/pride-and-prejudice/pc-select/fig_arabella_you.webp

@@ -54,6 +54,7 @@ const MIME = {
   '.webp': 'image/webp',
   '.mp4':  'video/mp4',
   '.webm': 'video/webm',
+  '.mov':  'video/quicktime',
   '.mp3':  'audio/mpeg',
   '.wav':  'audio/wav',
   '.ico':  'image/x-icon',
@@ -1135,15 +1136,33 @@ function serveStatic(req, res, parsed) {
       res.writeHead(404);
       return res.end('not found');
     }
-    streamFile(filePath, res);
+    streamFile(filePath, res, req, stat);
   });
 }
 
-function streamFile(filePath, res) {
+function streamFile(filePath, res, req, stat) {
   const ext = path.extname(filePath).toLowerCase();
   const mime = MIME[ext] || 'application/octet-stream';
   // no-store + no validators = browser can NEVER serve a stale copy (dev only)
-  res.writeHead(200, { 'content-type': mime, 'cache-control': 'no-store, no-cache, must-revalidate, max-age=0', 'pragma': 'no-cache', 'expires': '0', 'access-control-allow-origin': '*' });   // CORS: lets tools (e.g. a Miro tab) fetch local assets
+  const headers = { 'content-type': mime, 'cache-control': 'no-store, no-cache, must-revalidate, max-age=0', 'pragma': 'no-cache', 'expires': '0', 'access-control-allow-origin': '*', 'accept-ranges': 'bytes' };   // CORS: lets tools (e.g. a Miro tab) fetch local assets
+  const size = stat ? stat.size : (fs.statSync(filePath).size);
+  // HTTP Range support: Safari refuses to play <video> from a server that answers 200 to a byte-range request
+  const range = req && req.headers && req.headers.range;
+  const m = range && /^bytes=(\d*)-(\d*)$/.exec(range);
+  if (m && size > 0) {
+    let start = m[1] === '' ? Math.max(0, size - Number(m[2])) : Number(m[1]);
+    let end = (m[1] !== '' && m[2] !== '') ? Number(m[2]) : size - 1;
+    if (end >= size) end = size - 1;
+    if (isNaN(start) || isNaN(end) || start > end || start >= size) { res.writeHead(416, { 'content-range': 'bytes */' + size }); return res.end(); }
+    headers['content-range'] = 'bytes ' + start + '-' + end + '/' + size;
+    headers['content-length'] = end - start + 1;
+    res.writeHead(206, headers);
+    if (req.method === 'HEAD') return res.end();
+    return fs.createReadStream(filePath, { start, end }).pipe(res);
+  }
+  headers['content-length'] = size;
+  res.writeHead(200, headers);
+  if (req && req.method === 'HEAD') return res.end();
   fs.createReadStream(filePath).pipe(res);
 }
 
