@@ -10,6 +10,16 @@
 <meta http-equiv="Pragma" content="no-cache" />
 <meta http-equiv="Expires" content="0" />
 <title>roles.ai</title>
+<!-- Boot screen: paints before anything else (inline, no dependencies) and matches the native iOS launch image
+     (same #0a0a0f + logo at 15.9% of screen height), so splash → loading → intro reads as one continuous shot. -->
+<style id="bootCss">
+  html{background:#0a0a0f}
+  #bootScreen{position:fixed;inset:0;z-index:100000;background:#0a0a0f;display:flex;flex-direction:column;align-items:center;justify-content:center;transition:opacity .55s ease}
+  #bootScreen.out{opacity:0;pointer-events:none}
+  #bootScreen img{height:15.9vh;width:auto;display:block;-webkit-user-drag:none}
+  #bootBar{position:absolute;left:50%;top:calc(50% + 7.95vh + 5vh);transform:translateX(-50%);width:96px;height:2px;background:rgba(255,255,255,.12);border-radius:2px;overflow:hidden}
+  #bootBar i{display:block;height:100%;width:0;background:linear-gradient(90deg,#e0668a,#8b7bd8);transition:width .3s ease}
+</style>
 
 <!-- PWA / iOS web-app metadata -->
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -11521,6 +11531,32 @@
 </style>
 </head>
 <body>
+<div id="bootScreen" aria-hidden="true"><img src="assets/ui/logo.png" alt=""><div id="bootBar"><i></i></div></div>
+<script>
+(function(){
+  var s=document.getElementById('bootScreen'), b=s.querySelector('#bootBar i'), p=0, t0=Date.now(), done=false;
+  function set(v){ if(v>p){ p=v; b.style.width=p+'%'; } }
+  var tick=setInterval(function(){ if(p<88) set(p+(88-p)*0.07); }, 200);   /* trickle while the page loads */
+  function finish(){ if(done) return; done=true; clearInterval(tick); set(100);
+    var wait=Math.max(0, 900-(Date.now()-t0));                                   /* never a sub-second flash */
+    setTimeout(function(){ s.classList.add('out'); setTimeout(function(){ try{ s.remove(); }catch(e){} }, 600); }, wait+180); }
+  window.__bootFinish=finish;
+  document.addEventListener('DOMContentLoaded', function(){ set(45); });
+  window.addEventListener('load', function(){ set(72);
+    var jobs=[];
+    if(document.fonts && document.fonts.ready) jobs.push(document.fonts.ready.catch(function(){}));
+    /* first screen is the intro: wait for its ambient loop to have a frame (capped, so a slow network never blocks) */
+    var v=document.getElementById('introVideo');
+    if(v && document.body.classList.contains('flow-intro')){
+      jobs.push(new Promise(function(r){ var d=false; function ok(){ if(!d){ d=true; r(); } }
+        ['loadeddata','canplay','playing'].forEach(function(ev){ v.addEventListener(ev, ok, {once:true}); });
+        if(v.readyState>=2) ok(); setTimeout(ok, 3500); }));
+    }
+    Promise.all(jobs).then(finish, finish);
+  });
+  setTimeout(finish, 12000);   /* hard cap */
+})();
+</script>
 
 <!-- build switch — only on the entry (landing) screen; works everywhere the
      game runs (mobile / incognito / direct), since it lives in the game itself -->
