@@ -16585,6 +16585,7 @@ function startPrideEnd() {
     if (want >= reel.length - 1) {
       clearInterval(endSceneTimer); endSceneTimer = null;
       if (cont) cont.classList.add('show');
+      scene.classList.add('awaiting-continue');   // (the CSS that reveals .es-continue keys off this class)
     }
   }, 120);
 }
@@ -16752,7 +16753,12 @@ function finishEndScene() {
     scene.setAttribute('aria-hidden','true');
     if (dialog) dialog.classList.remove('show');
     el.body.classList.remove('in-endscene');
-    if (typeof showMap === 'function') showMap();
+    // Hand over to the regular end-of-episode flow (END → chapter dashboard → map events → map)
+    // instead of jumping straight to the map, so unlocks / consequences / the clock all run.
+    idx = lines.length; renderLine();
+    const endBtn = document.getElementById('epEndContinue');
+    if (endBtn && endBtn.style.display !== 'none') endBtn.click();
+    else if (typeof showMap === 'function') showMap();
     return;
   }
   try { video.pause(); } catch (e) {}
