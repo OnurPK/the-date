@@ -1930,6 +1930,18 @@
     pointer-events: none;
     transform: translateX(-50%) scale(0.85) translateY(-12px);
   }
+  /* New game — same line-button style, one row under Continue; only when there is saved progress */
+  #introNewGame {
+    position: absolute; left: 50%; top: calc(60% + 122px); transform: translateX(-50%);
+    background: transparent; border: none; color: rgba(255,255,255,0.5); font-family: inherit;
+    font-size: 11px; font-weight: 700; letter-spacing: 0.28em; text-transform: uppercase; cursor: pointer;
+    padding: 8px 14px 4px; text-shadow: 0 2px 8px rgba(0,0,0,0.6);
+    transition: opacity 0.45s ease, color 0.2s, transform 0.55s cubic-bezier(0.25,0.9,0.3,1.05);
+  }
+  #introNewGame[hidden] { display: none; }
+  #introNewGame:hover { color: #fff; }
+  #introNewGame:active { transform: translateX(-50%) scale(0.96); }
+  body.flow-form #introNewGame { opacity: 0; pointer-events: none; transform: translateX(-50%) scale(0.85) translateY(-12px); }
 
   #introScreen .form-content {
     position: absolute;
@@ -11560,6 +11572,7 @@
 
   <button class="intro-cta" id="introStart">Start</button>
   <button id="introSignIn" type="button">Sign in</button>
+  <button id="introNewGame" type="button" hidden>New game</button>
 
   <div class="form-content">
     <div class="field">
@@ -23470,6 +23483,8 @@ try {
   if (qs.get('newgame') === '1' || qs.get('reset') === '1') {
     ['rai.completedEps','cowork.room.prideMeta.v1','rai_pride_pcs','rai.activePC','cowork.room.currentScenario','rai.clock','rai.encFired','rai.revealedLocs','rai.pendingReveal','rai.metCast','rai.whisperTurn','rai.mapEvents','rai.conseqDone','rai.youPortrait']
       .forEach(k => { try { localStorage.removeItem(k); } catch (e) {} });
+    // one-shot: drop the flag from the address bar so a plain reload doesn't wipe again
+    try { const u = new URL(window.location.href); u.searchParams.delete('newgame'); u.searchParams.delete('reset'); u.searchParams.delete('cb'); history.replaceState(null, '', u.toString()); } catch (e) {}
   }
 } catch (e) {}
 
@@ -28185,9 +28200,18 @@ function prideHasProgress(){
 }
 function prideUpdateIntroCTA(){
   const b=document.getElementById('introSignIn'); if(!b) return;
-  b.textContent = prideHasProgress() ? 'Continue' : 'Sign in';
+  const has = prideHasProgress();
+  b.textContent = has ? 'Continue' : 'Sign in';
+  const ng=document.getElementById('introNewGame'); if(ng) ng.hidden = !has;
 }
 prideUpdateIntroCTA();
+// New game (shown under Continue when there is progress): confirm, then reload with ?newgame=1 —
+// the same wipe the dev URL flag does (profile + pride progress), so the map starts fully fresh.
+document.getElementById('introNewGame').addEventListener('click', () => {
+  if (!confirm('Start a new game? Your current progress will be erased.')) return;
+  const u = new URL(window.location.href); u.searchParams.set('newgame', '1'); u.searchParams.set('cb', String(Date.now()));
+  window.location.replace(u.toString());
+});
 document.getElementById('introSignIn').addEventListener('click', () => {
   if (prideHasProgress() && typeof window.prideResumeToMap === 'function') {
     // Returning user → resume onto their map at the right spot.
