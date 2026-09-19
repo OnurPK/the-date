@@ -71,3 +71,6 @@ ios/App/build/
 ios/App/App.xcworkspace/xcuserdata/
 ios/App/App.xcodeproj/xcuserdata/
 ios/DerivedData/
+
+# simulator screenshots for review
+_shots/

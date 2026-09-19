@@ -28797,7 +28797,7 @@ console.log('%c[caller] Episode 1 ready — run startCaller()', 'color:#e7b24c')
    create button becomes a filled gradient pill. */
 #pcsel.overmap .pcs-rtop{ padding-top:calc(env(safe-area-inset-top,0px) + 64px); }
 #pcsel.overmap .pcs-rfoot{ padding-bottom:calc(env(safe-area-inset-bottom,0px) + 42px); }
-#pcsel.overmap .pcs-rclose{ display:grid; top:calc(env(safe-area-inset-top,0px) + 38px); background:rgba(20,12,26,.5); border-color:rgba(255,255,255,.3); color:#fff; }
+#pcsel.overmap .pcs-rclose{ display:grid; top:18px; width:42px; height:42px; background:rgba(20,12,26,.5); border-color:rgba(255,255,255,.3); color:#fff; }
 #pcsel.overmap .pcs-h1{ color:#fff; text-shadow:none; font-size:28px; }
 #pcsel.overmap .pcs-kick{ color:#f4b8cf; text-shadow:0 1px 10px rgba(0,0,0,.7); }
 #pcsel.overmap .dcard{ box-shadow:none; }
@@ -29038,7 +29038,7 @@ console.log('%c[caller] Episode 1 ready — run startCaller()', 'color:#e7b24c')
 #pcsel .pcs-mirror .pm-fig video{position:absolute; inset:0; width:100%; height:100%; object-fit:contain; object-position:center top}
 #pcsel .pcs-mirror .pm-hint{position:absolute; left:3%; width:52%; top:calc(53% + var(--pm-dy)); white-space:nowrap; text-align:center; font:500 12px/1.3 Inter,system-ui,sans-serif; color:rgba(255,255,255,.78); text-shadow:0 1px 6px rgba(0,0,0,.8); opacity:0; transition:opacity .5s ease .4s}
 #pcsel .pcs-mirror.has-photo .pm-hint{opacity:1}
-#pcsel .pcs-mirror .pm-top{position:absolute; left:22px; right:70px; top:calc(env(safe-area-inset-top,0px) + 62px); z-index:3}
+#pcsel .pcs-mirror .pm-top{position:absolute; left:22px; right:70px; top:max(62px, calc(env(safe-area-inset-top,0px) + 10px)); z-index:3}
 #pcsel .pcs-mirror .pm-k{font:800 10px/1 Inter,system-ui,sans-serif; letter-spacing:.28em; text-transform:uppercase; color:#e7b24c; margin-bottom:8px}
 #pcsel .pcs-mirror .pm-t{font:700 30px/1.08 "Playfair Display",Georgia,serif; color:#fff; margin:0 0 8px; text-shadow:0 2px 14px rgba(0,0,0,.7)}
 #pcsel .pcs-mirror .pm-s{font:400 13px/1.45 Inter,system-ui,sans-serif; color:rgba(255,255,255,.82); max-width:290px; text-shadow:0 1px 8px rgba(0,0,0,.8)}
@@ -29059,7 +29059,7 @@ console.log('%c[caller] Episode 1 ready — run startCaller()', 'color:#e7b24c')
 #pcsel .pcs-createpg.on{display:block} #pcsel .pcs-createpg.live{transform:translateY(0)}
 #pcsel .pcs-createpg .cp-bg{position:absolute; inset:0; background:url('worlds/pride-and-prejudice/pc-select/bg_floor.webp') center top/cover no-repeat}
 #pcsel .pcs-createpg .cp-bg::after{content:""; position:absolute; inset:0; background:radial-gradient(80% 60% at 50% 45%, rgba(10,7,16,.35) 0, rgba(6,4,10,.8) 100%)}
-#pcsel .pcs-createpg .cp-top{position:absolute; left:24px; right:24px; top:calc(env(safe-area-inset-top,0px) + 150px); text-align:center; z-index:3}
+#pcsel .pcs-createpg .cp-top{position:absolute; left:24px; right:24px; top:max(150px, calc(env(safe-area-inset-top,0px) + 100px)); text-align:center; z-index:3}
 #pcsel .pcs-createpg .cp-k{font:800 10px/1 Inter,system-ui,sans-serif; letter-spacing:.3em; text-transform:uppercase; color:#e7b24c}
 #pcsel .pcs-createpg .cp-t{font:700 26px/1.12 "Playfair Display",Georgia,serif; color:#fff; margin:10px 0 0; text-shadow:0 2px 18px rgba(0,0,0,.7)}
 #pcsel .pcs-createpg .cp-cards{position:absolute; left:16px; right:16px; top:50%; transform:translateY(-44%); z-index:3; display:flex; flex-direction:column; gap:16px}
@@ -29075,7 +29075,7 @@ console.log('%c[caller] Episode 1 ready — run startCaller()', 'color:#e7b24c')
 #pcsel .pcs-createpg .cp-desc{font:italic 500 12.5px/1.35 Lora,Georgia,serif; color:#4e4352}
 #pcsel .pcs-createpg .cp-arr{position:absolute; right:16px; top:50%; transform:translateY(-50%); font:400 30px/1 "Playfair Display",Georgia,serif; color:#c9a24a}
 #pcsel .pcs-createpg .cp-back{position:absolute; left:14%; right:14%; bottom:calc(env(safe-area-inset-bottom,0px) + 56px); z-index:3; padding:15px; border-radius:22px; background:rgba(14,10,20,.55); border:1px solid rgba(255,255,255,.28); color:#fff; font:700 16px/1 "Playfair Display",Georgia,serif; -webkit-backdrop-filter:blur(14px); backdrop-filter:blur(14px); cursor:pointer}
-#pcsel .pcs-createpg .pm-x, #pcsel .pcs-mirror .pm-x{position:absolute; right:14px; top:calc(env(safe-area-inset-top,0px) + 38px); z-index:10; width:38px; height:38px; border-radius:50%; display:grid; place-items:center; background:rgba(20,12,26,.5); border:1px solid rgba(255,255,255,.3); color:#fff; font-size:15px; cursor:pointer; -webkit-backdrop-filter:none; backdrop-filter:none}   /* = the deck's .pcs-rclose */
+#pcsel .pcs-createpg .pm-x, #pcsel .pcs-mirror .pm-x{position:absolute; right:14px; top:18px; z-index:10; width:42px; height:42px; border-radius:50%; display:grid; place-items:center; background:rgba(20,12,26,.5); border:1px solid rgba(255,255,255,.3); color:#fff; font-size:15px; cursor:pointer; -webkit-backdrop-filter:none; backdrop-filter:none}   /* = the deck's .pcs-rclose */
 #pcsel .pcs-rv{position:absolute; left:0; right:0; bottom:0; z-index:9; text-align:center; padding:90px 28px max(11%, calc(env(safe-area-inset-bottom,0px) + 70px)); background:linear-gradient(180deg, rgba(8,5,12,0) 0%, rgba(8,5,12,.55) 40%, rgba(8,5,12,.9) 100%); opacity:0; transform:translateY(12px); transition:opacity .6s ease, transform .6s ease; pointer-events:none}
 #pcsel.revealing.rv-text .pcs-rv{opacity:1; transform:none}
 #pcsel .pcs-rv .rv-spark{display:block; margin:0 auto 14px; transform-origin:center; animation:pcsSpark 3s ease-in-out infinite}
@@ -29133,7 +29133,7 @@ console.log('%c[caller] Episode 1 ready — run startCaller()', 'color:#e7b24c')
 #pcsel .hero.has-wardrobe .wd-arrow{display:grid; opacity:1}
 #pcsel .hero.avatar-edit .wd-arrow, #pcsel.revealing .wd-arrow, #pcsel #pcs-detail.entering .wd-arrow{opacity:0; pointer-events:none}
 #pcsel .wd-arrow:active{background:rgba(255,255,255,.22)}
-#pcsel .dclose{position:absolute; right:14px; top:18px; z-index:10; width:38px; height:38px; border-radius:50%; background:rgba(255,255,255,.26); border:1px solid rgba(255,255,255,.5); color:#fff; font-size:15px; display:grid; place-items:center; cursor:pointer}
+#pcsel .dclose{position:absolute; right:14px; top:18px; z-index:10; width:42px; height:42px; border-radius:50%; background:rgba(255,255,255,.26); border:1px solid rgba(255,255,255,.5); color:#fff; font-size:15px; display:grid; place-items:center; cursor:pointer}
 #pcsel .d-scroll{position:absolute; inset:0; overflow-y:auto; z-index:3; will-change:opacity,transform}
 #pcsel .d-spacer{height:72%; pointer-events:none}
 #pcsel .d-content{position:relative; z-index:3; background:#f6f2fb; padding:18px 22px 0; border-radius:20px 20px 0 0; box-shadow:0 -20px 40px rgba(120,90,150,.16)}

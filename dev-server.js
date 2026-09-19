@@ -1117,6 +1117,22 @@ function handleAssetStatus(req, res, parsed) {
 // ───────────────────────────────────────────────────────────────
 // Static file server fallback
 // ───────────────────────────────────────────────────────────────
+
+// ---- Review tool (review.html): annotated screenshots → _shots/<name>.png + .json (Claude reads these) ----
+async function handleReviewSave(req, res) {
+  const raw = await new Promise((resolve, reject) => { let buf = ''; req.on('data', c => { buf += c; if (buf.length > 40e6) reject(new Error('payload too large')); }); req.on('end', () => resolve(buf)); req.on('error', reject); });
+  let b; try { b = JSON.parse(raw || '{}'); } catch (e) { return sendJson(res, 400, { error: 'bad json' }); }
+  const dir = path.join(ROOT, '_shots'); fs.mkdirSync(dir, { recursive: true });
+  const stamp = new Date().toISOString().slice(0, 19).replace(/[T:]/g, '-');
+  const base = String(b.name || '').trim().replace(/[^\w.-]+/g, '-').replace(/^-+|-+$/g, '') || 'review';
+  const name = b.overwrite ? base : base + '-' + stamp;   // overwrite = re-save of an already saved capture (same file)
+  const m = /^data:image\/png;base64,(.+)$/.exec(String(b.png || ''));
+  if (!m) return sendJson(res, 400, { error: 'png required' });
+  fs.writeFileSync(path.join(dir, name + '.png'), Buffer.from(m[1], 'base64'));
+  fs.writeFileSync(path.join(dir, name + '.json'), JSON.stringify({ name, title: b.title || '', notes: b.notes || [], size: b.size || null, createdAt: new Date().toISOString() }, null, 2));
+  return sendJson(res, 200, { ok: true, name, file: '_shots/' + name + '.png' });
+}
+
 function serveStatic(req, res, parsed) {
   let filePath = path.join(ROOT, decodeURIComponent(parsed.pathname));
   if (filePath.endsWith(path.sep)) filePath = path.join(filePath, 'index.html');
@@ -1181,6 +1197,7 @@ const server = http.createServer(async (req, res) => {
   }
 
   try {
+    if (req.method === 'POST' && parsed.pathname === '/api/review/save') return handleReviewSave(req, res);
     if (req.method === 'POST' && parsed.pathname === '/api/save-venue') return handleSaveVenue(req, res);
     if (req.method === 'POST' && parsed.pathname === '/api/save-script') return handleSaveScript(req, res);
     if (req.method === 'GET'  && parsed.pathname === '/api/list-venues') return handleListVenues(req, res);

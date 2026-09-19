@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Review — roles.ai</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; background: #0d0d12; color: #eee; font: 13px/1.4 -apple-system, Inter, system-ui, sans-serif; }
+  body { display: grid; grid-template-rows: 48px 1fr; }
+  header { display: flex; align-items: center; gap: 8px; padding: 0 12px; border-bottom: 1px solid #222; background: #121218; }
+  header b { font-size: 14px; letter-spacing: .04em; margin-right: 8px; }
+  button { background: #1e1e28; color: #eee; border: 1px solid #333; border-radius: 8px; padding: 7px 12px; font: inherit; cursor: pointer; }
+  button:hover { background: #2a2a38; }
+  button.primary { background: linear-gradient(120deg, #e0668a, #8b7bd8); border: none; font-weight: 700; }
+  button.danger { color: #f88; }
+  button.on { border-color: #8b7bd8; color: #cfc6ff; }
+  button:disabled { opacity: .4; cursor: default; }
+  input[type=text] { background: #15151c; border: 1px solid #333; color: #eee; border-radius: 8px; padding: 7px 10px; font: inherit; }
+  .hint { color: #777; margin-left: auto; font-size: 12px; }
+  main { display: grid; grid-template-columns: 1fr 340px; min-height: 0; }
+  #stage { position: relative; display: flex; align-items: center; justify-content: center; overflow: hidden; background: #08080c; }
+  #wrap { position: relative; display: inline-block; line-height: 0; }
+  #shot, #live { display: block; max-height: calc(100vh - 88px); max-width: calc(100vw - 380px); }
+  #live { display: none; }
+  #wrap.live #live { display: block; }
+  #wrap.live #shot, #wrap.live .dot { display: none; }
+  /* phone frame overlay: rounded screen corners + Dynamic Island, sized in JS from the image box */
+  #frame { position: absolute; inset: 0; pointer-events: none; overflow: hidden; display: none; }
+  #wrap.framed #frame { display: block; }
+  #frame .rr { position: absolute; inset: 0; box-shadow: 0 0 0 3000px #000; }
+  #frame .isl { position: absolute; left: 50%; transform: translateX(-50%); background: #000; }
+  .dot { position: absolute; width: 26px; height: 26px; margin: -13px 0 0 -13px; border-radius: 50%; background: #ff2d6f; color: #fff; font-weight: 800; font-size: 13px; line-height: 26px; text-align: center;
+         box-shadow: 0 0 0 2px #fff, 0 4px 14px rgba(0,0,0,.6); cursor: grab; user-select: none; z-index: 5; }
+  .dot.sel { background: #8b7bd8; }
+  #empty { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; text-align: center; color: #666; line-height: 1.8; pointer-events: none; }
+  /* mode badge */
+  #mode { position: absolute; top: 10px; left: 50%; transform: translateX(-50%); z-index: 20; padding: 6px 14px; border-radius: 999px; font-weight: 800; letter-spacing: .22em; font-size: 12px; pointer-events: none;
+          background: rgba(0,0,0,.55); border: 1px solid rgba(255,255,255,.15); -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); transition: background .2s, color .2s; }
+  #mode.live { color: #7cf0a0; } #mode.live::before { content: '● '; animation: blink 1.2s infinite; }
+  #mode.review { color: #ff8ab0; background: rgba(255,45,111,.18); border-color: rgba(255,45,111,.4); }
+  #mode.idle { color: #888; }
+  @keyframes blink { 50% { opacity: .2; } }
+  #flash { position: absolute; inset: 0; background: #fff; opacity: 0; pointer-events: none; z-index: 30; }
+  #flash.go { animation: flash .35s ease-out; }
+  @keyframes flash { 0% { opacity: .7; } 100% { opacity: 0; } }
+  aside { border-left: 1px solid #222; background: #121218; display: flex; flex-direction: column; min-height: 0; }
+  .tabs { display: flex; border-bottom: 1px solid #222; }
+  .tabs button { flex: 1; border: none; border-radius: 0; background: none; padding: 11px; font-size: 11px; letter-spacing: .16em; text-transform: uppercase; color: #777; border-bottom: 2px solid transparent; }
+  .tabs button.on { color: #fff; border-bottom-color: #e0668a; }
+  .pane { flex: 1; overflow: auto; padding: 6px 10px 10px; display: none; }
+  .pane.on { display: block; }
+  .note { display: grid; grid-template-columns: 26px 1fr 22px; gap: 8px; align-items: start; padding: 8px 4px; border-bottom: 1px solid #1c1c24; }
+  .note .n { width: 24px; height: 24px; border-radius: 50%; background: #ff2d6f; color: #fff; font-weight: 800; font-size: 12px; display: flex; align-items: center; justify-content: center; margin-top: 3px; }
+  .note.sel .n { background: #8b7bd8; }
+  .note textarea { width: 100%; min-height: 34px; background: #15151c; border: 1px solid #2a2a34; color: #eee; border-radius: 6px; padding: 6px 8px; font: inherit; resize: vertical; }
+  .note .x { background: none; border: none; color: #666; font-size: 16px; padding: 4px; cursor: pointer; }
+  .note .x:hover { color: #f66; }
+  .nonote { color: #666; padding: 14px 6px; line-height: 1.6; }
+  .cap { display: grid; grid-template-columns: 54px 1fr; gap: 10px; align-items: center; padding: 8px 6px; border-radius: 8px; cursor: pointer; border: 1px solid transparent; }
+  .cap:hover { background: #191922; }
+  .cap.on { background: #1d1a2c; border-color: #3b3560; }
+  .cap img { width: 54px; height: 96px; object-fit: cover; border-radius: 6px; background: #000; }
+  .cap .t { font-weight: 700; margin-bottom: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .cap .m { color: #777; font-size: 11px; }
+  .cap .m i { font-style: normal; color: #f6b26b; }
+  #foot { padding: 10px; border-top: 1px solid #222; display: flex; gap: 8px; align-items: center; }
+  #foot input { flex: 1; }
+  #status { padding: 0 14px 10px; color: #7cf0d2; min-height: 18px; font-size: 12px; }
+</style>
+</head>
+<body>
+<header>
+  <b>REVIEW</b>
+  <button id="btnShare">Ekranı paylaş</button>
+  <button id="btnSnap" disabled>Yakala (Space)</button>
+  <button id="btnLive" disabled>Canlıya dön (Esc)</button>
+  <button id="btnFrame" class="on">Çerçeve</button>
+  <button id="btnPaste">Yapıştır (⌘V)</button>
+  <button id="btnClear" class="danger">Noktaları sil</button>
+  <span class="hint">tıkla → nokta · sürükle → taşı · sağ tık → sil · ⌘S → kaydet</span>
+</header>
+<main>
+  <div id="stage">
+    <div id="mode" class="idle">HAZIR</div>
+    <div id="wrap" class="framed">
+      <video id="live" autoplay muted playsinline></video>
+      <img id="shot" alt="">
+      <div id="frame"><div class="rr"></div><div class="isl"></div></div>
+    </div>
+    <div id="flash"></div>
+    <div id="empty">"Ekranı paylaş" → QuickTime (iPhone) penceresini seç → Space ile yakala.<br>Ya da bir ekran görüntüsünü ⌘V ile yapıştır / sürükle-bırak.</div>
+  </div>
+  <aside>
+    <div class="tabs"><button id="tabNotes" class="on">Notlar</button><button id="tabCaps">Yakalananlar <span id="capCount"></span></button></div>
+    <div class="pane on" id="paneNotes"><div id="notes"></div></div>
+    <div class="pane" id="paneCaps"><div id="caps"></div></div>
+    <div id="status"></div>
+    <div id="foot">
+      <input id="title" type="text" placeholder="başlık (ör. kart-ekrani)">
+      <button id="btnSave" class="primary">Kaydet</button>
+    </div>
+  </aside>
+</main>
+<script>
+(function(){
+  const $=id=>document.getElementById(id);
+  const wrap=$('wrap'), shot=$('shot'), live=$('live'), notesEl=$('notes'), capsEl=$('caps'), status=$('status'), empty=$('empty'), modeEl=$('mode'), frame=$('frame');
+  // iPhone 16 Pro Max geometry in points (440×956): corner radius 62, island 126×37 at y=11
+  const PHONE={ r:62/440, islW:126/440, islH:37/956, islY:11/956 };
+  let stream=null, caps=[], cur=-1;            // caps: [{id, src, w, h, dots:[{x,y,text}], title, saved, at}]
+  let framed=true;
+
+  function setMode(m, txt){ modeEl.className=m; modeEl.textContent=txt; }
+  function say(t){ status.textContent=t; }
+  const C=()=>caps[cur];
+
+  // ---- captures ----
+  function addCapture(src, meta){ const c=Object.assign({ id:'c'+Date.now()+Math.random().toString(36).slice(2,6), src, w:0, h:0, dots:[], title:'', saved:null, at:new Date() }, meta||{}); caps.push(c); select(caps.length-1); renderCaps(); return c; }
+  function select(i){ cur=i; const c=C(); if(!c) return; shot.onload=()=>{ c.w=shot.naturalWidth; c.h=shot.naturalHeight; empty.style.display='none'; wrap.classList.remove('live'); $('btnLive').disabled=!stream; setMode('review','REVIEW MODE'); $('title').value=c.title||''; renderDots(); renderNotes(); layoutFrame(); renderCaps(); };
+    if(shot.src===c.src) shot.onload(); else shot.src=c.src; }
+  window.__reviewSet=src=>addCapture(src);   /* (test hook) */
+  function fileToImage(file){ if(!file||!/^image\//.test(file.type)) return; const r=new FileReader(); r.onload=()=>addCapture(r.result); r.readAsDataURL(file); }
+  document.addEventListener('paste', e=>{ const it=[...((e.clipboardData||{}).items||[])].find(i=>i.type.startsWith('image/')); if(it){ fileToImage(it.getAsFile()); e.preventDefault(); } });
+  document.addEventListener('dragover', e=>e.preventDefault());
+  document.addEventListener('drop', e=>{ e.preventDefault(); fileToImage(e.dataTransfer.files[0]); });
+  $('btnPaste').onclick=async()=>{ try{ const items=await navigator.clipboard.read(); for(const it of items){ const t=it.types.find(t=>t.startsWith('image/')); if(t){ const b=await it.getType(t); const r=new FileReader(); r.onload=()=>addCapture(r.result); r.readAsDataURL(b); return; } } say('Panoda görüntü yok'); }catch(e){ say('⌘V ile yapıştır'); } };
+
+  // ---- live ----
+  $('btnShare').onclick=async()=>{ try{
+      stream=await navigator.mediaDevices.getDisplayMedia({ video:{ frameRate:30 }, audio:false });
+      live.srcObject=stream; goLive(); $('btnSnap').disabled=false; $('btnLive').disabled=false;
+      live.addEventListener('loadedmetadata', layoutFrame, {once:true});
+      stream.getVideoTracks()[0].addEventListener('ended', ()=>{ stream=null; $('btnSnap').disabled=true; $('btnLive').disabled=true; if(cur>=0) select(cur); else { wrap.classList.remove('live'); setMode('idle','HAZIR'); } });
+      say('Canlı. Space = yakala.');
+    }catch(e){ say('Paylaşım iptal'); } };
+  function goLive(){ if(!stream) return; wrap.classList.add('live'); empty.style.display='none'; setMode('live','LIVE MODE'); layoutFrame(); }
+  function snap(){ if(!stream||!live.videoWidth) return; const c=document.createElement('canvas'); c.width=live.videoWidth; c.height=live.videoHeight; c.getContext('2d').drawImage(live,0,0);
+    const f=$('flash'); f.classList.remove('go'); void f.offsetWidth; f.classList.add('go');
+    addCapture(c.toDataURL('image/png')); say('Yakalandı → REVIEW. Nokta ekle, ⌘S kaydet, Esc canlıya dön.'); }
+  $('btnSnap').onclick=snap; $('btnLive').onclick=goLive;
+  $('btnFrame').onclick=()=>{ framed=!framed; wrap.classList.toggle('framed',framed); $('btnFrame').classList.toggle('on',framed); };
+  document.addEventListener('keydown', e=>{
+    const typing=e.target.tagName==='TEXTAREA'||e.target.tagName==='INPUT';
+    if(e.metaKey&&e.key==='s'){ e.preventDefault(); save(); return; }
+    if(typing){ if(e.key==='Escape') e.target.blur(); return; }
+    if(e.code==='Space'&&stream){ e.preventDefault(); snap(); }
+    if(e.key==='Escape'&&stream) goLive();
+    if((e.key==='Backspace'||e.key==='Delete')&&C()&&C().sel>=0){ e.preventDefault(); removeDot(C().sel); }
+  });
+
+  // ---- frame overlay (screen corners + island) ----
+  function layoutFrame(){ const el=wrap.classList.contains('live')?live:shot; const w=el.clientWidth, h=el.clientHeight; if(!w) return;
+    frame.querySelector('.rr').style.borderRadius=(w*PHONE.r)+'px';
+    const isl=frame.querySelector('.isl'); isl.style.width=(w*PHONE.islW)+'px'; isl.style.height=(h*PHONE.islH)+'px'; isl.style.top=(h*PHONE.islY)+'px'; isl.style.borderRadius=(h*PHONE.islH/2)+'px'; }
+  function drawFrame(g, W, H){ const r=W*PHONE.r; g.save(); g.fillStyle='#000';
+    g.beginPath(); g.rect(0,0,W,H); g.moveTo(r,0); g.arcTo(W,0,W,H,r); g.arcTo(W,H,0,H,r); g.arcTo(0,H,0,0,r); g.arcTo(0,0,W,0,r); g.closePath(); g.fill('evenodd');
+    const iw=W*PHONE.islW, ih=H*PHONE.islH, iy=H*PHONE.islY, ix=(W-iw)/2; g.beginPath(); g.roundRect(ix,iy,iw,ih,ih/2); g.fill(); g.restore(); }
+
+  // ---- dots ----
+  function renderDots(){ wrap.querySelectorAll('.dot').forEach(d=>d.remove()); const c=C(); if(!c) return;
+    c.dots.forEach((d,i)=>{ const el=document.createElement('div'); el.className='dot'+(i===c.sel?' sel':''); el.textContent=i+1; el.style.left=(d.x*100)+'%'; el.style.top=(d.y*100)+'%';
+      el.addEventListener('pointerdown', ev=>{ ev.stopPropagation(); ev.preventDefault(); selectDot(i); const move=m=>{ const b=shot.getBoundingClientRect(); d.x=Math.min(1,Math.max(0,(m.clientX-b.left)/b.width)); d.y=Math.min(1,Math.max(0,(m.clientY-b.top)/b.height)); el.style.left=(d.x*100)+'%'; el.style.top=(d.y*100)+'%'; };
+        const up=()=>{ window.removeEventListener('pointermove',move); window.removeEventListener('pointerup',up); }; window.addEventListener('pointermove',move); window.addEventListener('pointerup',up); });
+      el.addEventListener('contextmenu', ev=>{ ev.preventDefault(); removeDot(i); });
+      wrap.appendChild(el); }); }
+  shot.addEventListener('click', e=>{ const c=C(); if(!c) return; const b=shot.getBoundingClientRect(); c.dots.push({ x:(e.clientX-b.left)/b.width, y:(e.clientY-b.top)/b.height, text:'' }); c.sel=c.dots.length-1; c.saved=null; renderDots(); renderNotes(); showTab('notes'); const ta=notesEl.querySelectorAll('textarea')[c.sel]; if(ta) ta.focus(); renderCaps(); });
+  function selectDot(i){ const c=C(); c.sel=i; renderDots(); renderNotes(); }
+  function removeDot(i){ const c=C(); c.dots.splice(i,1); c.sel=-1; c.saved=null; renderDots(); renderNotes(); renderCaps(); }
+  function renderNotes(){ notesEl.innerHTML=''; const c=C(); if(!c){ notesEl.innerHTML='<div class="nonote">Henüz görüntü yok.</div>'; return; }
+    if(!c.dots.length){ notesEl.innerHTML='<div class="nonote">Görüntüye tıkla → numaralı nokta. Not istersen buraya yazarsın, boş da kalabilir.</div>'; return; }
+    c.dots.forEach((d,i)=>{ const row=document.createElement('div'); row.className='note'+(i===c.sel?' sel':'');
+      row.innerHTML='<div class="n">'+(i+1)+'</div><textarea placeholder="not (boş bırakabilirsin)"></textarea><button class="x" title="sil">×</button>';
+      const ta=row.querySelector('textarea'); ta.value=d.text; ta.addEventListener('input',()=>{ d.text=ta.value; c.saved=null; renderCaps(); }); ta.addEventListener('focus',()=>{ if(c.sel!==i){ c.sel=i; renderDots(); notesEl.querySelectorAll('.note').forEach((n,k)=>n.classList.toggle('sel',k===i)); } });
+      row.querySelector('.x').onclick=()=>removeDot(i); notesEl.appendChild(row); }); }
+  $('btnClear').onclick=()=>{ const c=C(); if(!c) return; c.dots=[]; c.sel=-1; c.saved=null; renderDots(); renderNotes(); renderCaps(); };
+  $('title').addEventListener('input', ()=>{ const c=C(); if(c){ c.title=$('title').value; renderCaps(); } });
+
+  // ---- captures tab ----
+  function showTab(t){ $('tabNotes').classList.toggle('on',t==='notes'); $('tabCaps').classList.toggle('on',t==='caps'); $('paneNotes').classList.toggle('on',t==='notes'); $('paneCaps').classList.toggle('on',t==='caps'); }
+  $('tabNotes').onclick=()=>showTab('notes'); $('tabCaps').onclick=()=>showTab('caps');
+  function renderCaps(){ $('capCount').textContent=caps.length?('('+caps.length+')'):''; capsEl.innerHTML='';
+    if(!caps.length){ capsEl.innerHTML='<div class="nonote">Yakalanan görüntüler burada listelenir; tıklayınca geri dönersin.</div>'; return; }
+    [...caps].reverse().forEach(c=>{ const i=caps.indexOf(c); const row=document.createElement('div'); row.className='cap'+(i===cur?' on':'');
+      row.innerHTML='<img src="'+c.src+'"><div><div class="t">'+(c.title||'(başlıksız)')+'</div><div class="m">'+c.at.toLocaleTimeString('tr-TR',{hour:'2-digit',minute:'2-digit'})+' · '+c.dots.length+' nokta · '+(c.saved?'kayıtlı':'<i>kaydedilmedi</i>')+'</div></div>';
+      row.onclick=()=>{ select(i); showTab('notes'); }; capsEl.appendChild(row); }); }
+
+  // ---- save: burn frame + numbered dots into the PNG → _shots/ ----
+  async function save(){ const c=C(); if(!c||!c.w){ say('Önce bir görüntü al'); return; }
+    const cv=document.createElement('canvas'); cv.width=c.w; cv.height=c.h; const g=cv.getContext('2d'); g.drawImage(shot,0,0);
+    if(framed) drawFrame(g, c.w, c.h);
+    const R=Math.max(16, Math.round(c.w*0.016));
+    c.dots.forEach((d,i)=>{ const x=d.x*c.w, y=d.y*c.h; g.beginPath(); g.arc(x,y,R,0,Math.PI*2); g.fillStyle='#ff2d6f'; g.fill(); g.lineWidth=Math.max(2,R*0.16); g.strokeStyle='#fff'; g.stroke();
+      g.fillStyle='#fff'; g.font='bold '+Math.round(R*1.15)+'px -apple-system,Inter,system-ui,sans-serif'; g.textAlign='center'; g.textBaseline='middle'; g.fillText(String(i+1), x, y+R*0.05); });
+    const png=cv.toDataURL('image/png'); const title=($('title').value||'').trim(); c.title=title;
+    const notes=c.dots.map((d,i)=>({ n:i+1, x:+d.x.toFixed(4), y:+d.y.toFixed(4), px:Math.round(d.x*c.w), py:Math.round(d.y*c.h), text:(d.text||'').trim() }));
+    say('Kaydediliyor…');
+    try{ const r=await fetch('/api/review/save',{ method:'POST', headers:{'content-type':'application/json'}, body:JSON.stringify({ name:c.saved||title||'review', overwrite:!!c.saved, title, png, notes, size:{w:c.w,h:c.h} }) });
+      const j=await r.json(); if(j.ok){ c.saved=j.name; say('✓ '+j.file+' — bana "review’a bak" de.'); renderCaps(); } else say('Hata: '+(j.error||r.status)); }
+    catch(e){ say('Kaydedilemedi (dev-server açık mı?)'); } }
+  $('btnSave').onclick=save;
+  window.addEventListener('resize', ()=>{ renderDots(); layoutFrame(); });
+  renderNotes(); renderCaps();
+})();
+</script>
+</body>
+</html>
