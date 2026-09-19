@@ -44,7 +44,7 @@
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500;1,600&family=Lora:ital,wght@0,400;0,500;0,600;1,400;1,500&family=IBM+Plex+Mono:ital,wght@0,300;0,400;0,500;1,400&family=Courier+Prime:ital,wght@0,400;0,700;1,400;1,700&family=Caveat:wght@500;600;700&family=Playfair+Display:ital,wght@0,600;0,700;1,600&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:ital,wght@0,300;0,400;0,500;1,400&family=Courier+Prime:ital,wght@0,400;0,700;1,400;1,700&family=Caveat:wght@500;600;700&family=Playfair+Display:ital,wght@0,500;0,600;0,700;0,800;1,500;1,600&family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="worlds/pride-and-prejudice/theme.css">
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
@@ -28849,7 +28849,7 @@ console.log('%c[caller] Episode 1 ready — run startCaller()', 'color:#e7b24c')
 #pcsel .c-veil{position:absolute; inset:0; z-index:2; background:linear-gradient(180deg, rgba(13,9,18,.26) 0%, transparent 24%, rgba(13,9,18,.55) 60%, rgba(13,9,18,.95) 100%)}
 #pcsel .c-cap{position:absolute; left:20px; right:20px; bottom:18px; z-index:3; color:#fff}
 #pcsel .c-nm{font-family:"Playfair Display",serif; font-weight:700; font-size:25px; line-height:1.02; text-shadow:0 2px 16px rgba(0,0,0,.6)}
-#pcsel .c-epi{font-family:"Cormorant Garamond","Playfair Display",serif; font-style:italic; font-size:15px; color:#f4a6c0; margin-top:1px}
+#pcsel .c-epi{font-family:"Playfair Display",Georgia,serif; font-style:italic; font-size:15px; color:#f4a6c0; margin-top:1px}
 /* redesigned card caption: two trait lines, 3-line bio, Continue line-button */
 #pcsel .c-lines{display:flex; flex-direction:column; gap:3px; margin-top:9px}
 #pcsel .c-line{font-size:13px; line-height:1.3; color:rgba(255,255,255,.9); font-weight:500}
@@ -28869,7 +28869,7 @@ console.log('%c[caller] Episode 1 ready — run startCaller()', 'color:#e7b24c')
 #pcsel .c-micro{display:flex; align-items:center; gap:10px; margin-top:11px; font-size:11.5px; color:rgba(255,255,255,.72); font-weight:500}
 #pcsel .c-micro .c-sep{opacity:.4}
 #pcsel .c-clock{width:11px; height:11px; vertical-align:-1px; margin-right:4px; opacity:.85}
-#pcsel .c-new{font-family:"Cormorant Garamond","Playfair Display",serif; font-style:italic; font-size:15px; color:rgba(255,255,255,.72); margin-top:12px}
+#pcsel .c-new{font-family:"Playfair Display",Georgia,serif; font-style:italic; font-size:15px; color:rgba(255,255,255,.72); margin-top:12px}
 /* Flat 2D swipe — every card the same size, no scale/depth. Neighbours sit
    just off each edge as a small peek; swiping slides them across. */
 #pcsel .dcard[data-pos="front"]{z-index:6; opacity:1; transform:translate(0,-50%)}
@@ -28907,7 +28907,7 @@ console.log('%c[caller] Episode 1 ready — run startCaller()', 'color:#e7b24c')
 #pcsel .dcard .plaque::before, #pcsel .dcard .plaque::after{content:""; position:absolute; top:50%; width:34px; height:1px; background:linear-gradient(90deg,rgba(201,162,74,0),#c9a24a); margin-top:-.5px}
 #pcsel .dcard .plaque::before{right:100%; margin-right:5px} #pcsel .dcard .plaque::after{left:100%; margin-left:5px; transform:scaleX(-1)}
 #pcsel .dcard .nm{font:700 26px/1.1 "Playfair Display",Georgia,serif; margin:20px 0 4px; white-space:nowrap; color:#241b26}
-#pcsel .dcard .beats{font:italic 500 12px/1.3 Lora,Georgia,serif; color:#4e4352; padding:0}
+#pcsel .dcard .beats{font:italic 500 12px/1.3 "Playfair Display",Georgia,serif; color:#4e4352; padding:0}
 #pcsel .dcard .beats::after{content:"\2740"; display:block; margin-top:5px; font:400 10px/1 serif; color:#c9a24a}
 #pcsel .dcard .shine{position:absolute; inset:0; border-radius:20px; background:linear-gradient(115deg,rgba(255,255,255,0) 30%,rgba(255,255,255,.18) 45%,rgba(255,255,255,0) 60%); background-size:260% 100%; mix-blend-mode:screen; opacity:0; pointer-events:none; z-index:6}
 #pcsel .dcard[data-pos="front"]{z-index:6; opacity:1; transform:translate3d(0,0,0) rotateY(0) scale(1); filter:none}
@@ -28985,7 +28985,7 @@ console.log('%c[caller] Episode 1 ready — run startCaller()', 'color:#e7b24c')
 #pcsel .d-card .k{font:800 11px/1 Inter,system-ui,sans-serif; letter-spacing:.24em; text-transform:uppercase; color:#e7b24c; margin-bottom:10px}
 #pcsel .d-card .t{font:700 22px/1.12 "Playfair Display",Georgia,serif; margin-bottom:8px}
 #pcsel .d-card .p{font:400 17px/1.38 Inter,system-ui,sans-serif; color:#d9cfe6; display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical; overflow:hidden}
-#pcsel .d-card.bio .p{font:italic 500 19px/1.38 Lora,Georgia,serif; color:#efe8f5; -webkit-line-clamp:3}
+#pcsel .d-card.bio .p{font:italic 500 18px/1.4 "Playfair Display",Georgia,serif; color:#efe8f5; -webkit-line-clamp:3}
 
 /* ===== "Make her you" reveal: UI slides off, the stage floor takes the whole screen ===== */
 /* (hero height no longer animates: the scene is always full-height; the old collapse-on-scroll is retired) */
@@ -29072,7 +29072,7 @@ console.log('%c[caller] Episode 1 ready — run startCaller()', 'color:#e7b24c')
 #pcsel .pcs-createpg .cp-body{flex:1; min-width:0; padding:6px 30px 4px 2px; display:flex; flex-direction:column; justify-content:center}
 #pcsel .pcs-createpg .cp-chip{display:inline-block; align-self:flex-start; padding:5px 12px; border-radius:6px; background:linear-gradient(180deg,#f0d47c,#c9a24a 55%,#a8842a); color:#3a2a08; font:800 8.5px/1 Inter,system-ui,sans-serif; letter-spacing:.26em; text-transform:uppercase; box-shadow:inset 0 0 0 1px rgba(120,80,10,.45), inset 0 0 0 2px rgba(255,240,200,.55)}
 #pcsel .pcs-createpg .cp-name{font:700 21px/1.15 "Playfair Display",Georgia,serif; margin:9px 0 5px}
-#pcsel .pcs-createpg .cp-desc{font:italic 500 12.5px/1.35 Lora,Georgia,serif; color:#4e4352}
+#pcsel .pcs-createpg .cp-desc{font:italic 500 12.5px/1.35 "Playfair Display",Georgia,serif; color:#4e4352}
 #pcsel .pcs-createpg .cp-arr{position:absolute; right:16px; top:50%; transform:translateY(-50%); font:400 30px/1 "Playfair Display",Georgia,serif; color:#c9a24a}
 #pcsel .pcs-createpg .cp-back{position:absolute; left:14%; right:14%; bottom:calc(env(safe-area-inset-bottom,0px) + 56px); z-index:3; padding:15px; border-radius:22px; background:rgba(14,10,20,.55); border:1px solid rgba(255,255,255,.28); color:#fff; font:700 16px/1 "Playfair Display",Georgia,serif; -webkit-backdrop-filter:blur(14px); backdrop-filter:blur(14px); cursor:pointer}
 #pcsel .pcs-createpg .pm-x, #pcsel .pcs-mirror .pm-x{position:absolute; right:14px; top:18px; z-index:10; width:42px; height:42px; border-radius:50%; display:grid; place-items:center; background:rgba(20,12,26,.5); border:1px solid rgba(255,255,255,.3); color:#fff; font-size:15px; cursor:pointer; -webkit-backdrop-filter:none; backdrop-filter:none}   /* = the deck's .pcs-rclose */
@@ -29081,7 +29081,7 @@ console.log('%c[caller] Episode 1 ready — run startCaller()', 'color:#e7b24c')
 #pcsel .pcs-rv .rv-spark{display:block; margin:0 auto 14px; transform-origin:center; animation:pcsSpark 3s ease-in-out infinite}
 @keyframes pcsSpark{0%,100%{transform:rotate(0) scale(1); opacity:.78} 50%{transform:rotate(45deg) scale(1.14); opacity:1}}
 #pcsel .pcs-rv .rv-title{font-family:"Playfair Display",Georgia,serif; font-style:italic; font-weight:600; font-size:clamp(24px,7vw,32px); line-height:1.1; color:#f4eee1; text-shadow:0 3px 18px rgba(0,0,0,.7)}
-#pcsel .pcs-rv .rv-sub{margin-top:8px; font:italic 500 14px/1.4 Lora,Georgia,serif; color:#d9cfb8; min-height:20px; transition:opacity .35s ease; text-shadow:0 2px 12px rgba(0,0,0,.7)}
+#pcsel .pcs-rv .rv-sub{margin-top:8px; font:italic 500 14px/1.4 "Playfair Display",Georgia,serif; color:#d9cfb8; min-height:20px; transition:opacity .35s ease; text-shadow:0 2px 12px rgba(0,0,0,.7)}
 #pcsel .pcs-rv .rv-dots{display:flex; justify-content:center; gap:12px; margin-top:16px}
 #pcsel .pcs-rv .rv-dots i{width:9px; height:9px; border-radius:50%; background:#c8a86a; opacity:.32; animation:pcsDot 1.4s ease-in-out infinite}
 #pcsel .pcs-rv .rv-dots i:nth-child(2){animation-delay:.22s} #pcsel .pcs-rv .rv-dots i:nth-child(3){animation-delay:.44s}
@@ -30049,7 +30049,7 @@ console.log('%c[caller] Episode 1 ready — run startCaller()', 'color:#e7b24c')
       '#pcStory.show-say .ps-fig{ opacity:1; transform:scaleX(-1); }',
       '#pcStory .ps-narr{ position:absolute; left:0; right:0; bottom:0; z-index:6; cursor:pointer; display:none; align-items:flex-end; padding:80px 26px max(28px, calc(env(safe-area-inset-bottom,0px) + 20px)); background:linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,.55) 45%, rgba(0,0,0,.92) 100%); }',
       '#pcStory.show-narr .ps-narr{ display:flex; }',
-      '#pcStory .ps-narr .tx{ flex:1; text-align:left; color:#fff; font-family:"Lora","Source Serif Pro",Georgia,serif; font-weight:500; font-size:19px; line-height:1.56; text-shadow:0 2px 14px rgba(0,0,0,.65); }',
+      '#pcStory .ps-narr .tx{ flex:1; text-align:left; color:#fff; font-family:"Playfair Display",Georgia,serif; font-style:italic; font-weight:500; font-size:19px; line-height:1.56; text-shadow:0 2px 14px rgba(0,0,0,.65); }',
       '#pcStory .ps-narr .cont{ align-self:flex-end; margin-left:6px; font-size:14px; color:rgba(255,255,255,.55); }',
       '#pcStory .ps-dlg{ position:absolute; left:0; right:0; bottom:0; z-index:5; cursor:pointer; display:none; overflow:visible; padding:20px 22px 20px 140px; padding-bottom:max(22px, calc(env(safe-area-inset-bottom,0px) + 14px)); background:linear-gradient(180deg, rgba(250,248,255,.62) 0%, rgba(244,241,252,.82) 100%); color:#3a2e46; -webkit-backdrop-filter:blur(30px) saturate(160%); backdrop-filter:blur(30px) saturate(160%); border-top:1px solid rgba(255,255,255,.62); min-height:120px; }',
       '#pcStory.show-say .ps-dlg{ display:block; }',
@@ -30073,7 +30073,7 @@ console.log('%c[caller] Episode 1 ready — run startCaller()', 'color:#e7b24c')
       '#pcStory .ps-load .pl-spark{ display:block; margin-bottom:26px; transform-origin:center; animation:plSpark 3s ease-in-out infinite; }',
       '@keyframes plSpark{ 0%,100%{ transform:rotate(0) scale(1); opacity:.78 } 50%{ transform:rotate(45deg) scale(1.14); opacity:1 } }',
       '#pcStory .ps-load .pl-title{ font-family:"Playfair Display",Georgia,serif; font-weight:700; font-size:clamp(32px,9vw,46px); line-height:1.05; color:#f4eee1; margin:0 0 18px; }',
-      '#pcStory .ps-load .pl-sub{ font-family:"Lora",Georgia,serif; font-style:italic; font-size:clamp(16px,4.6vw,20px); color:#bcb0c6; min-height:28px; opacity:1; transition:opacity .35s ease; margin-bottom:46px; }',
+      '#pcStory .ps-load .pl-sub{ font-family:"Playfair Display",Georgia,serif; font-style:italic; font-size:clamp(16px,4.6vw,20px); color:#bcb0c6; min-height:28px; opacity:1; transition:opacity .35s ease; margin-bottom:46px; }',
       '#pcStory .ps-load .pl-dots{ display:flex; gap:14px; }',
       '#pcStory .ps-load .pl-dots i{ width:12px; height:12px; border-radius:50%; background:#c8a86a; opacity:.32; animation:plDot 1.4s ease-in-out infinite; }',
       '#pcStory .ps-load .pl-dots i:nth-child(2){ animation-delay:.22s; }',
@@ -30259,7 +30259,7 @@ console.log('%c[caller] Episode 1 ready — run startCaller()', 'color:#e7b24c')
 #zvBubbles .zv-bubble.on{ opacity:1; transform:translate(-50%,-100%) scale(1); }
 /* thought bubble: 1–2 sentence musing, italic, with a two-circle thought tail */
 #zvBubbles .zv-bubble.zv-thought{ max-width:172px; padding:9px 13px; background:rgba(255,255,255,.96); }
-#zvBubbles .zv-thought .txt{ display:block; font-family:'Lora','Playfair Display',Georgia,serif; font-style:italic;
+#zvBubbles .zv-thought .txt{ display:block; font-family:'Playfair Display',Georgia,serif; font-style:italic;
   font-size:11.5px; line-height:1.4; color:#3a2e46; text-align:left; }
 #zvBubbles .zv-thought::after{ content:""; position:absolute; top:calc(100% + 2px); left:50%; transform:translateX(-50%);
   width:7px; height:7px; border-radius:50%; border:none; background:rgba(255,255,255,.96); }
@@ -30294,7 +30294,7 @@ console.log('%c[caller] Episode 1 ready — run startCaller()', 'color:#e7b24c')
   background:linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,.55) 45%, rgba(0,0,0,.92) 100%); }
 #zvNarrBox.on{ display:flex; animation:zvnIn .4s ease; }
 @keyframes zvnIn{ from{ opacity:0 } to{ opacity:1 } }
-#zvNarrBox .zvn-tx{ flex:1; text-align:left; color:#fff; font-family:"Lora","Source Serif Pro",Georgia,serif;
+#zvNarrBox .zvn-tx{ flex:1; text-align:left; color:#fff; font-family:"Playfair Display",Georgia,serif; font-style:italic;
   font-style:normal; font-weight:500; font-size:19px; line-height:1.56; letter-spacing:.005em;
   text-shadow:0 2px 14px rgba(0,0,0,.65); }
 #zvNarrBox .zvn-cont{ align-self:flex-end; margin-left:6px; font-size:14px; color:rgba(255,255,255,.55); }
@@ -31928,8 +31928,8 @@ body.pride-hud-on #pridePcHud{ display:none !important; }
   #prideMeters .pm-btn:active{ transform:scale(.96); }
 </style>
 <div id="prideMeters">
-  <div class="pm-meter pm-scandal"><span class="pm-head"><span class="pm-ico">🔥</span><span class="pm-label">Scandal</span></span><span class="pm-bar"><span class="pm-fill" id="pmScandal"></span></span></div>
-  <div class="pm-meter pm-allure"><span class="pm-head"><span class="pm-ico">✦</span><span class="pm-label">Allure</span></span><span class="pm-bar"><span class="pm-fill" id="pmAllure"></span></span></div>
+  <div class="pm-meter pm-scandal"><span class="pm-head"><span class="pm-ico"><svg class="ico" viewBox="0 0 24 24"><path d="M12 3c1 3 4 4 4 8a4 4 0 0 1-8 0c0-2 1-3 1-3s0 2 1.5 2C11 8 10 5 12 3z"/></svg></span><span class="pm-label">Scandal</span></span><span class="pm-bar"><span class="pm-fill" id="pmScandal"></span></span></div>
+  <div class="pm-meter pm-allure"><span class="pm-head"><span class="pm-ico"><svg class="ico" viewBox="0 0 24 24"><path d="M12 3l2 6 6 2-6 2-2 6-2-6-6-2 6-2z"/></svg></span><span class="pm-label">Allure</span></span><span class="pm-bar"><span class="pm-fill" id="pmAllure"></span></span></div>
 </div>
 <script>
 (function setupPrideMeta(){
@@ -32280,7 +32280,7 @@ body.pride-hud-on #pridePcHud{ display:none !important; }
   .sd-qbox .q-lock{ position:absolute; inset:0; display:grid; place-items:center; z-index:3; }
   /* fact box (text) — centered serif */
   .sd-fbox{ padding:14px 13px; align-items:center; justify-content:center; text-align:center; }
-  .sd-fbox .f-t{ font:500 14px/1.42 "Lora","Playfair Display",Georgia,serif; color:rgba(255,255,255,.9); }
+  .sd-fbox .f-t{ font:500 14px/1.42 "Playfair Display",Georgia,serif; color:rgba(255,255,255,.9); }
   .sd-fbox.locked{ gap:9px; }
   .sd-fbox.locked .f-t{ color:rgba(255,255,255,.5); font-weight:600; }
   /* ---- first-encounter suitor intro (fires on Discover) ---- */
@@ -33301,7 +33301,7 @@ body.pride-hud-on #pridePcHud{ display:none !important; }
   background:linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,.55) 45%, rgba(0,0,0,.92) 100%);
   opacity:0; pointer-events:none; transition:opacity .4s ease }
 #freeExplore.talk-on.fe-narrating .fe-narr{ opacity:1; pointer-events:auto }
-#freeExplore .fe-narr .tx{ flex:1; text-align:left; color:#fff; font-family:"Lora","Source Serif Pro",Georgia,serif;
+#freeExplore .fe-narr .tx{ flex:1; text-align:left; color:#fff; font-family:"Playfair Display",Georgia,serif; font-style:italic;
   font-style:normal; font-weight:500; font-size:19px; line-height:1.56; letter-spacing:.005em;
   text-shadow:0 2px 14px rgba(0,0,0,.65) }
 #freeExplore .fe-narr .cont{ align-self:flex-end; margin-left:6px; font-size:14px; color:rgba(255,255,255,.55) }
@@ -33646,7 +33646,7 @@ body[data-pack="pride"] #objectDialog .od-speaker{
 
 body[data-pack="pride"] #dialogBox.narrative .text,
 body[data-pack="pride"] #objectDialog.narrative .od-text{
-  font-family:"Lora","Source Serif Pro",Georgia,serif !important; font-style:normal !important; font-weight:500 !important;
+  font-family:"Playfair Display",Georgia,serif !important; font-style:italic !important; font-weight:500 !important;
   font-size:19px !important; line-height:1.56 !important; letter-spacing:.005em !important; }
 /* ---- episode chrome: objective (top-left) + 3 icons (top-right) ---- */
 #prideEpChrome{ display:none }
@@ -33737,7 +33737,7 @@ body.pride-reflect #prideEpChrome > #peReflect{ display:block; opacity:1; pointe
 #peReflect .rf-narr{ position:absolute; left:0; right:0; bottom:0;
   padding:80px 26px max(28px, calc(env(safe-area-inset-bottom) + 20px));
   background:linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,.55) 45%, rgba(0,0,0,.92) 100%);
-  color:#fff; font-family:"Lora","Source Serif Pro",Georgia,serif; font-style:normal; font-weight:500;
+  color:#fff; font-family:"Playfair Display",Georgia,serif; font-style:italic; font-weight:500;
   font-size:19px; line-height:1.56; letter-spacing:.005em; text-shadow:0 2px 14px rgba(0,0,0,.65);
   opacity:0; transition:opacity .5s ease .2s }
 body.pride-reflect #peReflect .rf-narr{ opacity:1 }
@@ -34011,7 +34011,7 @@ body[data-pack="pride"] #dialogBox.pride-discovery .speaker::before{
 #peCombat{ --ink:#3a2e46; --ink2:#6a5d78; --rose:#e0668a; --rose2:#f4a6c0; --wine:#c0466a; --violet:#8b7bd8; --violet2:#b79cf0;
   --gold:#d7a95a; --teal:#4bb0c9; --blue:#5b7bff; --blue2:#8fb0ff; --red:#e0566a; --red2:#f4909f;
   --glass:rgba(250,248,255,.72); --glass2:rgba(244,241,252,.88); --line:rgba(255,255,255,.6);
-  --fdisp:"Playfair Display",Georgia,serif; --fbody:"Inter",system-ui,sans-serif; --fnarr:"Lora","Source Serif Pro",Georgia,serif;
+  --fdisp:"Playfair Display",Georgia,serif; --fbody:"Inter",system-ui,sans-serif; --fnarr:"Playfair Display",Georgia,serif;
   position:fixed; inset:0; z-index:9000; display:none; overflow:hidden; background:#0d0912; color:#fff; user-select:none; flex-direction:column }
 #peCombat.on{ display:flex }
 #peCombat *{ box-sizing:border-box; -webkit-tap-highlight-color:transparent }
@@ -34650,7 +34650,7 @@ body.pe-combat.pe-beat #dialogBox{ opacity:1 !important; transform:none !importa
 #choiceEdit .ce-hint{ font-family:"Inter",system-ui,sans-serif; font-style:normal; font-weight:800; text-transform:uppercase;
   font-size:10px; letter-spacing:.16em; color:#9a90a2; margin:0 0 14px }
 /* the line — readable serif (Lora), plum ink; min-height reserved so swaps don't resize */
-#choiceEdit .ce-sentence{ font-family:"Lora","Source Serif Pro",Georgia,serif; font-style:normal; font-weight:500;
+#choiceEdit .ce-sentence{ font-family:"Playfair Display",Georgia,serif; font-style:normal; font-weight:500;
   font-size:20px; line-height:1.55; color:#3a2e46; }
 /* swappable words — rose highlight marker (colour), no underline / icon */
 #choiceEdit .ce-var{ cursor:pointer; color:#a83a63; font-weight:700; background:rgba(224,102,138,.14); border-radius:5px; padding:1px 7px;
@@ -34748,7 +34748,7 @@ body.pride-sketch .scene-bubble, body.pride-sketch #choicePanel, body.pride-sket
 #prideSketch .sk-pad-wrap::after{ content:""; position:absolute; left:0; right:0; top:0; height:38%; pointer-events:none;
   background:linear-gradient(180deg, rgba(255,255,255,.4), transparent) }
 #prideSketch #skPad{ position:absolute; inset:0; width:100%; height:100%; touch-action:none; cursor:crosshair; z-index:1 }
-#prideSketch .sk-hint{ position:absolute; bottom:12px; left:0; right:0; text-align:center; padding:0 16px; z-index:1; font-family:"EB Garamond",serif; font-style:italic; color:#a89b86; font-size:12.5px; pointer-events:none }
+#prideSketch .sk-hint{ position:absolute; bottom:12px; left:0; right:0; text-align:center; padding:0 16px; z-index:1; font-family:"Playfair Display",Georgia,serif; font-style:italic; color:#a89b86; font-size:12.5px; pointer-events:none }
 #prideSketch .sk-pad-wrap.hasink .sk-hint{ display:none }
 /* result: fill the square, on white paper */
 #prideSketch .sk-result{ position:absolute; inset:0; z-index:2; display:none; background:#fff }
@@ -34770,14 +34770,14 @@ body.pride-sketch .scene-bubble, body.pride-sketch #choicePanel, body.pride-sket
 #prideSketch .sk-lbl{ font-family:"Inter"; font-size:10px; font-weight:800; letter-spacing:.18em; text-transform:uppercase; color:rgba(220,205,225,.6) }
 #prideSketch .sk-surprise{ display:inline-flex; align-items:center; gap:5px; cursor:pointer; color:#cbb8f0; font-family:"Inter"; font-size:10px; font-weight:800; letter-spacing:.1em; text-transform:uppercase }
 #prideSketch .sk-surprise svg{ width:13px; height:13px }
-#prideSketch .sk-prompt{ font-family:"Lora",Georgia,serif; font-weight:500; font-size:19px; line-height:1.85; color:#f2ecdd }
+#prideSketch .sk-prompt{ font-family:"Playfair Display",Georgia,serif; font-weight:500; font-size:19px; line-height:1.85; color:#f2ecdd }
 #prideSketch .sk-tok{ display:inline; cursor:pointer; color:#ffbcd0; font-weight:600; background:rgba(224,102,138,.2); border-radius:6px; padding:2px 9px; margin:0 1px;
   box-decoration-break:clone; -webkit-box-decoration-break:clone }
 #prideSketch .sk-tok .rm{ margin-left:6px; opacity:.55; font-weight:800 }
 #prideSketch .sk-add{ display:inline-flex; align-items:center; gap:5px; vertical-align:middle; margin-left:6px; cursor:pointer; padding:3px 11px 3px 8px; border-radius:999px;
   background:rgba(255,255,255,.1); border:1px solid rgba(180,160,220,.5); color:#cbb8f0; font-family:"Inter"; font-size:11px; font-weight:800 }
 #prideSketch .sk-add svg{ width:13px; height:13px } #prideSketch .sk-add.hide{ display:none }
-#prideSketch .sk-cap{ text-align:center; font-family:"EB Garamond",serif; font-style:italic; color:rgba(255,255,255,.5); font-size:12px; min-height:15px; margin-top:12px }
+#prideSketch .sk-cap{ text-align:center; font-family:"Playfair Display",Georgia,serif; font-style:italic; color:rgba(255,255,255,.5); font-size:12px; min-height:15px; margin-top:12px }
 /* dock: just the Draw it button */
 #prideSketch .sk-dock{ flex:none; padding:12px 20px calc(16px + env(safe-area-inset-bottom)) }
 #prideSketch .sk-draw{ width:100%; height:52px; border:none; border-radius:13px; cursor:pointer; color:#fff; font-family:"Inter"; font-size:14px; font-weight:800; letter-spacing:.02em;
@@ -35374,8 +35374,8 @@ body.pride-sketch .scene-bubble, body.pride-sketch #choicePanel, body.pride-sket
       +'\n#pcWhisper .ps-pola{ display:none; position:absolute; left:18px; bottom:22px; width:112px; padding:7px 7px 22px; background:#f7f2ea; box-shadow:0 10px 24px rgba(0,0,0,.45); transform:rotate(-5deg); z-index:2; }'
       +'\n#pcWhisper .ps-dlg.polaroid .ps-pola{ display:block; }'
       +'\n#pcWhisper .ps-pola i{ display:block; height:98px; background-size:cover; background-position:center; background-color:#d9d0c4; }'
-      +'\n#pcWhisper .ps-pola b{ position:absolute; left:0; right:0; bottom:5px; text-align:center; font:italic 600 10px Lora,Georgia,serif; color:#5a4a5e; }'
-      +'\n#pcWhisper .ps-dlg.polaroid .tx{ font:500 15px/1.36 Lora,Georgia,serif; }'
+      +'\n#pcWhisper .ps-pola b{ position:absolute; left:0; right:0; bottom:5px; text-align:center; font:italic 600 10px "Playfair Display",Georgia,serif; color:#5a4a5e; }'
+      +'\n#pcWhisper .ps-dlg.polaroid .tx{ font:500 15px/1.36 "Playfair Display",Georgia,serif; }'
       +'\n#pcWhisper .ps-cta{ display:none; margin-top:8px; font:800 11px Inter,system-ui,sans-serif; letter-spacing:.14em; text-transform:uppercase; color:#8b7bd8; }'
       +'\n#pcWhisper .ps-dlg.polaroid .ps-cta{ display:block; }';
     document.head.appendChild(st);
@@ -35552,7 +35552,7 @@ body.pride-sketch .scene-bubble, body.pride-sketch #choicePanel, body.pride-sket
   #prideEpiDash .rcard .pips i.new + i.new{ animation-delay:.8s; }
   #prideEpiDash .rcard .stage{ display:inline-block; padding:6px 12px; border-radius:999px; font-weight:800; font-size:12px; border:1px solid rgba(255,255,255,.12); background:rgba(255,255,255,.06); }
   #prideEpiDash .rcard.a .stage{ color:#b48cff; border-color:rgba(180,140,255,.5); } #prideEpiDash .rcard.r .stage{ color:#e0668a; border-color:rgba(224,102,138,.5); } #prideEpiDash .rcard.t .stage{ color:#39c6b0; border-color:rgba(57,198,176,.5); }
-  #prideEpiDash .ed-empty{ text-align:center; color:#9a90b4; font:italic 500 14px Lora,Georgia,serif; padding:26px 10px; border:1px dashed rgba(255,255,255,.14); border-radius:18px; }
+  #prideEpiDash .ed-empty{ text-align:center; color:#9a90b4; font:italic 500 14px "Playfair Display",Georgia,serif; padding:26px 10px; border:1px dashed rgba(255,255,255,.14); border-radius:18px; }
   /* gauges */
   #prideEpiDash .gcard{ border-radius:18px; background:rgba(24,18,34,.78); border:1px solid rgba(255,255,255,.12); padding:14px 10px 16px; text-align:center; -webkit-backdrop-filter:blur(18px); backdrop-filter:blur(18px); box-shadow:0 18px 40px rgba(0,0,0,.45); }
   #prideEpiDash .gauge{ width:100%; height:auto; display:block; }
@@ -35684,7 +35684,7 @@ body.pride-sketch .scene-bubble, body.pride-sketch #choicePanel, body.pride-sket
       +'<div class="num">'+val+'<small class="'+(delta?(cls==='gold'?'g':''):'z')+'">'+(delta>0?'+':'')+(delta||'—')+'</small></div><div class="st">'+label+'</div></div>';
     const p1='<div class="ed-h rv"><div class="ed-eyebrow">'+esc(title||'')+'</div><h2>Who you became</h2></div><div class="g2 rv">'+(T.length?T.map(tcard).join(''):'<div class="ed-empty">No trait moved this chapter.</div>')+'</div><div class="ed-tap rv">Tap to continue</div>';
     const p2='<div class="ed-h rv"><div class="ed-eyebrow">Relationships</div><h2>Who noticed you</h2></div><div class="g2 rv">'+(R.length?R.map(rcard).join(''):'<div class="ed-empty">No one’s feelings shifted — yet.</div>')+'</div><div class="ed-tap rv">Tap to continue</div>';
-    const p3='<div class="ed-h rv"><div class="ed-eyebrow">Meryton</div><h2>What the county says</h2></div><div class="g2 rv">'+gauge('rose', s.scandal, s.scandalDelta, '🔥 Scandal')+gauge('gold', s.allure, s.allureDelta, '✦ Allure')+'</div><div class="ed-tap rv">Tap to continue</div>';
+    const p3='<div class="ed-h rv"><div class="ed-eyebrow">Meryton</div><h2>What the county says</h2></div><div class="g2 rv">'+gauge('rose', s.scandal, s.scandalDelta, 'Scandal')+gauge('gold', s.allure, s.allureDelta, 'Allure')+'</div><div class="ed-tap rv">Tap to continue</div>';
     return [p1,p2,p3]; }
   // the outro still = whatever the episode last painted (cutscene / backdrop), else the episode cover
   function outroBg(){ try{ for(const id of ['cutsceneLayer','narrativeSceneLayer','backdrop']){ const e=document.getElementById(id); if(!e) continue;
@@ -35986,5 +35986,76 @@ body.pride-sketch .scene-bubble, body.pride-sketch #choicePanel, body.pride-sket
   };
 })();
 </script>
+<!-- ======================================================================
+     UI v2 — Faz A (buttons · type · icons). Source of truth: docs/ui-guideline-v2.html
+     Scope: P&P only (#pcsel, body[data-pack="pride"], pride modules). Loaded last on purpose:
+     same-specificity rules here win over the older per-screen button styles above.
+     ====================================================================== -->
+<style id="ui-v2">
+:root{
+  --rose-600:#c0466a; --rose-500:#e0668a; --rose-300:#f4a6c0; --violet-500:#8b7bd8; --violet-300:#b6a2ff;
+  --gold-600:#c9a24a; --gold-500:#e7b24c; --gold-300:#f0d47c; --plum-900:#3a2e46; --plum-600:#6a5d78;
+  --glass-dark:rgba(14,10,20,.55); --glass-dark-2:rgba(8,5,12,.82); --glass-dark-line:rgba(255,255,255,.28);
+  --grad-primary:linear-gradient(120deg,#e0668a,#8b7bd8); --e-primary:0 12px 26px rgba(139,123,216,.32);
+  --f-display:"Playfair Display",Georgia,serif; --f-ui:"Inter",system-ui,-apple-system,sans-serif;
+  --r-m:16px; --btn-h:52px;
+}
+/* ---- BTN-1 primary: 52 · r16 · grad-primary · Inter 600 15 (full-page CTA: Playfair 700 16) ---- */
+#pcsel .pcs-play, #pcsel .pcs-continue, #pcsel .btn-primary, #pcsel .pcs-mirror .pm-btn.pri,
+body[data-pack="pride"] .poi-btn.start, .poi-card .pc-btn, .ep-end-continue, #prideUnlockCine #pucCont, #prideCharUnlock #pcuCont{
+  min-height:var(--btn-h); padding:15px 22px; border:none; border-radius:var(--r-m);
+  background:var(--grad-primary); color:#fff; box-shadow:var(--e-primary);
+  font:600 15px/1 var(--f-ui); letter-spacing:0; cursor:pointer; -webkit-tap-highlight-color:transparent;
+  display:inline-flex; align-items:center; justify-content:center; gap:10px;
+}
+#pcsel .pcs-play, #pcsel .pcs-mirror .pm-btn.pri{ font:700 16px/1 var(--f-display); }   /* full-page CTAs read serif */
+#pcsel .pcs-play{ width:100%; margin:0 0 10px; }
+#pcsel .pcs-continue{ width:100%; margin:0 0 10px; display:none; }
+#pcsel.switch .pcs-continue{ display:inline-flex; }
+.ep-end-continue{ position:fixed; left:50%; bottom:calc(env(safe-area-inset-bottom,0px) + 24px); transform:translateX(-50%); padding:15px 34px; }
+.ep-end-continue:active{ transform:translateX(-50%) scale(.98); }
+#pcsel .pcs-play:active, #pcsel .pcs-continue:active, #pcsel .btn-primary:active, #pcsel .pcs-mirror .pm-btn.pri:active,
+body[data-pack="pride"] .poi-btn.start:active, .poi-card .pc-btn:active{ transform:scale(.98); }
+/* ---- BTN-2 secondary: 52 · r16 · dark glass ---- */
+#pcsel .pcs-create, #pcsel .pcs-mirror .pm-btn, #pcsel .pcs-createpg .cp-back, body[data-pack="pride"] .poi-btn{
+  min-height:var(--btn-h); padding:15px 22px; border-radius:var(--r-m);
+  background:var(--glass-dark); border:1px solid var(--glass-dark-line); color:#fff; box-shadow:none;
+  font:600 15px/1 var(--f-ui); font-style:normal; cursor:pointer; -webkit-tap-highlight-color:transparent;
+  -webkit-backdrop-filter:blur(14px); backdrop-filter:blur(14px);
+  display:inline-flex; align-items:center; justify-content:center; gap:10px;
+}
+#pcsel .pcs-mirror .pm-btn, #pcsel .pcs-createpg .cp-back{ font:700 16px/1 var(--f-display); }
+#pcsel .pcs-create{ width:100%; }
+#pcsel .pcs-create-text, #pcsel.overmap .pcs-create-text{ display:inline-flex; width:72%; margin:0 auto; min-height:48px; padding:14px 22px; border-radius:var(--r-m); background:var(--glass-dark); border:1px solid var(--glass-dark-line); color:#fff; font:700 15px/1 var(--f-display); box-shadow:none; }   /* BTN-2 narrow */
+#pcsel .pcs-createpg .cp-back{ padding:15px; }
+/* ---- BTN-3 line: caps · .28em · 72% ---- */
+#pcsel .pcs-mirror .pm-skip{ min-height:44px; padding:12px 8px; font:700 11.5px/1.2 var(--f-ui); letter-spacing:.28em; text-transform:uppercase; color:rgba(255,255,255,.72); }
+#pcsel .pcs-mirror .pm-skip:active{ color:#fff; }
+/* ---- BTN-4 icon round 42 · dark glass · right 14 / top 18 (no safe-area) ---- */
+#pcsel .dclose, #pcsel .pcs-rclose, #pcsel .dback, #pcsel .pcs-createpg .pm-x, #pcsel .pcs-mirror .pm-x,
+#zoomView .zv-back, body[data-pack="pride"] .poi-close{
+  width:42px; height:42px; border-radius:50%; background:var(--glass-dark); border:1px solid var(--glass-dark-line); color:#fff;
+  font:400 16px/1 var(--f-ui); place-items:center; cursor:pointer; padding:0;
+  -webkit-backdrop-filter:blur(14px); backdrop-filter:blur(14px); -webkit-tap-highlight-color:transparent;
+}
+#pcsel .dclose, #pcsel .dback, #pcsel .pcs-createpg .pm-x, #pcsel .pcs-mirror .pm-x, #zoomView .zv-back, body[data-pack="pride"] .poi-close{ display:grid; }
+#pcsel .pcs-rclose{ display:none; }   /* roster ✕ only in overmap/switch (rule below) */
+#pcsel .dclose, #pcsel .pcs-rclose, #pcsel .pcs-createpg .pm-x, #pcsel .pcs-mirror .pm-x, body[data-pack="pride"] .poi-close{ right:14px; top:18px; }
+#pcsel .dback{ left:14px; top:18px; }
+#pcsel.overmap .pcs-rclose, #pcsel.switch .pcs-rclose{ display:grid; top:18px; background:var(--glass-dark); border-color:var(--glass-dark-line); color:#fff; }
+#pcsel .dclose:active, #pcsel .pcs-rclose:active, #pcsel .dback:active, #pcsel .pm-x:active, #zoomView .zv-back:active, body[data-pack="pride"] .poi-close:active{ transform:scale(.94); }
+/* ---- BTN-4L icon square 54 · r16 ---- */
+#pcsel .btn-ghost{ width:54px; min-height:var(--btn-h); border-radius:var(--r-m); background:var(--glass-dark); border:1px solid var(--glass-dark-line); }
+/* ---- BTN-6 arrows 44 ---- */
+#pcsel .wd-arrow, #pcsel .face-arrow{ width:44px; height:44px; background:rgba(0,0,0,.42); border:1px solid var(--glass-dark-line); font:600 18px/1 var(--f-ui); }
+/* ---- TAG: trait chip / gold chip stay as defined in their screens (TAG-2/3) ---- */
+/* ---- ICONS: one line set — 24 viewBox · stroke 1.8 · round caps (Lucide dialect) ---- */
+#prideMapRail .mr-ic svg, #prideMapChrome #pmcStore svg, #prideMeters .pm-ico svg, #pmcClock .ck-tod svg{ stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round; fill:none; stroke:currentColor; }
+#prideMeters .pm-ico{ display:inline-grid; place-items:center; width:13px; height:13px; }
+#prideMeters .pm-ico svg{ width:13px; height:13px; }
+#prideMeters .pm-scandal .pm-ico{ color:var(--rose-300); } #prideMeters .pm-allure .pm-ico{ color:var(--gold-300); }
+/* ---- ICONS: every SVG inside a v2 button = 18px · stroke 2 · round ---- */
+#pcsel .pcs-play svg, #pcsel .pcs-mirror .pm-btn svg, #pcsel .btn-ghost svg, #pcsel .dclose svg, #pcsel .pcs-rclose svg{ width:18px; height:18px; stroke:currentColor; fill:none; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; }
+</style>
 </body>
 </html>

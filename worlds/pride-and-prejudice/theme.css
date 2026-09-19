@@ -38,7 +38,7 @@ body[data-pack="pride"] #dialogBox{
 }
 body[data-pack="pride"] #dialogBox .speaker,
 body[data-pack="pride"] #dialogBox #speakerLabel{
-  font-family:-apple-system, BlinkMacSystemFont, "Segoe UI", "Inter", sans-serif; font-style:normal; font-weight:800;
+  font-family:"Inter",system-ui,sans-serif; font-style:normal; font-weight:800;
   font-size:12px; letter-spacing:.14em; color:#c0466a;
 }
 body[data-pack="pride"] #dialogBox .text{
@@ -68,7 +68,7 @@ body[data-pack="pride"] #objectDialog{
   backdrop-filter:blur(30px) saturate(160%); -webkit-backdrop-filter:blur(30px) saturate(160%);
   border:1px solid rgba(255,255,255,.62); border-left:3px solid #e0668a; border-radius:26px;
 }
-body[data-pack="pride"] #objectDialog .od-speaker{ font-family:-apple-system, BlinkMacSystemFont, "Segoe UI", "Inter", sans-serif; font-style:normal; font-weight:800; font-size:12px; letter-spacing:.14em; color:#c0466a; }
+body[data-pack="pride"] #objectDialog .od-speaker{ font-family:"Inter",system-ui,sans-serif; font-style:normal; font-weight:800; font-size:12px; letter-spacing:.14em; color:#c0466a; }
 body[data-pack="pride"] #objectDialog .od-text{ font-family:"Inter",sans-serif; color:#3a2e46; }
 
 /* item 6: in cast-small the full-body sprite crammed into the portrait
@@ -156,7 +156,7 @@ body[data-pack="pride"] .pw-go svg{ width:16px; height:16px; }
 body[data-pack="pride"].pride-infinite #choicePanel .choice-list::before{
   content:"INFINITE MODE"; order:-1; align-self:stretch; text-align:center; margin:0 0 -3px; padding:7px 0;
   background:#8b7bd8; color:#fff;
-  font-family:-apple-system, BlinkMacSystemFont, "Segoe UI", "Inter", sans-serif;
+  font-family:"Inter",system-ui,sans-serif;
   font-size:9.5px; font-weight:800; letter-spacing:.28em; text-transform:uppercase;
 }
 
@@ -195,7 +195,7 @@ body[data-pack="pride"] .scene-bubble{
 }
 body[data-pack="pride"] .scene-bubble .bubble-text{ color:#3a2e46; font-family:"Inter",sans-serif; }
 body[data-pack="pride"] .scene-bubble .bubble-speaker{ color:#c0466a !important;
-  font-family:-apple-system, BlinkMacSystemFont, "Segoe UI", "Inter", sans-serif; font-weight:800; font-style:normal; letter-spacing:.14em; }
+  font-family:"Inter",system-ui,sans-serif; font-weight:800; font-style:normal; letter-spacing:.14em; }
 body[data-pack="pride"] .scene-bubble::after{ display:none; }   /* çentik/tail kaldırıldı */
 /* the men — same light card, cool violet name accent (keeps the two-sided read) */
 body[data-pack="pride"] .scene-bubble.speaker-darcy,
@@ -210,3 +210,8 @@ body[data-pack="pride"] .scene-bubble.speaker-bingley .bubble-speaker{ color:#8b
 body[data-pack="pride"] .scene-bubble.speaker-darcy::after,
 body[data-pack="pride"] .scene-bubble.speaker-wickham::after,
 body[data-pack="pride"] .scene-bubble.speaker-bingley::after{ background:rgba(247,244,252,.92); }
+
+/* ============================================================
+   6. TYPE — v2 additions: coda text (End of Episode) reads as narrative (TYPE-5)
+   ============================================================ */
+body[data-pack="pride"] .es-text{ font-family:"Playfair Display",Georgia,serif; font-style:italic; font-weight:600; font-size:18px; line-height:1.55; }
