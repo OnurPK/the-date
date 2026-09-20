@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+<title>Orbit prototype — suitor profile</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,700;1,500&family=Inter:wght@500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--rose-600:#c0466a;--rose-500:#e0668a;--violet-500:#8b7bd8;--gold-500:#e7b24c;--gold-300:#f0d47c;--plum-900:#3a2e46;--plum-600:#6a5d78;--fd:"Playfair Display",Georgia,serif;--fu:"Inter",system-ui,sans-serif}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#0e0d13;display:flex;align-items:center;justify-content:center;min-height:100vh;font-family:var(--fu);color:#fff}
+.phone{width:390px;height:844px;border-radius:44px;overflow:hidden;position:relative;background:#0a0a0f;border:1px solid #2a2733;box-shadow:0 30px 80px rgba(0,0,0,.6);touch-action:none;user-select:none;-webkit-user-select:none}
+.bg{position:absolute;inset:0;background:radial-gradient(120% 70% at 50% 42%,#2b2038 0%,#130e19 55%,#07050a 100%)}
+.bg::before{content:"";position:absolute;inset:0;background:url("../worlds/pride-and-prejudice/pc-select/bg_ballroom.webp") center 40%/cover;opacity:.22;filter:blur(2px)}
+.hd{position:absolute;left:22px;right:70px;top:58px;z-index:30;pointer-events:none}
+.k6{font:800 10.5px/1 var(--fu);letter-spacing:.26em;text-transform:uppercase;color:var(--gold-500)}
+.hd h1{font:700 28px/1.05 var(--fd);color:#fff;text-shadow:0 2px 16px rgba(0,0,0,.7);margin-top:6px}
+.x,.back{position:absolute;top:18px;width:42px;height:42px;border-radius:50%;background:rgba(14,10,20,.55);border:1px solid rgba(255,255,255,.28);display:grid;place-items:center;z-index:40;font-size:16px;color:#fff;cursor:pointer;-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px)}
+.x{right:14px}.back{left:14px;display:none}.phone.focus .back{display:grid}
+/* full-body stage */
+.stage{position:absolute;left:0;right:0;top:0;height:844px;perspective:900px;perspective-origin:50% 55%}
+.fig{position:absolute;left:50%;top:92px;height:720px;transform:translateX(-50%);z-index:10;filter:drop-shadow(0 40px 40px rgba(0,0,0,.7));pointer-events:none;transition:filter .45s,transform .45s}
+.phone.focus .fig{filter:drop-shadow(0 40px 40px rgba(0,0,0,.7)) brightness(.62) saturate(.85)}
+.floor{position:absolute;left:50%;top:768px;width:320px;height:70px;transform:translateX(-50%);border-radius:50%;background:radial-gradient(ellipse at center,rgba(231,178,76,.22),rgba(231,178,76,0) 70%);z-index:2;transition:opacity .3s}
+.phone.focus .floor{opacity:0}
+.hint{position:absolute;left:0;right:0;top:800px;text-align:center;font:800 9px/1 var(--fu);letter-spacing:.3em;text-transform:uppercase;color:rgba(255,255,255,.4);z-index:3}
+.phone.focus .hint{opacity:0}
+/* ring of words */
+.orb{position:absolute;left:50%;top:520px;width:0;height:0;transform-style:preserve-3d}
+.orb.back{z-index:4}.orb.front{z-index:12}
+.lbl{position:absolute;left:0;top:0;width:0;height:0;transform-style:preserve-3d;cursor:pointer;font:700 26px/1 var(--fd);color:#fff;transition:opacity .3s}
+.lbl .ch{position:absolute;left:0;top:0;transform-origin:50% 50%;white-space:pre;will-change:transform;text-shadow:0 2px 14px rgba(0,0,0,.75);backface-visibility:visible}
+.lbl.front .ch{color:var(--gold-300);text-shadow:0 0 22px rgba(231,178,76,.55),0 2px 14px rgba(0,0,0,.75)}
+.phone.focus .lbl{opacity:0 !important}
+.dot{position:absolute;left:0;top:0;width:5px;height:5px;border-radius:50%;background:var(--gold-300);opacity:.7;transform:translate(-50%,-50%)}
+.phone.focus .dot{opacity:0 !important}
+/* focus block: text straight over the figure (no box). .glass adds a soft dark glass behind it */
+.fb{position:absolute;left:22px;right:22px;bottom:28px;z-index:25;opacity:0;transform:translateY(14px);pointer-events:none;transition:opacity .4s,transform .45s cubic-bezier(.2,.7,.2,1)}
+.phone.focus .fb{opacity:1;transform:none;pointer-events:auto}
+.fb .k6{color:var(--gold-300)}
+.fb h2{font:700 26px/1.1 var(--fd);color:#fff;margin:8px 0 8px;text-shadow:0 2px 16px rgba(0,0,0,.8)}
+.fb p{font:400 15px/1.5 var(--fu);color:rgba(255,255,255,.88);text-shadow:0 1px 10px rgba(0,0,0,.85)}
+.fb .kv{display:grid;grid-template-columns:1fr 1fr;gap:10px 14px;margin-top:14px}
+.fb .kv i{display:block;font:800 8.5px/1 var(--fu);letter-spacing:.2em;text-transform:uppercase;color:var(--gold-500);font-style:normal;margin-bottom:4px}
+.fb .kv b{font:700 15px/1.25 var(--fd);color:#fff;text-shadow:0 1px 10px rgba(0,0,0,.85)}
+.fb .it{display:flex;gap:12px;align-items:center;padding:9px 0;border-top:1px solid rgba(255,255,255,.14)}
+.fb .it:first-of-type{border-top:none}
+.fb .it .im{flex:none;width:48px;height:48px;border-radius:10px;background:#2a2233 url("../worlds/pride-and-prejudice/pc-select/bg_ballroom.webp") center/cover;box-shadow:0 6px 14px rgba(0,0,0,.5)}
+.fb .it b{display:block;font:700 15px/1.2 var(--fd);color:#fff}
+.fb .it small{display:block;font:500 11.5px/1.35 var(--fu);color:rgba(255,255,255,.7);margin-top:2px}
+.fb .it .v{margin-left:auto;font:800 9.5px/1 var(--fu);letter-spacing:.16em;text-transform:uppercase;color:var(--gold-300)}
+.fb .bar{height:5px;border-radius:3px;background:rgba(255,255,255,.16);overflow:hidden;margin:10px 0 4px}.fb .bar i{display:block;height:100%;background:linear-gradient(90deg,#e0668a,#8b7bd8)}
+.fb .list{margin-top:10px}
+.cta{margin-top:16px;display:flex;align-items:center;justify-content:center;min-height:52px;border-radius:16px;background:linear-gradient(120deg,#e0668a,#8b7bd8);color:#fff;font:700 16px/1 var(--fd);box-shadow:0 12px 26px rgba(139,123,216,.32)}
+/* glass variant */
+.phone.glass .fb{padding:18px 18px 16px;border-radius:22px;background:rgba(14,10,20,.42);border:1px solid rgba(255,255,255,.14);-webkit-backdrop-filter:blur(18px) saturate(140%);backdrop-filter:blur(18px) saturate(140%)}
+.phone.glass.focus .fig{filter:drop-shadow(0 40px 40px rgba(0,0,0,.7)) brightness(.85)}
+.tg{position:absolute;left:50%;top:18px;transform:translateX(-50%);z-index:40;padding:9px 12px;border-radius:999px;background:rgba(14,10,20,.55);border:1px solid rgba(255,255,255,.22);font:800 9px/1 var(--fu);letter-spacing:.2em;text-transform:uppercase;color:rgba(255,255,255,.75);cursor:pointer}
+.phone.glass .tg{color:var(--gold-300);border-color:rgba(231,178,76,.6)}
+.deg{position:absolute;right:22px;top:66px;font:600 10px/1 var(--fu);letter-spacing:.18em;color:rgba(255,255,255,.4);z-index:30}
+</style>
+</head>
+<body>
+<div class="phone" id="ph">
+  <div class="bg"></div>
+  <div class="x" id="x">✕</div><div class="back" id="back">‹</div>
+  <div class="tg" id="tg">Glass: off</div>
+  <div class="hd"><div class="k6">Courting · at Netherfield</div><h1>Mr Charles Bingley</h1></div>
+  <div class="deg" id="deg">0°</div>
+  <div class="stage">
+    <div class="floor"></div>
+    <img class="fig" id="fig" src="../worlds/pride-and-prejudice/characters/mr_bingley/appearances/pride.png" alt="">
+    <div class="orb back" id="orbB"></div><div class="orb front" id="orbF"></div>
+    <div class="hint">drag to turn · tap a word</div>
+  </div>
+  <div class="fb" id="fb">
+    <div class="k6" id="sk"></div><h2 id="sh"></h2><p id="sp"></p>
+    <div id="detail"></div>
+    <div class="cta" id="cta"></div>
+  </div>
+</div>
+<script>
+(function(){
+  // ---- content on the ring: angle (deg, 0 = front) → section ----
+  const SECTIONS=[
+    {a:0,   k:'Short Bio',   h:'Sunny, open-handed', p:'Adored by all — and rather too easily led by cooler heads. Netherfield Park, leased; five thousand a year, warmly spent.', cta:'Call on him',
+      detail:'<div class="kv"><div><i>Family</i><b>Netherfield Park (leased)</b></div><div><i>Rank</i><b>Gentleman, new money</b></div><div><i>Fortune</i><b>Five thousand a year</b></div><div><i>Household</i><b>Miss Bingley · Mr Hurst</b></div></div>'},
+    {a:60,  k:'Amiable',     h:'Amiable', p:'He likes everyone and assumes the favour is returned. It usually is.', cta:'Catch his eye',
+      detail:'<div class="kv"><div><i>Shows as</i><b>Warmth, easy laughter</b></div><div><i>Costs him</i><b>He cannot refuse</b></div><div><i>Use it</i><b>Ask; he will say yes</b></div><div><i>Beware</i><b>Cooler heads steer him</b></div></div>'},
+    {a:120, k:'Yielding',    h:'Yielding', p:'Persuasion works on him like weather. Whoever spoke last, spoke best.', cta:'Keep his confidence',
+      detail:'<div class="kv"><div><i>Shows as</i><b>Deference to Darcy</b></div><div><i>Costs him</i><b>His own wishes</b></div><div><i>Use it</i><b>Be the last voice</b></div><div><i>Beware</i><b>His sister speaks often</b></div></div>'},
+    {a:180, k:'Discoveries', h:'What you have learned', p:'Two of five. The rest wait in rooms you have not entered.', cta:'Dine at Netherfield',
+      detail:'<div class="list"><div class="it"><div class="im"></div><div><b>He means to buy an estate</b><small>Overheard · the supper table</small></div><span class="v">Ch. 1</span></div><div class="it"><div class="im"></div><div><b>He asked about you by name</b><small>Told by Charlotte</small></div><span class="v">Ch. 1</span></div><div class="it" style="opacity:.5"><div class="im" style="filter:grayscale(1)"></div><div><b>· · ·</b><small>Locked · dine at Netherfield</small></div><span class="v">?</span></div></div>'},
+    {a:240, k:'Bonding',     h:'Bond · Lv 1', p:'Interest +1 · Confidence +2 · Fondness +3. Sixty of a hundred to the next level.', cta:'Walk with him',
+      detail:'<div class="bar"><i style="width:60%"></i></div><div class="kv" style="margin-top:8px"><div><i>Desire</i><b>Interest · +1</b></div><div><i>Trust</i><b>Confidence · +2</b></div><div><i>Affection</i><b>Fondness · +3</b></div><div><i>Next level</i><b>He seeks you out</b></div></div>'},
+    {a:300, k:'Pursuits',    h:'With him you can…', p:'Three open, one locked.', cta:'Secure the first dance',
+      detail:'<div class="list"><div class="it"><div class="im"></div><div><b>Secure the first dance</b><small>Activity · The Netherfield Ball</small></div><span class="v">Open</span></div><div class="it"><div class="im"></div><div><b>Dine at Netherfield</b><small>Location · evening</small></div><span class="v">Open</span></div><div class="it"><div class="im"></div><div><b>Ride out to Meryton</b><small>Location · needs Bond Lv 2</small></div><span class="v">Locked</span></div></div>'},
+  ];
+  const orbB=document.getElementById('orbB'), orbF=document.getElementById('orbF'), ph=document.getElementById('ph'), degEl=document.getElementById('deg');
+  const R=176, RY=42;               // ring radius (x) and its vertical squash (we look slightly from above)
+  let ang=0, vel=0, drag=false, lastX=0, lastT=0, target=null;
+  // labels + a few orbiting particles
+  const meas=document.createElement('canvas').getContext('2d');
+  function buildLetters(n){ meas.font='700 24px "Playfair Display", Georgia, serif'; n.el.innerHTML=''; n.chars=[]; const cs=[...n.s.k]; const ws=cs.map(c=>meas.measureText(c).width); const total=ws.reduce((a,b)=>a+b,0)+ (cs.length-1)*0.8; let x=-total/2;
+    cs.forEach((c,i)=>{ const sp=document.createElement('span'); sp.className='ch'; sp.textContent=c; n.el.appendChild(sp); const centre=x+ws[i]/2; x+=ws[i]+0.8; n.chars.push({el:sp,off:centre/R*180/Math.PI,w:ws[i]}); }); }   // off = the letter's own angle along the ring (arc length / R)
+  const nodes=SECTIONS.map(s=>{ const el=document.createElement('div'); el.className='lbl';  orbB.appendChild(el); const n={el,a:s.a,s,inFront:false,chars:[]}; buildLetters(n); return n; });
+  if(document.fonts&&document.fonts.ready) document.fonts.ready.then(()=>nodes.forEach(buildLetters));
+  const dots=[]; for(let i=0;i<14;i++){ const el=document.createElement('div'); el.className='dot'; orbB.appendChild(el); dots.push({el,a:Math.random()*360,r:R*(0.8+Math.random()*0.5),y:-60+Math.random()*160,sp:(Math.random()<.5?-1:1)*(6+Math.random()*10),sz:2+Math.random()*4}); }
+  function norm(a){ a=a%360; if(a<0) a+=360; return a; }
+  let front=-1;
+  function layout(){
+    let best=-1, bestZ=-2;
+    nodes.forEach(n=>{ const deg=n.a+ang; const z=Math.cos(deg*Math.PI/180);   // word centre depth: 1 = front, -1 = back
+      const op=0.22+0.78*(z+1)/2; n.el.style.opacity=op.toFixed(2);
+      n.chars.forEach(c=>{ const d=deg+c.off, t=d*Math.PI/180; const x=Math.sin(t)*R, cz=Math.cos(t); const y=cz*RY;
+        c.el.style.transform='translate(-50%,-50%) translate3d('+x.toFixed(1)+'px,'+y.toFixed(1)+'px,'+(cz*120).toFixed(1)+'px) rotateY('+d.toFixed(2)+'deg)'; });
+      const f=z>0; if(f!==n.inFront){ n.inFront=f; (f?orbF:orbB).appendChild(n.el); }   // in front of / behind the figure
+      if(z>bestZ){ bestZ=z; best=nodes.indexOf(n); } });
+    if(best!==front){ front=best; nodes.forEach((n,i)=>n.el.classList.toggle('front',i===best)); showSection(nodes[best].s); }
+    dots.forEach(d=>{ const t=(d.a+ang*1.15)*Math.PI/180; const x=Math.sin(t)*d.r, z=Math.cos(t); d.el.style.transform='translate(-50%,-50%) translate('+x+'px,'+(d.y+z*RY*0.8)+'px) scale('+(0.5+0.5*(z+1)/2)+')'; d.el.style.opacity=(0.15+0.55*(z+1)/2).toFixed(2); d.el.style.width=d.el.style.height=d.sz+'px'; const f=z>0; if(f!==d.inFront){ d.inFront=f; (f?orbF:orbB).appendChild(d.el); } });
+    degEl.textContent=Math.round(norm(-ang))+'°';
+    // figure: when the turntable frames exist → frameIndex = round(norm(-ang)/360*N). Until then: a tiny parallax + mirror at the back half.
+    const f=document.getElementById('fig'); f.style.transform='translateX(-50%) translateX('+(Math.sin(ang*Math.PI/180)*8)+'px)';
+  }
+  function setFocus(on){ ph.classList.toggle('focus',on); }
+  document.getElementById('back').addEventListener('click',()=>setFocus(false));
+  document.getElementById('tg').addEventListener('click',()=>{ ph.classList.toggle('glass'); document.getElementById('tg').textContent='Glass: '+(ph.classList.contains('glass')?'on':'off'); });
+  function showSection(s){ document.getElementById('sk').textContent=s.k; document.getElementById('sh').textContent=s.h; document.getElementById('sp').textContent=s.p;
+    document.getElementById('detail').innerHTML=s.detail||''; document.getElementById('cta').textContent=s.cta; }
+  // ---- drag / inertia / snap ----
+  let downX=0, downY=0, moved=false;
+  ph.addEventListener('pointerdown',e=>{ if(e.target.closest('.fb,.x,.back,.tg')) return; drag=true; target=null; lastX=e.clientX; lastT=performance.now(); vel=0; downX=e.clientX; downY=e.clientY; moved=false; ph.setPointerCapture(e.pointerId); });
+  ph.addEventListener('pointermove',e=>{ if(!drag||ph.classList.contains('focus')) return; if(Math.hypot(e.clientX-downX,e.clientY-downY)>6) moved=true; const dx=e.clientX-lastX, now=performance.now(), dt=Math.max(1,now-lastT); ang+=dx*0.9; vel=dx/dt*0.9; lastX=e.clientX; lastT=now; });
+  const end=e=>{ if(!drag) return; drag=false; if(!moved){ vel=0; if(ph.classList.contains('focus')){ setFocus(false); return; } const el=document.elementFromPoint(e.clientX,e.clientY); const lbl=el&&el.closest('.lbl'); if(lbl){ const n=nodes.find(x=>x.el===lbl); if(n){ if(nodes[front]===n) setFocus(true); else target=-n.a; } } } };
+  ph.addEventListener('pointerup',end); ph.addEventListener('pointercancel',end);
+  let idle=0;
+  function tick(now){
+    if(!drag){
+      if(target!==null){ let d=((target-ang+540)%360)-180; ang+=d*0.12; if(Math.abs(d)<0.2){ ang=target; target=null; } }
+      else if(Math.abs(vel)>0.01){ ang+=vel*16; vel*=0.94; if(Math.abs(vel)<=0.01){ // snap to the nearest label
+          const near=SECTIONS.reduce((b,s)=>{ const d=Math.abs(((-s.a-ang+540)%360)-180); return d<b.d?{d,a:-s.a}:b; },{d:1e9,a:0}); target=near.a; } }
+      else { idle+=1; if(idle>240) ang+=0.05; }   // after ~4s of no interaction: a slow ambient turn
+    } else idle=0;
+    if(target!==null||drag||Math.abs(vel)>0.01) idle=0;
+    layout(); requestAnimationFrame(tick);
+  }
+  layout(); requestAnimationFrame(tick);
+})();
+</script>
+</body>
+</html>

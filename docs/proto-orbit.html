@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+<title>Orbit — Mr Darcy</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=Inter:wght@500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--rose-600:#c0466a;--rose-500:#e0668a;--violet-500:#8b7bd8;--gold-500:#e7b24c;--gold-300:#f0d47c;--fd:"Playfair Display",Georgia,serif;--fu:"Inter",system-ui,sans-serif}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#0e0d13;display:flex;align-items:center;justify-content:center;min-height:100vh;font-family:var(--fu);color:#fff}
+.phone{width:390px;height:844px;border-radius:44px;overflow:hidden;position:relative;background:#0a0a0f;border:1px solid #2a2733;box-shadow:0 30px 80px rgba(0,0,0,.6);touch-action:none;user-select:none;-webkit-user-select:none}
+.bg{position:absolute;inset:0;background:radial-gradient(120% 70% at 50% 42%,#2b2038 0%,#130e19 55%,#07050a 100%)}
+.bg::before{content:"";position:absolute;inset:0;background:var(--bgimg,url("../worlds/pride-and-prejudice/pc-select/bg_ballroom.webp")) center/cover;opacity:var(--bgop,.22);filter:blur(var(--bgblur,2px))}
+.bg.real::before{--bgop:1;--bgblur:0px}
+.bg.real::after{background:linear-gradient(180deg,rgba(7,5,10,.18),rgba(7,5,10,0) 22%,rgba(7,5,10,0) 56%,rgba(7,5,10,.62) 76%,rgba(7,5,10,.92))}
+.fig::after{content:""}
+.figscrim{position:absolute;left:0;right:0;bottom:0;height:300px;z-index:11;pointer-events:none;background:linear-gradient(180deg,rgba(7,5,10,0),rgba(7,5,10,.45) 45%,rgba(7,5,10,.78))}
+.bg::after{content:"";position:absolute;left:0;right:0;bottom:0;height:260px;background:linear-gradient(180deg,rgba(7,5,10,0),rgba(7,5,10,.75))}
+.hd{position:absolute;left:0;right:0;top:54px;z-index:3;pointer-events:none;text-align:center}
+.hd .fn{font:italic 500 20px/1 var(--fd);color:rgba(255,255,255,.85);letter-spacing:.02em;text-shadow:0 2px 14px rgba(0,0,0,.6)}
+.hd .ln{font:700 96px/.9 var(--fd);color:#fff;letter-spacing:-.01em;margin-top:-18px;text-shadow:0 4px 30px rgba(0,0,0,.55);display:inline-block;will-change:transform,letter-spacing}
+.hd .fn{display:inline-block;will-change:transform}
+.k6{font:800 10.5px/1 var(--fu);letter-spacing:.26em;text-transform:uppercase;color:var(--gold-500)}
+.x{position:absolute;right:14px;top:18px;width:42px;height:42px;border-radius:50%;background:rgba(14,10,20,.55);border:1px solid rgba(255,255,255,.28);display:grid;place-items:center;z-index:40;font-size:16px;color:#fff;cursor:pointer;-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px)}
+.stage{position:absolute;left:0;right:0;top:0;height:844px;perspective:900px;perspective-origin:50% 55%;z-index:5}
+.fig{position:absolute;left:50%;top:0;height:844px;transform:translateX(-50%);z-index:10;filter:drop-shadow(0 30px 30px rgba(0,0,0,.6));pointer-events:none;image-rendering:auto}
+.floor{position:absolute;left:50%;top:740px;width:320px;height:70px;transform:translateX(-50%);border-radius:50%;background:radial-gradient(ellipse at center,rgba(231,178,76,.2),rgba(231,178,76,0) 70%);z-index:2}
+/* ring of words */
+.orb{position:absolute;left:50%;top:500px;width:0;height:0;transform-style:preserve-3d}
+.orb.back{z-index:4}.orb.front{z-index:12}
+.lbl{position:absolute;left:0;top:0;width:0;height:0;transform-style:preserve-3d;cursor:pointer;font:700 26px/1 var(--fd);color:#fff}
+.lbl .ch{position:absolute;left:0;top:0;transform-origin:50% 50%;white-space:pre;will-change:transform;text-shadow:0 2px 14px rgba(0,0,0,.75);backface-visibility:visible}
+.lbl.front .ch{color:#fff}
+.lbl svg.ul{position:absolute;left:-300px;top:-100px;width:600px;height:200px;overflow:visible;pointer-events:none;opacity:0;transition:opacity .3s ease}
+.lbl.front svg.ul{opacity:1}
+.lbl svg.ul path{fill:none;stroke:var(--gold-300);stroke-width:2;stroke-linecap:round;filter:drop-shadow(0 0 4px rgba(231,178,76,.6))}
+.lbl .sc{position:absolute;left:0;top:0;transform-origin:50% 50%;white-space:pre;font:800 9.5px/1 var(--fu);text-transform:uppercase;color:var(--gold-300);opacity:0;transition:opacity .3s ease .1s;text-shadow:0 1px 8px rgba(0,0,0,.8);will-change:transform;backface-visibility:visible}
+.lbl .sc svg{width:11px;height:11px;stroke:var(--gold-300);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;display:block}
+.lbl.front .sc{opacity:1}
+.dot{position:absolute;left:0;top:0;width:5px;height:5px;border-radius:50%;background:var(--gold-300);opacity:.7;transform:translate(-50%,-50%)}
+/* the one line of info for whatever is in front — slides sideways as the front word changes */
+.info{position:absolute;left:22px;right:22px;bottom:36px;height:232px;z-index:25;overflow:hidden;pointer-events:none}
+.info .card{position:absolute;inset:0;display:flex;flex-direction:column;justify-content:flex-end;gap:8px;transition:transform .42s cubic-bezier(.2,.7,.2,1) .18s,opacity .3s ease .18s}
+.info .card.leaving{transition:transform .22s ease-in,opacity .18s ease-in}
+.info .card .k6{color:var(--gold-300)}
+.info .card p{font:400 16px/1.45 var(--fu);color:rgba(255,255,255,.92);text-shadow:0 1px 10px rgba(0,0,0,.85)}
+.info .card p b{font:700 17px var(--fd);color:#fff}
+.info .card .q{font:italic 500 17px/1.4 var(--fd);color:#fff;text-shadow:0 1px 10px rgba(0,0,0,.85)}
+.info .bio{font:400 16.5px/1.5 var(--fd);color:rgba(255,255,255,.94);text-shadow:0 1px 10px rgba(0,0,0,.85);letter-spacing:.005em}
+.info .rows{display:flex;flex-direction:column;gap:9px;margin-top:16px}
+.info .row{display:flex;align-items:flex-start;gap:10px;font:400 14.5px/1.3 var(--fu);color:rgba(255,255,255,.9);text-shadow:0 1px 8px rgba(0,0,0,.85)}
+.info .row svg{width:16px;height:16px;stroke:var(--gold-300);fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.info .row i{font:800 9px/1 var(--fu);letter-spacing:.2em;text-transform:uppercase;color:var(--gold-300);font-style:normal;width:64px;flex:none;padding-top:4px}
+.info .row svg{margin-top:1px}
+.info .prog{height:2px;background:rgba(255,255,255,.16);border-radius:1px;margin:6px 0 10px}.info .prog i{display:block;height:100%;background:var(--gold-300)}
+.info .dh{display:flex;align-items:flex-start;margin-bottom:12px}
+.info .dh .pg{display:flex;flex-direction:column;gap:8px;padding-top:4px}
+.info .dh .pg .prog{width:96px;height:4px;border-radius:2px;margin:0}.info .dh .pg .prog i{border-radius:2px}
+.info .dh .cnt{display:flex;align-items:center;gap:5px;font:600 12px/1 var(--fu);letter-spacing:.06em;color:rgba(255,255,255,.85);text-shadow:0 1px 8px rgba(0,0,0,.85);white-space:nowrap}
+.info .dh .all{font:700 12px/1 var(--fu);letter-spacing:.06em;color:var(--gold-300);display:flex;align-items:center;gap:4px;white-space:nowrap;text-shadow:0 1px 8px rgba(0,0,0,.85);margin-left:auto}
+.info .dh .cnt svg{width:12px;height:12px;stroke:rgba(255,255,255,.85);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.info .dh .all svg{width:12px;height:12px;stroke:var(--gold-300);fill:none;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+.info .disc{overflow-x:auto;overflow-y:hidden;scrollbar-width:none;pointer-events:auto;touch-action:pan-x;cursor:grab;margin:0 -6px;-webkit-mask-image:linear-gradient(90deg,#000 74%,transparent 97%);mask-image:linear-gradient(90deg,#000 74%,transparent 97%)}
+.info .disc::-webkit-scrollbar{display:none}
+.info .grid{display:flex;gap:10px;padding:6px 40px 14px 6px;width:max-content}
+.info .grid .pola{flex:none;width:94px}
+.info .pola{padding:5px 5px 18px;background:#f6f2ee;border-radius:3px;box-shadow:0 10px 24px rgba(0,0,0,.55);color:#3a2e46;position:relative;transform:rotate(-2deg)}
+.info .pola:nth-child(even){transform:rotate(1.5deg)}.info .pola:nth-child(3){transform:rotate(-1deg)}.info .pola:nth-child(5){transform:rotate(-2.5deg)}
+.info .pola .im{height:84px;background:#2a2233 center/cover;border-radius:2px}
+.info .pola b{position:absolute;left:0;right:0;bottom:4px;text-align:center;font:italic 600 9.5px/1 var(--fd)}
+.info .pola .play{position:absolute;left:50%;top:41px;transform:translate(-50%,-50%);width:26px;height:26px;border-radius:50%;background:rgba(10,6,14,.72);border:1px solid rgba(255,255,255,.5);display:grid;place-items:center}
+.info .pola .play::after{content:"";border-left:8px solid #fff;border-top:5px solid transparent;border-bottom:5px solid transparent;margin-left:2px}
+.info .side{display:flex;gap:16px;align-items:center}
+.info .side .pola{width:112px;padding:5px;transform:rotate(-3deg);flex:none}.info .side .pola .im{height:118px}
+.info .side .tx{flex:1;padding-bottom:6px}
+.info .side .tx .tt{font:700 24px/1 var(--fd);color:var(--gold-300);margin-bottom:10px;text-shadow:0 2px 12px rgba(0,0,0,.8)}
+.info .side .tx .tb{font:400 16px/1.5 var(--fd);color:rgba(255,255,255,.94);text-shadow:0 1px 10px rgba(0,0,0,.85)}
+.info .side .tx small{display:block;font:500 12.5px/1.4 var(--fu);color:rgba(255,255,255,.75);margin-top:6px}
+.info .stats{display:flex;gap:10px;margin-top:8px}
+.info .stat{flex:1}.info .stat i{display:block;font:800 8.5px/1 var(--fu);letter-spacing:.18em;text-transform:uppercase;color:var(--gold-300);font-style:normal;margin-bottom:5px}
+.info .stat b{font:700 15px/1 var(--fd);color:#fff}.info .stat .bar{height:3px;border-radius:2px;background:rgba(255,255,255,.16);margin-top:7px}.info .stat .bar i{display:block;height:100%;border-radius:2px;background:linear-gradient(90deg,#e0668a,#8b7bd8);margin:0}
+.info .pur{display:flex;gap:8px}.info .pur .pc{flex:1;border-radius:12px;overflow:hidden;position:relative;height:78px;background:#2a2233 center/cover;box-shadow:0 8px 18px rgba(0,0,0,.5)}
+.info .pur .pc::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,0) 30%,rgba(6,4,10,.9))}
+.info .pur .pc b{position:absolute;left:8px;right:8px;bottom:7px;font:700 11.5px/1.2 var(--fd);color:#fff;z-index:1}
+.info .pur .pc i{position:absolute;left:8px;top:7px;font:800 8px/1 var(--fu);letter-spacing:.18em;text-transform:uppercase;color:var(--gold-300);font-style:normal;z-index:1}
+.info .pur .pc.lock{filter:grayscale(.8) brightness(.55)}
+.info .bond{display:flex;align-items:center;gap:22px;padding-bottom:4px}
+.info .ring{position:relative;width:118px;height:118px;flex:none}
+.info .ring svg{width:100%;height:100%;transform:rotate(-90deg);filter:drop-shadow(0 4px 12px rgba(0,0,0,.6))}
+.info .ring circle{fill:none;stroke-width:6}.info .ring .bg{stroke:rgba(255,255,255,.14)}.info .ring .fg{stroke:var(--gold-300);stroke-linecap:round}
+.info .ring .rt{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;text-shadow:0 1px 10px rgba(0,0,0,.85)}
+.info .ring .rt b{font:700 30px/1 var(--fd);color:#fff}.info .ring .rt i{font:600 10.5px/1 var(--fu);letter-spacing:.08em;color:rgba(255,255,255,.75);font-style:normal}
+.info .bars{flex:1;display:flex;flex-direction:column;gap:14px}
+.info .st .l{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px;text-shadow:0 1px 8px rgba(0,0,0,.85)}
+.info .st .l i{font:800 9px/1 var(--fu);letter-spacing:.18em;text-transform:uppercase;color:var(--gold-300);font-style:normal}
+.info .st .l b{font:700 14px/1 var(--fd);color:#fff}
+.info .st .bar{height:6px;border-radius:3px;background:rgba(255,255,255,.14);overflow:hidden}.info .st .bar i{display:block;height:100%;border-radius:3px}
+.info .card.out-l{transform:translateX(-60px);opacity:0}.info .card.out-r{transform:translateX(60px);opacity:0}
+.info .card.in-l{transform:translateX(-60px);opacity:0}.info .card.in-r{transform:translateX(60px);opacity:0}
+.deg{position:absolute;right:22px;top:66px;font:600 10px/1 var(--fu);letter-spacing:.18em;color:rgba(255,255,255,.35);z-index:30}
+</style>
+</head>
+<body>
+<div class="phone" id="ph">
+  <div class="bg"></div>
+  <div class="x" id="x">✕</div>
+  <div class="hd"><div class="fn">Mr Fitzwilliam</div><div class="ln">Darcy</div></div>
+  <div class="stage">
+    <div class="floor"></div>
+    <img class="fig" id="fig" src="../worlds/pride-and-prejudice/characters/mr_darcy/turntable/f00.webp" alt="">
+    <div class="orb back" id="orbB"></div><div class="orb front" id="orbF"></div>
+    <div class="figscrim"></div>
+  </div>
+  <div class="info" id="info"></div>
+</div>
+<script>
+(function(){
+  // ---- ring content: one short line per word ----
+  const SECTIONS=[
+    {a:0,   k:'Biography', sub:'At Netherfield', pin:true, html:'<div class="bio">Reserved to the point of insult — yet still waters, they say, run deep. He watches more than he speaks, and forgets nothing.</div><div class="rows"><div class="row"><svg viewBox="0 0 24 24"><path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"/></svg><i>Home</i><span>Pemberley, Derbyshire</span></div><div class="row"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.5"/><circle cx="17" cy="10" r="2.5"/><path d="M3 20c0-3.5 2.7-6 6-6s6 2.5 6 6M15 20c0-2.6 1.6-4.5 4-4.5"/></svg><i>Family</i><span>Miss Georgiana Darcy<br>Lady Catherine (aunt)</span></div><div class="row"><svg viewBox="0 0 24 24"><ellipse cx="12" cy="6" rx="7" ry="3"/><path d="M5 6v6c0 1.7 3.1 3 7 3s7-1.3 7-3V6M5 12v6c0 1.7 3.1 3 7 3s7-1.3 7-3v-6"/></svg><i>Fortune</i><span>Ten thousand a year</span></div></div>'},
+    {a:72,  k:'Proud', sub:'Trait',     html:'<div class="side"><div class="pola"><div class="im" style="background-image:url(../worlds/pride-and-prejudice/episodes/the-newcomer/the-netherfield-ball/cutscenes/s1b_darcy_across.png)"></div></div><div class="tx"><div class="tt">Proud</div><div class="tb">He would rather be thought cold than be caught caring. Slights first, apologises never — until he does.</div></div></div>'},
+    {a:144, k:'Constant', sub:'Trait',  html:'<div class="side"><div class="pola"><div class="im" style="background-image:url(../worlds/pride-and-prejudice/episodes/the-newcomer/the-netherfield-ball/cutscenes/s2c_darcy_watches.png)"></div></div><div class="tx"><div class="tt">Constant</div><div class="tb">What he decides, he does not undecide. Slow to warm; impossible to cool.</div></div></div>'},
+    {a:216, k:'Discoveries', sub:'6 of 65 discovered', html:'<div class="dh"><div class="pg"><div class="prog"><i style="width:9%"></i></div><span class="cnt"><svg viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>54 to be discovered</span></div><span class="all">Show All<svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></span></div><div class="disc"><div class="grid"><div class="pola"><div class="im" style="background-image:url(../worlds/pride-and-prejudice/episodes/the-newcomer/the-netherfield-ball/cutscenes/s3c_darcy_confess.png)"></div><span class="play"></span><b>What he confessed</b></div><div class="pola"><div class="im" style="background-image:url(../worlds/pride-and-prejudice/episodes/the-newcomer/the-netherfield-ball/cutscenes/s4b_darcy_glass.png)"></div><span class="play"></span><b>The glass at supper</b></div><div class="pola"><div class="im" style="background-image:url(../worlds/pride-and-prejudice/episodes/the-newcomer/the-netherfield-ball/cutscenes/s1b_darcy_across.png)"></div><span class="play"></span><b>Across the ballroom</b></div><div class="pola"><div class="im" style="background-image:url(../worlds/pride-and-prejudice/episodes/the-newcomer/the-netherfield-ball/cutscenes/s2c_darcy_watches.png)"></div><span class="play"></span><b>Where he stood</b></div><div class="pola"><div class="im" style="background-image:url(../worlds/pride-and-prejudice/episodes/the-newcomer/the-netherfield-ball/cutscenes/s5d_darcy_ice.png)"></div><span class="play"></span><b>The cold reply</b></div><div class="pola"><div class="im" style="background-image:url(../worlds/pride-and-prejudice/episodes/the-newcomer/the-netherfield-ball/cutscenes/s3b_caroline_darcy.png)"></div><span class="play"></span><b>Caroline’s aside</b></div></div></div>'},
+    {a:288, k:'Bonding', sub:'Level 4',   html:'<div class="bond"><div class="ring"><svg viewBox="0 0 110 110"><circle class="bg" cx="55" cy="55" r="48"/><circle class="fg" cx="55" cy="55" r="48" style="stroke-dasharray:301.6;stroke-dashoffset:181"/></svg><div class="rt"><b>Lv 4</b><i>40 / 100 XP</i></div></div><div class="bars"><div class="st"><div class="l"><i>Desire</i><b>Curiosity</b></div><div class="bar"><i style="width:18%;background:#e0668a"></i></div></div><div class="st"><div class="l"><i>Trust</i><b>Wary</b></div><div class="bar"><i style="width:10%;background:#5fcf9a"></i></div></div><div class="st"><div class="l"><i>Affection</i><b>Regard</b></div><div class="bar"><i style="width:30%;background:#6fb7e8"></i></div></div></div></div>'},
+  ];
+  const orbB=document.getElementById('orbB'), orbF=document.getElementById('orbF'), ph=document.getElementById('ph'), info=document.getElementById('info');
+  const R=176, RY=42;
+  // turntable frames (48 = 7.5° steps), preloaded so scrubbing is instant
+  const figEl=document.getElementById('fig'); const TT=[]; let ttIdx=0;
+  for(let i=0;i<48;i++){ const im=new Image(); im.src='../worlds/pride-and-prejudice/characters/mr_darcy/turntable/f'+String(i).padStart(2,'0')+'.webp'; TT.push(im); }
+  let ang=0, amb=0, vel=0, drag=false, lastX=0, lastT=0, target=null, vs=0, lastAngN=0;   // ang = user-driven (figure + words) · amb = ambient drift (words only)
+  const meas=document.createElement('canvas').getContext('2d');
+  function buildLetters(n){ meas.font='700 26px "Playfair Display", Georgia, serif'; n.el.innerHTML=''; n.chars=[]; const cs=[...n.s.k]; const ws=cs.map(c=>meas.measureText(c).width); const total=ws.reduce((a,b)=>a+b,0)+(cs.length-1)*0.8; let x=-total/2; n.width=total;
+    cs.forEach((c,i)=>{ const sp=document.createElement('span'); sp.className='ch'; sp.textContent=c; n.el.appendChild(sp); const centre=x+ws[i]/2; x+=ws[i]+0.8; n.chars.push({el:sp,off:centre/R*180/Math.PI}); });
+    const svg=document.createElementNS('http://www.w3.org/2000/svg','svg'); svg.setAttribute('class','ul'); const path=document.createElementNS('http://www.w3.org/2000/svg','path'); svg.appendChild(path); n.el.appendChild(svg); n.path=path; n.span=(total*0.94)/R*180/Math.PI;
+    // sub-label: one element per glyph on the same ring, a little lower (pin icon = first glyph)
+    n.subChars=[]; const SUB=(n.s.sub||'').toUpperCase(); if(SUB){ meas.font='800 9.5px Inter, system-ui, sans-serif'; const gl=[...SUB]; const gw=gl.map(c=>meas.measureText(c).width+2.3); const items=[]; const ICONS={pin:'<svg viewBox="0 0 24 24"><path d="M12 21s-6-5.2-6-10a6 6 0 0 1 12 0c0 4.8-6 10-6 10z"/><circle cx="12" cy="11" r="2.2"/></svg>',lock:'<svg viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>'}; if(n.s.pin){ items.push({html:ICONS[n.s.pin===true?'pin':n.s.pin],w:15}); } gl.forEach((c,i)=>items.push({html:c===' '?' ':c,w:gw[i]})); const tw=items.reduce((a,b)=>a+b.w,0); let sx=-tw/2;
+      items.forEach(it=>{ const el=document.createElement('span'); el.className='sc'; el.innerHTML=it.html; n.el.appendChild(el); const cx=sx+it.w/2; sx+=it.w; n.subChars.push({el,off:cx/R*180/Math.PI}); }); } }
+  const nodes=SECTIONS.map(s=>{ const el=document.createElement('div'); el.className='lbl'; orbB.appendChild(el); const n={el,a:s.a,s,inFront:false,chars:[]}; buildLetters(n); return n; });
+  if(document.fonts&&document.fonts.ready) document.fonts.ready.then(()=>nodes.forEach(buildLetters));
+  const dots=[]; for(let i=0;i<14;i++){ const el=document.createElement('div'); el.className='dot'; orbB.appendChild(el); dots.push({el,a:Math.random()*360,r:R*(0.8+Math.random()*0.5),y:-60+Math.random()*160,sz:2+Math.random()*4,inFront:false}); }
+  function norm(a){ a=a%360; if(a<0) a+=360; return a; }
+  let front=-1, lastAng=0;
+  function layout(){
+    let best=-1, bestZ=-2;
+    const tot=ang+amb;
+    nodes.forEach(n=>{ const deg=n.a+tot; const z=Math.cos(deg*Math.PI/180); n.el.style.opacity=(0.22+0.78*(z+1)/2).toFixed(2);
+      n.chars.forEach(c=>{ const d=deg+c.off, t=d*Math.PI/180; const x=Math.sin(t)*R, cz=Math.cos(t); c.el.style.transform='translate(-50%,-50%) translate3d('+x.toFixed(1)+'px,'+(cz*RY).toFixed(1)+'px,0px) rotateY('+d.toFixed(2)+'deg)'; });
+      n.subChars.forEach(c=>{ const d=deg+c.off, t=d*Math.PI/180; c.el.style.transform='translate(-50%,-50%) translate3d('+(Math.sin(t)*R).toFixed(1)+'px,'+(Math.cos(t)*RY+31).toFixed(1)+'px,0px) rotateY('+d.toFixed(2)+'deg)'; });
+      if(n.path){ let dstr=''; const K=16; for(let k=0;k<=K;k++){ const d=deg-n.span/2+n.span*k/K, t=d*Math.PI/180; const px=300+Math.sin(t)*R, py=100+Math.cos(t)*RY+17; dstr+=(k?'L':'M')+px.toFixed(1)+' '+py.toFixed(1); } n.path.setAttribute('d',dstr); }
+      const f=z>0; if(f!==n.inFront){ n.inFront=f; (f?orbF:orbB).appendChild(n.el); }
+      if(z>bestZ){ bestZ=z; best=nodes.indexOf(n); } });
+    if(best!==front){ const dir=(front<0)?0:(((tot-lastAng+540)%360)-180>0?1:-1); front=best; lastAng=tot; nodes.forEach((n,i)=>n.el.classList.toggle('front',i===best)); showInfo(nodes[best].s, dir); }
+    dots.forEach(d=>{ const t=(d.a+tot*1.15)*Math.PI/180; const x=Math.sin(t)*d.r, z=Math.cos(t); d.el.style.transform='translate(-50%,-50%) translate('+x+'px,'+(d.y+z*RY*0.8)+'px) scale('+(0.5+0.5*(z+1)/2)+')'; d.el.style.opacity=(0.15+0.55*(z+1)/2).toFixed(2); d.el.style.width=d.el.style.height=d.sz+'px'; const f=z>0; if(f!==d.inFront){ d.inFront=f; (f?orbF:orbB).appendChild(d.el); } });
+    
+    { const N=TT.length; if(N){ const idx=((Math.round(norm(-ang)/360*N)%N)+N)%N; if(idx!==ttIdx){ ttIdx=idx; figEl.src=TT[idx].src; } } }
+  }
+  // info slides in the direction the ring is turning; the old line slides out the other way
+  // one card at a time: every card already there leaves (whatever state it is in), then the new one arrives
+  function showInfo(s, dir){
+    info.querySelectorAll('.card').forEach(old=>{ if(old.dataset.leaving) return; old.dataset.leaving='1'; old.classList.add('leaving', dir>=0?'out-l':'out-r'); setTimeout(()=>old.remove(),260); });
+    const el=document.createElement('div'); el.className='card '+(dir>=0?'in-r':'in-l'); el.innerHTML=(s.html||''); info.appendChild(el);
+    void el.offsetWidth; el.classList.remove('in-r','in-l'); }
+  // ---- drag / inertia / snap ----
+  let downX=0, downY=0, moved=false;
+  let vsc=null;
+  ph.addEventListener('pointerdown',e=>{ if(e.target.closest('.x')) return;
+    const d=e.target.closest('.disc'); if(d){ vsc={el:d,x:e.clientX,left:d.scrollLeft}; ph.setPointerCapture(e.pointerId); return; }
+    drag=true; target=null; lastX=e.clientX; lastT=performance.now(); vel=0; downX=e.clientX; downY=e.clientY; moved=false; ph.setPointerCapture(e.pointerId); });
+  const DEG_PER_PX=()=>360/ph.clientWidth;   // one full screen width of drag = exactly one full turn
+  ph.addEventListener('pointermove',e=>{ if(vsc){ vsc.el.scrollLeft=vsc.left-(e.clientX-vsc.x); return; } if(!drag) return; if(Math.hypot(e.clientX-downX,e.clientY-downY)>6) moved=true; const dx=e.clientX-lastX, now=performance.now(), dt=Math.max(1,now-lastT); const k=DEG_PER_PX(); ang+=dx*k; vel=dx/dt*k; lastX=e.clientX; lastT=now; });
+  const end=e=>{ if(vsc){ vsc=null; return; } if(!drag) return; drag=false; if(!moved){ vel=0; const el=document.elementFromPoint(e.clientX,e.clientY); const lbl=el&&el.closest('.lbl'); if(lbl){ const n=nodes.find(x=>x.el===lbl); if(n) target=-n.a-amb; } } };
+  ph.addEventListener('pointerup',end); ph.addEventListener('pointercancel',end);
+  let idle=0;
+  function tick(){
+    if(!drag){
+      if(target!==null){ let d=((target-ang+540)%360)-180; ang+=d*0.12; if(Math.abs(d)<0.2){ ang=target; target=null; } }
+      else if(Math.abs(vel)>0.01){ ang+=vel*16; vel*=0.94; if(Math.abs(vel)<=0.01){ const near=SECTIONS.reduce((b,s)=>{ const d=Math.abs(((-s.a-amb-ang+540)%360)-180); return d<b.d?{d,a:-s.a-amb}:b; },{d:1e9,a:0}); target=near.a; } }
+      else { idle+=1; if(idle>240) amb+=0.05; }
+    } else idle=0;
+    if(target!==null||drag||Math.abs(vel)>0.01) idle=0;
+    // name follows the spin as a pendulum: position = sin(angle) → Darcy drifts left while the first name drifts right,
+    // reaches a limit, then comes back the other way; still while the ring is still
+    { const th=(ang+amb)*Math.PI/180; const sw=Math.sin(th);   // -1..1, one full swing per turn
+      const ln=document.querySelector('.hd .ln'), fn=document.querySelector('.hd .fn');
+      ln.style.transform='translateX('+(-sw*130).toFixed(1)+'px)'; ln.style.letterSpacing='-0.01em';
+      fn.style.transform='translateX('+(sw*80).toFixed(1)+'px)'; fn.style.opacity='0.85'; }
+    layout(); requestAnimationFrame(tick);
+  }
+  layout(); requestAnimationFrame(tick);
+  // background switcher (prototype only)
+  const bgEl=document.querySelector('.bg');
+  function setBg(n){ if(!n){ bgEl.classList.remove('real'); bgEl.style.removeProperty('--bgimg'); } else { bgEl.classList.add('real'); bgEl.style.setProperty('--bgimg','url("../worlds/pride-and-prejudice/_mockups/bg-darcy-'+n+'.png")'); } }
+  setBg('pemberley-dusk');
+})();
+</script>
+</body>
+</html>

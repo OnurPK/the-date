@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+<title>Orbit prototype — suitor profile</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,700;1,500&family=Inter:wght@500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--rose-600:#c0466a;--rose-500:#e0668a;--violet-500:#8b7bd8;--gold-500:#e7b24c;--gold-300:#f0d47c;--plum-900:#3a2e46;--plum-600:#6a5d78;--fd:"Playfair Display",Georgia,serif;--fu:"Inter",system-ui,sans-serif}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#0e0d13;display:flex;align-items:center;justify-content:center;min-height:100vh;font-family:var(--fu);color:#fff}
+.phone{width:390px;height:844px;border-radius:44px;overflow:hidden;position:relative;background:#0a0a0f;border:1px solid #2a2733;box-shadow:0 30px 80px rgba(0,0,0,.6);touch-action:none;user-select:none;-webkit-user-select:none}
+.bg{position:absolute;inset:0;background:radial-gradient(120% 70% at 50% 42%,#2b2038 0%,#130e19 55%,#07050a 100%)}
+.bg::before{content:"";position:absolute;inset:0;background:url("../worlds/pride-and-prejudice/pc-select/bg_ballroom.webp") center 40%/cover;opacity:.2;filter:blur(2px)}
+.hd{position:absolute;left:22px;top:62px;z-index:30}
+.k6{font:800 10.5px/1 var(--fu);letter-spacing:.26em;text-transform:uppercase;color:var(--gold-500)}
+.hd h1{font:700 30px/1.05 var(--fd);color:#fff;text-shadow:0 2px 16px rgba(0,0,0,.7);margin-top:6px}
+.x{position:absolute;right:14px;top:18px;width:42px;height:42px;border-radius:50%;background:rgba(14,10,20,.55);border:1px solid rgba(255,255,255,.28);display:grid;place-items:center;z-index:30;font-size:16px}
+/* stage: a 3D cylinder around the figure */
+.stage{position:absolute;left:0;right:0;top:120px;height:560px;perspective:900px;perspective-origin:50% 45%}
+.fig{position:absolute;left:50%;top:0;height:520px;transform:translateX(-50%);z-index:10;filter:drop-shadow(0 40px 40px rgba(0,0,0,.7));pointer-events:none}
+.disc{position:absolute;left:50%;top:480px;width:300px;height:78px;transform:translateX(-50%);z-index:5}
+.disc i{position:absolute;inset:0;border-radius:50%;border:1px solid rgba(231,178,76,.55);box-shadow:inset 0 0 40px rgba(231,178,76,.12),0 0 40px rgba(139,123,216,.25)}
+.disc i+i{inset:10px 24px;border-color:rgba(255,255,255,.18);border-style:dashed}
+.disc b{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);font:800 9px/1 var(--fu);letter-spacing:.3em;color:var(--gold-300);opacity:.9}
+/* orbit labels live on a ring: each has an angle; we position them in 3D by hand (JS), so depth == size/opacity/z */
+.orb{position:absolute;left:50%;top:300px;width:0;height:0}
+.orb.back{z-index:4}.orb.front{z-index:12}
+.lbl{position:absolute;left:0;top:0;transform:translate(-50%,-50%);white-space:nowrap;padding:9px 14px;border-radius:999px;border:1px solid rgba(255,255,255,.22);background:rgba(14,10,20,.6);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);font:800 10.5px/1 var(--fu);letter-spacing:.22em;text-transform:uppercase;color:rgba(255,255,255,.8);cursor:pointer;will-change:transform,opacity}
+.lbl small{display:block;font:italic 500 13px/1 var(--fd);letter-spacing:0;text-transform:none;color:#fff;margin-top:4px}
+.lbl.front{border-color:rgba(231,178,76,.8);background:rgba(40,28,12,.78);color:var(--gold-300);box-shadow:0 10px 30px rgba(231,178,76,.25)}
+/* orbiting particles (petals / sparks) */
+.dot{position:absolute;left:0;top:0;width:5px;height:5px;border-radius:50%;background:var(--gold-300);opacity:.7;transform:translate(-50%,-50%)}
+/* bottom sheet reacts to the front label */
+.sheet{position:absolute;left:0;right:0;bottom:0;z-index:20;padding:14px 18px 18px;border-radius:26px 26px 0 0;background:linear-gradient(180deg,rgba(250,248,255,.62),rgba(244,241,252,.88));border:1px solid rgba(255,255,255,.62);border-bottom:none;color:var(--plum-900);-webkit-backdrop-filter:blur(26px) saturate(150%);backdrop-filter:blur(26px) saturate(150%)}
+.sheet .k6{color:var(--rose-600)}
+.sheet h2{font:700 20px/1.15 var(--fd);margin:6px 0 6px;color:var(--plum-900)}
+.sheet p{font:400 13.5px/1.45 var(--fu);color:var(--plum-600);min-height:40px}
+.sheet .row{display:flex;gap:8px;margin-top:10px}
+.sheet .row span{flex:1;padding:8px 10px;border-radius:12px;background:rgba(58,46,70,.07);border:1px solid rgba(58,46,70,.12);font:700 12px/1.2 var(--fd);color:var(--plum-900)}
+.sheet .row span i{display:block;font:800 8.5px/1 var(--fu);letter-spacing:.18em;text-transform:uppercase;color:var(--rose-600);font-style:normal;margin-bottom:4px}
+.cta{margin-top:12px;display:flex;align-items:center;justify-content:center;min-height:52px;border-radius:16px;background:linear-gradient(120deg,#e0668a,#8b7bd8);color:#fff;font:700 16px/1 var(--fd);box-shadow:0 12px 26px rgba(139,123,216,.32)}
+.hint{position:absolute;left:0;right:0;top:96px;text-align:center;font:600 11px/1 var(--fu);letter-spacing:.2em;text-transform:uppercase;color:rgba(255,255,255,.45);z-index:30}
+.deg{position:absolute;right:22px;top:66px;font:600 11px/1 var(--fu);letter-spacing:.18em;color:rgba(255,255,255,.5);z-index:30}
+</style>
+</head>
+<body>
+<div class="phone" id="ph">
+  <div class="bg"></div>
+  <div class="x">✕</div>
+  <div class="hd"><div class="k6">Courting · Netherfield</div><h1>Mr Charles Bingley</h1></div>
+  <div class="deg" id="deg">0°</div>
+  <div class="stage">
+    <div class="disc"><i></i><i></i><b>DRAG TO TURN</b></div>
+    <img class="fig" id="fig" src="../worlds/pride-and-prejudice/characters/mr_bingley/appearances/pride.png" alt="">
+    <div class="orb back" id="orbB"></div><div class="orb front" id="orbF"></div>
+  </div>
+  <div class="sheet" id="sheet">
+    <div class="k6" id="sk">Who he is</div><h2 id="sh">Sunny, open-handed</h2><p id="sp">Adored by all — and rather too easily led by cooler heads.</p>
+    <div class="row" id="sr"></div>
+    <div class="cta" id="cta">Call on him</div>
+  </div>
+</div>
+<script>
+(function(){
+  // ---- content on the ring: angle (deg, 0 = front) → section ----
+  const SECTIONS=[
+    {a:0,   k:'Who he is', t:'Amiable', h:'Sunny, open-handed', p:'Adored by all — and rather too easily led by cooler heads.', row:[['Trait','Amiable'],['Trait','Yielding']], cta:'Call on him'},
+    {a:60,  k:'Desire',    t:'Interest', h:'Interest · +1', p:'He notices you. He is not yet sure what to do about it.', row:[['Desire','+1'],['Next','A second dance']], cta:'Catch his eye'},
+    {a:120, k:'Trust',     t:'Confidence', h:'Confidence · +2', p:'He will tell you things he has not told his sister.', row:[['Trust','+2'],['Next','A confidence kept']], cta:'Keep his confidence'},
+    {a:180, k:'Standing',  t:'New money', h:'Gentleman, new money', p:'Netherfield Park (leased). Five thousand a year, warmly spent.', row:[['Family','Netherfield'],['Fortune','£5,000 / yr']], cta:'Dine at Netherfield'},
+    {a:240, k:'Affection', t:'Fondness', h:'Fondness · +3', p:'When you leave a room he looks for the door you used.', row:[['Affection','+3'],['Next','A walk alone']], cta:'Walk with him'},
+    {a:300, k:'Pursuits',  t:'Bond · Lv 1', h:'With him you can…', p:'Secure the first dance · Dine at Netherfield · Ride out to Meryton.', row:[['Bond','Lv 1 · 60 XP'],['Open','3 pursuits']], cta:'Secure the first dance'},
+  ];
+  const orbB=document.getElementById('orbB'), orbF=document.getElementById('orbF'), ph=document.getElementById('ph'), degEl=document.getElementById('deg');
+  const R=185, RY=46;               // ring radius (x) and its vertical squash (we look slightly from above)
+  let ang=0, vel=0, drag=false, lastX=0, lastT=0, target=null;
+  // labels + a few orbiting particles
+  const nodes=SECTIONS.map(s=>{ const el=document.createElement('div'); el.className='lbl'; el.innerHTML=s.k+'<small>'+s.t+'</small>'; el.addEventListener('click',()=>{ target=-s.a; }); orbB.appendChild(el); return {el,a:s.a,s,inFront:false}; });
+  const dots=[]; for(let i=0;i<14;i++){ const el=document.createElement('div'); el.className='dot'; orbB.appendChild(el); dots.push({el,a:Math.random()*360,r:R*(0.8+Math.random()*0.5),y:-60+Math.random()*160,sp:(Math.random()<.5?-1:1)*(6+Math.random()*10),sz:2+Math.random()*4}); }
+  function norm(a){ a=a%360; if(a<0) a+=360; return a; }
+  let front=-1;
+  function layout(){
+    let best=-1, bestZ=-2;
+    nodes.forEach(n=>{ const t=(n.a+ang)*Math.PI/180; const x=Math.sin(t)*R, z=Math.cos(t); const y=z*RY;   // z: 1 = front, -1 = back
+      const sc=0.72+0.28*(z+1)/2, op=0.35+0.65*(z+1)/2;
+      n.el.style.transform='translate(-50%,-50%) translate('+x+'px,'+y+'px) scale('+sc.toFixed(3)+')'; n.el.style.opacity=op.toFixed(2); const f=z>0; if(f!==n.inFront){ n.inFront=f; (f?orbF:orbB).appendChild(n.el); }   // in front of / behind the figure
+      if(z>bestZ){ bestZ=z; best=nodes.indexOf(n); } });
+    if(best!==front){ front=best; nodes.forEach((n,i)=>n.el.classList.toggle('front',i===best)); showSection(nodes[best].s); }
+    dots.forEach(d=>{ const t=(d.a+ang*1.15)*Math.PI/180; const x=Math.sin(t)*d.r, z=Math.cos(t); d.el.style.transform='translate(-50%,-50%) translate('+x+'px,'+(d.y+z*RY*0.8)+'px) scale('+(0.5+0.5*(z+1)/2)+')'; d.el.style.opacity=(0.15+0.55*(z+1)/2).toFixed(2); d.el.style.width=d.el.style.height=d.sz+'px'; const f=z>0; if(f!==d.inFront){ d.inFront=f; (f?orbF:orbB).appendChild(d.el); } });
+    degEl.textContent=Math.round(norm(-ang))+'°';
+    // figure: when the turntable frames exist → frameIndex = round(norm(-ang)/360*N). Until then: a tiny parallax + mirror at the back half.
+    const f=document.getElementById('fig'); const back=Math.cos(ang*Math.PI/180)<0; f.style.transform='translateX(-50%) translateX('+(Math.sin(ang*Math.PI/180)*6)+'px)'+(back?' scaleX(-1)':'');
+  }
+  function showSection(s){ document.getElementById('sk').textContent=s.k; document.getElementById('sh').textContent=s.h; document.getElementById('sp').textContent=s.p;
+    document.getElementById('sr').innerHTML=s.row.map(r=>'<span><i>'+r[0]+'</i>'+r[1]+'</span>').join(''); document.getElementById('cta').textContent=s.cta;
+    const sh=document.getElementById('sheet'); sh.animate([{transform:'translateY(6px)',opacity:.7},{transform:'none',opacity:1}],{duration:260,easing:'ease-out'}); }
+  // ---- drag / inertia / snap ----
+  ph.addEventListener('pointerdown',e=>{ if(e.target.closest('.sheet,.x')) return; drag=true; target=null; lastX=e.clientX; lastT=performance.now(); vel=0; ph.setPointerCapture(e.pointerId); });
+  ph.addEventListener('pointermove',e=>{ if(!drag) return; const dx=e.clientX-lastX, now=performance.now(), dt=Math.max(1,now-lastT); ang+=dx*0.9; vel=dx/dt*0.9; lastX=e.clientX; lastT=now; });
+  const end=()=>{ if(!drag) return; drag=false; };
+  ph.addEventListener('pointerup',end); ph.addEventListener('pointercancel',end);
+  let idle=0;
+  function tick(now){
+    if(!drag){
+      if(target!==null){ let d=((target-ang+540)%360)-180; ang+=d*0.12; if(Math.abs(d)<0.2){ ang=target; target=null; } }
+      else if(Math.abs(vel)>0.01){ ang+=vel*16; vel*=0.94; if(Math.abs(vel)<=0.01){ // snap to the nearest label
+          const near=SECTIONS.reduce((b,s)=>{ const d=Math.abs(((-s.a-ang+540)%360)-180); return d<b.d?{d,a:-s.a}:b; },{d:1e9,a:0}); target=near.a; } }
+      else { idle+=1; if(idle>240) ang+=0.05; }   // after ~4s of no interaction: a slow ambient turn
+    } else idle=0;
+    if(target!==null||drag||Math.abs(vel)>0.01) idle=0;
+    layout(); requestAnimationFrame(tick);
+  }
+  layout(); requestAnimationFrame(tick);
+})();
+</script>
+</body>
+</html>

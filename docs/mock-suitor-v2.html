@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Suitor profile — 3 alternatives</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,600;0,700;0,800;1,500;1,600&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--rose-600:#c0466a;--rose-500:#e0668a;--rose-300:#f4a6c0;--violet-500:#8b7bd8;--violet-300:#b6a2ff;--gold-600:#c9a24a;--gold-500:#e7b24c;--gold-300:#f0d47c;--plum-900:#3a2e46;--plum-600:#6a5d78;--parch:#f1e7d3;
+--glass-dark:rgba(14,10,20,.55);--glass-dark-2:rgba(8,5,12,.82);--line:rgba(255,255,255,.28);--grad:linear-gradient(120deg,#e0668a,#8b7bd8);--fd:"Playfair Display",Georgia,serif;--fu:"Inter",system-ui,sans-serif}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#0e0d13;color:#eae6f2;font:14px/1.5 var(--fu);padding:40px 32px 80px}
+h1{font:700 30px var(--fd);color:#fff;margin-bottom:6px}
+p.lead{color:#b8b2c8;max-width:900px;margin-bottom:28px}
+.grid{display:grid;grid-template-columns:repeat(3,390px);gap:44px;align-items:start}
+.col h2{font:600 20px var(--fd);color:#fff;margin:0 0 4px}
+.col .k{font:800 10px var(--fu);letter-spacing:.26em;text-transform:uppercase;color:var(--gold-500);margin-bottom:8px}
+.col p{color:#b8b2c8;font-size:13px;margin:10px 0 0;max-width:390px}
+.col ul{margin:8px 0 0 16px;color:#b8b2c8;font-size:13px}
+.phone{width:390px;height:844px;border-radius:44px;overflow:hidden;position:relative;background:#0a0a0f;border:1px solid #2a2733;box-shadow:0 30px 80px rgba(0,0,0,.6);font-size:14px}
+.isl{position:absolute;left:50%;top:11px;transform:translateX(-50%);width:126px;height:37px;border-radius:20px;background:#000;z-index:50}
+.btn-icon{position:absolute;width:42px;height:42px;border-radius:50%;background:var(--glass-dark);border:1px solid var(--line);display:grid;place-items:center;color:#fff;z-index:20;-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px)}
+.btn-icon svg{width:18px;height:18px;stroke:#fff;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.k6{font:800 10.5px/1 var(--fu);letter-spacing:.26em;text-transform:uppercase;color:var(--gold-500)}
+.pill{display:inline-flex;align-items:center;gap:6px;padding:6px 12px;border-radius:999px;background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.34);font:600 12px/1 var(--fu);color:#fff;-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px)}
+.pill.v{background:rgba(139,123,216,.22);border-color:rgba(139,123,216,.5)}
+.chip-gold{display:inline-block;padding:5px 12px;border-radius:6px;background:linear-gradient(180deg,#f0d47c,#c9a24a 55%,#a8842a);color:#3a2a08;font:800 8.5px/1 var(--fu);letter-spacing:.26em;text-transform:uppercase;box-shadow:inset 0 0 0 1px rgba(120,80,10,.45)}
+.btn1{display:inline-flex;align-items:center;justify-content:center;gap:10px;min-height:52px;padding:15px 22px;border-radius:16px;background:var(--grad);color:#fff;font:700 16px/1 var(--fd);box-shadow:0 12px 26px rgba(139,123,216,.32)}
+.btn2{display:inline-flex;align-items:center;justify-content:center;gap:10px;min-height:52px;padding:15px 22px;border-radius:16px;background:var(--glass-dark);border:1px solid var(--line);color:#fff;font:700 16px/1 var(--fd);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px)}
+.arrow{position:absolute;width:44px;height:44px;border-radius:50%;background:rgba(0,0,0,.42);border:1px solid var(--line);color:#fff;display:grid;place-items:center;font:600 18px/1 var(--fu);z-index:12}
+
+/* ================= A · GALLERY / DOSSIER ================= */
+.A .bg{position:absolute;inset:0;background:url("../worlds/pride-and-prejudice/pc-select/bg_ballroom.webp") center 30%/cover;filter:brightness(.62) saturate(.9)}
+.A .bg::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,.25),rgba(0,0,0,0) 30%,rgba(6,4,10,.2) 55%,rgba(6,4,10,.96) 78%)}
+.A .fig{position:absolute;left:50%;top:56px;height:540px;transform:translateX(-52%);z-index:3;filter:drop-shadow(0 30px 40px rgba(0,0,0,.6))}
+.A .frame{position:absolute;left:24px;right:24px;top:64px;height:470px;border:1px solid rgba(231,178,76,.35);border-radius:6px;z-index:2;pointer-events:none}
+.A .frame i{position:absolute;width:38px;height:38px;background:url("../worlds/pride-and-prejudice/pc-select/orn_corner.webp") center/contain no-repeat;opacity:.85}
+.A .frame i:nth-child(1){left:-6px;top:-6px}.A .frame i:nth-child(2){right:-6px;top:-6px;transform:scaleX(-1)}.A .frame i:nth-child(3){left:-6px;bottom:-6px;transform:scaleY(-1)}.A .frame i:nth-child(4){right:-6px;bottom:-6px;transform:scale(-1)}
+.A .plate{position:absolute;left:50%;top:560px;width:100%;transform:translateX(-50%);z-index:4;text-align:center}
+.A .plate .k6{color:var(--gold-300)}
+.A .plate h1{font:700 28px/1 var(--fd);white-space:nowrap;color:#fff;margin:6px 0 8px;text-shadow:0 2px 18px rgba(0,0,0,.7)}
+.A .tags{position:absolute;top:22px;right:70px;z-index:5;display:flex;gap:6px}
+.A .sheet{position:absolute;left:0;right:0;bottom:0;height:176px;z-index:6;padding:14px 16px 0}
+.A .tabs{display:flex;gap:6px;margin-bottom:10px}
+.A .tabs span{flex:1;text-align:center;padding:9px 0;border-radius:999px;font:800 9.5px/1 var(--fu);letter-spacing:.2em;text-transform:uppercase;color:rgba(255,255,255,.6);background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1)}
+.A .tabs span.on{color:#fff;background:var(--glass-dark-2);border-color:var(--line)}
+.A .cards{display:flex;gap:10px;overflow:hidden}
+.A .card{flex:0 0 200px;height:112px;border-radius:16px;padding:14px 16px;background:rgba(24,18,34,.85);border:1px solid rgba(255,255,255,.12)}
+.A .card .h{font:700 17px/1.15 var(--fd);color:#fff;margin:6px 0 4px}
+.A .card .b{font:400 12px/1.4 var(--fu);color:rgba(255,255,255,.72)}
+.A .card.gold{background:linear-gradient(160deg,rgba(60,44,20,.9),rgba(24,18,34,.9));border-color:rgba(231,178,76,.35)}
+.A .turn{position:absolute;left:50%;top:548px;transform:translateX(-50%);width:230px;height:26px;border-radius:50%;border:1px solid rgba(231,178,76,.35);background:radial-gradient(ellipse at center,rgba(231,178,76,.18),rgba(231,178,76,0) 70%);z-index:2}
+.A .arrow.l{left:16px;top:330px}.A .arrow.r{right:16px;top:330px}
+
+/* ================= B · TURNTABLE STAGE ================= */
+.B .bg{position:absolute;inset:0;background:radial-gradient(120% 70% at 50% 40%,#2a1f36 0%,#120d18 55%,#07050a 100%)}
+.B .bg::before{content:"";position:absolute;inset:0;background:url("../worlds/pride-and-prejudice/pc-select/bg_ballroom.webp") center 40%/cover;opacity:.22;filter:blur(2px)}
+.B .halo{position:absolute;left:50%;top:130px;width:300px;height:300px;transform:translateX(-50%);border-radius:50%;background:radial-gradient(circle,rgba(139,123,216,.35),rgba(139,123,216,0) 65%)}
+.B .fig{position:absolute;left:50%;top:78px;height:520px;transform:translateX(-50%);z-index:3;filter:drop-shadow(0 40px 40px rgba(0,0,0,.7))}
+.B .disc{position:absolute;left:50%;top:560px;width:300px;height:76px;transform:translateX(-50%);z-index:2}
+.B .disc i{position:absolute;inset:0;border-radius:50%;border:1px solid rgba(231,178,76,.55);box-shadow:inset 0 0 40px rgba(231,178,76,.12),0 0 40px rgba(139,123,216,.25)}
+.B .disc i:nth-child(2){inset:10px 24px;border-color:rgba(255,255,255,.18);border-style:dashed}
+.B .disc b{position:absolute;left:50%;top:-14px;transform:translateX(-50%);font:800 9px/1 var(--fu);letter-spacing:.3em;color:var(--gold-300)}
+.B .deg{position:absolute;left:50%;bottom:-18px;transform:translateX(-50%);font:600 10px/1 var(--fu);letter-spacing:.2em;color:rgba(255,255,255,.5)}
+.B .hd{position:absolute;left:22px;top:62px;z-index:5}
+.B .hd h1{font:700 30px/1.05 var(--fd);color:#fff;text-shadow:0 2px 16px rgba(0,0,0,.7)}
+.B .hd .tags{margin-top:8px;display:flex;gap:6px}
+.B .gauge{position:absolute;z-index:5;width:84px;text-align:center}
+.B .gauge svg{width:84px;height:84px;transform:rotate(-90deg)}
+.B .gauge circle{fill:none;stroke-width:5;stroke-linecap:round}
+.B .gauge .t{stroke:rgba(255,255,255,.12)} .B .gauge .v{stroke:url(#g1)}
+.B .gauge .n{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.B .gauge .n b{font:700 15px/1 var(--fd);color:#fff}
+.B .gauge .n small{font:800 8.5px/1 var(--fu);letter-spacing:.18em;text-transform:uppercase;color:var(--gold-500);margin-top:4px}
+.B .gauge .d{position:absolute;right:-4px;top:-4px;padding:3px 6px;border-radius:999px;background:#7bd88f;color:#0a2b14;font:800 9px/1 var(--fu)}
+.B .g1{left:14px;top:300px}.B .g2{left:14px;top:400px}.B .g3{right:14px;top:300px}.B .g4{right:14px;top:400px;opacity:.9}
+.B .sheet{position:absolute;left:0;right:0;bottom:0;z-index:7;padding:12px 16px 18px;border-radius:26px 26px 0 0;background:linear-gradient(180deg,rgba(250,248,255,.62),rgba(244,241,252,.86));border:1px solid rgba(255,255,255,.62);border-bottom:none;color:var(--plum-900);-webkit-backdrop-filter:blur(26px) saturate(150%);backdrop-filter:blur(26px) saturate(150%)}
+.B .grab{width:36px;height:4px;border-radius:2px;background:rgba(58,46,70,.25);margin:0 auto 10px}
+.B .quote{font:italic 500 15px/1.4 var(--fd);color:var(--plum-900)}
+.B .row{display:flex;gap:10px;margin-top:12px}
+.B .act{flex:1;border-radius:14px;padding:10px 12px;background:rgba(58,46,70,.07);border:1px solid rgba(58,46,70,.12)}
+.B .act .k6{color:var(--rose-600);font-size:9px}
+.B .act .h{font:700 14px/1.15 var(--fd);color:var(--plum-900);margin-top:4px}
+.B .cta{margin-top:12px;display:flex;gap:10px}
+.B .cta .btn1{flex:1}.B .cta .btn2{width:54px;padding:0;border-radius:16px}
+
+/* ================= C · CHARACTER SHEET (tarot + book) ================= */
+.C .bg{position:absolute;inset:0;background:#160f1a url("../worlds/pride-and-prejudice/pc-select/mirror_room.webp") center/cover;filter:brightness(.35) saturate(.8)}
+.C .card{position:absolute;left:50%;top:70px;width:300px;height:470px;transform:translateX(-50%) perspective(900px) rotateY(0deg);border-radius:20px;background:var(--parch) radial-gradient(120% 80% at 50% 0%,rgba(255,255,255,.4),rgba(255,255,255,0) 60%);box-shadow:0 30px 70px rgba(0,0,0,.6);z-index:4;transition:transform .6s}
+.C .card .art{position:absolute;left:12px;right:12px;top:12px;height:332px;border-radius:12px;overflow:hidden;background:#241a2c url("../worlds/pride-and-prejudice/pc-select/bg_ballroom.webp") center 35%/cover;box-shadow:inset 0 0 0 1px rgba(120,80,10,.4)}
+.C .card .art img{position:absolute;left:50%;top:6px;height:330px;transform:translateX(-50%)}
+.C .card .art::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,0) 60%,rgba(20,12,26,.55))}
+.C .orn{position:absolute;width:38px;height:38px;background:url("../worlds/pride-and-prejudice/pc-select/orn_corner.webp") center/contain no-repeat;opacity:.9}
+.C .orn.tl{left:6px;top:6px}.C .orn.tr{right:6px;top:6px;transform:scaleX(-1)}.C .orn.bl{left:6px;bottom:6px;transform:scaleY(-1)}.C .orn.br{right:6px;bottom:6px;transform:scale(-1)}
+.C .plaque{position:absolute;left:50%;top:333px;transform:translate(-50%,-50%)}
+.C .nm{position:absolute;left:0;right:0;top:362px;text-align:center;font:700 24px/1 var(--fd);color:var(--plum-900)}
+.C .sub{position:absolute;left:0;right:0;top:394px;text-align:center;font:italic 500 12.5px/1.3 var(--fd);color:var(--plum-600);padding:0 26px}
+.C .stats{position:absolute;left:0;right:0;top:426px;display:flex;justify-content:center;gap:8px}
+.C .stats span{padding:5px 9px;border-radius:6px;background:rgba(58,46,70,.08);border:1px solid rgba(120,80,10,.25);font:800 8.5px/1 var(--fu);letter-spacing:.14em;text-transform:uppercase;color:var(--plum-900)}
+.C .stats span b{color:var(--rose-600);margin-left:4px}
+.C .flip{position:absolute;right:14px;top:70px;z-index:6}
+.C .book{position:absolute;left:0;right:0;bottom:0;height:300px;z-index:5;background:linear-gradient(180deg,#1e1523,#120c16);border-top:1px solid rgba(231,178,76,.3)}
+.C .book::before{content:"";position:absolute;left:16px;right:16px;top:-1px;height:1px;background:linear-gradient(90deg,transparent,rgba(231,178,76,.7),transparent)}
+.C .btabs{display:flex;gap:0;padding:0 16px;margin-top:-1px}
+.C .btabs span{flex:1;text-align:center;padding:12px 0 10px;font:800 9.5px/1 var(--fu);letter-spacing:.22em;text-transform:uppercase;color:rgba(255,255,255,.5);border-bottom:2px solid transparent}
+.C .btabs span.on{color:var(--gold-300);border-bottom-color:var(--gold-500)}
+.C .page{padding:14px 22px}
+.C .kv{display:grid;grid-template-columns:1fr 1fr;gap:12px 14px}
+.C .kv .k6{font-size:9px;color:rgba(255,255,255,.5)}
+.C .kv .v{font:600 14px/1.25 var(--fd);color:#fff;margin-top:3px}
+.C .kv .v.gold{color:var(--gold-300)}
+.C .bond{display:flex;align-items:center;gap:14px;margin-top:14px;padding:12px 14px;border-radius:16px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1)}
+.C .ring{width:54px;height:54px;border-radius:50%;background:conic-gradient(var(--gold-500) 0 216deg,rgba(255,255,255,.12) 216deg 360deg);display:grid;place-items:center}
+.C .ring i{width:42px;height:42px;border-radius:50%;background:#160f1a;display:grid;place-items:center;font:700 13px/1 var(--fd);color:#fff}
+.C .bond .h{font:700 15px/1.15 var(--fd);color:#fff}
+.C .bond .b{font:500 11px/1.3 var(--fu);color:rgba(255,255,255,.6);margin-top:3px}
+.C .cta{position:absolute;left:16px;right:16px;bottom:16px;display:flex;gap:10px}
+.C .cta .btn1{flex:1}
+</style>
+</head>
+<body>
+<h1>Suitor profile — 3 alternatives</h1>
+<p class="lead">Üçü de tam boy figür, karakteri döndürme (A/B: turntable, C: kartı çevirme) ve içeriğin oyun mantığında bölümlenmesi (Karakter · Konum · Bağ · Yapabileceklerin) üstüne kurulu. Tokenlar rehber v2.</p>
+<div class="grid">
+
+<!-- ===== A ===== -->
+<div class="col">
+  <div class="k">A · Portrait Gallery</div><h2>Çerçeveli portre + dosya kartları</h2>
+  <div class="phone A">
+    <div class="isl"></div><div class="bg"></div>
+    <div class="btn-icon" style="left:14px;top:18px"><svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg></div>
+    <div class="tags"><span class="pill v">Courting</span><span class="pill">Netherfield</span></div>
+    <div class="frame"><i></i><i></i><i></i><i></i></div>
+    <div class="turn"></div>
+    <img class="fig" src="../worlds/pride-and-prejudice/characters/mr_bingley/appearances/pride.png" alt="">
+    <div class="arrow l">‹</div><div class="arrow r">›</div>
+    <div class="plate"><div class="k6">Gentleman · New money</div><h1>Mr Charles Bingley</h1><span class="pill">Amiable</span> <span class="pill">Yielding</span></div>
+    <div class="sheet">
+      <div class="tabs"><span class="on">Who he is</span><span>Standing</span><span>Bond · Lv 1</span><span>Pursuits</span></div>
+      <div class="cards">
+        <div class="card"><div class="k6">Nature</div><div class="h">Sunny, open-handed</div><div class="b">Adored by all — and rather too easily led by cooler heads.</div></div>
+        <div class="card gold"><div class="k6">Fortune</div><div class="h">Five thousand a year</div><div class="b">Warmly spent. Netherfield Park, leased.</div></div>
+      </div>
+    </div>
+  </div>
+  <p><b>Fikir:</b> galeri tablosu. Figür altın çerçevenin içinde durur; alttaki zemin halkası "turntable" — figürü sürükle/ok ile döndür (ön · ¾ · arka pozlar). Alt bölüm 4 sekmeli: Who he is · Standing · Bond · Pursuits; her sekme yatay kaydırılan bilgi kartları (C9).</p>
+  <ul><li>Mevcut ekrana en yakın; risk düşük.</li><li>Sekmeler sayesinde uzun sayfa yok, her şey ekranın altında.</li></ul>
+</div>
+
+<!-- ===== B ===== -->
+<div class="col">
+  <div class="k">B · Turntable Stage</div><h2>Sahne · radyal göstergeler · cam sayfa</h2>
+  <div class="phone B">
+    <div class="isl"></div><div class="bg"></div><div class="halo"></div>
+    <div class="btn-icon" style="left:14px;top:18px"><svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg></div>
+    <div class="btn-icon" style="right:14px;top:18px"><svg viewBox="0 0 24 24"><path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.5A4 4 0 0 1 19 10c0 5.6-7 10-7 10z"/></svg></div>
+    <div class="hd"><div class="k6">Courting · Netherfield</div><h1>Mr Charles<br>Bingley</h1><div class="tags"><span class="pill">Amiable</span><span class="pill">Yielding</span></div></div>
+    <svg width="0" height="0"><defs><linearGradient id="g1" x1="0" x2="1"><stop offset="0" stop-color="#e0668a"/><stop offset="1" stop-color="#8b7bd8"/></linearGradient></defs></svg>
+    <div class="gauge g1"><svg viewBox="0 0 84 84"><circle class="t" cx="42" cy="42" r="36"/><circle class="v" cx="42" cy="42" r="36" stroke-dasharray="226" stroke-dashoffset="170"/></svg><div class="n"><b>Interest</b><small>Desire</small></div><span class="d">+1</span></div>
+    <div class="gauge g2"><svg viewBox="0 0 84 84"><circle class="t" cx="42" cy="42" r="36"/><circle class="v" cx="42" cy="42" r="36" stroke-dasharray="226" stroke-dashoffset="120"/></svg><div class="n"><b>Fondness</b><small>Affection</small></div><span class="d">+3</span></div>
+    <div class="gauge g3"><svg viewBox="0 0 84 84"><circle class="t" cx="42" cy="42" r="36"/><circle class="v" cx="42" cy="42" r="36" stroke-dasharray="226" stroke-dashoffset="140"/></svg><div class="n"><b>Confidence</b><small>Trust</small></div><span class="d">+2</span></div>
+    <div class="gauge g4"><svg viewBox="0 0 84 84"><circle class="t" cx="42" cy="42" r="36"/><circle class="v" cx="42" cy="42" r="36" stroke="#e7b24c" stroke-dasharray="226" stroke-dashoffset="90" style="stroke:#e7b24c"/></svg><div class="n"><b>Lv 1</b><small>Bond · 60 xp</small></div></div>
+    <img class="fig" src="../worlds/pride-and-prejudice/characters/mr_bingley/appearances/pride.png" alt="">
+    <div class="disc"><b>DRAG TO TURN</b><i></i><i></i><span class="deg">· 0° ·</span></div>
+    <div class="sheet">
+      <div class="grab"></div>
+      <div class="quote">"Sunny, open-handed, adored by all — and rather too easily led by cooler heads."</div>
+      <div class="row"><div class="act"><div class="k6">Activity</div><div class="h">Secure the first dance</div></div><div class="act"><div class="k6">Location</div><div class="h">Dine at Netherfield</div></div></div>
+      <div class="cta"><div class="btn1">Call on him</div><div class="btn2"><svg viewBox="0 0 24 24" style="width:18px;height:18px;stroke:#fff;fill:none;stroke-width:2"><path d="M4 7h16M4 12h16M4 17h10"/></svg></div></div>
+    </div>
+  </div>
+  <p><b>Fikir:</b> vitrin/turntable. Figür ışıklı bir kaidenin üstünde; kaideyi sürükleyince döner (ön · ¾ · arka; ileride 8 açı). Üç ilişki değeri + Bond seviyesi figürün iki yanında radyal gösterge — "oyun HUD'u" hissi. Alt cam sayfa (C3 dili) yukarı çekilince Standing ve Pursuits açılır.</p>
+  <ul><li>En "oyun" hissi veren; figür başrolde.</li><li>Standing (aile/servet) ikinci katmanda — bilinçli.</li></ul>
+</div>
+
+<!-- ===== C ===== -->
+<div class="col">
+  <div class="k">C · Character Sheet</div><h2>Tarot kart + deri kitap</h2>
+  <div class="phone C">
+    <div class="isl"></div><div class="bg"></div>
+    <div class="btn-icon" style="left:14px;top:18px"><svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg></div>
+    <div class="btn-icon flip" title="flip"><svg viewBox="0 0 24 24"><path d="M4 12a8 8 0 1 0 3-6.2"/><path d="M4 4v5h5"/></svg></div>
+    <div class="card">
+      <div class="art"><img src="../worlds/pride-and-prejudice/characters/mr_bingley/appearances/pride.png" alt=""></div>
+      <div class="orn tl"></div><div class="orn tr"></div><div class="orn bl"></div><div class="orn br"></div>
+      <div class="plaque"><span class="chip-gold">The Amiable</span></div>
+      <div class="nm">Mr Charles Bingley</div>
+      <div class="sub">Sunny, open-handed · Too easily led</div>
+      <div class="stats"><span>Desire<b>+1</b></span><span>Trust<b>+2</b></span><span>Affection<b>+3</b></span></div>
+    </div>
+    <div class="book">
+      <div class="btabs"><span class="on">Standing</span><span>Bond</span><span>Pursuits</span><span>History</span></div>
+      <div class="page">
+        <div class="kv">
+          <div><div class="k6">Family</div><div class="v">Netherfield Park (leased)</div></div>
+          <div><div class="k6">Rank</div><div class="v">Gentleman, new money</div></div>
+          <div><div class="k6">Fortune</div><div class="v gold">Five thousand a year</div></div>
+          <div><div class="k6">Status</div><div class="v">Courting · Netherfield</div></div>
+        </div>
+        <div class="bond"><div class="ring"><i>Lv 1</i></div><div><div class="h">Bonding</div><div class="b">60 / 100 XP · next: he seeks you out at the ball</div></div></div>
+      </div>
+      <div class="cta"><div class="btn1">Secure the first dance</div></div>
+    </div>
+  </div>
+  <p><b>Fikir:</b> deste ile aynı dil. Talip bir tarot kartı; sağ üstteki ↺ kartı çevirir — arka yüzde arması, ailesi ve "what the county says". Altta deri "kitap": Standing · Bond · Pursuits · History sekmeleri. Roster'la görsel süreklilik en yüksek.</p>
+  <ul><li>Döndürme = kart çevirme; 3D figür gerekmez.</li><li>Figür tam boy ama kart içinde; en "koleksiyon" hissi.</li></ul>
+</div>
+</div>
+</body>
+</html>
