@@ -44,6 +44,8 @@ def build(cid,n,manual=None,reverse=True):
         a=load(cid,fi); rgb,al=key(a)
         m=al>0.5; ys,xs=np.where(m); y0,y1,x0,x1=ys.min(),ys.max(),xs.min(),xs.max()
         if ref is None: ref=(y1-y0)
+        # constant scale (locked camera) with the head top pinned: the AI clip shortens the legs at the back view,
+        # so per-frame height normalisation would make the head bob — keep the head level, let the feet float a little
         sc=(FEET_Y-TOP_Y)/ref
         # premultiplied resize
         pm=np.concatenate([rgb*al[:,:,None],al[:,:,None]*255],2)
@@ -53,7 +55,7 @@ def build(cid,n,manual=None,reverse=True):
         r=np.array(im).astype(np.float32); ra=r[:,:,3:4]/255
         un=np.where(ra>0, r[:,:,:3]/np.maximum(ra,1e-3), 0)
         out=np.zeros((H,W,4),np.float32)
-        oy=FEET_Y-nh; ox=(W-nw)//2
+        oy=TOP_Y; ox=(W-nw)//2
         # clip if out of bounds
         sy0=max(0,-oy); sx0=max(0,-ox); oy=max(0,oy); ox=max(0,ox)
         hh=min(nh-sy0,H-oy); ww=min(nw-sx0,W-ox)
