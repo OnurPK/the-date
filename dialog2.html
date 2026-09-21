@@ -31341,7 +31341,9 @@ body.pride-hud-on #pridePcHud{ display:none !important; }
     // right rail: Suitors → suitors screen, Map → close any overlay & return to map
     const mrS=document.getElementById('mrSuitors'); if(mrS) mrS.addEventListener('click', ()=>{ if(typeof window.prideOpenSuitors==='function') window.prideOpenSuitors(); });
     const mrM=document.getElementById('mrMap'); if(mrM) mrM.addEventListener('click', ()=>{
-      ['suitorsScreen','suitorDetail'].forEach(id=>{ const e=document.getElementById(id); if(e) e.classList.remove('on'); });
+      ['suitorsScreen','suitorDetail','orbitScreen'].forEach(id=>{ const e=document.getElementById(id); if(e) e.classList.remove('on'); });
+      // Map icon → the wider world (seasons as pins); pressing it again returns to the county map
+      if(typeof window.prideWorldOpen==='function' && window.prideWorldOpen()) window.prideCloseWorld(); else if(typeof window.prideOpenWorld==='function') window.prideOpenWorld();
     });
     const mrAv=document.getElementById('mrAv'); if(mrAv){ mrAv.addEventListener('click', ()=>{ if(typeof window.pcSelectSwitch==='function') window.pcSelectSwitch(); });
       const c=window.__pridePC; if(c&&c.portrait) mrAv.style.backgroundImage="url('worlds/pride-and-prejudice/pc-select/fig_"+c.portrait+".webp')"; }
@@ -32332,6 +32334,122 @@ body.pride-hud-on #pridePcHud{ display:none !important; }
   <div class="sd-hero" id="sdHero"><div class="sd-loc" id="sdLoc"></div><div class="sd-fig" id="sdFig"></div><button class="sd-back" id="sdBack" type="button">&#8592;</button><span class="su-badge sd-badge" id="sdBadge"></span><span class="sd-loctag" id="sdLocTag"></span></div>
   <div class="sd-body" id="sdBody"></div>
 </div>
+<!-- ===== PRIDE WORLD MAP (map rail icon → the wider world, seasons as pins; data: worlds/pride-and-prejudice/world-map.json) ===== -->
+<style id="world-map-css">
+  #worldScreen{position:fixed;inset:0;z-index:9722;display:none;overflow:hidden;background:#0a0a0f;color:#fff;font-family:"Inter",system-ui,sans-serif;user-select:none;-webkit-user-select:none;
+    --gold-500:#e7b24c;--gold-300:#f0d47c;--rose-500:#e0668a;--violet-500:#8b7bd8;--fd:"Playfair Display",Georgia,serif;--fu:"Inter",system-ui,sans-serif}
+  #worldScreen.on{display:block}
+  #worldScreen *{box-sizing:border-box;margin:0;padding:0}
+  /* the painted map fills the height; width overflows and is centred (2:3 image on a taller phone) */
+  #worldScreen .wm-view{position:absolute;inset:0;overflow:hidden;touch-action:none;cursor:grab}
+  #worldScreen .wm-view.drag{cursor:grabbing}
+  /* the painted map is a little larger than the screen (pannable); JS sets width/height + translate */
+  #worldScreen .wm-img{position:absolute;left:0;top:0;background:#0a0a0f center/cover no-repeat;opacity:0;will-change:transform;transition:opacity .45s ease}
+  #worldScreen.on .wm-img{opacity:1}
+  #worldScreen .wm-vig{position:absolute;inset:0;pointer-events:none;z-index:3;background:radial-gradient(120% 90% at 50% 45%,rgba(7,5,10,0) 55%,rgba(7,5,10,.35) 100%)}
+  #worldScreen .wm-img::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(7,5,10,.55),rgba(7,5,10,0) 18%,rgba(7,5,10,0) 78%,rgba(7,5,10,.7));pointer-events:none}
+  /* "you are here" region */
+  #worldScreen .wm-region{position:absolute;border:1.5px dashed rgba(240,212,124,.7);border-radius:14px;box-shadow:0 0 0 2000px rgba(7,5,10,.42),inset 0 0 60px rgba(240,212,124,.14);pointer-events:none;animation:wmBreathe 3.2s ease-in-out infinite}
+  @keyframes wmBreathe{0%,100%{border-color:rgba(240,212,124,.45)}50%{border-color:rgba(240,212,124,.9)}}
+  /* season pins */
+  #worldScreen .wm-pin{position:absolute;transform:translate(-50%,-50%);display:flex;flex-direction:column;align-items:center;gap:6px;cursor:pointer;-webkit-tap-highlight-color:transparent;z-index:2}
+  #worldScreen .wm-seal{width:46px;height:46px;border-radius:50%;display:grid;place-items:center;font:700 19px/1 var(--fd);color:#fff;background:rgba(14,10,20,.8);border:1.5px solid rgba(255,255,255,.35);box-shadow:0 8px 22px rgba(0,0,0,.55);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);position:relative}
+  #worldScreen .wm-seal svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+  #worldScreen .wm-pin.active .wm-seal{border-color:var(--gold-300);color:var(--gold-300);box-shadow:0 0 0 6px rgba(240,212,124,.14),0 8px 22px rgba(0,0,0,.55);animation:wmPulse 2.2s ease-in-out infinite}
+  @keyframes wmPulse{0%,100%{box-shadow:0 0 0 5px rgba(240,212,124,.12),0 8px 22px rgba(0,0,0,.55)}50%{box-shadow:0 0 0 11px rgba(240,212,124,.04),0 8px 22px rgba(0,0,0,.55)}}
+  #worldScreen .wm-pin.soon .wm-seal{border-color:var(--violet-500);color:#d9d2ff}
+  #worldScreen .wm-pin.locked .wm-seal{border-color:rgba(255,255,255,.3);color:rgba(255,255,255,.8);background:rgba(14,10,20,.86)}
+  #worldScreen .wm-pin.locked{opacity:1;filter:saturate(.7)}
+  #worldScreen .wm-lock{position:absolute;right:-5px;bottom:-5px;width:19px;height:19px;border-radius:50%;background:rgba(10,7,14,.92);border:1px solid rgba(255,255,255,.3);display:grid;place-items:center}
+  #worldScreen .wm-lock svg{width:10px;height:10px;stroke:#fff;fill:none;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+  #worldScreen .wm-card{display:flex;flex-direction:column;align-items:center;gap:4px;padding:7px 11px 8px;border-radius:12px;background:rgba(14,10,20,.78);border:1px solid rgba(255,255,255,.14);-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);box-shadow:0 8px 22px rgba(0,0,0,.45);white-space:nowrap}
+  #worldScreen .wm-k{font:800 8.5px/1 var(--fu);letter-spacing:.2em;text-transform:uppercase;color:var(--gold-300)}
+  #worldScreen .wm-pin.soon .wm-k{color:#c9bfff}#worldScreen .wm-pin.locked .wm-k{color:rgba(255,255,255,.45)}
+  #worldScreen .wm-t{font:700 14px/1.1 var(--fd);color:#fff}
+  #worldScreen .wm-pin.locked .wm-t{color:rgba(255,255,255,.82)}
+  #worldScreen .wm-pin.locked .wm-card{padding:6px 11px 7px;background:rgba(14,10,20,.84);border-color:rgba(255,255,255,.12)}
+  #worldScreen .wm-bar{width:118px;height:4px;border-radius:2px;background:rgba(255,255,255,.16);margin-top:3px;overflow:hidden}
+  #worldScreen .wm-bar i{display:block;height:100%;border-radius:2px;background:linear-gradient(90deg,var(--gold-500),var(--gold-300))}
+  #worldScreen .wm-s{font:600 10.5px/1 var(--fu);letter-spacing:.04em;color:rgba(255,255,255,.8)}
+  #worldScreen .wm-pin.soon .wm-s{display:flex;align-items:center;gap:5px;color:#d9d2ff}
+  #worldScreen .wm-pin.soon .wm-s svg{width:11px;height:11px;stroke:#d9d2ff;fill:none;stroke-width:2;stroke-linecap:round}
+  #worldScreen .wm-pin.locked .wm-s{color:rgba(255,255,255,.4)}
+  /* chrome */
+  #worldScreen .wm-x{position:absolute;right:14px;top:18px;width:42px;height:42px;border-radius:50%;background:rgba(14,10,20,.55);border:1px solid rgba(255,255,255,.28);display:grid;place-items:center;z-index:5;font-size:16px;color:#fff;cursor:pointer;-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px)}
+  #worldScreen .wm-hd{position:absolute;left:18px;top:72px;z-index:5;pointer-events:none;text-shadow:0 2px 14px rgba(0,0,0,.7)}
+  #worldScreen .wm-hd .k{font:800 9.5px/1 var(--fu);letter-spacing:.24em;text-transform:uppercase;color:var(--gold-300)}
+  #worldScreen .wm-hd .t{font:700 26px/1 var(--fd);color:#fff;margin-top:6px}
+  #worldScreen.on ~ #prideLockTip{z-index:9730}
+  #worldScreen .wm-ft{position:absolute;left:0;right:0;bottom:max(22px,calc(env(safe-area-inset-bottom,0px) + 10px));text-align:center;z-index:5;pointer-events:none;font:500 12px/1.4 var(--fu);color:rgba(255,255,255,.7);text-shadow:0 1px 8px rgba(0,0,0,.8)}
+</style>
+<div id="worldScreen" lang="en">
+  <div class="wm-view" id="wmView"><div class="wm-img" id="wmImg"></div><div class="wm-vig"></div></div>
+  <div class="wm-hd"><div class="k">The Kingdom</div><div class="t">Six Seasons</div></div>
+  <div class="wm-x" id="wmX">✕</div>
+</div>
+<script>
+(function setupWorldMap(){
+  const root=document.getElementById('worldScreen'), img=document.getElementById('wmImg');
+  let data=null, timer=0;
+  const ICO={lock:'<svg viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>',
+    clock:'<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>'};
+  const esc=s=>String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;');
+  function completed(){ try{ return new Set(typeof window.prideCompleted==='function'?window.prideCompleted():[]); }catch(e){ return new Set(); } }
+  function fmtLeft(ms){ if(ms<=0) return 'Opening'; const d=Math.floor(ms/864e5), h=Math.floor(ms%864e5/36e5), m=Math.floor(ms%36e5/6e4); return d>0?(d+'d '+String(h).padStart(2,'0')+'h'):(h>0?(h+'h '+String(m).padStart(2,'0')+'m'):(m+'m')); }
+  function stateOf(s,i,list){
+    if(s.episodes&&s.episodes.length){ const done=completed(); const n=s.episodes.filter(e=>done.has(e)).length; return n>=s.episodes.length?{k:'done',pct:100}:{k:'active',pct:Math.round(n/s.episodes.length*100),n,total:s.episodes.length}; }
+    if(s.opensAt) return {k:'soon',at:new Date(s.opensAt).getTime()};
+    return {k:'locked'};
+  }
+  function render(){
+    if(!data) return;
+    img.style.backgroundImage='url("'+data.image+'")';
+    img.querySelectorAll('.wm-pin,.wm-region').forEach(e=>e.remove());
+    const list=data.seasons||[];
+    list.forEach((s,i)=>{
+      const st=stateOf(s,i,list);
+      const p=document.createElement('div'); p.className='wm-pin '+(st.k==='done'?'active':st.k); p.style.left=s.x+'%'; p.style.top=s.y+'%'; p.dataset.id=s.id;
+      const seal=String(s.n)+(st.k==='locked'?'<span class="wm-lock">'+ICO.lock+'</span>':'');
+      let card='<div class="wm-t">'+esc(s.title)+'</div>';
+      if(st.k==='active'||st.k==='done') card+='<div class="wm-bar"><i style="width:'+st.pct+'%"></i></div><div class="wm-s">'+(st.k==='done'?'Completed':st.pct+'% completed')+'</div>';
+      else if(st.k==='soon') card+='<div class="wm-s">'+ICO.clock+'<span data-at="'+st.at+'">Coming soon · '+fmtLeft(st.at-Date.now())+'</span></div>';
+      p.innerHTML='<div class="wm-seal">'+seal+'</div><div class="wm-card">'+card+'</div>';
+      p._tap=()=>onTap(s,st);
+      img.appendChild(p);
+    });
+  }
+  function tick(){ root.querySelectorAll('.wm-pin.soon [data-at]').forEach(el=>{ el.textContent='Coming soon · '+fmtLeft(+el.dataset.at-Date.now()); }); }
+  function onTap(s,st){
+    const tip=typeof window.prideLockTip==='function'?window.prideLockTip:(m=>alert(m));
+    if(st.k==='active'||st.k==='done'){ close(); if(typeof window.prideFocusActiveEpisode==='function') setTimeout(()=>window.prideFocusActiveEpisode(),50); return; }
+    if(st.k==='soon'){ tip('Season '+s.n+' · '+s.title+' opens in '+fmtLeft(st.at-Date.now())); return; }
+    tip('Season '+s.n+' · '+s.title+' — unlocks after Season '+(s.n-1));
+  }
+  // ---- pan: the map is drawn 1.18× the viewport height (2:3), dragged within bounds, with a little inertia ----
+  const view=document.getElementById('wmView');
+  const pan={x:0,y:0,w:0,h:0,drag:false,moved:false,lx:0,ly:0,vx:0,vy:0,lt:0,raf:0};
+  function fit(cx,cy){ const vw=root.clientWidth, vh=root.clientHeight; pan.h=Math.round(vh*1.18); pan.w=Math.round(pan.h*2/3); if(pan.w<vw*1.12){ pan.w=Math.round(vw*1.12); pan.h=Math.round(pan.w*3/2); }
+    img.style.width=pan.w+'px'; img.style.height=pan.h+'px'; centreOn(cx==null?0.5:cx, cy==null?0.5:cy); apply(); }
+  function clamp(){ const vw=root.clientWidth, vh=root.clientHeight; pan.x=Math.min(0,Math.max(vw-pan.w,pan.x)); pan.y=Math.min(0,Math.max(vh-pan.h,pan.y)); }
+  function apply(){ img.style.transform='translate3d('+pan.x.toFixed(1)+'px,'+pan.y.toFixed(1)+'px,0)'; }
+  function centreOn(fx,fy){ pan.x=root.clientWidth/2-fx*pan.w; pan.y=root.clientHeight/2-fy*pan.h; clamp(); }
+  view.addEventListener('pointerdown',e=>{ pan.drag=true; pan.moved=false; pan.target=e.target.closest('.wm-pin'); pan.lx=e.clientX; pan.ly=e.clientY; pan.vx=pan.vy=0; pan.lt=performance.now(); cancelAnimationFrame(pan.raf); view.classList.add('drag'); view.setPointerCapture(e.pointerId); });
+  view.addEventListener('pointermove',e=>{ if(!pan.drag) return; const dx=e.clientX-pan.lx, dy=e.clientY-pan.ly; if(Math.hypot(dx,dy)>4) pan.moved=true; if(!pan.moved) return; const now=performance.now(), dt=Math.max(1,now-pan.lt); pan.vx=dx/dt; pan.vy=dy/dt; pan.lt=now; pan.x+=dx; pan.y+=dy; pan.lx=e.clientX; pan.ly=e.clientY; clamp(); apply(); });
+  const endPan=()=>{ if(!pan.drag) return; pan.drag=false; view.classList.remove('drag'); if(!pan.moved){ const t=pan.target; pan.target=null; if(t&&t._tap) t._tap(); return; } pan.target=null; let vx=pan.vx*16, vy=pan.vy*16; const glide=()=>{ vx*=0.92; vy*=0.92; if(Math.abs(vx)<0.2&&Math.abs(vy)<0.2) return; pan.x+=vx; pan.y+=vy; clamp(); apply(); pan.raf=requestAnimationFrame(glide); }; pan.raf=requestAnimationFrame(glide); setTimeout(()=>{ pan.moved=false; },0); };
+  view.addEventListener('pointerup',endPan); view.addEventListener('pointercancel',endPan);
+  window.addEventListener('resize',()=>{ if(root.classList.contains('on')) fit(); });
+  function load(){ if(data) return Promise.resolve(data); return fetch('worlds/pride-and-prejudice/world-map.json?v='+Date.now()).then(r=>r.json()).then(j=>{ data=j; return j; }); }
+  function open(){ load().then(()=>{ render(); root.classList.add('on');
+    // frame the current season and the next one (coming soon) together
+    const L=data.seasons||[]; const act=L.find(s=>{ const k=stateOf(s).k; return k==='active'||k==='done'; }); const nxt=L.find(s=>stateOf(s).k==='soon');
+    const pts=[act,nxt].filter(Boolean); const cx=pts.length?pts.reduce((a,s)=>a+s.x,0)/pts.length/100:0.5, cy=pts.length?pts.reduce((a,s)=>a+s.y,0)/pts.length/100:0.5;
+    fit(cx,cy); void img.offsetWidth; clearInterval(timer); timer=setInterval(tick,30000); }); }
+  function close(){ root.classList.remove('on'); clearInterval(timer); timer=0; }
+  document.getElementById('wmX').addEventListener('click',close);
+  window.prideOpenWorld=open; window.prideCloseWorld=close; window.prideWorldOpen=()=>root.classList.contains('on');
+})();
+</script>
+
 <!-- ===== PRIDE SUITOR ORBIT (docs/proto-orbit.html → game; replaces #suitorDetail) ===== -->
 <style id="orbit-css">
   #orbitScreen{position:fixed;inset:0;z-index:9725;display:none;overflow:hidden;background:#0a0a0f;touch-action:none;user-select:none;-webkit-user-select:none;font-family:"Inter",system-ui,sans-serif;color:#fff;

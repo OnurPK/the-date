@@ -1,0 +1,14 @@
+{
+  "image": "worlds/pride-and-prejudice/world-map.jpg",
+  "w": 1024, "h": 1536,
+  "seasons": [
+    { "id": "s1", "n": 1, "title": "Hertfordshire", "sub": "The Wit at Netherfield", "x": 57, "y": 43,
+      "region": { "x": 43, "y": 31, "w": 29, "h": 22 },
+      "episodes": ["netherfield-ball", "longbourn", "lucas-lodge", "meryton", "pemberley", "rosings-park"] },
+    { "id": "s2", "n": 2, "title": "Brighton", "sub": "A Season by the Sea", "x": 51, "y": 84, "opensAt": "2026-10-20T09:00:00Z" },
+    { "id": "s3", "n": 3, "title": "Kent", "sub": "Rosings Park", "x": 71, "y": 72 },
+    { "id": "s4", "n": 4, "title": "Derbyshire", "sub": "Pemberley", "x": 64, "y": 21 },
+    { "id": "s5", "n": 5, "title": "London", "sub": "The Season", "x": 51, "y": 61 },
+    { "id": "s6", "n": 6, "title": "Bath", "sub": "The Pump Room", "x": 32, "y": 37 }
+  ]
+}
