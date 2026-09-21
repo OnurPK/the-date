@@ -32450,6 +32450,131 @@ body.pride-hud-on #pridePcHud{ display:none !important; }
 })();
 </script>
 
+<!-- ===== PRIDE MEMORY RECALL (orbit discovery polaroid → dreamy video; docs/proto-memory.html port) ===== -->
+<style id="mem-css">
+  #memScreen{position:fixed;inset:0;z-index:9740;display:none;overflow:hidden;background:transparent;color:#fff;font-family:"Inter",system-ui,sans-serif;user-select:none;-webkit-user-select:none;
+    --gold-300:#f0d47c;--fd:"Playfair Display",Georgia,serif;--fu:"Inter",system-ui,sans-serif}
+  #memScreen.on{display:block}
+  #memScreen *{box-sizing:border-box;margin:0;padding:0}
+  #memScreen .mm-snap{position:absolute;inset:0;pointer-events:none;opacity:0;will-change:opacity;filter:blur(14px) brightness(.4);transform:scale(1.04);background:#07050a center/cover no-repeat}
+  #memScreen .mm-veil{position:absolute;inset:0;background:#07050a;opacity:0;will-change:opacity}
+  #memScreen .mm-vid{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;max-width:none}
+  #memScreen .mm-frame{position:absolute;inset:0;will-change:transform,filter,opacity}
+  #memScreen .mm-layer{position:absolute;inset:0;pointer-events:none}
+  #memScreen .mm-grain{position:absolute;inset:-50%;width:200%;height:200%;background:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 .5 0'/></filter><rect width='160' height='160' filter='url(%23n)'/></svg>");opacity:.08;mix-blend-mode:overlay;animation:mmGrain .7s steps(3) infinite;will-change:transform}
+  @keyframes mmGrain{0%{transform:translate(0,0)}25%{transform:translate(-4%,3%)}50%{transform:translate(3%,-2%)}75%{transform:translate(-2%,-4%)}100%{transform:translate(0,0)}}
+  #memScreen .mm-vig{position:absolute;inset:0;background:radial-gradient(70% 60% at 50% 50%,rgba(7,5,10,0) 45%,rgba(7,5,10,.85) 100%)}
+  #memScreen .mm-lines{position:absolute;left:0;right:0;bottom:max(64px,calc(env(safe-area-inset-bottom,0px) + 40px));height:260px;z-index:6;pointer-events:none;overflow:hidden;contain:layout paint}
+  #memScreen .mm-ln{position:absolute;left:0;right:0;font:italic 500 34px/1.1 var(--fd);color:#fff;text-shadow:0 2px 16px rgba(0,0,0,.95),0 0 30px rgba(0,0,0,.6);white-space:nowrap;padding:0 30px;will-change:transform,opacity,filter}
+  #memScreen .mm-ln.r{text-align:right}
+  #memScreen .mm-ln .w{display:inline-block;margin-right:.26em;opacity:0;filter:blur(8px);will-change:opacity,filter,transform}
+  #memScreen .mm-cap{position:absolute;left:0;right:0;bottom:0;padding:18px 24px max(24px,env(safe-area-inset-bottom));text-align:center;opacity:0;transition:opacity 1s ease 1.4s;text-shadow:0 2px 14px rgba(0,0,0,.9);z-index:9;cursor:pointer}
+  #memScreen.on .mm-cap{opacity:1}
+  #memScreen .mm-cap .k{font:800 9.5px/1 var(--fu);letter-spacing:.26em;text-transform:uppercase;color:var(--gold-300);animation:mmWake 2.8s ease-in-out infinite}
+  @keyframes mmWake{0%,100%{opacity:.55}50%{opacity:1}}
+</style>
+<div id="memScreen" lang="en">
+  <div class="mm-snap" id="mmSnap"></div>
+  <div class="mm-veil" id="mmVeil"></div>
+  <div class="mm-frame" id="mmFrame"><video class="mm-vid" id="mmVid" playsinline preload="auto" muted></video></div>
+  <div class="mm-layer mm-grain"></div>
+  <div class="mm-layer mm-vig"></div>
+  <div class="mm-lines" id="mmLines"></div>
+  <div class="mm-cap" id="mmCap"><div class="k">Touch to wake up</div></div>
+</div>
+<script>
+(function setupMemoryRecall(){
+  const root=document.getElementById('memScreen'), frame=document.getElementById('mmFrame'), vid=document.getElementById('mmVid'), veil=document.getElementById('mmVeil'), snap=document.getElementById('mmSnap'), linesEl=document.getElementById('mmLines');
+  let anims=[], extra=[], timers=[], alive=false, snapUrl='';
+  const A=(el,kf,opt)=>{ const a=el.animate(kf,Object.assign({fill:'forwards'},opt)); anims.push(a); return a; };
+  const later=(fn,ms)=>{ const id=setTimeout(fn,ms); timers.push(id); return id; };
+  function reset(){ alive=false; anims.forEach(a=>a.cancel()); anims=[]; extra.forEach(e=>e.remove()); extra=[]; timers.forEach(clearTimeout); timers=[]; linesEl.innerHTML=''; frame.style.cssText=''; vid.style.cssText=''; veil.style.opacity=0; }
+
+  // snapshot of the screen behind (the orbit) so the "sink away" blur is a static image, not a live filter
+  function snapshotBehind(){
+    const ob=document.getElementById('orbitScreen'); if(!ob) return Promise.resolve('');
+    // cheap approximation: reuse the orbit's own backdrop image + current turntable frame drawn on a canvas
+    try{
+      const c=document.createElement('canvas'); const W=Math.max(8,Math.round(window.innerWidth/2)), H=Math.max(8,Math.round(window.innerHeight/2)); c.width=W; c.height=H; const ctx=c.getContext('2d');
+      ctx.fillStyle='#0a0a0f'; ctx.fillRect(0,0,W,H);
+      const bgEl=document.getElementById('obBg'); const raw=(bgEl&&bgEl.style.getPropertyValue('--bgimg'))||''; const m=/url\(\s*['"]?([^'")]+)['"]?\s*\)/.exec(raw);
+      const fig=document.getElementById('obFig');
+      const draw=(img,cover)=>{ if(!img||!img.naturalWidth) return; const r=Math.max(W/img.naturalWidth,H/img.naturalHeight); const w=img.naturalWidth*r,h=img.naturalHeight*r; if(cover) ctx.drawImage(img,(W-w)/2,(H-h)/2,w,h); else { const rr=H/img.naturalHeight; const ww=img.naturalWidth*rr; ctx.drawImage(img,(W-ww)/2,0,ww,H); } };
+      const p=[]; if(m){ const im=new Image(); im.src=m[1]; p.push(new Promise(r=>{ im.onload=()=>r(im); im.onerror=()=>r(null); })); } else p.push(Promise.resolve(null));
+      return Promise.all(p).then(([bg])=>{ draw(bg,true); if(fig&&fig.complete) draw(fig,false); try{ const u=c.toDataURL('image/jpeg',.6); return u.length>200?u:''; }catch(e){ return ''; } });
+    }catch(e){ return Promise.resolve(''); }
+  }
+
+  function open(o){   // o = {src, title, lines:[...], poster}
+    if(!o||!o.src) return;
+    reset(); alive=true;
+    root.classList.add('on');
+    if(vid.getAttribute('src')!==o.src){ vid.src=o.src; vid.load(); }
+    vid.currentTime=0; vid.muted=true; vid.loop=true;
+    snapshotBehind().then(url=>{ if(!alive) return; if(url){ snap.style.backgroundImage='url("'+url+'")'; } else { snap.style.backgroundImage='none'; A(veil,[{opacity:.55},{opacity:.85}],{duration:600,easing:'ease-out'}); } });
+    const tryPlay=()=>vid.play().catch(()=>{}); if(vid.readyState>=2) tryPlay(); else vid.addEventListener('canplay',tryPlay,{once:true});
+    A(snap,[{opacity:0},{opacity:1}],{duration:900,easing:'ease-out'});
+    A(veil,[{opacity:0},{opacity:.55}],{duration:1400,easing:'ease-out'});
+    irisOpen();
+    later(dreamEdge,900);
+    later(motes,1200);
+    later(()=>narrate(o.lines||[]),2200);
+  }
+  function close(){
+    alive=false;
+    A(frame,[{opacity:1,filter:'blur(0px)'},{opacity:0,filter:'blur(18px)'}],{duration:700,easing:'ease-in'});
+    extra.forEach(e=>A(e,[{opacity:getComputedStyle(e).opacity},{opacity:0}],{duration:600,easing:'ease-in'}));
+    A(linesEl,[{opacity:1},{opacity:0}],{duration:500});
+    A(veil,[{opacity:.55},{opacity:0}],{duration:900,easing:'ease-out',delay:150});
+    A(snap,[{opacity:1},{opacity:0}],{duration:900,easing:'ease-out',delay:250});
+    setTimeout(()=>{ root.classList.remove('on'); vid.pause(); reset(); linesEl.style.opacity=''; snap.style.backgroundImage='none'; },1200);
+  }
+  document.getElementById('mmCap').addEventListener('click',e=>{ e.stopPropagation(); if(alive) close(); });
+
+  function irisOpen(){
+    const d=document.createElement('div'); d.style.cssText='position:absolute;inset:0;z-index:4;pointer-events:none;background:#07050a'; root.appendChild(d); extra.push(d);
+    const set=(r,soft)=>{ const m='radial-gradient(circle at 50% 50%, transparent '+Math.max(0,r-soft)+'%, #000 '+r+'%)'; d.style.webkitMaskImage=m; d.style.maskImage=m; };
+    set(0,0); const t0=performance.now(), D=1500;
+    const step=()=>{ if(!d.isConnected) return; const t=Math.min(1,(performance.now()-t0)/D); let r; if(t<.18) r=6*(t/.18); else if(t<.3) r=6-2*((t-.18)/.12); else { const k=(t-.3)/.7; r=4+(150-4)*(1-Math.pow(1-k,2.2)); } set(r,8+r*.4); if(t<1) setTimeout(()=>requestAnimationFrame(step),16); else { d.remove(); const i=extra.indexOf(d); if(i>=0) extra.splice(i,1); } };
+    requestAnimationFrame(step);
+    A(vid,[{filter:'blur(14px) saturate(.5)',transform:'scale(1.18)'},{filter:'blur(0px) saturate(1)',transform:'scale(1.06)',offset:.55},{filter:'blur(0px) saturate(1)',transform:'scale(1)'}],{duration:2400,easing:'cubic-bezier(.2,.7,.2,1)'});
+  }
+  function dreamEdge(){
+    const v=document.createElement('video'); v.src=vid.currentSrc||vid.src; v.muted=true; v.playsInline=true; v.loop=true; v.className='mm-vid'; v.style.cssText='pointer-events:none;z-index:3;opacity:0;filter:blur(14px) saturate(.85) brightness(.9);transform:scale(1.06)'; root.appendChild(v); extra.push(v); try{ v.currentTime=vid.currentTime; }catch(e){} v.play().catch(()=>{});
+    A(v,[{opacity:0},{opacity:1}],{duration:2200,easing:'ease-out'});
+    const t0=performance.now(); const step=()=>{ if(!v.isConnected) return; const t=(performance.now()-t0)/1000; const cx=50+Math.sin(t*.35)*6, cy=47+Math.cos(t*.27)*5; const m='radial-gradient(60% 50% at '+cx.toFixed(1)+'% '+cy.toFixed(1)+'%, transparent 30%, #000 72%)'; v.style.webkitMaskImage=m; v.style.maskImage=m; setTimeout(()=>requestAnimationFrame(step),50); }; step();
+    const sync=()=>{ if(!v.isConnected) return; if(Math.abs(v.currentTime-vid.currentTime)>.15){ try{ v.currentTime=vid.currentTime; }catch(e){} } later(sync,1500); }; later(sync,1500);
+  }
+  function motes(){
+    const c=document.createElement('canvas'); c.width=Math.round(root.clientWidth/2); c.height=Math.round(root.clientHeight/2); c.style.cssText='position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:3;opacity:0;mix-blend-mode:screen'; root.appendChild(c); extra.push(c); A(c,[{opacity:0},{opacity:.85}],{duration:2400,easing:'ease-out'});
+    const ctx=c.getContext('2d'); const P=[]; for(let i=0;i<70;i++) P.push({x:Math.random(),y:Math.random(),r:2+Math.random()*7,vy:-.006-Math.random()*.012,vx:(Math.random()-.5)*.004,ph:Math.random()*6,bl:Math.random()<.5});
+    const wY=y=>{ const d=Math.abs(y-.5)*2; return Math.pow(Math.max(0,(d-.62)/.38),1.4); };
+    const t0=performance.now(); const step=()=>{ if(!c.isConnected) return; const t=(performance.now()-t0)/1000, W=c.width, H=c.height; ctx.clearRect(0,0,W,H);
+      P.forEach(p=>{ p.y+=p.vy/60*8; p.x+=p.vx/60*8+Math.sin(t*.8+p.ph)*.0006; if(p.y<-.05){p.y=1.05;p.x=Math.random();} const w=wY(p.y); if(w<.02) return; const x=p.x*W,y=p.y*H; const tw=.5+.5*Math.sin(t*1.5+p.ph); const a=(0.35+0.5*tw)*w; const g=ctx.createRadialGradient(x,y,0,x,y,p.r*(p.bl?3:1.4)); g.addColorStop(0,'rgba(255,236,200,'+a.toFixed(2)+')'); g.addColorStop(1,'rgba(255,236,200,0)'); ctx.fillStyle=g; ctx.fillRect(x-p.r*3,y-p.r*3,p.r*6,p.r*6); });
+      const gx=ctx.createLinearGradient(0,0,W,0); gx.addColorStop(0,'rgba(0,0,0,.35)'); gx.addColorStop(.25,'rgba(0,0,0,1)'); gx.addColorStop(.75,'rgba(0,0,0,1)'); gx.addColorStop(1,'rgba(0,0,0,.35)'); ctx.globalCompositeOperation='destination-in'; ctx.fillStyle=gx; ctx.fillRect(0,0,W,H); ctx.globalCompositeOperation='source-over'; requestAnimationFrame(step); }; step();
+  }
+  function narrate(lines){
+    if(!lines.length) return;
+    const IN=900, HOLD=2600, OUT=1100, DRIFT=60; let i=0;
+    const showLine=()=>{
+      if(!alive || i>=lines.length) return;
+      const txt=lines[i], dirR=(i%2===1);
+      const el=document.createElement('div'); el.className='mm-ln'+(dirR?' r':''); el.style.top=((i%2)?118:70)+'px';
+      String(txt).split(' ').forEach(w=>{ const s=document.createElement('span'); s.className='w'; s.textContent=w; el.appendChild(s); });
+      linesEl.appendChild(el);
+      const from=dirR?DRIFT:-DRIFT, to=dirR?-DRIFT:DRIFT; const total=IN+HOLD+OUT;
+      A(el,[{transform:'translateX('+from+'px)'},{transform:'translateX('+to+'px)'}],{duration:total,easing:'linear'});
+      const words=[...el.children]; const per=Math.min(160,IN/Math.max(1,words.length));
+      words.forEach((w,k)=>{ const d=dirR?(words.length-1-k)*per:k*per; A(w,[{opacity:0,filter:'blur(8px)',transform:'translateY(6px)'},{opacity:1,filter:'blur(0px)',transform:'translateY(0)'}],{duration:700,easing:'ease-out',delay:d}); });
+      later(()=>{ words.forEach((w,k)=>{ const d=(dirR?k:(words.length-1-k))*per*.6; A(w,[{opacity:1,filter:'blur(0px)'},{opacity:0,filter:'blur(10px)'}],{duration:OUT,easing:'ease-in',delay:d}); }); later(()=>el.remove(),OUT+per*words.length*.6+50); },IN+HOLD);
+      i++; later(showLine,IN+HOLD-400);
+    };
+    showLine();
+  }
+  window.prideOpenMemory=open; window.prideCloseMemory=close;
+})();
+</script>
+
 <!-- ===== PRIDE SUITOR ORBIT (docs/proto-orbit.html → game; replaces #suitorDetail) ===== -->
 <style id="orbit-css">
   #orbitScreen{position:fixed;inset:0;z-index:9725;display:none;overflow:hidden;background:#0a0a0f;touch-action:none;user-select:none;-webkit-user-select:none;font-family:"Inter",system-ui,sans-serif;color:#fff;
@@ -32548,7 +32673,8 @@ body.pride-hud-on #pridePcHud{ display:none !important; }
     mr_darcy:{ frames:48, bg:W+'characters/mr_darcy/orbit_bg.webp', kin:['Miss Georgiana Darcy','Lady Catherine (aunt)'], home:'Pemberley, Derbyshire', fortune:'Ten thousand a year',
       traits:{ Proud:{img:CUT+'s1b_darcy_across.png', tx:'He would rather be thought cold than be caught caring. Slights first, apologises never — until he does.'},
                Constant:{img:CUT+'s2c_darcy_watches.png', tx:'What he decides, he does not undecide. Slow to warm; impossible to cool.'} },
-      disc:[{img:CUT+'s3c_darcy_confess.png',t:'What he confessed'},{img:CUT+'s4b_darcy_glass.png',t:'The glass at supper'},{img:CUT+'s1b_darcy_across.png',t:'Across the ballroom'},
+      disc:[{img:W+'characters/mr_darcy/memory_rider.jpg',t:'The rider in the mist',src:W+'characters/mr_darcy/unlock.mp4',lines:['Out of the mist.','A black horse.','He did not hurry.','He never does.']},
+            {img:CUT+'s3c_darcy_confess.png',t:'What he confessed',lines:['He thought it empty.','The dark had ears.','Bewitched, he said.','She never told him.']},{img:CUT+'s4b_darcy_glass.png',t:'The glass at supper',lines:['He did not drink.','Only watched.','Over the rim.','All through supper.']},{img:CUT+'s1b_darcy_across.png',t:'Across the ballroom',lines:['A locked door.','She adores a lock.','The whole floor between.','Neither crossed first.']},
             {img:CUT+'s2c_darcy_watches.png',t:'Where he stood'},{img:CUT+'s5d_darcy_ice.png',t:'The cold reply'},{img:CUT+'s3b_caroline_darcy.png',t:'Caroline’s aside'}] },
     mr_bingley:{ frames:48 }, sir_ashbourne:{ frames:48 }, mr_collins:{ frames:48 }, mr_wickham:{ frames:48 }, ens_pryce:{ frames:48 }, capt_vane:{ frames:48 }
   };
@@ -32567,7 +32693,7 @@ body.pride-hud-on #pridePcHud{ display:none !important; }
   const lnEl=document.getElementById('obLn'), fnEl=document.getElementById('obFn');
   const R=176, RY=42;
   const meas=document.createElement('canvas').getContext('2d');
-  let SECTIONS=[], nodes=[], dots=[], TT=[], ttIdx=0, raf=0, curId=null;
+  let SECTIONS=[], nodes=[], dots=[], TT=[], ttIdx=0, raf=0, curId=null, DISC_ITEMS=[];
   let ang=0, amb=0, vel=0, drag=false, lastX=0, lastT=0, target=null, front=-1, lastAng=0, idle=0, downX=0, downY=0, moved=false, vsc=null;
 
   // ---- build the five ring sections from the suitor's live data ----
@@ -32587,7 +32713,8 @@ body.pride-hud-on #pridePcHud{ display:none !important; }
     const known=d.known||0, total=db.total||0, remaining=Math.max(0,total-known), pct=total?Math.round(known/total*100):0;
     let items=art.disc?art.disc.slice():[];
     if(!items.length){ const facts=(nf.facts||[]).slice(0,Math.min(known,(nf.facts||[]).length)).concat(d.disc||[]); items=facts.map(f=>({img:bgLoc,t:f})); }
-    const polas=items.map(it=>'<div class="ob-pola"><div class="ob-im" style="background-image:url(\''+it.img+'\')"></div><span class="ob-play"></span><b>'+esc(it.t)+'</b></div>').join('');
+    DISC_ITEMS=items;
+    const polas=items.map((it,i)=>'<div class="ob-pola" data-mi="'+i+'"><div class="ob-im" style="background-image:url(\''+it.img+'\')"></div><span class="ob-play"></span><b>'+esc(it.t)+'</b></div>').join('');
     const disc='<div class="ob-dh"><div class="ob-pg"><div class="ob-prog"><i style="width:'+pct+'%"></i></div><span class="ob-cnt">'+ICO.lock+esc(remaining+' to be discovered')+'</span></div><span class="ob-all">Show All'+ICO.chev+'</span></div>'
       +'<div class="ob-disc"><div class="ob-grid">'+polas+'</div></div>';
     const lvl=d.lvl||1, xpInto=d.xpInto||0, xpSpan=d.xpSpan||100; const off=(301.6*(1-Math.min(1,xpInto/xpSpan))).toFixed(1);
@@ -32624,11 +32751,11 @@ body.pride-hud-on #pridePcHud{ display:none !important; }
     void el.offsetWidth; el.classList.remove('ob-in-r','ob-in-l'); }
   // ---- drag / inertia / snap ----
   root.addEventListener('pointerdown',e=>{ if(e.target.closest('.ob-x')) return;
-    const d=e.target.closest('.ob-disc'); if(d){ vsc={el:d,x:e.clientX,left:d.scrollLeft}; root.setPointerCapture(e.pointerId); return; }
+    const d=e.target.closest('.ob-disc'); if(d){ vsc={el:d,x:e.clientX,left:d.scrollLeft,pola:e.target.closest('.ob-pola')}; root.setPointerCapture(e.pointerId); return; }
     drag=true; target=null; lastX=e.clientX; lastT=performance.now(); vel=0; downX=e.clientX; downY=e.clientY; moved=false; root.setPointerCapture(e.pointerId); });
   const DEG_PER_PX=()=>360/Math.max(1,root.clientWidth);
   root.addEventListener('pointermove',e=>{ if(vsc){ vsc.el.scrollLeft=vsc.left-(e.clientX-vsc.x); return; } if(!drag) return; if(Math.hypot(e.clientX-downX,e.clientY-downY)>6) moved=true; const dx=e.clientX-lastX, now=performance.now(), dt=Math.max(1,now-lastT); const k=DEG_PER_PX(); ang+=dx*k; vel=dx/dt*k; lastX=e.clientX; lastT=now; });
-  const end=e=>{ if(vsc){ vsc=null; return; } if(!drag) return; drag=false; if(!moved){ vel=0; const el=document.elementFromPoint(e.clientX,e.clientY); const lbl=el&&el.closest('.ob-lbl'); if(lbl){ const n=nodes.find(x=>x.el===lbl); if(n) target=-n.a-amb; } } };
+  const end=e=>{ if(vsc){ const v=vsc; vsc=null; if(v.pola && Math.abs(v.el.scrollLeft-v.left)<4){ const it=DISC_ITEMS[+v.pola.dataset.mi]; if(it && typeof window.prideOpenMemory==='function'){ const src=it.src||(W+'cover_trailer.mp4'); window.prideOpenMemory({src, title:it.t, lines:it.lines||[it.t]}); } } return; } if(!drag) return; drag=false; if(!moved){ vel=0; const el=document.elementFromPoint(e.clientX,e.clientY); const lbl=el&&el.closest('.ob-lbl'); if(lbl){ const n=nodes.find(x=>x.el===lbl); if(n) target=-n.a-amb; } } };
   root.addEventListener('pointerup',end); root.addEventListener('pointercancel',end);
   function tick(){
     if(!root.classList.contains('on')){ raf=0; return; }

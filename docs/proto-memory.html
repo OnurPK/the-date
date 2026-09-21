@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+<title>Memory recall — prototype (iris · dream edge · motes · drifting lines)</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400;1,500;1,600&family=Inter:wght@500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--gold-300:#f0d47c;--gold-500:#e7b24c;--fd:"Playfair Display",Georgia,serif;--fu:"Inter",system-ui,sans-serif}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#0e0d13;min-height:100vh;display:flex;align-items:center;justify-content:center;gap:28px;font-family:var(--fu);color:#fff}
+.phone{width:390px;height:844px;border-radius:44px;overflow:hidden;position:relative;background:#0a0a0f;border:1px solid #2a2733;box-shadow:0 30px 80px rgba(0,0,0,.6);user-select:none;-webkit-user-select:none}
+/* --- suitor screen stand-in --- */
+.bg{position:absolute;inset:0;background:url("../worlds/pride-and-prejudice/characters/mr_darcy/orbit_bg.webp") center/cover}
+.bg::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(7,5,10,.2),rgba(7,5,10,0) 25%,rgba(7,5,10,.7) 70%,rgba(7,5,10,.95))}
+.fig{position:absolute;left:50%;top:0;height:100%;transform:translateX(-50%);filter:drop-shadow(0 30px 30px rgba(0,0,0,.6))}
+.hd{position:absolute;left:0;right:0;top:54px;text-align:center;z-index:3;pointer-events:none}
+.hd .fn{font:italic 500 20px/1 var(--fd);color:rgba(255,255,255,.85)}
+.hd .ln{font:700 96px/.9 var(--fd);margin-top:-18px;text-shadow:0 4px 30px rgba(0,0,0,.55)}
+.info{position:absolute;left:22px;right:22px;bottom:36px;z-index:6}
+.dh{display:flex;align-items:flex-start;margin-bottom:12px}
+.pg{display:flex;flex-direction:column;gap:8px;padding-top:4px}
+.prog{width:96px;height:4px;border-radius:2px;background:rgba(255,255,255,.16)}.prog i{display:block;height:100%;width:9%;border-radius:2px;background:var(--gold-300)}
+.cnt{display:flex;align-items:center;gap:5px;font:600 12px/1 var(--fu);letter-spacing:.06em;color:rgba(255,255,255,.85);text-shadow:0 1px 8px rgba(0,0,0,.85)}
+.cnt svg{width:12px;height:12px;stroke:rgba(255,255,255,.85);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.all{margin-left:auto;font:700 12px/1 var(--fu);letter-spacing:.06em;color:var(--gold-300)}
+.strip{display:flex;gap:10px;padding:6px 6px 14px}
+.pola{flex:none;width:94px;padding:5px 5px 18px;background:#f6f2ee;border-radius:3px;box-shadow:0 10px 24px rgba(0,0,0,.55);color:#3a2e46;position:relative;transform:rotate(-2deg);cursor:pointer;transition:transform .2s}
+.pola:nth-child(2){transform:rotate(1.5deg)}.pola:nth-child(3){transform:rotate(-1deg)}.pola:nth-child(4){transform:rotate(1deg)}
+.strip{overflow-x:auto;scrollbar-width:none}.strip::-webkit-scrollbar{display:none}
+.pola:active{transform:scale(.96)}
+.pola .im{height:84px;background:#2a2233 center/cover;border-radius:2px}
+.pola b{position:absolute;left:4px;right:4px;bottom:4px;text-align:center;font:italic 600 9.5px/1 var(--fd);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pola .play{position:absolute;left:50%;top:41px;transform:translate(-50%,-50%);width:26px;height:26px;border-radius:50%;background:rgba(10,6,14,.72);border:1px solid rgba(255,255,255,.5);display:grid;place-items:center}
+.pola .play::after{content:"";border-left:8px solid #fff;border-top:5px solid transparent;border-bottom:5px solid transparent;margin-left:2px}
+
+/* ===================== MEMORY OVERLAY ===================== */
+#mem{position:absolute;inset:0;z-index:50;display:none;overflow:hidden}
+#mem.on{display:block}
+#mem .veil{position:absolute;inset:0;background:#07050a;opacity:0;will-change:opacity}
+#mem .snap{position:absolute;inset:0;pointer-events:none;opacity:0;will-change:opacity;filter:blur(14px) brightness(.4);transform:scale(1.04)}
+#mem .vid{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+#mem .frame{position:absolute;inset:0;will-change:transform,filter,opacity}
+#mem .layer{position:absolute;inset:0;pointer-events:none}
+#mem .grain{position:absolute;inset:-50%;width:200%;height:200%;background:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 .5 0'/></filter><rect width='160' height='160' filter='url(%23n)'/></svg>");opacity:.08;mix-blend-mode:overlay;animation:grain .7s steps(3) infinite;will-change:transform}
+@keyframes grain{0%{transform:translate(0,0)}25%{transform:translate(-4%,3%)}50%{transform:translate(3%,-2%)}75%{transform:translate(-2%,-4%)}100%{transform:translate(0,0)}}
+#mem .vig{position:absolute;inset:0;background:radial-gradient(70% 60% at 50% 50%,rgba(7,5,10,0) 45%,rgba(7,5,10,.85) 100%)}
+#mem .x{position:absolute;right:14px;top:18px;width:42px;height:42px;border-radius:50%;background:rgba(14,10,20,.55);border:1px solid rgba(255,255,255,.28);display:grid;place-items:center;font-size:16px;cursor:pointer;z-index:9;opacity:0;transition:opacity .6s ease 1.2s;-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px)}
+#mem.on .x{opacity:1}
+/* ---- drifting narrative lines (bottom third) ---- */
+#mem .lines{position:absolute;left:0;right:0;bottom:max(64px,calc(env(safe-area-inset-bottom,0px) + 40px));height:260px;z-index:6;pointer-events:none;overflow:hidden;contain:layout paint}
+#mem .ln{position:absolute;left:0;right:0;font:italic 500 19px/1.3 var(--fd);color:#fff;text-shadow:0 2px 16px rgba(0,0,0,.95),0 0 30px rgba(0,0,0,.6);white-space:nowrap;padding:0 28px;will-change:transform,opacity,filter}
+#mem .ln.r{text-align:right}
+#mem .ln .w{display:inline-block;margin-right:.26em;opacity:0;filter:blur(8px);will-change:opacity,filter,transform}
+#mem .ln{font-size:34px;line-height:1.1;padding:0 30px}
+#mem .cap{position:absolute;left:0;right:0;bottom:0;padding:18px 24px max(24px,env(safe-area-inset-bottom));text-align:center;opacity:0;transition:opacity 1s ease 1.4s;text-shadow:0 2px 14px rgba(0,0,0,.9);z-index:9;cursor:pointer}
+#mem.on .cap{opacity:1}
+#mem .cap .k{font:800 9.5px/1 var(--fu);letter-spacing:.26em;text-transform:uppercase;color:var(--gold-300);animation:wake 2.8s ease-in-out infinite}
+@keyframes wake{0%,100%{opacity:.55}50%{opacity:1}}
+.note{position:fixed;right:24px;top:24px;max-width:240px;background:#181622;border:1px solid #2f2b3c;border-radius:10px;padding:10px 14px;font:500 12px/1.5 var(--fu);color:#8a8598}
+.note b{color:#ddd}
+</style>
+</head>
+<body>
+<div class="phone" id="ph">
+  <div id="src">
+    <div class="bg"></div>
+    <img class="fig" src="../worlds/pride-and-prejudice/characters/mr_darcy/turntable/f00.webp" alt="">
+    <div class="hd"><div class="fn">Mr Fitzwilliam</div><div class="ln">Darcy</div></div>
+    <div class="info">
+      <div class="dh"><div class="pg"><div class="prog"><i></i></div><span class="cnt"><svg viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>54 to be discovered</span></div><span class="all">Show All ›</span></div>
+      <div class="strip" id="strip">
+        <div class="pola" data-t="The rider in the mist" data-src="../worlds/pride-and-prejudice/characters/mr_darcy/unlock.mp4" data-lines="Out of the mist.|A black horse.|He did not hurry.|He never does."><div class="im" style="background-image:url(../worlds/pride-and-prejudice/_mockups/rider_thumb.jpg)"></div><span class="play"></span><b>The rider in the mist</b></div>
+        <div class="pola" data-t="What he confessed" data-lines="He thought it empty.|The dark had ears.|Bewitched, he said.|She never told him."><div class="im" style="background-image:url(../worlds/pride-and-prejudice/episodes/the-newcomer/the-netherfield-ball/cutscenes/s3c_darcy_confess.png)"></div><span class="play"></span><b>What he confessed</b></div>
+        <div class="pola" data-t="The glass at supper" data-lines="He did not drink.|Only watched.|Over the rim.|All through supper."><div class="im" style="background-image:url(../worlds/pride-and-prejudice/episodes/the-newcomer/the-netherfield-ball/cutscenes/s4b_darcy_glass.png)"></div><span class="play"></span><b>The glass at supper</b></div>
+        <div class="pola" data-t="Across the ballroom" data-lines="A locked door.|She adores a lock.|The whole floor between.|Neither crossed first."><div class="im" style="background-image:url(../worlds/pride-and-prejudice/episodes/the-newcomer/the-netherfield-ball/cutscenes/s1b_darcy_across.png)"></div><span class="play"></span><b>Across the ballroom</b></div>
+      </div>
+    </div>
+  </div>
+
+  <div id="mem">
+    <div class="snap" id="snap"></div>
+    <div class="veil"></div>
+    <div class="frame" id="frame"><video class="vid" id="vid" src="../worlds/pride-and-prejudice/_mockups/cover_trailer_9x16.mp4" playsinline preload="auto"></video></div>
+    <div class="layer grain"></div>
+    <div class="layer vig"></div>
+    <div class="lines" id="lines"></div>
+    <div class="cap"><div class="k">Touch to wake up</div></div>
+  </div>
+</div>
+<div class="note"><b>Memory recall</b><br>iris open · dream edge · drifting motes · narrative lines (L→R, R→L, …)<br><br>Polaroid'e dokun. Satırlar <code>data-lines</code>'tan, "|" ile ayrılmış.</div>
+
+<script>
+(function(){
+  const mem=document.getElementById('mem'), frame=document.getElementById('frame'), vid=document.getElementById('vid'), src=document.getElementById('src'), veil=mem.querySelector('.veil'), snap=document.getElementById('snap'), linesEl=document.getElementById('lines');
+  const DEFAULT_SRC=vid.getAttribute('src');
+  // pre-warm: decode the memory video before the first tap so play() is instant
+  vid.load(); vid.muted=true;
+  let anims=[], extra=[], timers=[], alive=false;
+  const A=(el,kf,opt)=>{ const a=el.animate(kf,Object.assign({fill:'forwards'},opt)); anims.push(a); return a; };
+  const later=(fn,ms)=>{ const id=setTimeout(fn,ms); timers.push(id); return id; };
+  function reset(){ alive=false; anims.forEach(a=>a.cancel()); anims=[]; extra.forEach(e=>e.remove()); extra=[]; timers.forEach(clearTimeout); timers=[]; linesEl.innerHTML=''; frame.style.cssText=''; vid.style.cssText=''; veil.style.opacity=0; }
+  document.getElementById('strip').addEventListener('click',e=>{ const p=e.target.closest('.pola'); if(p) open(p); });
+    mem.querySelector('.cap').addEventListener('click',e=>{ e.stopPropagation(); if(alive) close(); });
+
+  function open(p){
+    reset(); alive=true; mem.classList.add('on');
+    const want=p.dataset.src||DEFAULT_SRC; if(vid.getAttribute('src')!==want){ vid.src=want; vid.load(); }
+    vid.currentTime=0; vid.muted=true; vid.loop=true; vid.play().catch(()=>{});
+    // scene sinks away: a blurred static copy of the scene fades in (compositor-only), no live filter animation
+    snap.innerHTML=src.innerHTML; snap.querySelectorAll('[id]').forEach(e=>e.removeAttribute('id'));
+    A(snap,[{opacity:0},{opacity:1}],{duration:900,easing:'ease-out'});
+    A(veil,[{opacity:0},{opacity:.55}],{duration:1400,easing:'ease-out'});
+    irisOpen();
+    later(dreamEdge,900);
+    later(motes,1200);
+    later(()=>narrate((p.dataset.lines||'').split('|').map(s=>s.trim()).filter(Boolean)),2200);
+  }
+  function close(){
+    alive=false;
+    A(frame,[{opacity:1,filter:'blur(0px)'},{opacity:0,filter:'blur(18px)'}],{duration:700,easing:'ease-in'});
+    extra.forEach(e=>A(e,[{opacity:getComputedStyle(e).opacity},{opacity:0}],{duration:600,easing:'ease-in'}));
+    A(linesEl,[{opacity:1},{opacity:0}],{duration:500});
+    A(veil,[{opacity:.55},{opacity:0}],{duration:900,easing:'ease-out',delay:150});
+    A(snap,[{opacity:1},{opacity:0}],{duration:900,easing:'ease-out',delay:250});
+    setTimeout(()=>{ mem.classList.remove('on'); vid.pause(); reset(); linesEl.style.opacity=''; snap.innerHTML=''; },1200);
+  }
+
+  /* ---- 1. iris open: soft circle opens from black, tiny pause at pin-hole, video sharpens as it widens ---- */
+  function irisOpen(){
+    const d=document.createElement('div'); d.style.cssText='position:absolute;inset:0;z-index:4;pointer-events:none;background:#07050a'; mem.appendChild(d); extra.push(d);
+    const set=(r,soft)=>{ const m='radial-gradient(circle at 50% 50%, transparent '+Math.max(0,r-soft)+'%, #000 '+r+'%)'; d.style.webkitMaskImage=m; d.style.maskImage=m; };
+    set(0,0); const t0=performance.now(), D=1500;
+    const step=()=>{ if(!d.isConnected) return; const t=Math.min(1,(performance.now()-t0)/D); let r; if(t<.18) r=6*(t/.18); else if(t<.3) r=6-2*((t-.18)/.12); else { const k=(t-.3)/.7; r=4+(150-4)*(1-Math.pow(1-k,2.2)); } set(r,8+r*.4); if(t<1) setTimeout(()=>requestAnimationFrame(step),16); else { d.remove(); extra.splice(extra.indexOf(d),1); } };
+    requestAnimationFrame(step);
+    A(vid,[{filter:'blur(14px) saturate(.5)',transform:'scale(1.18)'},{filter:'blur(0px) saturate(1)',transform:'scale(1.06)',offset:.55},{filter:'blur(0px) saturate(1)',transform:'scale(1)'}],{duration:2400,easing:'cubic-bezier(.2,.7,.2,1)'});
+  }
+
+  /* ---- 2. dream edge: blurred copy masked to the edges; the sharp centre wanders slowly ---- */
+  function dreamEdge(){
+    const v=document.createElement('video'); v.src=vid.src; v.muted=true; v.playsInline=true; v.className='vid'; v.style.cssText='pointer-events:none;z-index:3;opacity:0;filter:blur(14px) saturate(.85) brightness(.9);transform:scale(1.06)'; mem.appendChild(v); extra.push(v); v.currentTime=vid.currentTime; v.play().catch(()=>{});
+    A(v,[{opacity:0},{opacity:1}],{duration:2200,easing:'ease-out'});
+    const t0=performance.now(); const step=()=>{ if(!v.isConnected) return; const t=(performance.now()-t0)/1000; const cx=50+Math.sin(t*.35)*6, cy=47+Math.cos(t*.27)*5; const m='radial-gradient(60% 50% at '+cx.toFixed(1)+'% '+cy.toFixed(1)+'%, transparent 30%, #000 72%)'; v.style.webkitMaskImage=m; v.style.maskImage=m; setTimeout(()=>requestAnimationFrame(step),50); }; step();
+    const sync=()=>{ if(!v.isConnected) return; if(Math.abs(v.currentTime-vid.currentTime)>.15) v.currentTime=vid.currentTime; later(sync,1500); }; later(sync,1500);
+  }
+
+  /* ---- 3. drifting motes: out-of-focus specks in the top/bottom bands only ---- */
+  function motes(){
+    const c=document.createElement('canvas'); const ph=document.getElementById('ph'); c.width=Math.round(ph.clientWidth/2); c.height=Math.round(ph.clientHeight/2); c.style.cssText='position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:3;opacity:0;mix-blend-mode:screen'; mem.appendChild(c); extra.push(c); A(c,[{opacity:0},{opacity:.85}],{duration:2400,easing:'ease-out'});
+    const ctx=c.getContext('2d'); const P=[]; for(let i=0;i<70;i++) P.push({x:Math.random(),y:Math.random(),r:2+Math.random()*7,vy:-.006-Math.random()*.012,vx:(Math.random()-.5)*.004,ph:Math.random()*6,bl:Math.random()<.5});
+    const wY=y=>{ const d=Math.abs(y-.5)*2; return Math.pow(Math.max(0,(d-.62)/.38),1.4); };
+    const t0=performance.now(); const step=()=>{ if(!c.isConnected) return; const t=(performance.now()-t0)/1000, W=c.width, H=c.height; ctx.clearRect(0,0,W,H);
+      P.forEach(p=>{ p.y+=p.vy/60*8; p.x+=p.vx/60*8+Math.sin(t*.8+p.ph)*.0006; if(p.y<-.05){p.y=1.05;p.x=Math.random();} const w=wY(p.y); if(w<.02) return; const x=p.x*W,y=p.y*H; const tw=.5+.5*Math.sin(t*1.5+p.ph); const a=(0.35+0.5*tw)*w; const g=ctx.createRadialGradient(x,y,0,x,y,p.r*(p.bl?3:1.4)); g.addColorStop(0,'rgba(255,236,200,'+a.toFixed(2)+')'); g.addColorStop(1,'rgba(255,236,200,0)'); ctx.fillStyle=g; ctx.fillRect(x-p.r*3,y-p.r*3,p.r*6,p.r*6); });
+      const gx=ctx.createLinearGradient(0,0,W,0); gx.addColorStop(0,'rgba(0,0,0,.35)'); gx.addColorStop(.25,'rgba(0,0,0,1)'); gx.addColorStop(.75,'rgba(0,0,0,1)'); gx.addColorStop(1,'rgba(0,0,0,.35)'); ctx.globalCompositeOperation='destination-in'; ctx.fillStyle=gx; ctx.fillRect(0,0,W,H); ctx.globalCompositeOperation='source-over'; requestAnimationFrame(step); }; step();
+  }
+
+  /* ---- 4. narrative lines: one at a time, alternating L→R / R→L; each line drifts slowly across while its words
+          surface out of blur one by one, holds, then dissolves. Lines stack on alternating rows; the previous
+          line fades as the next arrives. ---- */
+  function narrate(lines){
+    if(!lines.length) return;
+    const IN=900, HOLD=2600, OUT=1100, DRIFT=60;       // ms · px of total sideways drift per line
+    let i=0;
+    const showLine=()=>{
+      if(!alive || i>=lines.length) return;
+      const txt=lines[i], dirR=(i%2===1);                 // even lines L→R, odd lines R→L
+      const el=document.createElement('div'); el.className='ln'+(dirR?' r':''); el.style.top=((i%2)?118:70)+'px';
+      txt.split(' ').forEach((w,k)=>{ const s=document.createElement('span'); s.className='w'; s.textContent=w; el.appendChild(s); });
+      linesEl.appendChild(el);
+      const from=dirR?DRIFT:-DRIFT, to=dirR?-DRIFT:DRIFT;
+      const total=IN+HOLD+OUT;
+      A(el,[{transform:'translateX('+from+'px)'},{transform:'translateX('+to+'px)'}],{duration:total,easing:'linear'});
+      const words=[...el.children]; const per=Math.min(160,IN/Math.max(1,words.length));
+      words.forEach((w,k)=>{ const d=dirR?(words.length-1-k)*per:k*per; A(w,[{opacity:0,filter:'blur(8px)',transform:'translateY(6px)'},{opacity:1,filter:'blur(0px)',transform:'translateY(0)'}],{duration:700,easing:'ease-out',delay:d}); });
+      later(()=>{ words.forEach((w,k)=>{ const d=(dirR?k:(words.length-1-k))*per*.6; A(w,[{opacity:1,filter:'blur(0px)'},{opacity:0,filter:'blur(10px)'}],{duration:OUT,easing:'ease-in',delay:d}); }); later(()=>el.remove(),OUT+per*words.length*.6+50); },IN+HOLD);
+      i++; later(showLine,IN+HOLD-400);                    // next line overlaps the fade of the previous one
+    };
+    showLine();
+  }
+})();
+</script>
+</body>
+</html>
