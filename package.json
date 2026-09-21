@@ -1,7 +1,7 @@
 {
   "name": "the-date",
   "version": "1.0.0",
-  "description": "The Date \u2014 visual novel prototype (static site)",
+  "description": "The Date — visual novel prototype (static site)",
   "private": true,
   "engines": {
     "node": ">=18"
@@ -13,11 +13,11 @@
     "ios:sync": "npx cap sync ios"
   },
   "dependencies": {
-    "serve": "^14.2.3",
-    "@capacitor/core": "^6.2.0",
-    "@capacitor/ios": "^6.2.0"
+    "@capacitor/core": "^8.5.2",
+    "@capacitor/ios": "^8.5.2",
+    "serve": "^14.2.3"
   },
   "devDependencies": {
-    "@capacitor/cli": "^6.2.0"
+    "@capacitor/cli": "^8.5.2"
   }
 }
