@@ -71,11 +71,13 @@ body[data-pack="pride"] #objectDialog{
 body[data-pack="pride"] #objectDialog .od-speaker{ font-family:"Inter",system-ui,sans-serif; font-style:normal; font-weight:800; font-size:12px; letter-spacing:.14em; color:#c0466a; }
 body[data-pack="pride"] #objectDialog .od-text{ font-family:"Inter",sans-serif; color:#3a2e46; }
 
-/* item 6: in cast-small the full-body sprite crammed into the portrait
-   slot overlapped the text. Drop the portrait for P&P cast-small and let
-   the text use the full card width (clean, matches the modern-glass look). */
-body[data-pack="pride"].ui-cast-small #focusCharacter{ display:none !important; }
-body[data-pack="pride"].ui-cast-small #objectDialog{ padding-left:22px !important; }
+/* cast-small portrait = the same figure geometry as the map whisper (.ps-fig):
+   big sprite bottom-left, head above the card, body fading into it. */
+body[data-pack="pride"].ui-cast-small #focusCharacter{ display:block !important; left:-104px; bottom:-278px; height:660px; aspect-ratio:.5 !important;
+  background-size:contain; background-position:bottom center; filter:none; z-index:2;
+  -webkit-mask-image:linear-gradient(to bottom, rgba(0,0,0,1) 0%, rgba(0,0,0,1) 40%, rgba(0,0,0,0) 56%);
+          mask-image:linear-gradient(to bottom, rgba(0,0,0,1) 0%, rgba(0,0,0,1) 40%, rgba(0,0,0,0) 56%); }
+body[data-pack="pride"].ui-cast-small #objectDialog:not(.narrative){ padding-left:162px !important; min-height:132px; }
 
 /* ============================================================
    4. MULTISELECT — full-bleed ANGULAR cards, tight stack,
@@ -126,7 +128,7 @@ body[data-pack="pride"] .choice-aux{ flex:none; display:flex; align-items:center
 body[data-pack="pride"] .choice-trait{
   font-family:"Inter",sans-serif; font-size:9px; font-weight:800; letter-spacing:.06em; text-transform:uppercase;
   color:#8b7bd8; background:rgba(139,123,216,.14); border:1px solid rgba(139,123,216,.42);
-  padding:3px 8px; border-radius:999px; white-space:nowrap;
+  padding:4px 9px; border-radius:999px; white-space:normal; max-width:124px; text-align:center; line-height:1.25;   /* long labels wrap to two lines instead of squeezing the option text */
 }
 /* continue arrow retired — was too loud on the cards */
 body[data-pack="pride"] .choice-cont{ display:none !important; }
@@ -215,3 +217,8 @@ body[data-pack="pride"] .scene-bubble.speaker-bingley::after{ background:rgba(24
    6. TYPE — v2 additions: coda text (End of Episode) reads as narrative (TYPE-5)
    ============================================================ */
 body[data-pack="pride"] .es-text{ font-family:"Playfair Display",Georgia,serif; font-style:italic; font-weight:600; font-size:18px; line-height:1.55; }
+/* cast-small: mirror figures that face away from the card so they look into the screen.
+   Same transform in both states + no transform transition → no flip animation. */
+body[data-pack="pride"].ui-cast-small #focusCharacter.c-darcy,
+body[data-pack="pride"].ui-cast-small #focusCharacter.c-sir-william2,
+body[data-pack="pride"].ui-cast-small #focusCharacter.c-carter{ transform:scaleX(-1) !important; transition:opacity .4s ease !important; }

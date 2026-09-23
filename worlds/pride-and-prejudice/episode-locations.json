@@ -71,6 +71,15 @@
       "episode": "authored/country-lane",
       "order": 4,
       "requires": null
+    },
+    {
+      "id": "assembly-rooms-test",
+      "title": "The Assembly Rooms",
+      "x": 91.0,
+      "y": 69.0,
+      "episode": "authored/the-assembly",
+      "order": 16,
+      "requires": null
     }
   ]
 }

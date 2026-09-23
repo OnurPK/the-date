@@ -1,0 +1,333 @@
+// =============================================================
+// Pride & Prejudice — The Assembly  (testbed, standalone)
+// Ported 1:1 from assembly-playthrough.json (run a3478fcc).
+// Golden route = the picked options; the other options get a
+// one-line reaction and rejoin. 2 situations, 10 turns + 1 cut-in.
+// Map: assembly-rooms-test (tier 1, no time passing). Cast sprites: arabella2, sir_william2, capt_carter (package-derived).
+// Speakers: arabella, sir-william2, darcy, carter, charlotte.
+// Videos: videos/as_*.mp4 · Stills: cutscenes/as_*.jpg · cast-large backdrop: locations/assembly-rooms-test/explore/assembly.png
+// =============================================================
+
+
+// ═══════════════════════════════════════════════════════════
+// SITUATION 1 · THE ASSEMBLY ROOM   (3 turns)
+// ═══════════════════════════════════════════════════════════
+(Situation: assembly_room | The Assembly Room | The Meryton rooms at the height of the evening — Sir William has seen you come in, and he has a plan for you.)
+[bg:scene=as_room.jpg] [ui:narrative]
+Narrative: The Meryton rooms are full to the walls and bright as day.
+Narrative: Mr Bingley was to have come tonight and has not, and every eye in the room has gone instead to the friend who came without him: tall, handsome, worth ten thousand a year, standing by the far wall and pleased with nothing.
+Narrative: Sir William Lucas has seen you come in. He is already on his way.
+(Quest: Take the measure of the room — and of the man by the far wall.)
+
+// --- Turn 1 · Sir William on his way ---
+[bg:cutscene=as_sir_william.jpg] [ui:cast-small]
+Narrative: Sir William crosses the floor with the air of a man delivering good news to the world at large.
+Sir-William2: Miss Frost, allow me, Sir William Lucas, and I shall introduce you to everyone of consequence!
+Sir-William2: Even Mr Darcy, who has danced at St James's itself, shall not escape the floor tonight!
+[ui:multi]
+(Choice:3)
+Arabella: Sir William, does St James's teach a man to refuse a partner? [trait: Sharpest Wit in the Room]
+Arabella: A man who condescends to dance still condescends, Sir William. [trait: Small Fortune, Large Spirit]
+Arabella: Turn your gaze toward the far wall, where Mr Darcy stands, and say nothing. [trait: Weakness]
+
+(IfChoice:0)
+  [bg:explore=assembly] [ui:cast-large]
+  Narrative: Sir William drops his chin and leans in, one hand raised to shield the confidence.
+  Sir-William2: Between ourselves, Miss Frost, I mean to put you before Mr Darcy before supper is served.
+(EndIf)
+(IfChoice:1)
+  [bg:explore=assembly] [ui:cast-large]
+  Sir-William2: Condescension, Miss Frost, is the whole point of him. Between ourselves, I mean to put you before him before supper.
+(EndIf)
+(IfChoice:2)
+  [bg:explore=assembly] [ui:cast-large]
+  Narrative: Sir William follows your look and takes it for eagerness.
+  Sir-William2: Ah! Then I mean to put you before him before supper is served.
+(EndIf)
+[ui:narrative]
+Narrative: Across the room, that knot of fan-wielding young ladies watches Mr Darcy as if he were a comet; he looks nowhere.
+(Discovery: Mr Darcy is wanted by the whole room and wants none of it.)
+(Relation: sir_william2 | affection | +1)
+
+// --- Turn 2 · St James's ---
+[bg:explore=assembly] [ui:multi]
+(Choice:3)
+Arabella: Tell me, Sir William, does St James's improve a man's manners or merely his posture?
+Arabella: I will not be placed before Mr Darcy like a dish at supper. [trait: Small Fortune, Large Spirit]
+Arabella: Turn the fan slowly in your hand, and say nothing. [trait: Weakness]
+
+(IfChoice:0)
+  [ui:cast-large]
+  Narrative: Sir William presses one hand to his breast, closes his eyes, and bows low and slow, as though the fiddlers are trumpets and the assembly room is St James's itself.
+  Sir-William2: Both, Miss Frost, both.
+(EndIf)
+(IfChoice:1)
+  [ui:cast-large]
+  Sir-William2: A dish! My dear Miss Frost, a dish does not answer back. That is precisely why I want you at the table.
+(EndIf)
+(IfChoice:2)
+  [ui:cast-large]
+  Narrative: The fan turns once, twice. Sir William fills the silence himself, at length.
+  Sir-William2: Both, Miss Frost, both, manners and posture. You shall see.
+(EndIf)
+(Video:as_charlottes_bet.mp4)
+[bg:cutscene=as_still_man.jpg] [ui:narrative]
+Narrative: Nobody will make Mr Darcy dance tonight. That is Charlotte's wager, and she has taken it.
+[ui:cast-small]
+Arabella2: A bet against the room. Charlotte does love a sure thing.
+
+// --- Turn 3 · lead me to him ---
+[ui:multi]
+(Choice:3)
+Arabella: Sir William, then lead me to him, I have a bet to collect. [trait: Sharpest Wit in the Room]
+Arabella: I will not be placed before him like a dish at supper. [trait: Small Fortune, Large Spirit]
+Arabella: Set your glass down and cross the floor toward Mr Darcy yourself.
+
+(IfChoice:0)
+  [bg:explore=assembly] [ui:narrative]
+  Narrative: Sir William leads you down the room as though to the King, and presents you to Mr Darcy, loud enough for half the floor, as the wittiest young lady in Hertfordshire.
+(EndIf)
+(IfChoice:1)
+  [bg:explore=assembly] [ui:narrative]
+  Narrative: Sir William hears only the word supper. He leads you down the room regardless, and presents you to Mr Darcy as the wittiest young lady in Hertfordshire.
+(EndIf)
+(IfChoice:2)
+  [bg:explore=assembly] [ui:narrative]
+  Narrative: You are three steps across the floor before Sir William catches you up, and turns it into a presentation anyway, loud enough for half the room: the wittiest young lady in Hertfordshire.
+(EndIf)
+
+
+// ═══════════════════════════════════════════════════════════
+// SITUATION 2 · BY THE WALL   (7 turns + the cut-in)
+// ═══════════════════════════════════════════════════════════
+(Situation: by_the_wall | By the Wall | A quiet stretch of floor by the wall, the loud room at your backs, the next set not yet called.)
+(Video:as_darcy_by_the_wall.mp4)
+[bg:cutscene=as_measuring.jpg] [ui:narrative]
+Narrative: Mr Darcy has not yet spoken; he simply looks at you, measuring.
+[bg:cutscene=as_his_hands.jpg] [ui:cast-small]
+Narrative: He holds your gaze a moment longer than courtesy strictly requires, then inclines his head a precise degree.
+Darcy: Hertfordshire sets a modest ceiling, Miss Frost. I wonder if you find it so.
+Darcy: Sir William's superlatives seldom disappoint. In your case, they have not misled him.
+
+// --- Turn 4 · the ceiling ---
+[ui:multi]
+(Choice:3)
+Arabella: Then Sir William and I are, for once, in perfect agreement. [trait: Sharpest Wit in the Room]
+Arabella: Hertfordshire's ceiling, Mr Darcy, is rather your floor. [trait: Small Fortune, Large Spirit]
+Arabella: Hold his gaze and say nothing, one brow barely raised. [trait: Weakness]
+
+(IfChoice:0)
+  [bg:explore=assembly] [ui:cast-large]
+  Darcy: Agreement with Sir William is easily had, Miss Frost. Most find it comfortable.
+(EndIf)
+(IfChoice:1)
+  [bg:explore=assembly] [ui:cast-large]
+  Darcy: Then I trust you find it comfortable, Miss Frost. Most do.
+(EndIf)
+(IfChoice:2)
+  [bg:explore=assembly] [ui:cast-large]
+  Darcy: You do not answer. Most find the ceiling comfortable, Miss Frost. I had assumed you would.
+(EndIf)
+[ui:narrative]
+Narrative: He turns his gaze to the middle distance, as though the matter is already concluded.
+
+// --- Turn 5 · yet here you look ---
+[ui:multi]
+(Choice:3)
+Arabella: I find it remarkably so, do you not, Mr Darcy? [trait: Sharpest Wit in the Room]
+Arabella: You conclude the matter rather before I have finished, sir. [trait: Sharpest Wit in the Room]
+Arabella: You insist nothing here is worth your attention, yet here you look.
+
+(IfChoice:0)
+  [ui:cast-large]
+  Narrative: He turns back to you. His gaze settles on you and does not move.
+  Darcy: I find very little here remarkable, Miss Frost. I am still deciding about the exceptions.
+(EndIf)
+(IfChoice:1)
+  [ui:cast-large]
+  Narrative: He turns back to you. His gaze settles on you and does not move.
+  Darcy: Then finish, Miss Frost. I find I am listening.
+(EndIf)
+(IfChoice:2)
+  [ui:cast-large]
+  Narrative: He turns back to you, precisely as described. His gaze settles on you and does not move.
+  Darcy: I assure you, I look at nothing in particular.
+(EndIf)
+(Relation: darcy | desire | +1)
+
+// --- Turn 6 · nothing in particular ---
+[ui:multi]
+(Choice:3)
+Arabella: Nothing in particular, and yet so very particularly at me. [trait: Sharpest Wit in the Room]
+Arabella: That is precisely the look a man gives a thing he means to dismiss. [trait: Sharpest Wit in the Room]
+Arabella: I find the chandelier equally riveting, Mr Darcy, shall we compare notes.
+
+(IfChoice:0)
+  [ui:cast-large]
+  Narrative: Something at the corner of his mouth threatens and is put down at once.
+  Darcy: You have the advantage of me, Miss Frost.
+(EndIf)
+(IfChoice:1)
+  [ui:cast-large]
+  Narrative: A short, involuntary sound escapes him; his jaw tightens immediately after.
+  Darcy: You have the advantage of me, Miss Frost.
+(EndIf)
+(IfChoice:2)
+  [ui:cast-large]
+  Narrative: A short, involuntary sound escapes him; his jaw tightens immediately after.
+  Darcy: You have the advantage of me, Miss Frost.
+(EndIf)
+[ui:narrative]
+Narrative: The laugh breaks free, brief, unguarded, and Mr Darcy goes quite still, as if surprised by his own treason.
+(Memory: darcy | She made him laugh at the Meryton assembly, before he had decided to like anything in it.)
+
+// --- Turn 7 · safe corners ---
+[ui:multi]
+(Choice:3)
+Arabella: Only in this room, Mr Darcy; elsewhere I suspect you lead.
+Arabella: An advantage implies you were not already looking down. [trait: Sharpest Wit in the Room]
+Arabella: I confess I am still learning which corners here are safe.
+
+(IfChoice:0)
+  [ui:cast-large]
+  Darcy: Elsewhere I am not asked to. It is a room like this one that unsettles. My sister is sixteen; she would sooner face a regiment than an assembly.
+(EndIf)
+(IfChoice:1)
+  [ui:cast-large]
+  Darcy: I was looking, Miss Frost, at a room my sister would sooner face a regiment than enter. She is sixteen.
+(EndIf)
+(IfChoice:2)
+  [ui:cast-large]
+  Narrative: Something in his posture shifts, almost imperceptibly, at the word safe.
+  Darcy: My sister is sixteen. She would sooner face a regiment than a room like this one.
+(EndIf)
+(Discovery: There is someone he is gentle with, and he has just shown her.)
+[ui:cast-large]
+Darcy: I was not so different, once, and have perhaps not changed as much as I suppose.
+[ui:narrative]
+Narrative: He looks away, toward the middle of the room, as if the admission had not been made at all.
+
+// --- Turn 8 · the corner of young ladies ---
+[ui:multi]
+(Choice:3)
+Arabella: Then perhaps the room is not entirely beneath you after all. [trait: Sharpest Wit in the Room]
+Arabella: Looking away does not unsay it, Mr Darcy. [trait: Weakness]
+Arabella: That corner of young ladies has watched you all evening, I think.
+
+(IfChoice:0)
+  [ui:cast-large]
+  Darcy: The room, Miss Frost, is precisely where I left it. It is the company that has moved.
+(EndIf)
+(IfChoice:1)
+  [ui:cast-large]
+  Darcy: I did not say it to have it repeated, Miss Frost. I find I do not mind that it was heard.
+(EndIf)
+(IfChoice:2)
+  [ui:cast-large]
+  Narrative: He glances, just once, toward the corner, then looks away.
+  Darcy: I did not come here to be looked at.
+(EndIf)
+[bg:cutscene=as_watchers.jpg] [ui:narrative]
+Narrative: Charlotte, across the room, lowers her fan and taps it once against her palm, the wager, silently renewed.
+
+// --- Turn 9 · the chandelier performs ---
+[bg:explore=assembly] [ui:multi]
+(Choice:3)
+Arabella: Yet here you stand, Mr Darcy, remarkably visible for a man unwilling. [trait: Sharpest Wit in the Room]
+Arabella: I did not come to be looked at either, and yet. [trait: Small Fortune, Large Spirit]
+Arabella: Honestly, even the chandelier seems to be performing tonight.
+
+(IfChoice:0)
+  [ui:cast-large]
+  Narrative: The corner of his mouth moves, just once.
+  Darcy: Standing is not a performance, Miss Frost. Sir William is waving at us. He believes he has accomplished something.
+(EndIf)
+(IfChoice:1)
+  [ui:cast-large]
+  Narrative: The corner of his mouth moves, just once.
+  Darcy: And yet. Sir William is waving at us, Miss Frost. He believes he has accomplished something.
+(EndIf)
+(IfChoice:2)
+  [ui:cast-large]
+  Narrative: The corner of his mouth moves, just once.
+  Darcy: Sir William is waving at us. He believes he has accomplished something.
+(EndIf)
+[ui:narrative]
+Narrative: Sir William's wave grows more emphatic, his satisfaction visible from thirty feet.
+Narrative: The set is called; couples stir; Mr Darcy's gaze moves once to the forming line, then back to you.
+
+// --- Turn 10 · the dare ---
+[ui:multi]
+(Choice:3)
+Arabella: You looked at the line just now, do not pretend you did not. [trait: Sharpest Wit in the Room]
+Arabella: I find these rooms perfectly easy to stand in, Mr Darcy. [trait: Small Fortune, Large Spirit]
+Arabella: Prove, then, that the Meryton rooms do not frighten you.
+
+(IfChoice:0)
+  [ui:cast-large]
+  Narrative: He does not look at the floor, nor at the forming set.
+  Darcy: A man may look at a line, Miss Frost, without wishing to stand in it.
+(EndIf)
+(IfChoice:1)
+  [ui:cast-large]
+  Narrative: He does not look at the floor, nor at the forming set.
+  Darcy: Standing was never the difficulty, Miss Frost.
+(EndIf)
+(IfChoice:2)
+  [ui:cast-large]
+  Narrative: He does not look at the floor, nor at the forming set.
+  Darcy: They do not. I remain, as you see, entirely unmoved.
+(EndIf)
+
+// --- The cut-in · Captain Carter ---
+(Video:as_vane_cuts_in.mp4)
+[bg:cutscene=as_set_forming.jpg] [ui:cast-small]
+Narrative: A red coat arrives at your elbow, all salt and sunshine, and bows to you and not to Mr Darcy.
+Carter: Miss Frost. The set is forming, and I find I cannot bear to see it form without you.
+Narrative: Captain Carter holds out his hand.
+[ui:multi]
+(Choice:3)
+Arabella: Take Captain Carter's hand.
+Arabella: Thank Captain Carter, and stay where I am.
+Arabella: Look at Mr Darcy, and say nothing.
+
+(IfChoice:0)
+  [bg:cutscene=as_watchers.jpg] [ui:cast-small]
+  Narrative: Your hand is half raised when Mr Darcy turns to the Captain, unhurried, and extends his own to you.
+  Darcy: The lady is engaged to me for this set, Carter.
+(EndIf)
+(IfChoice:1)
+  [bg:cutscene=as_watchers.jpg] [ui:cast-small]
+  Narrative: The Captain's smile does not move; his eyes go to the man beside you. Mr Darcy turns, unhurried, and extends his hand.
+  Darcy: The lady is engaged to me for this set, Carter.
+(EndIf)
+(IfChoice:2)
+  [bg:cutscene=as_watchers.jpg] [ui:cast-small]
+  Narrative: He turns to Captain Carter, unhurried. He extends his hand to you.
+  Darcy: The lady is engaged to me for this set, Carter.
+(EndIf)
+(Memory: carter | She had a hand out to him at Meryton, and Darcy took it first.)
+
+// --- The set ---
+(Video:as_darcy_dances.mp4)
+[bg:cutscene=as_quiet_wall.jpg] [ui:narrative]
+Narrative: He leads you down the whole length of the set without a word, every figure correct, and the room turns to watch Mr Darcy dance.
+Narrative: The last figure ends. He bows, and does not let go of your hand quite at once.
+(Relation: darcy | romance | +1)
+(Trait: arabella | Sharpest Wit | +1)
+
+// --- Coda ---
+[bg:cutscene=as_ending.jpg] [ui:narrative]
+Narrative: He did not ask. He told Captain Carter you were engaged to him and led you out before you could say otherwise.
+Narrative: Charlotte will have to pay. You are not sure yet what it cost him.
+[ui:cast-small]
+Arabella2: He claimed the set. I never said yes — and I never once said no.
+(Memory: arabella2 | The night Mr Darcy claimed a set he had not asked for, and she let him.)
+
+(EndScene bg=as_ending.jpg)
+0.3 Narrative: He did not ask. He told Captain Carter you were engaged to him, and led you out.
+4.4 Narrative: Charlotte will have to pay. You are not sure yet what it cost him.
+8.6 Narrative: He bowed, and did not let go of your hand quite at once.
+12.6 Narrative: End of Episode — The Assembly.
+(/EndScene)
+(Music)

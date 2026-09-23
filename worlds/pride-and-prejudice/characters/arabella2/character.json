@@ -1,0 +1,15 @@
+{
+  "name": "Arabella Frost (Assembly)",
+  "archetype": "The Wit",
+  "appearance": "Dark hair pinned up with loose curls, pale and watchful; ivory empire gown under a short dark-green spencer, long white gloves.",
+  "definition": "Testbed variant of the player heroine, drawn from the Assembly playthrough package. Not the player character — a cast sprite for the-assembly episode only.",
+  "voice": "Dry, quick, never leaves a cleverness unanswered.",
+  "traits": [
+    "Sharpest Wit",
+    "Pride",
+    "Reads the Room"
+  ],
+  "folder": "arabella2",
+  "brief": "",
+  "created": "2026-09-23T02:07:56.137167Z"
+}

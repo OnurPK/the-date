@@ -520,6 +520,23 @@
         "high": "A new poem is pinned to the door. It has your name in it, badly hidden.\n\"You were not meant to see that yet. You were meant to see it in a hundred years, in a book.\"",
         "empty": "The bookseller shrugs. \"Out walking, miss. He says the poems come from the hills. The rent comes from nowhere.\""
       }
+    },
+    {
+      "id": "assembly-rooms-test",
+      "title": "The Assembly Rooms",
+      "type": "episode",
+      "x": 91.0,
+      "y": 69.0,
+      "unlockedBy": null,
+      "episode": "authored/the-assembly",
+      "order": 16,
+      "appearsAfter": null,
+      "tier": 1,
+      "suitor": "mr_darcy",
+      "passesTime": false,
+      "lifespan": 99,
+      "desc": "Testbed — the Meryton assembly, ported from the playthrough package.",
+      "cover": "episodes/authored/the-assembly/cover.jpg"
     }
   ]
 }

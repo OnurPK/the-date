@@ -901,6 +901,15 @@
     display: flex;
     opacity: 1;
   }
+  /* P&P: no SUCCESS layer — the clip holds on its last frame and a quiet
+     "Tap to continue" breathes at the bottom until the player taps. */
+  #videoTap { position:absolute; left:0; right:0; bottom:0; display:none; justify-content:center;
+    padding:0 24px max(30px, calc(env(safe-area-inset-bottom) + 22px)); pointer-events:none;
+    background:linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,.55) 100%); padding-top:60px; opacity:0; transition:opacity .5s ease; }
+  #videoTap span { font:800 10px/1 "Inter",system-ui,sans-serif; letter-spacing:.26em; text-transform:uppercase; color:#f0d47c;
+    text-shadow:0 2px 12px rgba(0,0,0,.9); animation:videoTapPulse 2.6s ease-in-out infinite; }
+  @keyframes videoTapPulse { 0%,100%{opacity:.55} 50%{opacity:1} }
+  #videoOverlay.tapwait #videoTap { display:flex; opacity:1; }
   .vs-tag {
     font-size: 44px;
     line-height: 1;
@@ -12860,6 +12869,7 @@
     <div class="vs-tag">SUCCESS</div>
     <div class="vs-sub">You hugged her</div>
   </div>
+  <div id="videoTap"><span>Tap to continue</span></div>
 </div>
 
 <!-- End scene: 15s cinematic video (endscene.mp4) with timed
@@ -14185,6 +14195,10 @@ const PRIDE_ACTORS = {
   fenwick:       'mr_fenwick',
   hale:          'mr_hale',
   quill:         'mr_quill',
+  // Assembly testbed cast (package-derived sprites; not the player PC)
+  arabella2:     'arabella2',
+  'sir-william2':'sir_william2',
+  carter:        'capt_carter',
 };
 const PRIDE_LABELS = {
   arabella: 'Arabella',    bingley: 'Mr Bingley',   darcy: 'Mr Darcy',
@@ -14194,6 +14208,7 @@ const PRIDE_LABELS = {
   'sir-henry': 'Sir Henry', 'mrs-frost': 'Mrs Frost', 'mr-frost': 'Mr Frost', maid: 'The Maid',
   pryce: 'Ensign Pryce', vane: 'Captain Vane', ravenscar: 'Lord Ravenscar', collins: 'Mr Collins',
   devereux: 'Mr Devereux', fenwick: 'Mr Fenwick', hale: 'Mr Hale', quill: 'Mr Quill',
+  arabella2: 'Arabella', 'sir-william2': 'Sir William', carter: 'Captain Carter',
 };
 const PRIDE_WORLD_BASE = 'worlds/pride-and-prejudice';
 window.PRIDE_ACTORS = PRIDE_ACTORS;   // expose so the cast stage can map speaker→folder
@@ -14589,7 +14604,7 @@ function applyDialogState(updates) {
   if ('ui' in updates) {
     currentDialogState.ui = updates.ui || null;
     const uiv = (updates.ui || '').trim();
-    if (/^cast\b/i.test(uiv)) {
+    if (/^cast(\d|\s|$)/i.test(uiv)) {   // 'cast', 'cast2', 'cast layout=…' — NOT 'cast-small' / 'cast-large'
       // multi-figure cast-large: "cast layout=NAME" (or cast2/cast3 shorthand)
       const lm = uiv.match(/layout\s*=\s*([a-z0-9_]+)/i);
       currentDialogState.castLayout = lm ? lm[1] : (uiv.replace(/\s+/g,'') || 'cast2');
@@ -15352,7 +15367,7 @@ function parseLine(s) {
   // Speaker prefix, allow hyphens so 1984 inner-voice ids like
   // "The-Rebel:", "The-Practical-Survivor:" parse as speaker tags
   // rather than narrative.
-  const m = s.match(/^([A-Za-zÇĞİÖŞÜçğıöşü_-]+)\s*:\s*(.*)$/);
+  const m = s.match(/^([A-Za-zÇĞİÖŞÜçğıöşü_-][A-Za-z0-9ÇĞİÖŞÜçğıöşü_-]*)\s*:\s*(.*)$/);   // digits allowed after the first char (arabella2, sir-william2)
   if (m) {
     let who = m[1].toLowerCase();
     // resolve authored aliases ("mr-darcy" → "darcy", "miss_bingley" → "caroline")
@@ -15689,7 +15704,9 @@ function parseScript(text) {
     //      e.g. `0.4 Narrative: The TV stops mattering.`
     //      Lines without a leading float are skipped (lets the writer
     //      drop comments or blank lines for readability).
-    if (/^\(\s*EndScene\s*\)$/i.test(s)) {
+    const esm = s.match(/^\(\s*EndScene(?:\s+bg\s*=\s*([^\s)]+))?\s*\)$/i);
+    if (esm) {
+      const esBg = esm[1] || null;   // P&P: optional still behind the coda text
       const reel = [];
       // Look-ahead: collect timed lines until matching (/EndScene). If
       // we don't find a closer, treat as the bare directive form.
@@ -15710,7 +15727,7 @@ function parseScript(text) {
         // Hard cap: don't scan more than 200 lines without a closer.
         if (j - i > 200) break;
       }
-      const ev = { type: 'endscene', lines: foundCloser ? reel : null };
+      const ev = { type: 'endscene', lines: foundCloser ? reel : null, bg: esBg };
       if (currentAction) currentAction.lines.push(ev);
       else currentArr.push(ev);
       if (foundCloser) i = j; // skip past the (/EndScene) line
@@ -16213,7 +16230,7 @@ function renderLine() {
 
   // End scene video + dashboard
   if (line.type === 'endscene') {
-    startEndScene();
+    startEndScene(line);
     return;
   }
 
@@ -16378,6 +16395,17 @@ function renderLine() {
   // If a full-frame background image is up (cutscene), the dialogue must read as
   // a bubble over it — never the cast-large box with figures on top of the still.
   const cutsceneActive = el.body.classList.contains('cutscene-active');
+  // P&P: an explicit [ui:cast-small] wins over the cutscene→bubble rule, so a
+  // still + small bottom-left avatar card reads like the source storyboards
+  // (small_dialogue). Bubbles stay for [ui:bubble] / cutscenes with no ui mode.
+  if (line.type === 'line' && activePack === 'pride' && cutsceneActive && !wantsBubble &&
+      el.body.classList.contains('ui-cast-small') && line.speaker !== 'narrative' &&
+      typeof PRIDE_ACTORS !== 'undefined' && PRIDE_ACTORS[line.speaker]) {
+    if (typeTimer) { clearInterval(typeTimer); typeTimer = null; }
+    el.body.classList.add('cutscene-bubble');   // keep the bottom box hidden; tap-anywhere advances
+    handleCastSmallLine(line);
+    return;
+  }
   if (line.type === 'line' && (el.body.classList.contains('narrativeScene') || wantsBubble || cutsceneActive)) {
     if (cutsceneActive) {
       // #dialogBox stays as an invisible tap-to-advance layer (CSS makes it
@@ -16580,7 +16608,7 @@ const END_SCENE_LINES_PRIDE = [
   { t: 8.6,  text: "Two adversaries, fully alight — at war with him, and wide awake with it." },
   { t: 12.6, text: "End of Episode — The Netherfield Ball." },
 ];
-function startPrideEnd() {
+function startPrideEnd(reelLines, bgFile) {
   // (b) episode-completion tracking: reaching the coda = this episode is done.
   try { if (typeof window.prideMarkComplete === 'function') window.prideMarkComplete(currentVenue); } catch (e) {}
   const scene  = document.getElementById('endScene');
@@ -16602,10 +16630,23 @@ function startPrideEnd() {
   scene.classList.remove('fade-out','dashboard','awaiting-continue');
   scene.classList.add('open');
   scene.setAttribute('aria-hidden','false');
+  // Optional coda still `(EndScene bg=file.jpg)` — episode cutscene, darkened
+  // at the bottom so the timed lines stay readable. Cleared when absent.
+  try {
+    if (bgFile) {
+      scene.style.backgroundImage = 'linear-gradient(180deg, rgba(7,5,10,.15) 0%, rgba(7,5,10,.25) 45%, rgba(7,5,10,.92) 100%), url("' + resolveWorldAsset(bgFile, 'scenes') + '")';
+      scene.style.backgroundSize = 'cover'; scene.style.backgroundPosition = 'center';
+      scene.classList.add('pride-coda-bg');
+    } else { scene.style.backgroundImage = ''; scene.classList.remove('pride-coda-bg'); }
+  } catch (e) {}
   if (esChar)  esChar.className = 'es-character';   // no portrait
   if (esSpeak) esSpeak.textContent = '';
   if (cont)    cont.classList.remove('show');
-  const reel = END_SCENE_LINES_PRIDE;
+  // Script-level coda `(EndScene) … (/EndScene)` wins; the hardcoded reel is
+  // the Netherfield-ball fallback for the bare `(EndScene)` form.
+  const reel = (Array.isArray(reelLines) && reelLines.length)
+    ? reelLines.map(l => ({ t: l.t, text: l.text }))
+    : END_SCENE_LINES_PRIDE;
   const startedAt = Date.now();
   let shownIdx = -1;
   if (endSceneTimer) clearInterval(endSceneTimer);
@@ -16626,9 +16667,9 @@ function startPrideEnd() {
   }, 120);
 }
 
-function startEndScene() {
+function startEndScene(line) {
   // P&P has its own clean coda — never fall into the London recap flow.
-  if (activePack === 'pride') { return startPrideEnd(); }
+  if (activePack === 'pride') { return startPrideEnd(line && line.lines, line && line.bg); }
   const scene     = document.getElementById('endScene');
   const video     = document.getElementById('endVideo');
   const dialog    = document.getElementById('endDialog');
@@ -17832,15 +17873,17 @@ function startVideo(src) {
     if (advanced) return;
     advanced = true;
     if (successTimer) { clearTimeout(successTimer); successTimer = null; }
-    overlay.classList.remove('show');
     try { video.pause(); } catch (e) {}
+    // Render the NEXT beat under the overlay first, then fade the clip out —
+    // otherwise the pre-video line flashes for the length of the fade.
+    idx++;
+    renderLine();
+    overlay.classList.remove('show');
     setTimeout(() => {
       overlay.hidden = true;
-      overlay.classList.remove('fallback', 'success');
+      overlay.classList.remove('fallback', 'success', 'tapwait');
       video.removeAttribute('src');
       video.load();
-      idx++;
-      renderLine();
     }, 350);
   };
 
@@ -17853,11 +17896,17 @@ function startVideo(src) {
   const showSuccessThenAdvance = () => {
     if (advanced) return;
     try { video.pause(); } catch (e) {}
+    if (activePack === 'pride') {   // P&P: hold the last frame, wait for a tap (no London SUCCESS layer)
+      if (overlay.classList.contains('tapwait')) return;
+      overlay.classList.add('tapwait');
+      return;
+    }
     overlay.classList.add('success');
     if (successTimer) clearTimeout(successTimer);
     successTimer = setTimeout(advance, 2500);
   };
 
+  overlay.classList.remove('tapwait');
   overlay.hidden = false;
   requestAnimationFrame(() => overlay.classList.add('show'));
 
@@ -17891,7 +17940,7 @@ function startVideo(src) {
   //   • if it's already showing, advance immediately
   overlay.onclick = () => {
     if (advanced) return;
-    if (overlay.classList.contains('success')) { advance(); }
+    if (overlay.classList.contains('success') || overlay.classList.contains('tapwait')) { advance(); }
     else { showSuccessThenAdvance(); }
   };
   // Single hard safety cap, only fire if onended NEVER reaches us
@@ -28839,7 +28888,7 @@ console.log('%c[caller] Episode 1 ready — run startCaller()', 'color:#e7b24c')
 #pcsel .pcs-create-text:active{opacity:.5}
 #pcsel .pcs-continue{width:100%; padding:16px; margin:0 0 10px; border:none; border-radius:18px; cursor:pointer; background:linear-gradient(120deg,#e0668a,#8b7bd8); color:#fff; font-weight:700; font-size:16px; display:none; align-items:center; justify-content:center; gap:8px; box-shadow:0 14px 30px rgba(139,123,216,.34)}
 #pcsel.switch .pcs-continue{display:flex}
-#pcsel .pcs-rclose{position:absolute; right:14px; top:16px; z-index:10; width:38px; height:38px; border-radius:50%; background:rgba(255,255,255,.5); border:1px solid rgba(255,255,255,.7); color:#6a5d78; font-size:15px; display:none; place-items:center; cursor:pointer}
+#pcsel .pcs-rclose{position:absolute; right:14px; top:max(16px, calc(env(safe-area-inset-top) + 8px)); z-index:10; width:38px; height:38px; border-radius:50%; background:rgba(255,255,255,.5); border:1px solid rgba(255,255,255,.7); color:#6a5d78; font-size:15px; display:none; place-items:center; cursor:pointer}
 #pcsel.switch .pcs-rclose{display:grid}
 #pcsel .dcard{position:absolute; top:50%; left:11%; width:78%; height:74%; border-radius:24px; overflow:hidden; background:#12101a; color:#fff; cursor:pointer; box-shadow:0 22px 52px rgba(120,90,150,.26); border:1px solid rgba(255,255,255,.14); transform:translate(0,-50%); transition:transform .44s cubic-bezier(.55,0,.2,1), opacity .44s ease, filter .44s ease}
 /* Cinematic save card (layout A) — full-bleed portrait, bottom info stack */
@@ -29075,7 +29124,7 @@ console.log('%c[caller] Episode 1 ready — run startCaller()', 'color:#e7b24c')
 #pcsel .pcs-createpg .cp-desc{font:italic 500 12.5px/1.35 "Playfair Display",Georgia,serif; color:#4e4352}
 #pcsel .pcs-createpg .cp-arr{position:absolute; right:16px; top:50%; transform:translateY(-50%); font:400 30px/1 "Playfair Display",Georgia,serif; color:#c9a24a}
 #pcsel .pcs-createpg .cp-back{position:absolute; left:14%; right:14%; bottom:calc(env(safe-area-inset-bottom,0px) + 56px); z-index:3; padding:15px; border-radius:22px; background:rgba(14,10,20,.55); border:1px solid rgba(255,255,255,.28); color:#fff; font:700 16px/1 "Playfair Display",Georgia,serif; -webkit-backdrop-filter:blur(14px); backdrop-filter:blur(14px); cursor:pointer}
-#pcsel .pcs-createpg .pm-x, #pcsel .pcs-mirror .pm-x{position:absolute; right:14px; top:18px; z-index:10; width:42px; height:42px; border-radius:50%; display:grid; place-items:center; background:rgba(20,12,26,.5); border:1px solid rgba(255,255,255,.3); color:#fff; font-size:15px; cursor:pointer; -webkit-backdrop-filter:none; backdrop-filter:none}   /* = the deck's .pcs-rclose */
+#pcsel .pcs-createpg .pm-x, #pcsel .pcs-mirror .pm-x{position:absolute; right:14px; top:max(18px, calc(env(safe-area-inset-top) + 8px)); z-index:10; width:42px; height:42px; border-radius:50%; display:grid; place-items:center; background:rgba(20,12,26,.5); border:1px solid rgba(255,255,255,.3); color:#fff; font-size:15px; cursor:pointer; -webkit-backdrop-filter:none; backdrop-filter:none}   /* = the deck's .pcs-rclose */
 #pcsel .pcs-rv{position:absolute; left:0; right:0; bottom:0; z-index:9; text-align:center; padding:90px 28px max(11%, calc(env(safe-area-inset-bottom,0px) + 70px)); background:linear-gradient(180deg, rgba(8,5,12,0) 0%, rgba(8,5,12,.55) 40%, rgba(8,5,12,.9) 100%); opacity:0; transform:translateY(12px); transition:opacity .6s ease, transform .6s ease; pointer-events:none}
 #pcsel.revealing.rv-text .pcs-rv{opacity:1; transform:none}
 #pcsel .pcs-rv .rv-spark{display:block; margin:0 auto 14px; transform-origin:center; animation:pcsSpark 3s ease-in-out infinite}
@@ -29133,7 +29182,7 @@ console.log('%c[caller] Episode 1 ready — run startCaller()', 'color:#e7b24c')
 #pcsel .hero.has-wardrobe .wd-arrow{display:grid; opacity:1}
 #pcsel .hero.avatar-edit .wd-arrow, #pcsel.revealing .wd-arrow, #pcsel #pcs-detail.entering .wd-arrow{opacity:0; pointer-events:none}
 #pcsel .wd-arrow:active{background:rgba(255,255,255,.22)}
-#pcsel .dclose{position:absolute; right:14px; top:18px; z-index:10; width:42px; height:42px; border-radius:50%; background:rgba(255,255,255,.26); border:1px solid rgba(255,255,255,.5); color:#fff; font-size:15px; display:grid; place-items:center; cursor:pointer}
+#pcsel .dclose{position:absolute; right:14px; top:max(18px, calc(env(safe-area-inset-top) + 8px)); z-index:10; width:42px; height:42px; border-radius:50%; background:rgba(255,255,255,.26); border:1px solid rgba(255,255,255,.5); color:#fff; font-size:15px; display:grid; place-items:center; cursor:pointer}
 #pcsel .d-scroll{position:absolute; inset:0; overflow-y:auto; z-index:3; will-change:opacity,transform}
 #pcsel .d-spacer{height:72%; pointer-events:none}
 #pcsel .d-content{position:relative; z-index:3; background:#f6f2fb; padding:18px 22px 0; border-radius:20px 20px 0 0; box-shadow:0 -20px 40px rgba(120,90,150,.16)}
@@ -29184,7 +29233,7 @@ console.log('%c[caller] Episode 1 ready — run startCaller()', 'color:#e7b24c')
 #pcsel #pcs-survey{background:#0d0912}
 #pcsel .sv-bg{position:absolute; inset:0; background-size:cover; background-position:center; z-index:0}
 #pcsel .sv-scrim{position:absolute; inset:0; z-index:1; background:linear-gradient(180deg, rgba(13,9,18,.4) 0%, rgba(13,9,18,.12) 34%, rgba(13,9,18,.5) 68%, rgba(13,9,18,.92) 100%)}
-#pcsel .sv-prog{position:absolute; top:20px; left:0; right:0; z-index:5; display:flex; gap:6px; justify-content:center}
+#pcsel .sv-prog{position:absolute; top:max(20px, calc(env(safe-area-inset-top) + 8px)); left:0; right:0; z-index:5; display:flex; gap:6px; justify-content:center}
 #pcsel .sv-prog .pd{width:20px; height:4px; border-radius:4px; background:rgba(255,255,255,.3)}
 #pcsel .sv-prog .pd.on{background:#e0668a}
 #pcsel .sv-fore{position:absolute; left:0; right:0; bottom:0; z-index:3; padding:0 22px 30px; cursor:pointer; display:flex; flex-direction:column; transition:background .45s ease}
@@ -31681,9 +31730,9 @@ body.pride-hud-on #pridePcHud{ display:none !important; }
   #charChat .cc-fig{ position:absolute; top:8%; bottom:0; width:50%; background-repeat:no-repeat; background-size:auto 109%; background-position:center top; pointer-events:none; z-index:2; filter:drop-shadow(0 6px 16px rgba(0,0,0,.55)); transition:transform .55s cubic-bezier(.22,1,.36,1); }
   #charChat .cc-left{ left:-20%; }
   #charChat .cc-right{ right:-20%; }
-  #charChat .cc-name{ position:absolute; top:16px; left:0; right:0; text-align:center; z-index:5; color:#fff; font:800 13px/1 "Inter",system-ui,sans-serif; letter-spacing:.1em; text-transform:uppercase; text-shadow:0 1px 10px rgba(0,0,0,.9); }
-  #charChat .cc-close{ position:absolute; top:12px; left:12px; z-index:6; width:38px; height:38px; border-radius:50%; border:1px solid rgba(255,255,255,.3); background:rgba(20,12,26,.6); color:#fff; font-size:16px; cursor:pointer; -webkit-backdrop-filter:blur(8px); backdrop-filter:blur(8px); }
-  #charChat .cc-private-btn{ position:absolute; top:14px; right:12px; z-index:6; padding:9px 15px; border-radius:999px; border:1px solid rgba(255,255,255,.42); background:rgba(20,12,26,.5); color:#fff; font:800 10px/1 "Inter",system-ui,sans-serif; letter-spacing:.16em; text-transform:uppercase; cursor:pointer; -webkit-backdrop-filter:blur(8px); backdrop-filter:blur(8px); transition:background .2s, border-color .2s, box-shadow .2s; }
+  #charChat .cc-name{ position:absolute; top:max(16px, calc(env(safe-area-inset-top) + 8px)); left:0; right:0; text-align:center; z-index:5; color:#fff; font:800 13px/1 "Inter",system-ui,sans-serif; letter-spacing:.1em; text-transform:uppercase; text-shadow:0 1px 10px rgba(0,0,0,.9); }
+  #charChat .cc-close{ position:absolute; top:max(12px, calc(env(safe-area-inset-top) + 6px)); left:12px; z-index:6; width:38px; height:38px; border-radius:50%; border:1px solid rgba(255,255,255,.3); background:rgba(20,12,26,.6); color:#fff; font-size:16px; cursor:pointer; -webkit-backdrop-filter:blur(8px); backdrop-filter:blur(8px); }
+  #charChat .cc-private-btn{ position:absolute; top:max(14px, calc(env(safe-area-inset-top) + 6px)); right:12px; z-index:6; padding:9px 15px; border-radius:999px; border:1px solid rgba(255,255,255,.42); background:rgba(20,12,26,.5); color:#fff; font:800 10px/1 "Inter",system-ui,sans-serif; letter-spacing:.16em; text-transform:uppercase; cursor:pointer; -webkit-backdrop-filter:blur(8px); backdrop-filter:blur(8px); transition:background .2s, border-color .2s, box-shadow .2s; }
   #charChat .cc-private-btn.on{ background:#8b7bd8; border-color:#8b7bd8; color:#fff; box-shadow:0 0 18px rgba(139,123,216,.5); }
   #charChat .cc-bubbles{ position:absolute; left:0; right:0; top:70px; bottom:0; z-index:4; display:flex; flex-direction:column; justify-content:flex-end; gap:8px; padding:0 25px; overflow-y:auto; -webkit-overflow-scrolling:touch; transition:opacity .35s ease;
     -webkit-mask-image:linear-gradient(to bottom, rgba(0,0,0,0) 0, rgba(0,0,0,0) 130px, rgba(0,0,0,1) 330px, rgba(0,0,0,1) 100%);
@@ -32375,8 +32424,8 @@ body.pride-hud-on #pridePcHud{ display:none !important; }
   #worldScreen .wm-pin.soon .wm-s svg{width:11px;height:11px;stroke:#d9d2ff;fill:none;stroke-width:2;stroke-linecap:round}
   #worldScreen .wm-pin.locked .wm-s{color:rgba(255,255,255,.4)}
   /* chrome */
-  #worldScreen .wm-x{position:absolute;right:14px;top:18px;width:42px;height:42px;border-radius:50%;background:rgba(14,10,20,.55);border:1px solid rgba(255,255,255,.28);display:grid;place-items:center;z-index:5;font-size:16px;color:#fff;cursor:pointer;-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px)}
-  #worldScreen .wm-hd{position:absolute;left:18px;top:72px;z-index:5;pointer-events:none;text-shadow:0 2px 14px rgba(0,0,0,.7)}
+  #worldScreen .wm-x{position:absolute;right:14px;top:max(18px, calc(env(safe-area-inset-top) + 8px));width:42px;height:42px;border-radius:50%;background:rgba(14,10,20,.55);border:1px solid rgba(255,255,255,.28);display:grid;place-items:center;z-index:5;font-size:16px;color:#fff;cursor:pointer;-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px)}
+  #worldScreen .wm-hd{position:absolute;left:18px;top:max(72px, calc(env(safe-area-inset-top) + 24px));z-index:5;pointer-events:none;text-shadow:0 2px 14px rgba(0,0,0,.7)}
   #worldScreen .wm-hd .k{font:800 9.5px/1 var(--fu);letter-spacing:.24em;text-transform:uppercase;color:var(--gold-300)}
   #worldScreen .wm-hd .t{font:700 26px/1 var(--fd);color:#fff;margin-top:6px}
   #worldScreen.on ~ #prideLockTip{z-index:9730}
@@ -32585,11 +32634,11 @@ body.pride-hud-on #pridePcHud{ display:none !important; }
   #orbitScreen .ob-bg::before{content:"";position:absolute;inset:0;background:var(--bgimg,none) center/cover;opacity:1}
   #orbitScreen .ob-bg::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(7,5,10,.18),rgba(7,5,10,0) 22%,rgba(7,5,10,0) 56%,rgba(7,5,10,.62) 76%,rgba(7,5,10,.92))}
   #orbitScreen .ob-figscrim{position:absolute;left:0;right:0;bottom:0;height:300px;z-index:11;pointer-events:none;background:linear-gradient(180deg,rgba(7,5,10,0),rgba(7,5,10,.45) 45%,rgba(7,5,10,.78))}
-  #orbitScreen .ob-hd{position:absolute;left:0;right:0;top:54px;z-index:3;pointer-events:none;text-align:center;white-space:nowrap}
+  #orbitScreen .ob-hd{position:absolute;left:0;right:0;top:max(54px, calc(env(safe-area-inset-top) + 20px));z-index:3;pointer-events:none;text-align:center;white-space:nowrap}
   #orbitScreen .ob-hd .ob-fn{font:italic 500 20px/1 var(--fd);color:rgba(255,255,255,.85);letter-spacing:.02em;text-shadow:0 2px 14px rgba(0,0,0,.6);display:inline-block;will-change:transform}
   #orbitScreen .ob-hd .ob-ln{font:700 96px/.9 var(--fd);color:#fff;letter-spacing:-.01em;margin-top:-18px;text-shadow:0 4px 30px rgba(0,0,0,.55);display:inline-block;will-change:transform,letter-spacing}
   #orbitScreen .ob-hd .ob-ln{display:block}
-  #orbitScreen .ob-x{position:absolute;right:14px;top:18px;width:42px;height:42px;border-radius:50%;background:rgba(14,10,20,.55);border:1px solid rgba(255,255,255,.28);display:grid;place-items:center;z-index:40;font-size:16px;color:#fff;cursor:pointer;-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px)}
+  #orbitScreen .ob-x{position:absolute;right:14px;top:max(18px, calc(env(safe-area-inset-top) + 8px));width:42px;height:42px;border-radius:50%;background:rgba(14,10,20,.55);border:1px solid rgba(255,255,255,.28);display:grid;place-items:center;z-index:40;font-size:16px;color:#fff;cursor:pointer;-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px)}
   #orbitScreen .ob-stage{position:absolute;left:0;right:0;top:0;bottom:0;perspective:900px;perspective-origin:50% 55%;z-index:5}
   #orbitScreen .ob-fig{position:absolute;left:50%;top:0;height:100%;width:auto;max-width:none;transform:translateX(-50%);z-index:10;filter:drop-shadow(0 30px 30px rgba(0,0,0,.6));pointer-events:none;-webkit-user-drag:none}
   #orbitScreen .ob-floor{position:absolute;left:50%;top:87.7%;width:320px;height:70px;transform:translateX(-50%);border-radius:50%;background:radial-gradient(ellipse at center,rgba(231,178,76,.2),rgba(231,178,76,0) 70%);z-index:2}
@@ -35068,7 +35117,8 @@ body.pe-combat.pe-beat #dialogBox{ opacity:1 !important; transform:none !importa
   const CH='worlds/pride-and-prejudice/characters/';
   const NAMES={ arabella_frost:'Arabella', mr_darcy:'Mr Darcy', mr_bingley:'Mr Bingley', miss_bingley:'Miss Bingley',
     mr_wickham:'Mr Wickham', mrs_bennet:'Mrs Bennet', charlotte_lucas:'Charlotte', jane_bennet:'Jane',
-    elizabeth_bennet:'Elizabeth', lydia_bennet:'Lydia', mr_collins:'Mr Collins', sir_william:'Sir William' };
+    elizabeth_bennet:'Elizabeth', lydia_bennet:'Lydia', mr_collins:'Mr Collins', sir_william:'Sir William',
+    arabella2:'Arabella', sir_william2:'Sir William', capt_carter:'Captain Carter', capt_vane:'Captain Vane', ens_pryce:'Ensign Pryce', sir_ashbourne:'Sir Henry' };
   const $=id=>document.getElementById(id);
   let hideT=null;
   function show(figid, name, sub, isRel){

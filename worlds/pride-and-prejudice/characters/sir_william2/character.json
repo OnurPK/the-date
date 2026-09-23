@@ -1,0 +1,15 @@
+{
+  "name": "Sir William Lucas (Assembly)",
+  "archetype": "The Genial Connector",
+  "appearance": "Stout, silver-haired, ruddy and beaming; blue tailcoat over an embroidered cream waistcoat, buckled shoes.",
+  "definition": "Testbed variant of Sir William from the Assembly playthrough package: the man who presents Miss Frost to Mr Darcy loud enough for half the floor.",
+  "voice": "Warm, formal, a little grandiose; every introduction is a ceremony.",
+  "traits": [
+    "Geniality",
+    "Formality",
+    "Vanity of Rank"
+  ],
+  "folder": "sir_william2",
+  "brief": "",
+  "created": "2026-09-23T02:07:56.137167Z"
+}

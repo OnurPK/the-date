@@ -1,0 +1,15 @@
+{
+  "name": "Captain Carter",
+  "archetype": "The Officer",
+  "appearance": "Young militia captain, fair-brown hair, open friendly face; scarlet regimentals with gold epaulettes, crimson sash, tall boots.",
+  "definition": "Officer of the militia quartered at Meryton (canon ch. 7). Cuts in at the assembly to ask Miss Frost for the set — and is told by Mr Darcy that the lady is engaged.",
+  "voice": "Easy, cheerful, a soldier's plainness; admits he dances badly.",
+  "traits": [
+    "Good Humour",
+    "Candour",
+    "Persistence"
+  ],
+  "folder": "capt_carter",
+  "brief": "",
+  "created": "2026-09-23T02:07:56.137167Z"
+}

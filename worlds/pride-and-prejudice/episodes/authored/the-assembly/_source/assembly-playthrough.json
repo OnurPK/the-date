@@ -1,0 +1,2006 @@
+{
+ "episode": "The Assembly (Testbed)",
+ "world": "Pride and Prejudice (Meryton, 1811)",
+ "player": "Arabella Frost, The Wit",
+ "run": "a3478fcc-03fb-4f0e-90e0-9d38cc2f1c2b",
+ "ending": "He Claimed the Set",
+ "media_base": "media/",
+ "cast": {
+  "Arabella Frost": "2bd5670c-ecf3-4bcc-8cd3-afd13c7bc9f0",
+  "Sir William Lucas": "4197995b-0524-4bb6-b3c9-f9eb84c97bfa",
+  "Mr Darcy": "55a0edb3-36f2-4d1b-9358-49bd4d39fa06"
+ },
+ "beats": [
+  {
+   "kind": "scene",
+   "situation": "The Assembly Room",
+   "setting": "The Meryton assembly rooms at the height of the evening: chandeliers lit, fiddlers in the gallery, long lines of country dancers down the floor, the neighbourhood packed along the walls.",
+   "present": [
+    "Arabella Frost",
+    "Sir William Lucas"
+   ],
+   "n": 1
+  },
+  {
+   "kind": "narration",
+   "text": "The Meryton rooms are full to the walls and bright as day. Mr Bingley was to have come tonight and has not, and every eye in the room has gone instead to the friend who came without him: tall, handsome, worth ten thousand a year, standing by the far wall and pleased with nothing. Sir William Lucas has seen you come in. He is already on his way.",
+   "screen": {
+    "mode": "narrative",
+    "shot": null,
+    "image": "848e1e60-cec8-4d43-ab71-2fda012ba6ff",
+    "in_frame": [],
+    "focus": null,
+    "cast_display": null,
+    "cast": []
+   },
+   "n": 2
+  },
+  {
+   "kind": "dialogue",
+   "speaker": "Sir William Lucas",
+   "direction": "Sir William crosses the floor with the air of a man delivering good news to the world at large.",
+   "line": "\"Miss Frost, allow me, Sir William Lucas, and I shall introduce you to everyone of consequence!\"",
+   "screen": {
+    "mode": "small_dialogue",
+    "shot": "Sir William on his way",
+    "image": "c9fe046c-0c7e-4364-8e21-ebbd050ea95e",
+    "in_frame": [
+     "Sir William Lucas",
+     "Arabella Frost"
+    ],
+    "focus": "Sir William Lucas",
+    "cast_display": "small",
+    "cast": [
+     {
+      "id": "player",
+      "name": "Arabella Frost",
+      "portrait": "2bd5670c-ecf3-4bcc-8cd3-afd13c7bc9f0",
+      "look": "Guarded",
+      "side": "left"
+     },
+     {
+      "id": "sir_william_lucas",
+      "name": "Sir William Lucas",
+      "portrait": "a9717c79-3187-4d0c-84da-07dd6e3c750c",
+      "look": "Affable warmth",
+      "side": "right"
+     }
+    ]
+   },
+   "n": 3
+  },
+  {
+   "kind": "dialogue",
+   "speaker": "Sir William Lucas",
+   "direction": null,
+   "line": "\"Even Mr. Darcy, who has danced at St. James's itself, shall not escape the floor tonight!\"",
+   "screen": {
+    "mode": "small_dialogue",
+    "shot": "Sir William on his way",
+    "image": "c9fe046c-0c7e-4364-8e21-ebbd050ea95e",
+    "in_frame": [
+     "Sir William Lucas"
+    ],
+    "focus": "Sir William Lucas",
+    "cast_display": "small",
+    "cast": [
+     {
+      "id": "player",
+      "name": "Arabella Frost",
+      "portrait": "2bd5670c-ecf3-4bcc-8cd3-afd13c7bc9f0",
+      "look": "Guarded",
+      "side": "left"
+     },
+     {
+      "id": "sir_william_lucas",
+      "name": "Sir William Lucas",
+      "portrait": "a9717c79-3187-4d0c-84da-07dd6e3c750c",
+      "look": "Affable warmth",
+      "side": "right"
+     }
+    ]
+   },
+   "n": 4
+  },
+  {
+   "kind": "choice",
+   "turn": 1,
+   "options": [
+    {
+     "text": "Sir William, does St. James's teach a man to refuse a partner?",
+     "tag": "Sharpest Wit in the Room",
+     "kind": "character"
+    },
+    {
+     "text": "A man who condescends to dance still condescends, Sir William.",
+     "tag": "Small Fortune, Large Spirit",
+     "kind": "character"
+    },
+    {
+     "text": "I find I prefer to watch Mr. Darcy appraise the room first.",
+     "tag": "Sharpest Wit in the Room",
+     "kind": "character"
+    },
+    {
+     "text": "She turns her gaze toward the far wall where Darcy stands.",
+     "tag": "weakness",
+     "kind": "character"
+    }
+   ],
+   "picked": 0,
+   "screen": {
+    "mode": "small_dialogue",
+    "shot": "Sir William on his way",
+    "image": "c9fe046c-0c7e-4364-8e21-ebbd050ea95e",
+    "in_frame": [
+     "Sir William Lucas"
+    ],
+    "focus": "Sir William Lucas",
+    "cast_display": "small",
+    "cast": [
+     {
+      "id": "player",
+      "name": "Arabella Frost",
+      "portrait": "2bd5670c-ecf3-4bcc-8cd3-afd13c7bc9f0",
+      "look": "Guarded",
+      "side": "left"
+     },
+     {
+      "id": "sir_william_lucas",
+      "name": "Sir William Lucas",
+      "portrait": "a9717c79-3187-4d0c-84da-07dd6e3c750c",
+      "look": "Affable warmth",
+      "side": "right"
+     }
+    ]
+   },
+   "n": 5
+  },
+  {
+   "kind": "player_line",
+   "text": "Sir William, does St. James's teach a man to refuse a partner?",
+   "screen": {
+    "mode": "large_dialogue",
+    "shot": null,
+    "image": "cd116929-2809-486b-852f-6a03bb784dd0",
+    "in_frame": [
+     "Arabella Frost",
+     "Sir William Lucas"
+    ],
+    "focus": "Arabella Frost",
+    "cast_display": "large",
+    "cast": [
+     {
+      "id": "player",
+      "name": "Arabella Frost",
+      "portrait": "2bd5670c-ecf3-4bcc-8cd3-afd13c7bc9f0",
+      "look": "Guarded",
+      "side": "left"
+     },
+     {
+      "id": "sir_william_lucas",
+      "name": "Sir William Lucas",
+      "portrait": "a9717c79-3187-4d0c-84da-07dd6e3c750c",
+      "look": "Affable warmth",
+      "side": "right"
+     }
+    ]
+   },
+   "n": 6
+  },
+  {
+   "kind": "dialogue",
+   "speaker": "Sir William Lucas",
+   "direction": "Sir William drops his chin and leans in, one hand raised to shield the confidence.",
+   "line": "\"Between ourselves, Miss Frost, I mean to put you before Mr. Darcy before supper is served.\"",
+   "screen": {
+    "mode": "large_dialogue",
+    "shot": null,
+    "image": "cd116929-2809-486b-852f-6a03bb784dd0",
+    "in_frame": [
+     "Arabella Frost",
+     "Sir William Lucas"
+    ],
+    "focus": "Arabella Frost",
+    "cast_display": "large",
+    "cast": [
+     {
+      "id": "player",
+      "name": "Arabella Frost",
+      "portrait": "2bd5670c-ecf3-4bcc-8cd3-afd13c7bc9f0",
+      "look": "Guarded",
+      "side": "left"
+     },
+     {
+      "id": "sir_william_lucas",
+      "name": "Sir William Lucas",
+      "portrait": "a9717c79-3187-4d0c-84da-07dd6e3c750c",
+      "look": "Affable warmth",
+      "side": "right"
+     }
+    ]
+   },
+   "n": 7
+  },
+  {
+   "kind": "narration",
+   "text": "Across the room, that knot of fan-wielding young ladies watches Mr. Darcy as if he were a comet; he looks nowhere.",
+   "screen": {
+    "mode": "large_dialogue",
+    "shot": null,
+    "image": "cd116929-2809-486b-852f-6a03bb784dd0",
+    "in_frame": [
+     "Arabella Frost",
+     "Sir William Lucas"
+    ],
+    "focus": "Arabella Frost",
+    "cast_display": "large",
+    "cast": [
+     {
+      "id": "player",
+      "name": "Arabella Frost",
+      "portrait": "2bd5670c-ecf3-4bcc-8cd3-afd13c7bc9f0",
+      "look": "Guarded",
+      "side": "left"
+     },
+     {
+      "id": "sir_william_lucas",
+      "name": "Sir William Lucas",
+      "portrait": "a9717c79-3187-4d0c-84da-07dd6e3c750c",
+      "look": "Affable warmth",
+      "side": "right"
+     }
+    ]
+   },
+   "fired": [
+    "sir_william_names_his_campaign"
+   ],
+   "n": 8
+  },
+  {
+   "kind": "discovery",
+   "text": "Mr Darcy is wanted by the whole room and wants none of it.",
+   "n": 9
+  },
+  {
+   "kind": "relationship",
+   "who": "Sir William Lucas",
+   "toward": "Arabella Frost",
+   "axis": "Affection",
+   "from": "Neutral",
+   "to": "Fondness",
+   "n": 10
+  },
+  {
+   "kind": "choice",
+   "turn": 2,
+   "options": [
+    {
+     "text": "Tell me, Sir William, does St. James's improve a man's manners or merely his posture?",
+     "tag": null,
+     "kind": "consequence"
+    },
+    {
+     "text": "I will not be placed before Mr. Darcy like a dish at supper.",
+     "tag": "Small Fortune, Large Spirit",
+     "kind": "character"
+    },
+    {
+     "text": "He looks at nothing, and yet everyone looks at him.",
+     "tag": "Sharpest Wit in the Room",
+     "kind": "character"
+    },
+    {
+     "text": "She turns the fan slowly in her hand and says nothing.",
+     "tag": "weakness",
+     "kind": "character"
+    }
+   ],
+   "picked": 0,
+   "screen": {
+    "mode": "large_dialogue",
+    "shot": null,
+    "image": "cd116929-2809-486b-852f-6a03bb784dd0",
+    "in_frame": [
+     "Arabella Frost",
+     "Sir William Lucas"
+    ],
+    "focus": "Arabella Frost",
+    "cast_display": "large",
+    "cast": [
+     {
+      "id": "player",
+      "name": "Arabella Frost",
+      "portrait": "2bd5670c-ecf3-4bcc-8cd3-afd13c7bc9f0",
+      "look": "Guarded",
+      "side": "left"
+     },
+     {
+      "id": "sir_william_lucas",
+      "name": "Sir William Lucas",
+      "portrait": "a9717c79-3187-4d0c-84da-07dd6e3c750c",
+      "look": "Affable warmth",
+      "side": "right"
+     }
+    ]
+   },
+   "n": 11
+  },
+  {
+   "kind": "player_line",
+   "text": "Tell me, Sir William, does St. James's improve a man's manners or merely his posture?",
+   "screen": {
+    "mode": "large_dialogue",
+    "shot": null,
+    "image": "cd116929-2809-486b-852f-6a03bb784dd0",
+    "in_frame": [
+     "Arabella Frost",
+     "Sir William Lucas"
+    ],
+    "focus": "Arabella Frost",
+    "cast_display": "large",
+    "cast": [
+     {
+      "id": "player",
+      "name": "Arabella Frost",
+      "portrait": "2bd5670c-ecf3-4bcc-8cd3-afd13c7bc9f0",
+      "look": "Guarded",
+      "side": "left"
+     },
+     {
+      "id": "sir_william_lucas",
+      "name": "Sir William Lucas",
+      "portrait": "a9717c79-3187-4d0c-84da-07dd6e3c750c",
+      "look": "Affable warmth",
+      "side": "right"
+     }
+    ]
+   },
+   "n": 12
+  },
+  {
+   "kind": "dialogue",
+   "speaker": "Sir William Lucas",
+   "direction": "Sir William presses one hand to his breast, closes his eyes, and bows low and slow, as though the fiddlers are trumpets and the assembly room is St James's itself.",
+   "line": "\"Both, Miss Frost, both.\"",
+   "screen": {
+    "mode": "large_dialogue",
+    "shot": null,
+    "image": "cd116929-2809-486b-852f-6a03bb784dd0",
+    "in_frame": [
+     "Arabella Frost",
+     "Sir William Lucas"
+    ],
+    "focus": "Arabella Frost",
+    "cast_display": "large",
+    "cast": [
+     {
+      "id": "player",
+      "name": "Arabella Frost",
+      "portrait": "2bd5670c-ecf3-4bcc-8cd3-afd13c7bc9f0",
+      "look": "Guarded",
+      "side": "left"
+     },
+     {
+      "id": "sir_william_lucas",
+      "name": "Sir William Lucas",
+      "portrait": "a9717c79-3187-4d0c-84da-07dd6e3c750c",
+      "look": "Affable warmth",
+      "side": "right"
+     }
+    ]
+   },
+   "n": 13
+  },
+  {
+   "kind": "film",
+   "title": "Charlotte's bet: nobody will make Mr Darcy dance",
+   "video": "d8b6dfb6-41ee-4d61-87b4-0ca95e017a3f",
+   "consequence": "charlottes_bet_after_the_charm",
+   "fired": [
+    "sir_william_charmed"
+   ],
+   "n": 14
+  },
+  {
+   "kind": "narration",
+   "text": "Nobody will make Mr Darcy dance tonight. That is Charlotte's wager, and she has taken it.",
+   "screen": {
+    "mode": "narrative",
+    "shot": "The still man",
+    "image": "03b4fcfc-a791-4084-a357-7eeecfea7054",
+    "in_frame": [
+     "Arabella Frost",
+     "Sir William Lucas"
+    ],
+    "focus": "Arabella Frost",
+    "cast_display": "hidden",
+    "cast": [
+     {
+      "id": "player",
+      "name": "Arabella Frost",
+      "portrait": "9bd302a5-ab96-4232-b956-6cb7736d0e99",
+      "look": "Cool appraisal",
+      "side": "left"
+     },
+     {
+      "id": "sir_william_lucas",
+      "name": "Sir William Lucas",
+      "portrait": "a9717c79-3187-4d0c-84da-07dd6e3c750c",
+      "look": "Affable warmth",
+      "side": "right"
+     }
+    ]
+   },
+   "n": 15
+  },
+  {
+   "kind": "choice",
+   "turn": 3,
+   "options": [
+    {
+     "text": "Sir William, then lead me to him, I have a bet to collect.",
+     "tag": "Sharpest Wit in the Room",
+     "kind": "character"
+    },
+    {
+     "text": "I will not be placed before him like a dish at supper.",
+     "tag": "Small Fortune, Large Spirit",
+     "kind": "character"
+    },
+    {
+     "text": "She sets her glass down and crosses the floor toward Mr Darcy.",
+     "tag": null,
+     "kind": "exit"
+    },
+    {
+     "text": "A man who looks nowhere is looking at everything.",
+     "tag": "Sharpest Wit in the Room",
+     "kind": "character"
+    }
+   ],
+   "picked": 0,
+   "screen": {
+    "mode": "narrative",
+    "shot": "The still man",
+    "image": "03b4fcfc-a791-4084-a357-7eeecfea7054",
+    "in_frame": [
+     "Arabella Frost",
+     "Sir William Lucas"
+    ],
+    "focus": "Arabella Frost",
+    "cast_display": "hidden",
+    "cast": [
+     {
+      "id": "player",
+      "name": "Arabella Frost",
+      "portrait": "9bd302a5-ab96-4232-b956-6cb7736d0e99",
+      "look": "Cool appraisal",
+      "side": "left"
+     },
+     {
+      "id": "sir_william_lucas",
+      "name": "Sir William Lucas",
+      "portrait": "a9717c79-3187-4d0c-84da-07dd6e3c750c",
+      "look": "Affable warmth",
+      "side": "right"
+     }
+    ]
+   },
+   "fired": [
+    "charlottes_bet_after_the_charm"
+   ],
+   "n": 16
+  },
+  {
+   "kind": "player_line",
+   "text": "Sir William, then lead me to him, I have a bet to collect.",
+   "screen": {
+    "mode": "large_dialogue",
+    "shot": null,
+    "image": "cd116929-2809-486b-852f-6a03bb784dd0",
+    "in_frame": [
+     "Arabella Frost",
+     "Sir William Lucas"
+    ],
+    "focus": "Arabella Frost",
+    "cast_display": "large",
+    "cast": [
+     {
+      "id": "player",
+      "name": "Arabella Frost",
+      "portrait": "9bd302a5-ab96-4232-b956-6cb7736d0e99",
+      "look": "Cool appraisal",
+      "side": "left"
+     },
+     {
+      "id": "sir_william_lucas",
+      "name": "Sir William Lucas",
+      "portrait": "a9717c79-3187-4d0c-84da-07dd6e3c750c",
+      "look": "Affable warmth",
+      "side": "right"
+     }
+    ]
+   },
+   "n": 17
+  },
+  {
+   "kind": "narration",
+   "text": "Sir William leads you down the room as though to the King, and presents you to Mr Darcy, loud enough for half the floor, as the wittiest young lady in Hertfordshire.",
+   "screen": {
+    "mode": "large_dialogue",
+    "shot": null,
+    "image": "cd116929-2809-486b-852f-6a03bb784dd0",
+    "in_frame": [
+     "Arabella Frost",
+     "Sir William Lucas"
+    ],
+    "focus": "Arabella Frost",
+    "cast_display": "large",
+    "cast": [
+     {
+      "id": "player",
+      "name": "Arabella Frost",
+      "portrait": "9bd302a5-ab96-4232-b956-6cb7736d0e99",
+      "look": "Cool appraisal",
+      "side": "left"
+     },
+     {
+      "id": "sir_william_lucas",
+      "name": "Sir William Lucas",
+      "portrait": "a9717c79-3187-4d0c-84da-07dd6e3c750c",
+      "look": "Affable warmth",
+      "side": "right"
+     }
+    ]
+   },
+   "fired": [
+    "presented_with_ceremony"
+   ],
+   "n": 18
+  },
+  {
+   "kind": "scene",
+   "situation": "By the Wall",
+   "setting": "A quiet stretch of floor by the wall, the loud room at their backs, the next set not yet called.",
+   "present": [
+    "Arabella Frost",
+    "Mr Darcy"
+   ],
+   "n": 19
+  },
+  {
+   "kind": "film",
+   "title": "Mr Darcy, by the wall",
+   "video": "c67e5706-a7eb-4d90-a316-677dd593cd0e",
+   "consequence": null,
+   "n": 20
+  },
+  {
+   "kind": "narration",
+   "text": "Mr Darcy has not yet spoken; he simply looks at her, measuring.",
+   "screen": {
+    "mode": "narrative",
+    "shot": null,
+    "image": "4830152f-ac44-462c-a723-01f5489eaed6",
+    "in_frame": [],
+    "focus": null,
+    "cast_display": null,
+    "cast": []
+   },
+   "n": 21
+  },
+  {
+   "kind": "dialogue",
+   "speaker": "Mr Darcy",
+   "direction": "He holds her gaze a moment longer than courtesy strictly requires, then inclines his head a precise degree.",
+   "line": "\"Hertfordshire sets a modest ceiling, Miss Frost. I wonder if you find it so.\"",
+   "screen": {
+    "mode": "small_dialogue",
+    "shot": "His hands",
+    "image": "3bfb67c7-8b6d-469f-bf41-21d47ce1d402",
+    "in_frame": [
+     "Mr Darcy"
+    ],
+    "focus": "Mr Darcy",
+    "cast_display": "small",
+    "cast": [
+     {
+      "id": "player",
+      "name": "Arabella Frost",
+      "portrait": "9bd302a5-ab96-4232-b956-6cb7736d0e99",
+      "look": "Cool appraisal",
+      "side": "left"
+     },
+     {
+      "id": "mr_darcy",
+      "name": "Mr Darcy",
+      "portrait": "f53a9266-51da-4820-bfa9-1ee3f1d34907",
+      "look": "Guarded pride",
+      "side": "right"
+     }
+    ]
+   },
+   "n": 22
+  },
+  {
+   "kind": "dialogue",
+   "speaker": "Mr Darcy",
+   "direction": null,
+   "line": "\"Sir William's superlatives seldom disappoint. In your case, they have not misled him.\"",
+   "screen": {
+    "mode": "small_dialogue",
+    "shot": "His hands",
+    "image": "3bfb67c7-8b6d-469f-bf41-21d47ce1d402",
+    "in_frame": [
+     "Mr Darcy"
+    ],
+    "focus": "Mr Darcy",
+    "cast_display": "small",
+    "cast": [
+     {
+      "id": "player",
+      "name": "Arabella Frost",
+      "portrait": "9bd302a5-ab96-4232-b956-6cb7736d0e99",
+      "look": "Cool appraisal",
+      "side": "left"
+     },
+     {
+      "id": "mr_darcy",
+      "name": "Mr Darcy",
+      "portrait": "f53a9266-51da-4820-bfa9-1ee3f1d34907",
+      "look": "Guarded pride",
+      "side": "right"
+     }
+    ]
+   },
+   "n": 23
+  },
+  {
+   "kind": "choice",
+   "turn": 4,
+   "options": [
+    {
+     "text": "Then Sir William and I are, for once, in perfect agreement.",
+     "tag": "Sharpest Wit in the Room",
+     "kind": "character"
+    },
+    {
+     "text": "Hertfordshire's ceiling, Mr Darcy, is rather your floor.",
+     "tag": "Small Fortune, Large Spirit",
+     "kind": "character"
+    },
+    {
+     "text": "I glance past him toward the empty set forming without us.",
+     "tag": null,
+     "kind": "wildcard"
+    },
+    {
+     "text": "She holds his gaze and says nothing, one brow barely raised.",
+     "tag": "weakness",
+     "kind": "character"
+    }
+   ],
+   "picked": 1,
+   "screen": {
+    "mode": "small_dialogue",
+    "shot": "His hands",
+    "image": "3bfb67c7-8b6d-469f-bf41-21d47ce1d402",
+    "in_frame": [
+     "Mr Darcy"
+    ],
+    "focus": "Mr Darcy",
+    "cast_display": "small",
+    "cast": [
+     {
+      "id": "player",
+      "name": "Arabella Frost",
+      "portrait": "9bd302a5-ab96-4232-b956-6cb7736d0e99",
+      "look": "Cool appraisal",
+      "side": "left"
+     },
+     {
+      "id": "mr_darcy",
+      "name": "Mr Darcy",
+      "portrait": "f53a9266-51da-4820-bfa9-1ee3f1d34907",
+      "look": "Guarded pride",
+      "side": "right"
+     }
+    ]
+   },
+   "n": 24
+  },
+  {
+   "kind": "player_line",
+   "text": "Hertfordshire's ceiling, Mr Darcy, is rather your floor.",
+   "screen": {
+    "mode": "large_dialogue",
+    "shot": null,
+    "image": "cd116929-2809-486b-852f-6a03bb784dd0",
+    "in_frame": [
+     "Arabella Frost",
+     "Mr Darcy"
+    ],
+    "focus": "Arabella Frost",
+    "cast_display": "large",
+    "cast": [
+     {
+      "id": "player",
+      "name": "Arabella Frost",
+      "portrait": "9bd302a5-ab96-4232-b956-6cb7736d0e99",
+      "look": "Cool appraisal",
+      "side": "left"
+     },
+     {
+      "id": "mr_darcy",
+      "name": "Mr Darcy",
+      "portrait": "f53a9266-51da-4820-bfa9-1ee3f1d34907",
+      "look": "Guarded pride",
+      "side": "right"
+     }
+    ]
+   },
+   "n": 25
+  },
+  {
+   "kind": "dialogue",
+   "speaker": "Mr Darcy",
+   "direction": null,
+   "line": "\"Then I trust you find it comfortable, Miss Frost. Most do.\"",
+   "screen": {
+    "mode": "large_dialogue",
+    "shot": null,
+    "image": "cd116929-2809-486b-852f-6a03bb784dd0",
+    "in_frame": [
+     "Mr Darcy"
+    ],
+    "focus": "Mr Darcy",
+    "cast_display": "large",
+    "cast": [
+     {
+      "id": "player",
+      "name": "Arabella Frost",
+      "portrait": "9bd302a5-ab96-4232-b956-6cb7736d0e99",
+      "look": "Cool appraisal",
+      "side": "left"
+     },
+     {
+      "id": "mr_darcy",
+      "name": "Mr Darcy",
+      "portrait": "f53a9266-51da-4820-bfa9-1ee3f1d34907",
+      "look": "Guarded pride",
+      "side": "right"
+     }
+    ]
+   },
+   "n": 26
+  },
+  {
+   "kind": "dialogue",
+   "speaker": "Mr Darcy",
+   "direction": "He turns his gaze to the middle distance, as though the matter is already concluded.",
+   "line": null,
+   "screen": {
+    "mode": "large_dialogue",
+    "shot": null,
+    "image": "cd116929-2809-486b-852f-6a03bb784dd0",
+    "in_frame": [
+     "Mr Darcy"
+    ],
+    "focus": "Mr Darcy",
+    "cast_display": "large",
+    "cast": [
+     {
+      "id": "player",
+      "name": "Arabella Frost",
+      "portrait": "9bd302a5-ab96-4232-b956-6cb7736d0e99",
+      "look": "Cool appraisal",
+      "side": "left"
+     },
+     {
+      "id": "mr_darcy",
+      "name": "Mr Darcy",
+      "portrait": "f53a9266-51da-4820-bfa9-1ee3f1d34907",
+      "look": "Guarded pride",
+      "side": "right"
+     }
+    ]
+   },
+   "n": 27
+  },
+  {
+   "kind": "choice",
+   "turn": 5,
+   "options": [
+    {
+     "text": "I find it remarkably so, do you not, Mr Darcy?",
+     "tag": "Sharpest Wit in the Room",
+     "kind": "character"
+    },
+    {
+     "text": "You conclude the matter rather before I have finished, sir.",
+     "tag": "Sharpest Wit in the Room",
+     "kind": "character"
+    },
+    {
+     "text": "You insist nothing here is worth your attention, yet here you look.",
+     "tag": null,
+     "kind": "consequence"
+    },
+    {
+     "text": "She turns her face toward the dancers, unhurried.",
+     "tag": "Small Fortune, Large Spirit",
+     "kind": "character"
+    }
+   ],
+   "picked": 2,
+   "screen": {
+    "mode": "large_dialogue",
+    "shot": null,
+    "image": "cd116929-2809-486b-852f-6a03bb784dd0",
+    "in_frame": [
+     "Mr Darcy"
+    ],
+    "focus": "Mr Darcy",
+    "cast_display": "large",
+    "cast": [
+     {
+      "id": "player",
+      "name": "Arabella Frost",
+      "portrait": "9bd302a5-ab96-4232-b956-6cb7736d0e99",
+      "look": "Cool appraisal",
+      "side": "left"
+     },
+     {
+      "id": "mr_darcy",
+      "name": "Mr Darcy",
+      "portrait": "f53a9266-51da-4820-bfa9-1ee3f1d34907",
+      "look": "Guarded pride",
+      "side": "right"
+     }
+    ]
+   },
+   "n": 28
+  },
+  {
+   "kind": "player_line",
+   "text": "You insist nothing here is worth your attention, yet here you look.",
+   "screen": {
+    "mode": "large_dialogue",
+    "shot": null,
+    "image": "cd116929-2809-486b-852f-6a03bb784dd0",
+    "in_frame": [
+     "Arabella Frost",
+     "Mr Darcy"
+    ],
+    "focus": "Arabella Frost",
+    "cast_display": "large",
+    "cast": [
+     {
+      "id": "player",
+      "name": "Arabella Frost",
+      "portrait": "9bd302a5-ab96-4232-b956-6cb7736d0e99",
+      "look": "Cool appraisal",
+      "side": "left"
+     },
+     {
+      "id": "mr_darcy",
+      "name": "Mr Darcy",
+      "portrait": "f53a9266-51da-4820-bfa9-1ee3f1d34907",
+      "look": "Guarded pride",
+      "side": "right"
+     }
+    ]
+   },
+   "n": 29
+  },
+  {
+   "kind": "dialogue",
+   "speaker": "Mr Darcy",
+   "direction": "He turns back to her, precisely as described. His gaze settles on her and does not move.",
+   "line": "\"I assure you, I look at nothing in particular.\"",
+   "screen": {
+    "mode": "large_dialogue",
+    "shot": null,
+    "image": "cd116929-2809-486b-852f-6a03bb784dd0",
+    "in_frame": [
+     "Arabella Frost",
+     "Mr Darcy"
+    ],
+    "focus": "Arabella Frost",
+    "cast_display": "large",
+    "cast": [
+     {
+      "id": "player",
+      "name": "Arabella Frost",
+      "portrait": "9bd302a5-ab96-4232-b956-6cb7736d0e99",
+      "look": "Cool appraisal",
+      "side": "left"
+     },
+     {
+      "id": "mr_darcy",
+      "name": "Mr Darcy",
+      "portrait": "f53a9266-51da-4820-bfa9-1ee3f1d34907",
+      "look": "Guarded pride",
+      "side": "right"
+     }
+    ]
+   },
+   "n": 30
+  },
+  {
+   "kind": "relationship",
+   "who": "Mr Darcy",
+   "toward": "Arabella Frost",
+   "axis": "Desire",
+   "from": "Indifference",
+   "to": "Interest",
+   "fired": [
+    "caught_him_looking"
+   ],
+   "n": 31
+  },
+  {
+   "kind": "choice",
+   "turn": 6,
+   "options": [
+    {
+     "text": "Nothing in particular, and yet so very particularly at me.",
+     "tag": "Sharpest Wit in the Room",
+     "kind": "character"
+    },
+    {
+     "text": "That is precisely the look a man gives a thing he means to dismiss.",
+     "tag": "Sharpest Wit in the Room",
+     "kind": "character"
+    },
+    {
+     "text": "I find the chandelier equally riveting, Mr Darcy, shall we compare notes.",
+     "tag": null,
+     "kind": "consequence"
+    },
+    {
+     "text": "She turns her face toward the dancers and says nothing at all.",
+     "tag": "Small Fortune, Large Spirit",
+     "kind": "character"
+    }
+   ],
+   "picked": 2,
+   "screen": {
+    "mode": "large_dialogue",
+    "shot": null,
+    "image": "cd116929-2809-486b-852f-6a03bb784dd0",
+    "in_frame": [
+     "Arabella Frost",
+     "Mr Darcy"
+    ],
+    "focus": "Arabella Frost",
+    "cast_display": "large",
+    "cast": [
+     {
+      "id": "player",
+      "name": "Arabella Frost",
+      "portrait": "9bd302a5-ab96-4232-b956-6cb7736d0e99",
+      "look": "Cool appraisal",
+      "side": "left"
+     },
+     {
+      "id": "mr_darcy",
+      "name": "Mr Darcy",
+      "portrait": "f53a9266-51da-4820-bfa9-1ee3f1d34907",
+      "look": "Guarded pride",
+      "side": "right"
+     }
+    ]
+   },
+   "n": 32
+  },
+  {
+   "kind": "player_line",
+   "text": "I find the chandelier equally riveting, Mr Darcy, shall we compare notes.",
+   "screen": {
+    "mode": "large_dialogue",
+    "shot": null,
+    "image": "cd116929-2809-486b-852f-6a03bb784dd0",
+    "in_frame": [
+     "Arabella Frost",
+     "Mr Darcy"
+    ],
+    "focus": "Arabella Frost",
+    "cast_display": "large",
+    "cast": [
+     {
+      "id": "player",
+      "name": "Arabella Frost",
+      "portrait": "9bd302a5-ab96-4232-b956-6cb7736d0e99",
+      "look": "Cool appraisal",
+      "side": "left"
+     },
+     {
+      "id": "mr_darcy",
+      "name": "Mr Darcy",
+      "portrait": "f53a9266-51da-4820-bfa9-1ee3f1d34907",
+      "look": "Guarded pride",
+      "side": "right"
+     }
+    ]
+   },
+   "n": 33
+  },
+  {
+   "kind": "dialogue",
+   "speaker": "Mr Darcy",
+   "direction": "A short, involuntary sound escapes him; his jaw tightens immediately after.",
+   "line": "\"You have the advantage of me, Miss Frost.\"",
+   "screen": {
+    "mode": "large_dialogue",
+    "shot": null,
+    "image": "cd116929-2809-486b-852f-6a03bb784dd0",
+    "in_frame": [
+     "Arabella Frost",
+     "Mr Darcy"
+    ],
+    "focus": "Arabella Frost",
+    "cast_display": "large",
+    "cast": [
+     {
+      "id": "player",
+      "name": "Arabella Frost",
+      "portrait": "9bd302a5-ab96-4232-b956-6cb7736d0e99",
+      "look": "Cool appraisal",
+      "side": "left"
+     },
+     {
+      "id": "mr_darcy",
+      "name": "Mr Darcy",
+      "portrait": "f53a9266-51da-4820-bfa9-1ee3f1d34907",
+      "look": "Guarded pride",
+      "side": "right"
+     }
+    ]
+   },
+   "n": 34
+  },
+  {
+   "kind": "narration",
+   "text": "The laugh breaks free, brief, unguarded, and Mr Darcy goes quite still, as if surprised by his own treason.",
+   "screen": {
+    "mode": "large_dialogue",
+    "shot": null,
+    "image": "cd116929-2809-486b-852f-6a03bb784dd0",
+    "in_frame": [
+     "Arabella Frost",
+     "Mr Darcy"
+    ],
+    "focus": "Arabella Frost",
+    "cast_display": "large",
+    "cast": [
+     {
+      "id": "player",
+      "name": "Arabella Frost",
+      "portrait": "9bd302a5-ab96-4232-b956-6cb7736d0e99",
+      "look": "Cool appraisal",
+      "side": "left"
+     },
+     {
+      "id": "mr_darcy",
+      "name": "Mr Darcy",
+      "portrait": "f53a9266-51da-4820-bfa9-1ee3f1d34907",
+      "look": "Guarded pride",
+      "side": "right"
+     }
+    ]
+   },
+   "n": 35
+  },
+  {
+   "kind": "choice",
+   "turn": 7,
+   "options": [
+    {
+     "text": "Only in this room, Mr Darcy; elsewhere I suspect you lead.",
+     "tag": null,
+     "kind": "wildcard"
+    },
+    {
+     "text": "An advantage implies you were not already looking down.",
+     "tag": "Sharpest Wit in the Room",
+     "kind": "character"
+    },
+    {
+     "text": "I confess I am still learning which corners here are safe.",
+     "tag": null,
+     "kind": "discovery"
+    },
+    {
+     "text": "She turns her face toward the dancers and is still.",
+     "tag": null,
+     "kind": "wildcard"
+    }
+   ],
+   "picked": 2,
+   "screen": {
+    "mode": "large_dialogue",
+    "shot": null,
+    "image": "cd116929-2809-486b-852f-6a03bb784dd0",
+    "in_frame": [
+     "Arabella Frost",
+     "Mr Darcy"
+    ],
+    "focus": "Arabella Frost",
+    "cast_display": "large",
+    "cast": [
+     {
+      "id": "player",
+      "name": "Arabella Frost",
+      "portrait": "9bd302a5-ab96-4232-b956-6cb7736d0e99",
+      "look": "Cool appraisal",
+      "side": "left"
+     },
+     {
+      "id": "mr_darcy",
+      "name": "Mr Darcy",
+      "portrait": "f53a9266-51da-4820-bfa9-1ee3f1d34907",
+      "look": "Guarded pride",
+      "side": "right"
+     }
+    ]
+   },
+   "fired": [
+    "made_him_laugh"
+   ],
+   "n": 36
+  },
+  {
+   "kind": "player_line",
+   "text": "I confess I am still learning which corners here are safe.",
+   "screen": {
+    "mode": "large_dialogue",
+    "shot": null,
+    "image": "cd116929-2809-486b-852f-6a03bb784dd0",
+    "in_frame": [
+     "Arabella Frost",
+     "Mr Darcy"
+    ],
+    "focus": "Arabella Frost",
+    "cast_display": "large",
+    "cast": [
+     {
+      "id": "player",
+      "name": "Arabella Frost",
+      "portrait": "9bd302a5-ab96-4232-b956-6cb7736d0e99",
+      "look": "Cool appraisal",
+      "side": "left"
+     },
+     {
+      "id": "mr_darcy",
+      "name": "Mr Darcy",
+      "portrait": "f53a9266-51da-4820-bfa9-1ee3f1d34907",
+      "look": "Guarded pride",
+      "side": "right"
+     }
+    ]
+   },
+   "n": 37
+  },
+  {
+   "kind": "dialogue",
+   "speaker": "Mr Darcy",
+   "direction": "Something in his posture shifts, almost imperceptibly, at the word safe.",
+   "line": "\"My sister is sixteen. She would sooner face a regiment than a room like this one.\"",
+   "screen": {
+    "mode": "large_dialogue",
+    "shot": null,
+    "image": "cd116929-2809-486b-852f-6a03bb784dd0",
+    "in_frame": [
+     "Mr Darcy",
+     "Arabella Frost"
+    ],
+    "focus": "Mr Darcy",
+    "cast_display": "large",
+    "cast": [
+     {
+      "id": "player",
+      "name": "Arabella Frost",
+      "portrait": "9bd302a5-ab96-4232-b956-6cb7736d0e99",
+      "look": "Cool appraisal",
+      "side": "left"
+     },
+     {
+      "id": "mr_darcy",
+      "name": "Mr Darcy",
+      "portrait": "4f57ff60-b7b9-4629-b8b7-e6dd809fad51",
+      "look": "Exposed, still",
+      "side": "right"
+     }
+    ]
+   },
+   "n": 38
+  },
+  {
+   "kind": "discovery",
+   "text": "There is someone he is gentle with, and he has just shown her.",
+   "n": 39
+  },
+  {
+   "kind": "dialogue",
+   "speaker": "Mr Darcy",
+   "direction": null,
+   "line": "\"I was not so different, once, and have perhaps not changed as much as I suppose.\"",
+   "screen": {
+    "mode": "large_dialogue",
+    "shot": null,
+    "image": "cd116929-2809-486b-852f-6a03bb784dd0",
+    "in_frame": [
+     "Mr Darcy"
+    ],
+    "focus": "Mr Darcy",
+    "cast_display": "large",
+    "cast": [
+     {
+      "id": "player",
+      "name": "Arabella Frost",
+      "portrait": "ee7a658a-b284-4ac8-a5a3-28fece763e53",
+      "look": "Searching",
+      "side": "left"
+     },
+     {
+      "id": "mr_darcy",
+      "name": "Mr Darcy",
+      "portrait": "4f57ff60-b7b9-4629-b8b7-e6dd809fad51",
+      "look": "Exposed, still",
+      "side": "right"
+     }
+    ]
+   },
+   "n": 40
+  },
+  {
+   "kind": "dialogue",
+   "speaker": "Mr Darcy",
+   "direction": "He looks away, toward the middle of the room, as if the admission had not been made at all.",
+   "line": null,
+   "screen": {
+    "mode": "large_dialogue",
+    "shot": null,
+    "image": "cd116929-2809-486b-852f-6a03bb784dd0",
+    "in_frame": [
+     "Mr Darcy"
+    ],
+    "focus": "Mr Darcy",
+    "cast_display": "large",
+    "cast": [
+     {
+      "id": "player",
+      "name": "Arabella Frost",
+      "portrait": "ee7a658a-b284-4ac8-a5a3-28fece763e53",
+      "look": "Searching",
+      "side": "left"
+     },
+     {
+      "id": "mr_darcy",
+      "name": "Mr Darcy",
+      "portrait": "4f57ff60-b7b9-4629-b8b7-e6dd809fad51",
+      "look": "Exposed, still",
+      "side": "right"
+     }
+    ]
+   },
+   "n": 41
+  },
+  {
+   "kind": "choice",
+   "turn": 8,
+   "options": [
+    {
+     "text": "Then perhaps the room is not entirely beneath you after all.",
+     "tag": "Sharpest Wit in the Room",
+     "kind": "character"
+    },
+    {
+     "text": "Looking away does not unsay it, Mr Darcy.",
+     "tag": "weakness",
+     "kind": "character"
+    },
+    {
+     "text": "That corner of young ladies has watched you all evening, I think.",
+     "tag": null,
+     "kind": "consequence"
+    },
+    {
+     "text": "She holds perfectly still, watching him decide where to look.",
+     "tag": "weakness",
+     "kind": "character"
+    }
+   ],
+   "picked": 2,
+   "screen": {
+    "mode": "large_dialogue",
+    "shot": null,
+    "image": "cd116929-2809-486b-852f-6a03bb784dd0",
+    "in_frame": [
+     "Mr Darcy"
+    ],
+    "focus": "Mr Darcy",
+    "cast_display": "large",
+    "cast": [
+     {
+      "id": "player",
+      "name": "Arabella Frost",
+      "portrait": "ee7a658a-b284-4ac8-a5a3-28fece763e53",
+      "look": "Searching",
+      "side": "left"
+     },
+     {
+      "id": "mr_darcy",
+      "name": "Mr Darcy",
+      "portrait": "4f57ff60-b7b9-4629-b8b7-e6dd809fad51",
+      "look": "Exposed, still",
+      "side": "right"
+     }
+    ]
+   },
+   "n": 42
+  },
+  {
+   "kind": "player_line",
+   "text": "That corner of young ladies has watched you all evening, I think.",
+   "screen": {
+    "mode": "large_dialogue",
+    "shot": null,
+    "image": "cd116929-2809-486b-852f-6a03bb784dd0",
+    "in_frame": [
+     "Arabella Frost",
+     "Mr Darcy"
+    ],
+    "focus": "Arabella Frost",
+    "cast_display": "large",
+    "cast": [
+     {
+      "id": "player",
+      "name": "Arabella Frost",
+      "portrait": "ee7a658a-b284-4ac8-a5a3-28fece763e53",
+      "look": "Searching",
+      "side": "left"
+     },
+     {
+      "id": "mr_darcy",
+      "name": "Mr Darcy",
+      "portrait": "4f57ff60-b7b9-4629-b8b7-e6dd809fad51",
+      "look": "Exposed, still",
+      "side": "right"
+     }
+    ]
+   },
+   "n": 43
+  },
+  {
+   "kind": "dialogue",
+   "speaker": "Mr Darcy",
+   "direction": "He glances, just once, toward the corner, then looks away.",
+   "line": "\"I did not come here to be looked at.\"",
+   "screen": {
+    "mode": "large_dialogue",
+    "shot": null,
+    "image": "cd116929-2809-486b-852f-6a03bb784dd0",
+    "in_frame": [
+     "Arabella Frost",
+     "Mr Darcy"
+    ],
+    "focus": "Arabella Frost",
+    "cast_display": "large",
+    "cast": [
+     {
+      "id": "player",
+      "name": "Arabella Frost",
+      "portrait": "ee7a658a-b284-4ac8-a5a3-28fece763e53",
+      "look": "Searching",
+      "side": "left"
+     },
+     {
+      "id": "mr_darcy",
+      "name": "Mr Darcy",
+      "portrait": "4f57ff60-b7b9-4629-b8b7-e6dd809fad51",
+      "look": "Exposed, still",
+      "side": "right"
+     }
+    ]
+   },
+   "n": 44
+  },
+  {
+   "kind": "narration",
+   "text": "Charlotte, across the room, lowers her fan and taps it once against her palm, the wager, silently renewed.",
+   "screen": {
+    "mode": "large_dialogue",
+    "shot": null,
+    "image": "cd116929-2809-486b-852f-6a03bb784dd0",
+    "in_frame": [
+     "Arabella Frost",
+     "Mr Darcy"
+    ],
+    "focus": "Arabella Frost",
+    "cast_display": "large",
+    "cast": [
+     {
+      "id": "player",
+      "name": "Arabella Frost",
+      "portrait": "ee7a658a-b284-4ac8-a5a3-28fece763e53",
+      "look": "Searching",
+      "side": "left"
+     },
+     {
+      "id": "mr_darcy",
+      "name": "Mr Darcy",
+      "portrait": "4f57ff60-b7b9-4629-b8b7-e6dd809fad51",
+      "look": "Exposed, still",
+      "side": "right"
+     }
+    ]
+   },
+   "fired": [
+    "named_his_audience"
+   ],
+   "n": 45
+  },
+  {
+   "kind": "choice",
+   "turn": 9,
+   "options": [
+    {
+     "text": "Yet here you stand, Mr Darcy, remarkably visible for a man unwilling.",
+     "tag": "Sharpest Wit in the Room",
+     "kind": "character"
+    },
+    {
+     "text": "I did not come to be looked at either, and yet.",
+     "tag": "Small Fortune, Large Spirit",
+     "kind": "character"
+    },
+    {
+     "text": "Honestly, even the chandelier seems to be performing tonight.",
+     "tag": null,
+     "kind": "consequence"
+    },
+    {
+     "text": "She lets the silence sit, her eyes level, her expression entirely composed.",
+     "tag": null,
+     "kind": "wildcard"
+    }
+   ],
+   "picked": 2,
+   "screen": {
+    "mode": "large_dialogue",
+    "shot": null,
+    "image": "cd116929-2809-486b-852f-6a03bb784dd0",
+    "in_frame": [
+     "Arabella Frost",
+     "Mr Darcy"
+    ],
+    "focus": "Arabella Frost",
+    "cast_display": "large",
+    "cast": [
+     {
+      "id": "player",
+      "name": "Arabella Frost",
+      "portrait": "ee7a658a-b284-4ac8-a5a3-28fece763e53",
+      "look": "Searching",
+      "side": "left"
+     },
+     {
+      "id": "mr_darcy",
+      "name": "Mr Darcy",
+      "portrait": "4f57ff60-b7b9-4629-b8b7-e6dd809fad51",
+      "look": "Exposed, still",
+      "side": "right"
+     }
+    ]
+   },
+   "fired": [
+    "charlotte_across_the_room"
+   ],
+   "n": 46
+  },
+  {
+   "kind": "player_line",
+   "text": "Honestly, even the chandelier seems to be performing tonight.",
+   "screen": {
+    "mode": "large_dialogue",
+    "shot": null,
+    "image": "cd116929-2809-486b-852f-6a03bb784dd0",
+    "in_frame": [
+     "Arabella Frost",
+     "Mr Darcy"
+    ],
+    "focus": "Arabella Frost",
+    "cast_display": "large",
+    "cast": [
+     {
+      "id": "player",
+      "name": "Arabella Frost",
+      "portrait": "ee7a658a-b284-4ac8-a5a3-28fece763e53",
+      "look": "Searching",
+      "side": "left"
+     },
+     {
+      "id": "mr_darcy",
+      "name": "Mr Darcy",
+      "portrait": "4f57ff60-b7b9-4629-b8b7-e6dd809fad51",
+      "look": "Exposed, still",
+      "side": "right"
+     }
+    ]
+   },
+   "n": 47
+  },
+  {
+   "kind": "dialogue",
+   "speaker": "Mr Darcy",
+   "direction": "The corner of his mouth moves, just once.",
+   "line": "\"Sir William is waving at us. He believes he has accomplished something.\"",
+   "screen": {
+    "mode": "large_dialogue",
+    "shot": null,
+    "image": "cd116929-2809-486b-852f-6a03bb784dd0",
+    "in_frame": [
+     "Arabella Frost",
+     "Mr Darcy"
+    ],
+    "focus": "Arabella Frost",
+    "cast_display": "large",
+    "cast": [
+     {
+      "id": "player",
+      "name": "Arabella Frost",
+      "portrait": "ee7a658a-b284-4ac8-a5a3-28fece763e53",
+      "look": "Searching",
+      "side": "left"
+     },
+     {
+      "id": "mr_darcy",
+      "name": "Mr Darcy",
+      "portrait": "4f57ff60-b7b9-4629-b8b7-e6dd809fad51",
+      "look": "Exposed, still",
+      "side": "right"
+     }
+    ]
+   },
+   "n": 48
+  },
+  {
+   "kind": "narration",
+   "text": "Sir William's wave grows more emphatic, his satisfaction visible from thirty feet.",
+   "screen": {
+    "mode": "large_dialogue",
+    "shot": null,
+    "image": "cd116929-2809-486b-852f-6a03bb784dd0",
+    "in_frame": [
+     "Arabella Frost",
+     "Mr Darcy"
+    ],
+    "focus": "Arabella Frost",
+    "cast_display": "large",
+    "cast": [
+     {
+      "id": "player",
+      "name": "Arabella Frost",
+      "portrait": "ee7a658a-b284-4ac8-a5a3-28fece763e53",
+      "look": "Searching",
+      "side": "left"
+     },
+     {
+      "id": "mr_darcy",
+      "name": "Mr Darcy",
+      "portrait": "4f57ff60-b7b9-4629-b8b7-e6dd809fad51",
+      "look": "Exposed, still",
+      "side": "right"
+     }
+    ]
+   },
+   "n": 49
+  },
+  {
+   "kind": "narration",
+   "text": "The set is called; couples stir; Mr Darcy's gaze moves once to the forming line, then back to her.",
+   "screen": {
+    "mode": "large_dialogue",
+    "shot": null,
+    "image": "cd116929-2809-486b-852f-6a03bb784dd0",
+    "in_frame": [
+     "Arabella Frost",
+     "Mr Darcy"
+    ],
+    "focus": "Arabella Frost",
+    "cast_display": "large",
+    "cast": [
+     {
+      "id": "player",
+      "name": "Arabella Frost",
+      "portrait": "ee7a658a-b284-4ac8-a5a3-28fece763e53",
+      "look": "Searching",
+      "side": "left"
+     },
+     {
+      "id": "mr_darcy",
+      "name": "Mr Darcy",
+      "portrait": "4f57ff60-b7b9-4629-b8b7-e6dd809fad51",
+      "look": "Exposed, still",
+      "side": "right"
+     }
+    ]
+   },
+   "fired": [
+    "mocked_the_room_together"
+   ],
+   "n": 50
+  },
+  {
+   "kind": "choice",
+   "turn": 10,
+   "options": [
+    {
+     "text": "Sir William always believes he has accomplished something, and usually has.",
+     "tag": null,
+     "kind": "wildcard"
+    },
+    {
+     "text": "You looked at the line just now, do not pretend you did not.",
+     "tag": "Sharpest Wit in the Room",
+     "kind": "character"
+    },
+    {
+     "text": "I find these rooms perfectly easy to stand in, Mr Darcy.",
+     "tag": "Small Fortune, Large Spirit",
+     "kind": "character"
+    },
+    {
+     "text": "Prove, then, that the Meryton rooms do not frighten you.",
+     "tag": null,
+     "kind": "consequence"
+    }
+   ],
+   "picked": 3,
+   "screen": {
+    "mode": "large_dialogue",
+    "shot": null,
+    "image": "cd116929-2809-486b-852f-6a03bb784dd0",
+    "in_frame": [
+     "Arabella Frost",
+     "Mr Darcy"
+    ],
+    "focus": "Arabella Frost",
+    "cast_display": "large",
+    "cast": [
+     {
+      "id": "player",
+      "name": "Arabella Frost",
+      "portrait": "ee7a658a-b284-4ac8-a5a3-28fece763e53",
+      "look": "Searching",
+      "side": "left"
+     },
+     {
+      "id": "mr_darcy",
+      "name": "Mr Darcy",
+      "portrait": "4f57ff60-b7b9-4629-b8b7-e6dd809fad51",
+      "look": "Exposed, still",
+      "side": "right"
+     }
+    ]
+   },
+   "fired": [
+    "he_thinks_of_asking"
+   ],
+   "n": 51
+  },
+  {
+   "kind": "player_line",
+   "text": "Prove, then, that the Meryton rooms do not frighten you.",
+   "screen": {
+    "mode": "large_dialogue",
+    "shot": null,
+    "image": "cd116929-2809-486b-852f-6a03bb784dd0",
+    "in_frame": [
+     "Arabella Frost",
+     "Mr Darcy"
+    ],
+    "focus": "Arabella Frost",
+    "cast_display": "large",
+    "cast": [
+     {
+      "id": "player",
+      "name": "Arabella Frost",
+      "portrait": "ee7a658a-b284-4ac8-a5a3-28fece763e53",
+      "look": "Searching",
+      "side": "left"
+     },
+     {
+      "id": "mr_darcy",
+      "name": "Mr Darcy",
+      "portrait": "4f57ff60-b7b9-4629-b8b7-e6dd809fad51",
+      "look": "Exposed, still",
+      "side": "right"
+     }
+    ]
+   },
+   "n": 52
+  },
+  {
+   "kind": "dialogue",
+   "speaker": "Mr Darcy",
+   "direction": "He does not look at the floor, nor at the forming set.",
+   "line": "\"They do not. I remain, as you see, entirely unmoved.\"",
+   "screen": {
+    "mode": "large_dialogue",
+    "shot": null,
+    "image": "cd116929-2809-486b-852f-6a03bb784dd0",
+    "in_frame": [
+     "Arabella Frost",
+     "Mr Darcy"
+    ],
+    "focus": "Arabella Frost",
+    "cast_display": "large",
+    "cast": [
+     {
+      "id": "player",
+      "name": "Arabella Frost",
+      "portrait": "ee7a658a-b284-4ac8-a5a3-28fece763e53",
+      "look": "Searching",
+      "side": "left"
+     },
+     {
+      "id": "mr_darcy",
+      "name": "Mr Darcy",
+      "portrait": "4f57ff60-b7b9-4629-b8b7-e6dd809fad51",
+      "look": "Exposed, still",
+      "side": "right"
+     }
+    ]
+   },
+   "n": 53
+  },
+  {
+   "kind": "film",
+   "title": "Captain Carter cuts in",
+   "video": "b32481ef-f6bb-49a3-b06a-4096cc5cc49d",
+   "consequence": "carter_cuts_in",
+   "fired": [
+    "dared_him"
+   ],
+   "n": 54
+  },
+  {
+   "kind": "authored_choice",
+   "prompt": "Captain Carter holds out his hand.",
+   "options": [
+    {
+     "id": "take_carters_hand",
+     "text": "Take Captain Carter's hand"
+    },
+    {
+     "id": "decline_and_stay",
+     "text": "Thank Captain Carter, and stay where you are"
+    },
+    {
+     "id": "look_to_darcy",
+     "text": "Look at Mr Darcy, and say nothing"
+    }
+   ],
+   "picked": 2,
+   "screen": {
+    "mode": "large_dialogue",
+    "shot": null,
+    "image": "cd116929-2809-486b-852f-6a03bb784dd0",
+    "in_frame": [
+     "Arabella Frost",
+     "Mr Darcy"
+    ],
+    "focus": "Arabella Frost",
+    "cast_display": "large",
+    "cast": [
+     {
+      "id": "player",
+      "name": "Arabella Frost",
+      "portrait": "ee7a658a-b284-4ac8-a5a3-28fece763e53",
+      "look": "Searching",
+      "side": "left"
+     },
+     {
+      "id": "mr_darcy",
+      "name": "Mr Darcy",
+      "portrait": "4f57ff60-b7b9-4629-b8b7-e6dd809fad51",
+      "look": "Exposed, still",
+      "side": "right"
+     }
+    ]
+   },
+   "n": 55
+  },
+  {
+   "kind": "player_line",
+   "text": "Look at Mr Darcy, and say nothing",
+   "screen": {
+    "mode": "small_dialogue",
+    "shot": "The next set forming",
+    "image": "b7b09e88-8900-4b56-8aa1-c1fd879f82ae",
+    "in_frame": [
+     "Arabella Frost",
+     "Mr Darcy",
+     "Captain Henry Carter"
+    ],
+    "focus": "Arabella Frost",
+    "cast_display": "small",
+    "cast": [
+     {
+      "id": "player",
+      "name": "Arabella Frost",
+      "portrait": "ee7a658a-b284-4ac8-a5a3-28fece763e53",
+      "look": "Searching",
+      "side": "left"
+     },
+     {
+      "id": "mr_darcy",
+      "name": "Mr Darcy",
+      "portrait": "4f57ff60-b7b9-4629-b8b7-e6dd809fad51",
+      "look": "Exposed, still",
+      "side": "right"
+     }
+    ]
+   },
+   "n": 56
+  },
+  {
+   "kind": "dialogue",
+   "speaker": "Mr Darcy",
+   "direction": "He turns to Captain Carter, unhurried. He extends his hand to Arabella Frost.",
+   "line": "\"The lady is engaged to me for this set, Carter.\"",
+   "screen": {
+    "mode": "small_dialogue",
+    "shot": "The watchers",
+    "image": "23a8adae-c8cf-40a8-ae5b-bd6be869def0",
+    "in_frame": [
+     "Mr Darcy",
+     "Arabella Frost",
+     "Captain Henry Carter"
+    ],
+    "focus": "Mr Darcy",
+    "cast_display": "small",
+    "cast": [
+     {
+      "id": "player",
+      "name": "Arabella Frost",
+      "portrait": "ee7a658a-b284-4ac8-a5a3-28fece763e53",
+      "look": "Searching",
+      "side": "left"
+     },
+     {
+      "id": "mr_darcy",
+      "name": "Mr Darcy",
+      "portrait": "95b37f68-e8a6-403a-8efe-fd33f5ef85a7",
+      "look": "Intent",
+      "side": "right"
+     }
+    ]
+   },
+   "n": 57
+  },
+  {
+   "kind": "film",
+   "title": "Mr Darcy dances",
+   "video": "573fceaf-11bb-4db5-8fec-c9c21b683ea0",
+   "consequence": "carter_cuts_in",
+   "n": 58
+  },
+  {
+   "kind": "narration",
+   "text": "He leads you down the whole length of the set without a word, every figure correct, and the room turns to watch Mr Darcy dance.",
+   "screen": {
+    "mode": "narrative",
+    "shot": "The quiet by the wall",
+    "image": "fb90543e-9cf2-4e3f-a444-0c7f27346306",
+    "in_frame": [
+     "Arabella Frost",
+     "Mr Darcy"
+    ],
+    "focus": "Arabella Frost",
+    "cast_display": "hidden",
+    "cast": [
+     {
+      "id": "player",
+      "name": "Arabella Frost",
+      "portrait": "0d3624aa-59f0-40e4-a793-211035f5b2d3",
+      "look": "Attentive stillness",
+      "side": "left"
+     },
+     {
+      "id": "mr_darcy",
+      "name": "Mr Darcy",
+      "portrait": "95b37f68-e8a6-403a-8efe-fd33f5ef85a7",
+      "look": "Intent",
+      "side": "right"
+     }
+    ]
+   },
+   "n": 59
+  },
+  {
+   "kind": "narration",
+   "text": "The last figure ends. He bows, and does not let go of your hand quite at once.",
+   "screen": {
+    "mode": "narrative",
+    "shot": "The quiet by the wall",
+    "image": "fb90543e-9cf2-4e3f-a444-0c7f27346306",
+    "in_frame": [
+     "Arabella Frost",
+     "Mr Darcy"
+    ],
+    "focus": "Arabella Frost",
+    "cast_display": "hidden",
+    "cast": [
+     {
+      "id": "player",
+      "name": "Arabella Frost",
+      "portrait": "0d3624aa-59f0-40e4-a793-211035f5b2d3",
+      "look": "Attentive stillness",
+      "side": "left"
+     },
+     {
+      "id": "mr_darcy",
+      "name": "Mr Darcy",
+      "portrait": "95b37f68-e8a6-403a-8efe-fd33f5ef85a7",
+      "look": "Intent",
+      "side": "right"
+     }
+    ]
+   },
+   "fired": [
+    "carter_cuts_in"
+   ],
+   "n": 60
+  },
+  {
+   "kind": "ending",
+   "title": "He Claimed the Set",
+   "text": "He did not ask. He told Captain Carter you were engaged to him and led you out before you could say otherwise. Charlotte will have to pay. You are not sure yet what it cost him.",
+   "image": "3f1d2632-9fa8-43e6-8e49-c9e584d259d1",
+   "n": 61
+  },
+  {
+   "kind": "growth",
+   "identity": "Sharpest Wit in the Room  ·  Small Fortune, Large Spirit",
+   "moved": [
+    {
+     "theme": "Sharpest Wit in the Room",
+     "track": "growth",
+     "why": "Arabella Frost answered Darcy's condescension with a cooler line at every turn — catching him looking, drawing an involuntary laugh, naming his audience — and the cumulative effect was that he claimed the set unprompted, meaning her wit did not merely deflect but compelled, proving the theme at its fullest."
+    }
+   ],
+   "n": 62
+  }
+ ],
+ "media_files": {
+  "03b4fcfc-a791-4084-a357-7eeecfea7054": "03b4fcfc-a791-4084-a357-7eeecfea7054.jpg",
+  "0d3624aa-59f0-40e4-a793-211035f5b2d3": "0d3624aa-59f0-40e4-a793-211035f5b2d3.jpg",
+  "23a8adae-c8cf-40a8-ae5b-bd6be869def0": "23a8adae-c8cf-40a8-ae5b-bd6be869def0.jpg",
+  "2bd5670c-ecf3-4bcc-8cd3-afd13c7bc9f0": "2bd5670c-ecf3-4bcc-8cd3-afd13c7bc9f0.png",
+  "3bfb67c7-8b6d-469f-bf41-21d47ce1d402": "3bfb67c7-8b6d-469f-bf41-21d47ce1d402.jpg",
+  "3f1d2632-9fa8-43e6-8e49-c9e584d259d1": "3f1d2632-9fa8-43e6-8e49-c9e584d259d1.jpg",
+  "4197995b-0524-4bb6-b3c9-f9eb84c97bfa": "4197995b-0524-4bb6-b3c9-f9eb84c97bfa.png",
+  "4830152f-ac44-462c-a723-01f5489eaed6": "4830152f-ac44-462c-a723-01f5489eaed6.jpg",
+  "4f57ff60-b7b9-4629-b8b7-e6dd809fad51": "4f57ff60-b7b9-4629-b8b7-e6dd809fad51.jpg",
+  "55a0edb3-36f2-4d1b-9358-49bd4d39fa06": "55a0edb3-36f2-4d1b-9358-49bd4d39fa06.png",
+  "573fceaf-11bb-4db5-8fec-c9c21b683ea0": "573fceaf-11bb-4db5-8fec-c9c21b683ea0.mp4",
+  "848e1e60-cec8-4d43-ab71-2fda012ba6ff": "848e1e60-cec8-4d43-ab71-2fda012ba6ff.jpg",
+  "95b37f68-e8a6-403a-8efe-fd33f5ef85a7": "95b37f68-e8a6-403a-8efe-fd33f5ef85a7.jpg",
+  "9bd302a5-ab96-4232-b956-6cb7736d0e99": "9bd302a5-ab96-4232-b956-6cb7736d0e99.jpg",
+  "a9717c79-3187-4d0c-84da-07dd6e3c750c": "a9717c79-3187-4d0c-84da-07dd6e3c750c.jpg",
+  "b32481ef-f6bb-49a3-b06a-4096cc5cc49d": "b32481ef-f6bb-49a3-b06a-4096cc5cc49d.mp4",
+  "b7b09e88-8900-4b56-8aa1-c1fd879f82ae": "b7b09e88-8900-4b56-8aa1-c1fd879f82ae.jpg",
+  "c67e5706-a7eb-4d90-a316-677dd593cd0e": "c67e5706-a7eb-4d90-a316-677dd593cd0e.mp4",
+  "c9fe046c-0c7e-4364-8e21-ebbd050ea95e": "c9fe046c-0c7e-4364-8e21-ebbd050ea95e.jpg",
+  "cd116929-2809-486b-852f-6a03bb784dd0": "cd116929-2809-486b-852f-6a03bb784dd0.jpg",
+  "d8b6dfb6-41ee-4d61-87b4-0ca95e017a3f": "d8b6dfb6-41ee-4d61-87b4-0ca95e017a3f.mp4",
+  "ee7a658a-b284-4ac8-a5a3-28fece763e53": "ee7a658a-b284-4ac8-a5a3-28fece763e53.jpg",
+  "f53a9266-51da-4820-bfa9-1ee3f1d34907": "f53a9266-51da-4820-bfa9-1ee3f1d34907.jpg",
+  "fb90543e-9cf2-4e3f-a444-0c7f27346306": "fb90543e-9cf2-4e3f-a444-0c7f27346306.jpg"
+ }
+}
