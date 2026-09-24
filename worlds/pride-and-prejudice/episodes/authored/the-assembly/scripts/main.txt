@@ -110,6 +110,7 @@ Darcy: Hertfordshire sets a modest ceiling, Miss Frost. I wonder if you find it 
 Darcy: Sir William's superlatives seldom disappoint. In your case, they have not misled him.
 
 // --- Turn 4 · the ceiling ---
+[pose:darcy=guarded]
 [ui:multi]
 (Choice:3)
 Arabella: Then Sir William and I are, for once, in perfect agreement. [trait: Sharpest Wit in the Room]
@@ -182,6 +183,7 @@ Narrative: The laugh breaks free, brief, unguarded, and Mr Darcy goes quite stil
 (Memory: darcy | She made him laugh at the Meryton assembly, before he had decided to like anything in it.)
 
 // --- Turn 7 · safe corners ---
+[pose:darcy=exposed]
 [ui:multi]
 (Choice:3)
 Arabella: Only in this room, Mr Darcy; elsewhere I suspect you lead.
@@ -292,17 +294,17 @@ Arabella: Thank Captain Carter, and stay where I am.
 Arabella: Look at Mr Darcy, and say nothing.
 
 (IfChoice:0)
-  [bg:cutscene=as_watchers.jpg] [ui:cast-small]
+  [bg:explore=assembly] [pose:darcy=intent] [ui:cast-large]
   Narrative: Your hand is half raised when Mr Darcy turns to the Captain, unhurried, and extends his own to you.
   Darcy: The lady is engaged to me for this set, Carter.
 (EndIf)
 (IfChoice:1)
-  [bg:cutscene=as_watchers.jpg] [ui:cast-small]
+  [bg:explore=assembly] [pose:darcy=intent] [ui:cast-large]
   Narrative: The Captain's smile does not move; his eyes go to the man beside you. Mr Darcy turns, unhurried, and extends his hand.
   Darcy: The lady is engaged to me for this set, Carter.
 (EndIf)
 (IfChoice:2)
-  [bg:cutscene=as_watchers.jpg] [ui:cast-small]
+  [bg:explore=assembly] [pose:darcy=intent] [ui:cast-large]
   Narrative: He turns to Captain Carter, unhurried. He extends his hand to you.
   Darcy: The lady is engaged to me for this set, Carter.
 (EndIf)

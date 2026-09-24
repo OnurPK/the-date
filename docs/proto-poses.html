@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Darcy poses — 16-frame test</title>
+<style>
+body{margin:0;background:#0e0d13;color:#fff;font:600 12px/1 Inter,system-ui,sans-serif;min-height:100vh;display:flex;flex-direction:column;align-items:center}
+.stage{position:relative;width:min(100vw,420px);aspect-ratio:9/16;background:url("../worlds/pride-and-prejudice/locations/assembly-rooms-test/explore/assembly.png") center/cover;overflow:hidden}
+.stage img{position:absolute;left:50%;top:0;height:100%;transform:translateX(-50%);filter:drop-shadow(0 20px 24px rgba(0,0,0,.55))}
+.bar{display:flex;flex-wrap:wrap;gap:8px;padding:14px;justify-content:center}
+button{background:#1b1826;color:#e7deff;border:1px solid #3a3450;border-radius:999px;padding:10px 14px;font:700 11px/1 Inter,system-ui,sans-serif;letter-spacing:.08em;text-transform:uppercase}
+button.on{background:#8b7bd8;color:#fff;border-color:#8b7bd8}
+.opts{display:flex;gap:10px;align-items:center;padding:0 14px 14px;color:#9a90b4}
+input[type=range]{width:120px}
+</style></head><body>
+<div class="stage"><img id="fig" alt=""></div>
+<div class="bar" id="bar"></div>
+<div class="opts">fps <input type="range" id="fps" min="4" max="16" value="8"><span id="fpsv">8</span> · <label><input type="checkbox" id="loop"> loop</label> · <span id="info"></span></div>
+<script>
+const BASE='../worlds/pride-and-prejudice/characters/mr_darcy/poses/'; const N=16;
+const POSES=['idle_breath','idle_glance','guarded','guarded_idle','exposed','exposed_idle','intent','intent_idle'];
+const fig=document.getElementById('fig'), bar=document.getElementById('bar'), info=document.getElementById('info');
+const cache={}; function frames(p){ if(!cache[p]){ cache[p]=[]; for(let i=0;i<N;i++){ const im=new Image(); im.src=BASE+p+'/f'+String(i).padStart(2,'0')+'.webp'; cache[p].push(im);} } return cache[p]; }
+POSES.forEach(frames);
+let cur=null, t=null;
+function play(p){ clearInterval(t); cur=p; [...bar.children].forEach(b=>b.classList.toggle('on',b.dataset.p===p)); const fr=frames(p); let k=0; const fps=+document.getElementById('fps').value; const loop=document.getElementById('loop').checked;
+  const step=()=>{ fig.src=fr[k].src; info.textContent=p+' f'+k; k++; if(k>=N){ if(loop||/idle/.test(p)) k=0; else { clearInterval(t); } } };
+  step(); t=setInterval(step,1000/fps); }
+POSES.forEach(p=>{ const b=document.createElement('button'); b.textContent=p.replace('_',' '); b.dataset.p=p; b.onclick=()=>play(p); bar.appendChild(b); });
+document.getElementById('fps').oninput=e=>{ document.getElementById('fpsv').textContent=e.target.value; if(cur) play(cur); };
+play('idle_breath');
+</script></body></html>

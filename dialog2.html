@@ -14212,6 +14212,92 @@ const PRIDE_LABELS = {
 };
 const PRIDE_WORLD_BASE = 'worlds/pride-and-prejudice';
 window.PRIDE_ACTORS = PRIDE_ACTORS;   // expose so the cast stage can map speaker→folder
+// ---- Pose clips: characters/<folder>/poses/<pose>/f00..f15.webp ----
+// Painted onto the big stage (#prideActor) and the cast-small portrait (#focusCharacter)
+// whenever that element currently shows the folder's character. Framing matches
+// appearances/pride.png, so no CSS changes. Expression clips hold their last frame;
+// idle_* clips loop, and a character with idles but no held pose gets a random idle.
+(function(){
+  const N = 16, FPS = 8;
+  // idles: base idles (no expression held). idleFor: idle clips that continue a held expression
+  // (added as they are generated; until then a held expression breathes on its last frames).
+  const POSE_SETS = { mr_darcy: { idles: ['idle_breath', 'idle_glance'], idleFor: { guarded: ['guarded_idle'], exposed: ['exposed_idle'], intent: ['intent_idle'] },
+                                  all: ['guarded', 'exposed', 'intent', 'idle_breath', 'idle_glance', 'guarded_idle', 'exposed_idle', 'intent_idle'] } };
+  const avail = {};   // folder/pose → true|false once probed (does f00.webp exist?)
+  function probe(folder, pose, cb){ const key = folder + '/' + pose; if (key in avail) { cb(avail[key]); return; } const im = new Image(); im.onload = () => { avail[key] = true; cb(true); }; im.onerror = () => { avail[key] = false; cb(false); }; im.src = PRIDE_WORLD_BASE + '/characters/' + folder + '/poses/' + pose + '/f00.webp'; }
+  const PAUSE = () => 1200 + Math.random() * 1600;   // ms held on the last frame between idle loops
+  let timer = null, cur = null;              // cur = {folder, pose, k, loop}
+  window.__pridePoseHeld = window.__pridePoseHeld || {};      // folder → pose held (expression) or chosen idle
+  window.__pridePosePlayed = window.__pridePosePlayed || {};  // folder/pose → true once the expression clip ran
+  const cache = {};
+  function frames(folder, pose){ const key = folder + '/' + pose; if (!cache[key]) { cache[key] = []; for (let i = 0; i < N; i++) { const im = new Image(); im.src = PRIDE_WORLD_BASE + '/characters/' + folder + '/poses/' + pose + '/f' + String(i).padStart(2, '0') + '.webp'; cache[key].push(im); } } return cache[key]; }
+  function targets(folder){
+    const out = [];
+    const st = document.getElementById('prideActor'); if (st && st.classList.contains('active') && st.dataset.poseFolder === folder) out.push(st);
+    const fc = document.getElementById('focusCharacter'); if (fc && fc.classList.contains('show') && fc.dataset.poseFolder === folder) out.push(fc);
+    return out;
+  }
+  function paint(folder, im){ targets(folder).forEach(el => { el.style.backgroundImage = 'url("' + im.src + '")'; }); }
+  function stop(){ if (timer) { clearInterval(timer); clearTimeout(timer); timer = null; } cur = null; }
+  function pickIdle(folder, avoid, list){ const set = POSE_SETS[folder]; if (!set) return null; const pool = list || set.idles; const c = pool.filter(x => x !== avoid); return c[Math.floor(Math.random() * c.length)] || pool[0]; }
+  const isIdle = pose => /idle/.test(pose);
+  function run(folder, pose){
+    stop(); const fr = frames(folder, pose); const loop = isIdle(pose); cur = { folder, pose, k: 0, loop };
+    const step = () => {
+      if (!targets(folder).length) { stop(); return; }            // character left both stages → stop painting
+      paint(folder, fr[cur.k]); cur.k++;
+      if (cur.k >= N) {
+        clearInterval(timer); timer = null;
+        if (loop) {
+          // pause on the last frame, then the next idle of the same family (random)
+          const held = window.__pridePoseHeld[folder]; const set = POSE_SETS[folder];
+          const pool = (held && set.idleFor && set.idleFor[held]) ? set.idleFor[held] : set.idles;
+          timer = setTimeout(() => { timer = null; if (!targets(folder).length) { stop(); return; } run(folder, pickIdle(folder, pose, pool)); }, PAUSE());
+        } else { window.__pridePosePlayed[folder + '/' + pose] = true; hold(folder, pose); }
+      }
+    };
+    step(); timer = setInterval(step, 1000 / FPS);
+  }
+  // Held expression → micro-idle: ping-pong over the clip's last 4 frames, slowly, so he
+  // keeps breathing in the pose instead of freezing on one frame.
+  function hold(folder, pose){
+    stop(); const fr = frames(folder, pose); cur = { folder, pose, k: N - 1, loop: false, hold: true };
+    paint(folder, fr[N - 1]);
+    // Prefer the expression's own idle clip (guarded_idle …) if it exists; otherwise breathe on the last frames.
+    const set = POSE_SETS[folder]; const own = (set && set.idleFor && set.idleFor[pose]) || [];
+    const first = own[0];
+    if (first) { probe(folder, first, ok => { if (!ok) { microIdle(folder, pose); return; } if (cur && cur.folder === folder && cur.pose === pose && cur.hold) timer = setTimeout(() => { timer = null; if (targets(folder).length) run(folder, pickIdle(folder, null, own)); }, PAUSE()); }); }
+    else microIdle(folder, pose);
+  }
+  function microIdle(folder, pose){
+    stop(); const fr = frames(folder, pose); cur = { folder, pose, k: N - 1, loop: false, hold: true }; let dir = -1;
+    const step = () => { if (!targets(folder).length) { stop(); return; } paint(folder, fr[cur.k]); cur.k += dir; if (cur.k <= N - 4 || cur.k >= N - 1) dir = -dir; };
+    step(); timer = setInterval(step, 1000 / 3);
+  }
+  // Called by the stage / cast-small painters after they placed the character.
+  window.pridePoseAttach = function(speaker, el){
+    const folder = PRIDE_ACTORS[speaker] || speaker; const set = POSE_SETS[folder];
+    if (el) el.dataset.poseFolder = folder;
+    if (!set) { if (cur && cur.folder !== folder && !targets(cur.folder).length) stop(); return false; }
+    const held = window.__pridePoseHeld[folder];
+    if (held) {
+      if (isIdle(held)) { if (!(cur && cur.folder === folder && timer)) run(folder, held); }
+      else if (!window.__pridePosePlayed[folder + '/' + held]) { if (!(cur && cur.folder === folder && cur.pose === held && timer)) run(folder, held); }
+      else { if (cur && cur.folder === folder && timer && (cur.pose === held || isIdle(cur.pose))) return true; hold(folder, held); }
+    } else {
+      if (!(cur && cur.folder === folder && cur.loop && timer)) run(folder, pickIdle(folder));   // random idle
+    }
+    return true;
+  };
+  window.pridePosePlay = function(speaker, pose){
+    const folder = PRIDE_ACTORS[speaker] || speaker;
+    if (pose === 'none' || pose === 'off') { delete window.__pridePoseHeld[folder]; if (cur && cur.folder === folder) stop(); if (targets(folder).length) window.pridePoseAttach(speaker); return; }
+    window.__pridePoseHeld[folder] = pose; delete window.__pridePosePlayed[folder + '/' + pose];
+    if (targets(folder).length) run(folder, pose);             // character on screen now → play immediately
+  };
+  window.pridePoseStop = stop;
+  window.pridePosePreload = function(speaker){ const folder = PRIDE_ACTORS[speaker] || speaker; const set = POSE_SETS[folder]; if (set) set.all.forEach(p => frames(folder, p)); };
+})();
 function prideSpritePath(speaker) {
   const folder = PRIDE_ACTORS[speaker];
   if (!folder) return null;
@@ -14323,10 +14409,13 @@ function pridePaintStage(speaker) {
   if (/^s\d[a-z0-9_]*\.(png|jpe?g)$/i.test(_bgNow)) { stageEl.classList.remove('active'); return; }
   const path = prideSpritePath(speaker);
   if (path) {
+    // A held pose (from [pose:speaker=name]) replaces the base sprite for this
+    // speaker: the last frame of an expression clip, or a looping idle.
     stageEl.style.backgroundImage = 'url("' + path + '")';
     stageEl.classList.add('active');
+    try { window.pridePoseAttach && window.pridePoseAttach(speaker, stageEl); } catch (e) {}   // pose clip / random idle if this character has them
   } else {
-    stageEl.classList.remove('active');   // narrative / unknown → empty stage
+    stageEl.classList.remove('active'); stageEl.dataset.poseFolder = '';   // narrative / unknown → empty stage
   }
 }
 
@@ -14614,6 +14703,14 @@ function applyDialogState(updates) {
       currentDialogState.castLayout = null;
       applyUiState(currentDialogState.ui);
     }
+  }
+  if ('pose' in updates && activePack === 'pride') {
+    // [pose:darcy=guarded] → play 16-frame pose on the stage sprite, hold last frame
+    // (expression) or loop (idle_*). [pose:darcy=none] clears it.
+    try {
+      const m = String(updates.pose || '').match(/^\s*([a-z0-9_-]+)\s*=\s*([a-z0-9_-]+)\s*$/i);
+      if (m && typeof window.pridePosePlay === 'function') window.pridePosePlay(m[1].toLowerCase(), m[2].toLowerCase());
+    } catch (e) {}
   }
   if ('cast' in updates) {
     // slot→character map, e.g. "slot1=mrs_bennet slot2=arabella_frost"
@@ -15086,8 +15183,10 @@ function handleCastSmallLine(line) {
   // Show the bottom-left portrait. focus-character keys off c-{speaker}
   // for the background image.
   el.focusCharacter.className = 'focus-character c-' + speaker;
+  el.focusCharacter.style.backgroundImage = '';   // drop any pose frame left by the previous speaker (CSS c-* supplies the base portrait)
   void el.focusCharacter.offsetWidth;
   el.focusCharacter.classList.add('show');
+  try { if (activePack === 'pride' && window.pridePoseAttach) window.pridePoseAttach(speaker, el.focusCharacter); } catch (e) {}
   // Side-effects (cutscene / points) still fire so the script's other
   // directives keep working.
   if (line.cutscene === '__clear__') clearCutscene();
