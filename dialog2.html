@@ -35296,10 +35296,19 @@ body.pe-combat.pe-beat #dialogBox{ opacity:1 !important; transform:none !importa
   let levels = { amb: .55, sfx: .8, music: .6, voice: 1 };
   try { const j = JSON.parse(localStorage.getItem(LS) || '{}'); if (j.levels) levels = Object.assign(levels, j.levels); muted = !!j.muted; } catch (e) {}
   const save = () => { try { localStorage.setItem(LS, JSON.stringify({ levels, muted })); } catch (e) {} };
-  // two looping channels: ambience + music (each: one element at a time, crossfade on change)
-  const amb = { kind: 'amb', el: null, name: null, fade: null }, mus = { kind: 'music', el: null, name: null, fade: null }, amb2 = { kind: 'amb', el: null, name: null, fade: null, mix: 0 };   // amb2: second ambience layer (map forest↔town blend)
-  const vol = (ch) => gain(ch.kind + '.x') * (ch.mix == null ? 1 : ch.mix);
-  const pool = {};   // slot → Audio (sfx one-shots, cloned per play)
+  // ---- Web Audio engine (buffers, not <audio> elements): iOS ignores HTMLMediaElement.volume and glitches on playbackRate,
+  //      so loops (amb / amb2 / music) and one-shots all run through the AudioContext: gain, low-pass and rate are AudioParams. ----
+  let ctx = null, master = null;
+  function ac(){ if (ctx) return ctx; const AC = window.AudioContext || window.webkitAudioContext; if (!AC) return null; ctx = new AC(); master = ctx.createGain(); master.gain.value = muted ? 0 : 1; master.connect(ctx.destination); return ctx; }
+  const bufs = {};
+  function getBuf(url){ if (bufs[url]) return bufs[url]; const c = ac(); if (!c) return Promise.resolve(null);
+    return bufs[url] = fetch(url).then(r => r.arrayBuffer()).then(ab => new Promise((res, rej) => { const p = c.decodeAudioData(ab, res, rej); if (p && p.then) p.then(res, rej); })).catch(() => { delete bufs[url]; return null; }); }
+  const now = () => (ctx ? ctx.currentTime : 0);
+  function ramp(param, v, ms){ try { const t = now(); param.cancelScheduledValues(t); param.setValueAtTime(param.value, t); param.linearRampToValueAtTime(v, t + Math.max(.01, ms / 1000)); } catch (e) { try { param.value = v; } catch (x) {} } }
+  function rampExp(param, v, ms){ try { const t = now(); param.cancelScheduledValues(t); param.setValueAtTime(Math.max(20, param.value), t); param.exponentialRampToValueAtTime(Math.max(20, v), t + Math.max(.01, ms / 1000)); } catch (e) { try { param.value = v; } catch (x) {} } }
+  // three looping channels: ambience, a second ambience layer (map forest↔town blend) and music
+  const amb = { kind: 'amb', name: null, slot: null, src: null, g: null, lp: null, mix: 1 }, amb2 = { kind: 'amb', name: null, slot: null, src: null, g: null, lp: null, mix: 0 }, mus = { kind: 'music', name: null, slot: null, src: null, g: null, lp: null, mix: 1 };
+  const CH = [amb, amb2, mus];
   function load(force){ if (M && !force) return Promise.resolve(M); if (loading && !force) return loading;
     loading = fetch(BASE + 'manifest.json' + (force ? '?v=' + Date.now() : ''), { cache: 'no-store' }).then(r => r.json()).then(j => { M = j; if (j.levels) { Object.keys(j.levels).forEach(k => { if (levels[k] == null) levels[k] = j.levels[k]; }); } tell(); return M; }).catch(() => (M = M || { slots: {}, hooks: {} }));
     return loading; }
@@ -35308,46 +35317,40 @@ body.pe-combat.pe-beat #dialogBox{ opacity:1 !important; transform:none !importa
     if (id === 'random' || id === '*' || (id && id.indexOf(',') > -1)) { const pool = (id === 'random' || id === '*') ? Object.keys(s.variants) : id.split(',').map(x => x.trim()).filter(x => s.variants[x]); id = pool[Math.floor(Math.random() * pool.length)]; }
     const v = s.variants[id]; return v ? BASE + v.file : null; }
   function kindOf(slot){ return String(slot).split('.')[0]; }
-  // ducking: while a voice line plays, amb/music sit at DUCK× their level (smooth in/out)
-  const DUCK = .55; let duck = 1, duckRaf = null;
-  let focusK = 1;   // choice focus: music/amb sink (volume × focusK, low-pass, slower)
-  function gain(slot){ const k = kindOf(slot); const g = muted ? 0 : (levels[k] != null ? levels[k] : .8); return (k === 'amb' || k === 'music') ? g * duck * focusK : g; }
-  function duckTo(target, ms){ if (duckRaf) cancelAnimationFrame(duckRaf); const from = duck, t0 = performance.now();
-    const step = () => { const k = Math.min(1, (performance.now() - t0) / ms); duck = from + (target - from) * k;
-      [amb, amb2, mus].forEach(ch => { if (ch.el && !ch.fade) ch.el.volume = vol(ch); });
-      duckRaf = k < 1 ? requestAnimationFrame(step) : null; }; step(); }
-  // iOS: audio can only start after a user gesture. First pointerdown creates/unlocks.
-  // ---- choice focus ("underwater"): each loop element runs through a low-pass filter; on a choice the cutoff sinks, the tempo slows and the level drops ----
-  let ctx = null; const FOCUS = { gain: .62, cutoff: 520, rate: .86, inMs: 900, outMs: 700 };
-  function wire(el){ try { if (!ctx) { const AC = window.AudioContext || window.webkitAudioContext; if (!AC) return; ctx = new AC(); } const src = ctx.createMediaElementSource(el); const lp = ctx.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = focusOn ? FOCUS.cutoff : 20000; lp.Q.value = .8; src.connect(lp); lp.connect(ctx.destination); el._lp = lp; el.preservesPitch = false; el.mozPreservesPitch = false; el.webkitPreservesPitch = false; if (focusOn) el.playbackRate = FOCUS.rate; } catch (e) {} }
-  let focusOn = false, focusTimer = null;
-  let randSaved = null;
-  function focus(on){ on = !!on; if (on === focusOn) return; focusOn = on; if (ctx && ctx.state === 'suspended') ctx.resume().catch(() => {});
+  // ducking (voice line playing) and choice focus multiply the amb/music level; mute is the master gain
+  const DUCK = .55; let duck = 1, focusK = 1;
+  const FOCUS = { gain: .62, cutoff: 520, rate: .86, inMs: 900, outMs: 700 };
+  function lvl(kind){ return levels[kind] != null ? levels[kind] : .8; }
+  function gain(slot){ const k = kindOf(slot); return (k === 'amb' || k === 'music') ? lvl(k) * duck * focusK : lvl(k); }
+  const vol = (ch) => lvl(ch.kind) * duck * focusK * (ch.mix == null ? 1 : ch.mix);
+  const applyVol = (ms) => CH.forEach(ch => { if (ch.g) ramp(ch.g.gain, vol(ch), ms); });
+  function duckTo(target, ms){ duck = target; applyVol(ms); }
+  let focusOn = false, randSaved = null;
+  function focus(on){ on = !!on; if (on === focusOn) return; focusOn = on; if (ctx && ctx.state !== 'running') ctx.resume().catch(() => {});
     if (on) { randSaved = randName; randomSet('thinking'); } else { randomSet(randSaved); randSaved = null; }   // Arabella's idle hums while she decides
-    const ms = on ? FOCUS.inMs : FOCUS.outMs, t0 = performance.now(), k0 = focusK, k1 = on ? FOCUS.gain : 1; const els = [amb, amb2, mus].map(c => c.el).filter(Boolean);
-    els.forEach(el => { if (el._lp && ctx) { const f = el._lp.frequency; f.cancelScheduledValues(ctx.currentTime); f.setValueAtTime(Math.max(40, f.value), ctx.currentTime); f.exponentialRampToValueAtTime(on ? FOCUS.cutoff : 20000, ctx.currentTime + ms / 1000); } });
-    const r0 = els.length ? els[0].playbackRate : 1, r1 = on ? FOCUS.rate : 1;
-    if (focusTimer) clearInterval(focusTimer);
-    focusTimer = setInterval(() => { const k = Math.min(1, (performance.now() - t0) / ms); const e = k < .5 ? 2 * k * k : 1 - Math.pow(-2 * k + 2, 2) / 2; focusK = k0 + (k1 - k0) * e;
-      [amb, amb2, mus].forEach(ch => { if (ch.el) { if (!ch.fade) ch.el.volume = vol(ch); try { ch.el.playbackRate = r0 + (r1 - r0) * e; } catch (x) {} } });
-      if (k >= 1) { clearInterval(focusTimer); focusTimer = null; } }, 33); }
-  function unlock(){ if (unlocked) return; unlocked = true; if (ctx && ctx.state === 'suspended') ctx.resume().catch(() => {}); try { const a = new Audio(); a.muted = true; a.play().catch(() => {}); } catch (e) {} if (amb.name) startLoop(amb, amb.name, true); if (mus.name) startLoop(mus, mus.name, true); }
+    const ms = on ? FOCUS.inMs : FOCUS.outMs; focusK = on ? FOCUS.gain : 1; applyVol(ms);
+    CH.forEach(ch => { if (ch.lp) rampExp(ch.lp.frequency, on ? FOCUS.cutoff : 20000, ms); if (ch.src) ramp(ch.src.playbackRate, on ? FOCUS.rate : 1, ms); }); }
+  // iOS: audio can only start after a user gesture. First pointerdown creates/unlocks; later gestures re-resume after interruptions (calls, lock screen).
+  function unlock(){ const c = ac(); if (c && c.state !== 'running') c.resume().catch(() => {}); if (unlocked) return; unlocked = true; CH.forEach(ch => { if (ch.name && !ch.src) startLoop(ch, ch.name, true); }); }
   document.addEventListener('pointerdown', unlock, { capture: true, passive: true });
   document.addEventListener('touchend', unlock, { capture: true, passive: true });
-  function playSfx(slot){ if (typeof activePack !== 'undefined' && activePack !== 'pride') return; load().then(() => { const f = fileOf(slot); if (!f || !unlocked) return; const S = M.slots[slot]; const vid = Object.keys(S.variants).find(k => BASE + S.variants[k].file === f); const lv = (vid && S.variants[vid].level != null) ? S.variants[vid].level : 1; const a = new Audio(f); a.volume = Math.min(1, gain(slot) * lv); a.play().catch(() => {}); }); }
-  function fadeTo(ch, el, target, ms, done){ if (!el) { done && done(); return; } const from = el.volume, t0 = performance.now(); if (ch.fade) cancelAnimationFrame(ch.fade);
-    const step = () => { const k = Math.min(1, (performance.now() - t0) / ms); el.volume = from + (target - from) * k; if (k < 1) ch.fade = requestAnimationFrame(step); else { ch.fade = null; done && done(); } }; step(); }
+  // one-shots: buffer → gain → master (never filtered / slowed)
+  function playSfx(slot, mul){ if (typeof activePack !== 'undefined' && activePack !== 'pride') return; load().then(() => { const f = fileOf(slot); if (!f || !unlocked) return; const S = M.slots[slot]; const vid = Object.keys(S.variants).find(k => BASE + S.variants[k].file === f); const lv = (vid && S.variants[vid].level != null) ? S.variants[vid].level : 1;
+    getBuf(f).then(buf => { const c = ctx; if (!buf || !c) return; const src = c.createBufferSource(); src.buffer = buf; const g = c.createGain(); g.gain.value = Math.min(1, gain(slot) * lv * (mul == null ? 1 : mul)); src.connect(g); g.connect(master); src.onended = () => { try { src.disconnect(); g.disconnect(); } catch (e) {} }; src.start(); }); }); }
   function startLoop(ch, name, instant){ load().then(() => { const slot = ch.kind + '.' + name; const f = fileOf(slot); if (!f) { stopLoop(ch); return; }
-    if (ch.el && ch.el.dataset.slot === slot && !ch.el.paused) { ch.el.volume = vol(ch); return; }
-    const old = ch.el; const el = new Audio(f); el.loop = true; wire(el); el.dataset.slot = slot; el.volume = 0; ch.el = el; ch.name = name;
-    tell();
+    if (ch.slot === slot && ch.src) { ramp(ch.g.gain, vol(ch), 200); return; }
+    ch.name = name; ch.slot = slot; tell();
     if (!unlocked) return;   // will start on first gesture
-    el.play().catch(() => {});
-    fadeTo(ch, el, vol(ch), instant ? 200 : 1200);
-    if (old) { const o = old; const t0 = performance.now(), v0 = o.volume; const st = () => { const k = Math.min(1, (performance.now() - t0) / 1000); o.volume = v0 * (1 - k); if (k < 1) requestAnimationFrame(st); else { o.pause(); o.src = ''; } }; st(); } }); }
-  function stopLoop(ch){ ch.name = null; const o = ch.el; ch.el = null; if (!o) return; fadeTo(ch, o, 0, 900, () => { o.pause(); o.src = ''; }); tell(); }
+    const c = ac(); if (!c) return;
+    getBuf(f).then(buf => { if (!buf || ch.slot !== slot) return; if (ch.src && ch.src._slot === slot) return;   // stale or already swapped
+      const old = ch.src, oldG = ch.g; const src = c.createBufferSource(); src.buffer = buf; src.loop = true; src._slot = slot;
+      const lp = c.createBiquadFilter(); lp.type = 'lowpass'; lp.Q.value = .8; lp.frequency.value = focusOn ? FOCUS.cutoff : 20000; const g = c.createGain(); g.gain.value = 0;
+      src.playbackRate.value = focusOn ? FOCUS.rate : 1; src.connect(lp); lp.connect(g); g.connect(master); src.start();
+      ch.src = src; ch.g = g; ch.lp = lp; ramp(g.gain, vol(ch), instant ? 200 : 1200);
+      if (old) { ramp(oldG.gain, 0, 1000); try { old.stop(c.currentTime + 1.1); } catch (e) {} old.onended = () => { try { old.disconnect(); oldG.disconnect(); } catch (e) {} }; } }); }); }
+  function stopLoop(ch){ ch.name = null; ch.slot = null; const o = ch.src, g = ch.g; ch.src = null; ch.g = null; ch.lp = null; if (!o) return; ramp(g.gain, 0, 900); try { o.stop(now() + 1); } catch (e) {} o.onended = () => { try { o.disconnect(); g.disconnect(); } catch (e) {} }; tell(); }
   const startAmb = (n, i) => startLoop(amb, n, i), stopAmb = () => stopLoop(amb);
-  document.addEventListener('visibilitychange', () => { [amb, mus].forEach(ch => { if (!ch.el) return; if (document.hidden) ch.el.pause(); else if (ch.name && unlocked) ch.el.play().catch(() => {}); }); });
+  document.addEventListener('visibilitychange', () => { if (!ctx) return; if (document.hidden) ctx.suspend().catch(() => {}); else if (unlocked) ctx.resume().catch(() => {}); });
   function tell(){ try { window.parent !== window && window.parent.postMessage({ type: 'audio', amb: amb.name, music: mus.name, levels, muted, manifest: M, episode: (typeof currentEpisodeBase === 'function' && activePack === 'pride') ? currentEpisodeBase() : null }, '*'); } catch (e) {} }
   // ---- voice-over ----
   let VO = null, voLoading = null, voEl = null; const voMissing = {};
@@ -35370,21 +35373,21 @@ body.pe-combat.pe-beat #dialogBox{ opacity:1 !important; transform:none !importa
   window.prideAudio = {
     voiceLine, stopVoice, reloadVoices(){ Object.keys(voMissing).forEach(k => delete voMissing[k]); return loadVoices(true); },
     voices(){ return VO; },
-    amb(name){ if (amb2.el || amb2.name) stopLoop(amb2); if (randName === 'map') randomSet(null); if (!name || name === 'none' || name === 'off') stopAmb(); else { amb.name = name; startAmb(name); } tell(); },
+    amb(name){ amb.mix = 1; if (amb2.src || amb2.name) stopLoop(amb2); if (randName === 'map') randomSet(null); if (!name || name === 'none' || name === 'off') stopAmb(); else { amb.name = name; startAmb(name); } tell(); },
     random(name){ randomSet(!name || name === 'none' || name === 'off' ? null : name); },
     focus,
     music(name){ if (!name || name === 'none' || name === 'off') stopLoop(mus); else { mus.name = name; startLoop(mus, name); } tell(); },
     hook(h){ load().then(() => { const slot = M && M.hooks && M.hooks[h]; if (slot) playSfx(slot); }); },
     play: playSfx,
-    setLevel(kind, v){ levels[kind] = Math.max(0, Math.min(1, +v)); [amb, amb2, mus].forEach(ch => { if (ch.el && ch.kind === kind) ch.el.volume = vol(ch); }); save(); tell(); },
-    setMuted(m){ muted = !!m; [amb, amb2, mus].forEach(ch => { if (ch.el) ch.el.volume = vol(ch); }); if (m) stopVoice(); save(); tell(); },
-    setActive(slot, variant){ load().then(() => { if (!M.slots[slot]) return; const okv = (v) => v === 'random' || M.slots[slot].variants[v] || (v.indexOf(',') > -1 && v.split(',').every(x => M.slots[slot].variants[x.trim()])); if (!okv(variant)) return; M.slots[slot].active = variant; [amb, amb2, mus].forEach(ch => { if (ch.el && ch.el.dataset.slot === slot) { const n = ch.name; ch.el.dataset.slot = ''; startLoop(ch, n, true); } }); tell(); }); },
-    reload(){ return load(true).then(() => { [amb, amb2, mus].forEach(ch => { if (ch.name) { const n = ch.name; if (ch.el) ch.el.dataset.slot = ''; startLoop(ch, n, true); } }); }); },
-    state(){ return { amb: amb.name, amb2: amb2.name, random: randName, music: mus.name, levels, muted, manifest: M, focus: focusOn, dbg: { ctx: ctx ? ctx.state : null, rate: mus.el ? mus.el.playbackRate : null, cutoff: (mus.el && mus.el._lp) ? Math.round(mus.el._lp.frequency.value) : null, vol: mus.el ? +mus.el.volume.toFixed(2) : null } }; },
+    setLevel(kind, v){ levels[kind] = Math.max(0, Math.min(1, +v)); applyVol(80); save(); tell(); },
+    setMuted(m){ muted = !!m; if (master) ramp(master.gain, muted ? 0 : 1, 150); if (m) stopVoice(); save(); tell(); },
+    setActive(slot, variant){ load().then(() => { if (!M.slots[slot]) return; const okv = (v) => v === 'random' || M.slots[slot].variants[v] || (v.indexOf(',') > -1 && v.split(',').every(x => M.slots[slot].variants[x.trim()])); if (!okv(variant)) return; M.slots[slot].active = variant; CH.forEach(ch => { if (ch.slot === slot) { const n = ch.name; ch.slot = null; startLoop(ch, n, true); } }); tell(); }); },
+    reload(){ return load(true).then(() => { CH.forEach(ch => { if (ch.name) { const n = ch.name; ch.slot = null; startLoop(ch, n, true); } }); }); },
+    state(){ return { amb: amb.name, amb2: amb2.name, random: randName, music: mus.name, levels, muted, manifest: M, focus: focusOn, dbg: { ctx: ctx ? ctx.state : null, rate: mus.src ? +mus.src.playbackRate.value.toFixed(2) : null, cutoff: mus.lp ? Math.round(mus.lp.frequency.value) : null, vol: mus.g ? +mus.g.gain.value.toFixed(2) : null } }; },
     stopAll(){ stopAmb(); stopLoop(amb2); stopLoop(mus); randomSet(null); focus(false); },
     // ---- map soundscape: town+forest ambience blended by pan position, map music, sparse random one-shots ----
-    mapEnter(){ amb.name = 'map_town'; startLoop(amb, 'map_town'); amb2.name = 'map_forest'; startLoop(amb2, 'map_forest'); mus.name = 'map'; startLoop(mus, 'map'); randomSet('map'); tell(); },
-    mapMix(t){ t = Math.max(0, Math.min(1, +t || 0)); amb.mix = .35 + .65 * t; amb2.mix = 1 - t; [amb, amb2].forEach(ch => { if (ch.el && !ch.fade) ch.el.volume = vol(ch); }); },
+    mapEnter(){ amb.mix = .35; amb2.mix = 1; amb.name = 'map_town'; startLoop(amb, 'map_town'); amb2.name = 'map_forest'; startLoop(amb2, 'map_forest'); mus.name = 'map'; startLoop(mus, 'map'); randomSet('map'); tell(); },
+    mapMix(t){ t = Math.max(0, Math.min(1, +t || 0)); amb.mix = .35 + .65 * t; amb2.mix = 1 - t; [amb, amb2].forEach(ch => { if (ch.g) ramp(ch.g.gain, vol(ch), 150); }); },
   };
   // sparse random one-shots: manifest.randoms[name] = { slots:[...], gap:[minS,maxS], level } — never continuous, one at a time.
   // 'map' runs on the map; an episode picks its own set with [random:ballroom]; [random:none] / stopAll() clears it.
@@ -35392,8 +35395,7 @@ body.pe-combat.pe-beat #dialogBox{ opacity:1 !important; transform:none !importa
   function randomSet(name){ if (randTimer) { clearTimeout(randTimer); randTimer = null; } randName = name || null; if (!randName) return;
     const tick = () => { load().then(() => { const R = (M && M.randoms && M.randoms[randName]) || null; if (!R || !R.slots || !R.slots.length) return; const gap = R.gap || [25, 60];
       randTimer = setTimeout(() => { if (randName !== name) return;
-        if (!document.hidden && !muted && unlocked) { const slot = R.slots[Math.floor(Math.random() * R.slots.length)]; const S = M.slots && M.slots[slot]; const ids = S ? Object.keys(S.variants || {}) : [];
-          if (ids.length) { const id = ids[Math.floor(Math.random() * ids.length)]; const f = BASE + S.variants[id].file; const a = new Audio(f); a.volume = gain('sfx.x') * (R.level != null ? R.level : .3); a.play().catch(() => {}); } }
+        if (!document.hidden && !muted && unlocked) { const slot = R.slots[Math.floor(Math.random() * R.slots.length)]; const S = M.slots && M.slots[slot]; if (S) { const keep = S.active; S.active = 'random'; playSfx(slot, R.level != null ? R.level : .3); S.active = keep; } }
         tick(); }, (gap[0] + Math.random() * (gap[1] - gap[0])) * 1000); }); };
     tick(); }
   window.addEventListener('message', (e) => { const d = e && e.data; if (!d || !d.type) return;
