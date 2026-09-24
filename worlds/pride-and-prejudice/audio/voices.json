@@ -1,0 +1,76 @@
+{
+  "_note": "ElevenLabs voice IDs per character folder. Never delete an id — add new ones and switch `active`. Generated lines live at episodes/<ep>/voice/<folder>/<voiceKey>/<hash>.mp3 (hash = fnv1a32 of 'speaker|text'). Editor → Audio → Voices manages this. Per-character `settings` override the global ones: speed (ElevenLabs 0.7–1.2, needs regeneration), stability/similarity/style (regeneration), tempo (ffmpeg post, no credits, 0.9–1.2), trim (post, default true), lufs (post loudness target, voice default -19; e.g. -17 = louder).",
+  "model": "eleven_multilingual_v2",
+  "settings": {
+    "stability": 0.45,
+    "similarity": 0.8,
+    "style": 0.2
+  },
+  "characters": {
+    "arabella2": {
+      "active": "e",
+      "voices": {
+        "e": {
+          "id": "mOUhDo8jDpNHQMrvB2xS",
+          "name": "Arabella (E warm alto)",
+          "note": "A young British woman, warm rich alto, quietly confident, playful intelligence, a smile in the voice, intimate and knowing, modern ease with period diction.",
+          "added": "2026-09-24"
+        }
+      }
+    },
+    "capt_carter": {
+      "active": "d",
+      "voices": {
+        "d": {
+          "id": "isVXDL63vyUwhY0Sjudu",
+          "name": "Carter (D soldierly)",
+          "note": "A cheerful young Englishman in his twenties, warm mid-range voice with a ready laugh, open and honest, slightly rough around the edges, soldierly plainness, fri",
+          "added": "2026-09-24"
+        }
+      }
+    },
+    "mr_darcy": {
+      "active": "e",
+      "voices": {
+        "e": {
+          "id": "rQQMHnNa2cAEj0aiZWeo",
+          "name": "Darcy (E warm baritone)",
+          "note": "A British gentleman in his early thirties, warm smooth baritone, cultured and precise, dry irony just under the surface, calm and self-possessed, medium-slow pa",
+          "added": "2026-09-24"
+        }
+      }
+    },
+    "narrator": {
+      "active": "e",
+      "voices": {
+        "e": {
+          "id": "OZdgrvu6DSYlY6aipsN7",
+          "name": "Narrator (E gravelly)",
+          "note": "A mature British man, rich dark baritone with a gravelly edge, commanding storyteller presence, intimate close-mic warmth, slow and deliberate, magnetic and sli",
+          "added": "2026-09-24"
+        }
+      },
+      "settings": {
+        "speed": 1.2
+      }
+    },
+    "sir_william2": {
+      "active": "e",
+      "voices": {
+        "e": {
+          "id": "XI4UZoRX16ibnQHw8HOr",
+          "name": "Sir William (E bustling)",
+          "note": "A round cheerful Englishman in his sixties, tenor-baritone, bustling energy, talks a little too fast when excited, wheezes with laughter, kindly and eager to pl",
+          "added": "2026-09-24"
+        }
+      },
+      "settings": {
+        "speed": 1.2,
+        "stability": 0.4,
+        "style": 0.15,
+        "lufs": -19,
+        "tempo": 1
+      }
+    }
+  }
+}

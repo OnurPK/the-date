@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Audio test — ElevenLabs batch 1</title>
+<style>
+body{margin:0;background:#0e0d13;color:#e7deff;font:500 14px/1.5 Inter,system-ui,sans-serif;padding:24px;max-width:520px}
+h1{font:600 18px Playfair Display,Georgia,serif;margin:0 0 6px}
+.row{display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid #2a2733}
+button{background:#1b1826;color:#e7deff;border:1px solid #3a3450;border-radius:999px;padding:9px 14px;font:700 11px/1 Inter,system-ui,sans-serif;letter-spacing:.08em;text-transform:uppercase}
+button.on{background:#8b7bd8;color:#fff;border-color:#8b7bd8}
+.n{flex:1}.n small{display:block;color:#7a7290}
+input[type=range]{width:110px}
+</style></head><body>
+<h1>ElevenLabs batch 1</h1>
+<p style="color:#7a7290;margin:0 0 10px">Tap once anywhere first (iOS audio unlock).</p>
+<div class="row"><div class="n">amb/ballroom <small>22 s · loop · -32.7 LUFS</small></div><input type="range" id="ambv" min="0" max="100" value="60"><button id="amb">Play</button></div>
+<div class="row"><div class="n">sfx/tap <small>0.6 s · UI tap</small></div><button data-s="tap">Play</button></div>
+<div class="row"><div class="n">sfx/choice <small>0.9 s · quill stroke, choice pick</small></div><button data-s="choice">Play</button></div>
+<div class="row"><div class="n">sfx/discovery <small>1.6 s · harp gliss, Discovery</small></div><button data-s="discovery">Play</button></div>
+<script>
+const B='../worlds/pride-and-prejudice/audio/';
+const amb=new Audio(B+'amb/ballroom.mp3'); amb.loop=true; amb.preload='auto';
+const ambBtn=document.getElementById('amb'), ambV=document.getElementById('ambv');
+amb.volume=ambV.value/100; ambV.oninput=()=>amb.volume=ambV.value/100;
+ambBtn.onclick=()=>{ if(amb.paused){ amb.play(); ambBtn.textContent='Stop'; ambBtn.classList.add('on'); } else { amb.pause(); amb.currentTime=0; ambBtn.textContent='Play'; ambBtn.classList.remove('on'); } };
+document.querySelectorAll('button[data-s]').forEach(b=>{ b.onclick=()=>{ const a=new Audio(B+'sfx/'+b.dataset.s+'.mp3'); a.volume=.9; a.play(); }; });
+</script></body></html>

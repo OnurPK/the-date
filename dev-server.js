@@ -363,6 +363,276 @@ async function handleGenAsset(req, res) {
 }
 
 // ───────────────────────────────────────────────────────────────
+// ElevenLabs audio (key from ELEVENLABS_API_KEY in .env). Everything is generated
+// once at author time and saved as a file under worlds/ — the game never calls
+// ElevenLabs at runtime.
+//   POST /api/author/gen-audio
+//     { kind:'sfx',   relPath, prompt, duration?(0.5–22 s), loop?, influence?(0–1) }
+//     { kind:'music', relPath, prompt, seconds?(3–600), instrumental?(default true), model?('music_v2_5') }
+//     { kind:'tts',   relPath, text, voiceId, model?('eleven_multilingual_v2'), stability?, similarity?, style? }
+//   GET  /api/author/eleven-voices   → { voices:[{voice_id,name,labels}] }
+//   GET  /api/author/eleven-usage    → { used, limit, remaining }
+// relPath must end in .mp3 (we keep the API's mp3 as-is; it plays in Safari + Chrome).
+// ───────────────────────────────────────────────────────────────
+const ELEVEN_KEY = process.env.ELEVENLABS_API_KEY || '';
+function elevenReq(method, pathname, payload, wantJson) {
+  return new Promise((resolve, reject) => {
+    const body = payload ? Buffer.from(JSON.stringify(payload)) : null;
+    const headers = { 'xi-api-key': ELEVEN_KEY, 'Accept': wantJson ? 'application/json' : 'audio/mpeg' };
+    if (body) { headers['Content-Type'] = 'application/json'; headers['Content-Length'] = body.length; }
+    const req = https.request({ hostname: 'api.elevenlabs.io', path: pathname, method, headers }, (r) => {
+      const chunks = []; r.on('data', c => chunks.push(c)); r.on('end', () => {
+        const buf = Buffer.concat(chunks);
+        if (r.statusCode >= 400) { let msg = 'HTTP ' + r.statusCode; try { const j = JSON.parse(buf.toString('utf8')); msg = (j.detail && (j.detail.message || JSON.stringify(j.detail))) || msg; } catch (e) {} return reject(new Error(msg)); }
+        if (wantJson) { try { resolve(JSON.parse(buf.toString('utf8'))); } catch (e) { reject(new Error('bad json')); } }
+        else resolve(buf);
+      });
+    });
+    req.on('error', reject); if (body) req.write(body); req.end();
+  });
+}
+// ---- Audio manifest (worlds/pride-and-prejudice/audio/manifest.json) ----
+const AUDIO_DIR = path.join(ROOT, 'worlds', 'pride-and-prejudice', 'audio');
+const AUDIO_MANIFEST = path.join(AUDIO_DIR, 'manifest.json');
+function readAudioManifest() { try { return JSON.parse(fs.readFileSync(AUDIO_MANIFEST, 'utf8')); } catch (e) { return { slots: {}, hooks: {}, levels: {} }; } }
+function writeAudioManifest(m) { fs.writeFileSync(AUDIO_MANIFEST, JSON.stringify(m, null, 2) + '\n'); }
+function audioRegister(m, slot, variant, file, src, note) {
+  m.slots = m.slots || {}; const s = m.slots[slot] = m.slots[slot] || { active: variant, variants: {} };
+  s.variants[variant] = { file, src: src || 'import', note: note || '' }; if (!s.active) s.active = variant; return s;
+}
+// POST /api/author/audio-manifest  { slots?:{slot:{active}}, hooks?, levels? }  → merges `active` choices + hooks + levels
+async function handleAudioManifestSave(req, res) {
+  const b = await readJsonBody(req); const m = readAudioManifest();
+  if (b.slots) Object.keys(b.slots).forEach(k => { if (m.slots[k] && b.slots[k] && b.slots[k].active && m.slots[k].variants[b.slots[k].active]) m.slots[k].active = b.slots[k].active; });
+  if (b.hooks) m.hooks = Object.assign({}, m.hooks || {}, b.hooks);
+  if (b.levels) m.levels = Object.assign({}, m.levels || {}, b.levels);
+  writeAudioManifest(m); return sendJson(res, 200, { ok: true, manifest: m });
+}
+// POST /api/author/audio-import — scan audio/_import/ for <kind>.<name>__<variant>.(mp3|m4a|wav) (or <kind>/<name>__<variant>.ext), move + register
+async function handleAudioImport(req, res) {
+  const imp = path.join(AUDIO_DIR, '_import'); const m = readAudioManifest(); const done = [], skipped = [];
+  const KINDS = new Set(['amb', 'sfx', 'music', 'voice']);
+  const walk = (dir, rel) => { let ents = []; try { ents = fs.readdirSync(dir, { withFileTypes: true }); } catch (e) { return; }
+    ents.forEach(e => { if (e.name.startsWith('.')) return; const p = path.join(dir, e.name); if (e.isDirectory()) { walk(p, rel ? rel + '/' + e.name : e.name); return; }
+      const mm = e.name.match(/^(?:([a-z]+)\.)?([a-z0-9_-]+)__([a-z0-9_-]+)\.(mp3|m4a|wav)$/i); if (!mm) { if (!/\.md$/i.test(e.name)) skipped.push((rel ? rel + '/' : '') + e.name + ' (name pattern)'); return; }
+      const kind = (mm[1] || rel.split('/')[0] || '').toLowerCase(); if (!KINDS.has(kind)) { skipped.push(e.name + ' (kind?)'); return; }
+      const name = mm[2].toLowerCase(), variant = mm[3].toLowerCase(), ext = mm[4].toLowerCase();
+      const relFile = kind + '/' + name + '__' + variant + '.' + ext; const dest = path.join(AUDIO_DIR, relFile);
+      fs.mkdirSync(path.dirname(dest), { recursive: true }); fs.renameSync(p, dest); if (ext === 'mp3') normalizeMp3(dest, kind);
+      audioRegister(m, kind + '.' + name, variant, relFile, 'import', 'imported ' + new Date().toISOString().slice(0, 10)); done.push(relFile); }); };
+  walk(imp, ''); writeAudioManifest(m); return sendJson(res, 200, { ok: true, imported: done, skipped, manifest: m });
+}
+// ---- Voice-over: voices.json (ids per character) + per-episode line builds ----
+const VOICES_PATH = path.join(AUDIO_DIR, 'voices.json');
+function readVoices() { try { return JSON.parse(fs.readFileSync(VOICES_PATH, 'utf8')); } catch (e) { return { model: 'eleven_multilingual_v2', settings: {}, characters: {} }; } }
+function writeVoices(v) { fs.writeFileSync(VOICES_PATH, JSON.stringify(v, null, 2) + '\n'); }
+function fnv1a(str) { let h = 0x811c9dc5; for (let i = 0; i < str.length; i++) { h ^= str.charCodeAt(i); h = Math.imul(h, 0x01000193) >>> 0; } return h.toString(16).padStart(8, '0'); }
+function voiceClean(t) { return String(t || '').replace(/\[[^\]]*\]/g, '').replace(/\{([^{}|]*)\|[^{}]*\}/g, '$1').replace(/\*\*/g, '').replace(/\s*\(\+\d+\)\s*$/, '').replace(/\s*\([a-zA-Z0-9_.\-]+\.(?:png|jpe?g)\)\s*$/i, '').replace(/\s+/g, ' ').trim(); }
+// speaker lines of an episode script (excluding Narrative, Mechanics and (Choice:N) option lines)
+const epNorm = ep => String(ep || '').replace(/^worlds\/pride-and-prejudice\//, '').replace(/^\/+/, '');
+function voiceLinesOf(epRel) {
+  epRel = epNorm(epRel);
+  const file = path.join(ROOT, 'worlds', 'pride-and-prejudice', epRel.startsWith('episodes/') ? epRel : 'episodes/' + epRel, 'scripts', 'main.txt');
+  let txt = ''; try { txt = fs.readFileSync(file, 'utf8'); } catch (e) { return null; }
+  const out = []; let inChoice = false;
+  txt.split('\n').forEach(raw => { const l = raw.trim();
+    if (/^\(\s*Choice\s*:\s*\d+\s*\)$/i.test(l)) { inChoice = true; return; }
+    if (inChoice && l === '') { inChoice = false; return; }
+    if (inChoice || l.startsWith('//') || l.startsWith('#')) return;
+    const m = l.match(/^([A-Za-z][A-Za-z0-9-]*):\s*(.+)$/); if (!m) return;
+    const sp = m[1].toLowerCase(); if (sp === 'mechanics') return;
+    const text = voiceClean(m[2]); if (!text) return;
+    out.push({ speaker: sp, text, hash: fnv1a(sp + '|' + text) }); });
+  return out;
+}
+const SPEAKER_FOLDER = { arabella: 'arabella_frost', bingley: 'mr_bingley', darcy: 'mr_darcy', wickham: 'mr_wickham', caroline: 'miss_bingley', 'mrs-bennet': 'mrs_bennet', charlotte: 'charlotte_lucas', lydia: 'lydia_bennet', jane: 'jane_bennet', elizabeth: 'elizabeth_bennet', 'sir-william': 'sir_william', 'sir-henry': 'sir_ashbourne', 'mrs-frost': 'mrs_frost', 'mr-frost': 'mr_frost', maid: 'the_maid', pryce: 'ens_pryce', vane: 'capt_vane', ravenscar: 'lord_ravenscar', collins: 'mr_collins', devereux: 'mr_devereux', fenwick: 'mr_fenwick', hale: 'mr_hale', quill: 'mr_quill', arabella2: 'arabella2', 'sir-william2': 'sir_william2', carter: 'capt_carter', 'mr-darcy': 'mr_darcy', 'ensign-pryce': 'ens_pryce', 'miss-bingley': 'miss_bingley', 'elderly-gentleman': 'elderly_gentleman' };
+const speakerFolder = sp => sp === 'narrative' ? 'narrator' : (SPEAKER_FOLDER[sp] || sp.replace(/-/g, '_'));
+// GET /api/author/voice-lines?episode=authored/the-assembly → { lines:[{speaker,folder,text,hash,have:{voiceKey:true}}], voices }
+function handleVoiceLines(req, res, parsed) {
+  const ep = epNorm(parsed.query.episode); const lines = voiceLinesOf(ep); if (!lines) return sendJson(res, 404, { error: 'no script' });
+  const V = readVoices(); const epDir = path.join(ROOT, 'worlds', 'pride-and-prejudice', ep.startsWith('episodes/') ? ep : 'episodes/' + ep, 'voice');
+  const out = lines.map(l => { const folder = speakerFolder(l.speaker); const have = {}; const c = V.characters[folder]; if (c) Object.keys(c.voices || {}).forEach(k => { have[k] = fs.existsSync(path.join(epDir, folder, k, l.hash + '.mp3')); });
+    return Object.assign({ folder, have }, l); });
+  // previous takes per folder/key: voice/<folder>/<key>/_prev/<stamp>/ (made by force regeneration)
+  const takes = {}; Object.keys(V.characters || {}).forEach(folder => { Object.keys((V.characters[folder] || {}).voices || {}).forEach(k => { const pv = path.join(epDir, folder, k, '_prev'); let st = []; try { st = fs.readdirSync(pv).filter(d => fs.statSync(path.join(pv, d)).isDirectory()).sort().reverse(); } catch (e) {}
+    if (st.length) takes[folder + '/' + k] = st.map(d => { let settings = null; try { settings = JSON.parse(fs.readFileSync(path.join(pv, d, 'settings.json'), 'utf8')); } catch (e) {} let n = 0; try { n = fs.readdirSync(path.join(pv, d)).filter(f => /\.mp3$/i.test(f)).length; } catch (e) {} return { stamp: d, n, settings }; }); }); });
+  return sendJson(res, 200, { episode: ep, lines: out, voices: V, takes });
+}
+// POST /api/author/voice-restore { episode, folder, voiceKey, stamp } → swap the current take with _prev/<stamp> (current goes to _prev/<now>)
+async function handleVoiceRestore(req, res) {
+  const b = await readJsonBody(req); const ep = epNorm(b.episode), folder = String(b.folder || ''), key = String(b.voiceKey || ''), stamp = String(b.stamp || '').replace(/[^0-9]/g, '');
+  const epDir = path.join(ROOT, 'worlds', 'pride-and-prejudice', ep.startsWith('episodes/') ? ep : 'episodes/' + ep, 'voice', folder, key); const src = path.join(epDir, '_prev', stamp);
+  if (!stamp || !fs.existsSync(src)) return sendJson(res, 404, { error: 'no such take' });
+  const V = readVoices(); const c = V.characters[folder] || {};
+  const cur = fs.readdirSync(epDir).filter(f => /\.mp3$/i.test(f)); let moved = 0;
+  if (cur.length) { const now = new Date().toISOString().slice(0, 16).replace(/[-:T]/g, ''); const pv = path.join(epDir, '_prev', now); fs.mkdirSync(pv, { recursive: true }); for (const f of cur) fs.renameSync(path.join(epDir, f), path.join(pv, f)); try { fs.writeFileSync(path.join(pv, 'settings.json'), JSON.stringify(Object.assign({}, V.settings || {}, c.settings || {}), null, 2)); } catch (e) {} }
+  for (const f of fs.readdirSync(src)) { if (/\.mp3$/i.test(f)) { fs.renameSync(path.join(src, f), path.join(epDir, f)); moved++; } }
+  let settings = null; try { settings = JSON.parse(fs.readFileSync(path.join(src, 'settings.json'), 'utf8')); } catch (e) {}
+  if (settings && V.characters[folder]) { const g = V.settings || {}; const own = {}; Object.keys(settings).forEach(k => { if (g[k] !== settings[k]) own[k] = settings[k]; }); V.characters[folder].settings = own; writeVoices(V); }   // restore the take's per-character settings too
+  try { fs.rmSync(src, { recursive: true, force: true }); } catch (e) {}
+  return sendJson(res, 200, { ok: true, restored: moved, settings });
+}
+// POST /api/author/voices  { folder, add?:{key?,id,name,note}, active?:key }
+async function handleVoicesSave(req, res) {
+  const b = await readJsonBody(req); const V = readVoices(); const folder = String(b.folder || '').trim(); if (!folder) return sendJson(res, 400, { error: 'folder required' });
+  const c = V.characters[folder] = V.characters[folder] || { active: null, voices: {} };
+  if (b.add && b.add.id) { let key = String(b.add.key || '').trim(); if (!key) { let n = 1; while (c.voices['v' + n]) n++; key = 'v' + n; }
+    c.voices[key] = { id: String(b.add.id).trim(), name: String(b.add.name || key).trim(), note: String(b.add.note || '').trim(), added: new Date().toISOString().slice(0, 10) }; if (!c.active) c.active = key; }
+  if ('active' in b) { if (b.active === null || b.active === '') c.active = null; else if (c.voices[b.active]) c.active = b.active; }
+  if (b.settings) V.settings = Object.assign({}, V.settings || {}, b.settings);
+  if (b.charSettings) { c.settings = Object.assign({}, c.settings || {}, b.charSettings); Object.keys(c.settings).forEach(k => { if (c.settings[k] === null || c.settings[k] === '' ) delete c.settings[k]; }); }   // null/'' clears a key → falls back to global
+  writeVoices(V); return sendJson(res, 200, { ok: true, voices: V });
+}
+// POST /api/author/voice-build { episode, folder, voiceKey, force? } → { job } ; GET /api/author/voice-job?job=… → progress
+const voiceJobs = {};
+async function handleVoiceBuild(req, res) {
+  if (!ELEVEN_KEY) return sendJson(res, 400, { error: 'Set ELEVENLABS_API_KEY in .env' });
+  const b = await readJsonBody(req); const ep = epNorm(b.episode), folder = String(b.folder || ''), key = String(b.voiceKey || '');
+  const V = readVoices(); const c = V.characters[folder]; const voice = c && c.voices && c.voices[key]; if (!voice) return sendJson(res, 400, { error: 'unknown voice' });
+  const all = voiceLinesOf(ep); if (!all) return sendJson(res, 404, { error: 'no script' });
+  const lines = all.filter(l => speakerFolder(l.speaker) === folder);
+  const epDir = path.join(ROOT, 'worlds', 'pride-and-prejudice', ep.startsWith('episodes/') ? ep : 'episodes/' + ep, 'voice', folder, key); fs.mkdirSync(epDir, { recursive: true });
+  const todo = lines.filter(l => b.force || !fs.existsSync(path.join(epDir, l.hash + '.mp3')));
+  // force = regenerate: keep the previous takes in <key>/_prev/<stamp>/ (never overwrite silently)
+  if (b.force) { const olds = todo.filter(l => fs.existsSync(path.join(epDir, l.hash + '.mp3'))); if (olds.length) { const stamp = new Date().toISOString().slice(0, 16).replace(/[-:T]/g, ''); const pv = path.join(epDir, '_prev', stamp); fs.mkdirSync(pv, { recursive: true }); for (const l of olds) fs.renameSync(path.join(epDir, l.hash + '.mp3'), path.join(pv, l.hash + '.mp3')); try { fs.writeFileSync(path.join(pv, 'settings.json'), JSON.stringify(Object.assign({}, V.settings || {}, c.settings || {}), null, 2)); } catch (e) {} } }
+  const job = { id: Date.now().toString(36), total: todo.length, done: 0, skipped: lines.length - todo.length, errors: [], running: true, chars: 0 };
+  voiceJobs[job.id] = job;
+  (async () => { const st = Object.assign({}, V.settings || {}, c.settings || {}); for (const l of todo) { try {
+        const vs = { stability: st.stability != null ? st.stability : 0.45, similarity_boost: st.similarity != null ? st.similarity : 0.8, style: st.style != null ? st.style : 0.2 }; if (st.speed != null) vs.speed = Math.max(0.7, Math.min(1.2, Number(st.speed)));
+        const payload = { text: l.text, model_id: st.model || V.model || 'eleven_multilingual_v2', voice_settings: vs };
+        const buf = await elevenReq('POST', '/v1/text-to-speech/' + encodeURIComponent(voice.id) + '?output_format=mp3_44100_128', payload, false);
+        const out = path.join(epDir, l.hash + '.mp3'); fs.writeFileSync(out, buf); job.chars += l.text.length; job.normalized = await normalizeMp3(out, 'voice', { tempo: st.tempo, trim: st.trim, lufs: st.lufs });
+      } catch (e) { job.errors.push(l.hash + ': ' + String(e.message || e)); } job.done++; }
+    job.running = false; })();
+  return sendJson(res, 200, { ok: true, job: job.id, total: job.total, skipped: job.skipped });
+}
+// POST /api/author/voice-preview { folder, voiceKey, text, settings? } → one-off TTS with the given settings into audio/_voice_samples/_preview/ (episode files untouched) → { url, chars }
+async function handleVoicePreview(req, res) {
+  if (!ELEVEN_KEY) return sendJson(res, 400, { error: 'Set ELEVENLABS_API_KEY in .env' });
+  const b = await readJsonBody(req); const folder = String(b.folder || '').replace(/[^a-z0-9_]/gi, ''), key = String(b.voiceKey || ''); const text = voiceClean(String(b.text || '')); if (!text) return sendJson(res, 400, { error: 'no text' });
+  const V = readVoices(); const c = V.characters[folder]; const voice = c && c.voices && c.voices[key]; if (!voice) return sendJson(res, 400, { error: 'unknown voice' });
+  const st = Object.assign({}, V.settings || {}, c.settings || {}); Object.keys(b.settings || {}).forEach(k => { const v = b.settings[k]; if (v === null || v === '' || v === undefined) delete st[k]; else st[k] = v; });
+  const vs = { stability: st.stability != null ? st.stability : 0.45, similarity_boost: st.similarity != null ? st.similarity : 0.8, style: st.style != null ? st.style : 0.2 }; if (st.speed != null) vs.speed = Math.max(0.7, Math.min(1.2, Number(st.speed)));
+  try {
+    const buf = await elevenReq('POST', '/v1/text-to-speech/' + encodeURIComponent(voice.id) + '?output_format=mp3_44100_128', { text, model_id: st.model || V.model || 'eleven_multilingual_v2', voice_settings: vs }, false);
+    const dir = path.join(AUDIO_DIR, '_voice_samples', '_preview'); fs.mkdirSync(dir, { recursive: true });
+    try { fs.readdirSync(dir).filter(f => /\.mp3$/.test(f)).sort().slice(0, -12).forEach(f => fs.unlinkSync(path.join(dir, f))); } catch (e) {}   // keep the last dozen
+    const name = folder + '_' + Date.now().toString(36) + '.mp3'; const out = path.join(dir, name); fs.writeFileSync(out, buf); await normalizeMp3(out, 'voice', { tempo: st.tempo, trim: st.trim, lufs: st.lufs });
+    return sendJson(res, 200, { ok: true, url: 'worlds/pride-and-prejudice/audio/_voice_samples/_preview/' + name, chars: text.length, settings: st });
+  } catch (e) { return sendJson(res, 500, { error: String(e && e.message || e) }); }
+}
+// POST /api/author/voice-post { episode, folder, voiceKey, tempo?, trim? } → re-run ffmpeg post on existing line files (no ElevenLabs credits)
+async function handleVoicePost(req, res) {
+  const b = await readJsonBody(req); const ep = epNorm(b.episode), folder = String(b.folder || ''), key = String(b.voiceKey || '');
+  const epDir = path.join(ROOT, 'worlds', 'pride-and-prejudice', ep.startsWith('episodes/') ? ep : 'episodes/' + ep, 'voice', folder, key);
+  let files = []; try { files = fs.readdirSync(epDir).filter(f => /\.mp3$/i.test(f)); } catch (e) { return sendJson(res, 404, { error: 'no files' }); }
+  const V = readVoices(); const c = V.characters[folder] || {}; const st = Object.assign({}, V.settings || {}, c.settings || {}, b);
+  let ok = 0; for (const f of files) { if (await normalizeMp3(path.join(epDir, f), 'voice', { tempo: st.tempo, trim: st.trim, lufs: st.lufs })) ok++; }
+  return sendJson(res, 200, { ok: true, processed: ok, total: files.length, tempo: st.tempo || 1 });
+}
+function handleVoiceJob(req, res, parsed) { const j = voiceJobs[String(parsed.query.job || '')]; if (!j) return sendJson(res, 404, { error: 'no job' }); return sendJson(res, 200, j); }
+// ---- Voice Design: previews from a description → audio/_voice_samples/<folder>/ ; create → voices.json ----
+// POST /api/author/voice-design { folder, tag, description, text, count? } → { samples:[{file, generated_voice_id, secs}] }
+async function handleVoiceDesign(req, res) {
+  if (!ELEVEN_KEY) return sendJson(res, 400, { error: 'Set ELEVENLABS_API_KEY in .env' });
+  const b = await readJsonBody(req); const folder = String(b.folder || '').replace(/[^a-z0-9_]/gi, ''); const tag = String(b.tag || 'x').replace(/[^a-z0-9_-]/gi, '');
+  if (!folder || !b.description) return sendJson(res, 400, { error: 'folder + description required' });
+  try {
+    const payload = { voice_description: String(b.description), model_id: b.model || 'eleven_multilingual_ttv_v2' };
+    if (b.text && String(b.text).length >= 100) payload.text = String(b.text).slice(0, 1000); else payload.auto_generate_text = true;
+    if (b.guidance != null) payload.guidance_scale = Number(b.guidance);
+    const j = await elevenReq('POST', '/v1/text-to-voice/design?output_format=mp3_44100_128', payload, true);
+    const dir = path.join(AUDIO_DIR, '_voice_samples', folder); fs.mkdirSync(dir, { recursive: true });
+    const metaPath = path.join(dir, 'samples.json'); let meta = []; try { meta = JSON.parse(fs.readFileSync(metaPath, 'utf8')); } catch (e) {}
+    const out = []; (j.previews || []).slice(0, b.count || 3).forEach((pv, i) => { const file = tag + '_' + (i + 1) + '.mp3'; fs.writeFileSync(path.join(dir, file), Buffer.from(pv.audio_base_64, 'base64'));
+      const rec = { file, tag, index: i + 1, generated_voice_id: pv.generated_voice_id, secs: pv.duration_secs, description: String(b.description), text: j.text, created: new Date().toISOString() };
+      meta = meta.filter(m => m.file !== file); meta.push(rec); out.push(rec); });
+    fs.writeFileSync(metaPath, JSON.stringify(meta, null, 2));
+    return sendJson(res, 200, { ok: true, folder, samples: out, text: j.text });
+  } catch (e) { return sendJson(res, 502, { error: String(e.message || e) }); }
+}
+// POST /api/author/voice-create { folder, generated_voice_id, name, description, key? } → saves the voice in ElevenLabs + voices.json
+async function handleVoiceCreate(req, res) {
+  if (!ELEVEN_KEY) return sendJson(res, 400, { error: 'Set ELEVENLABS_API_KEY in .env' });
+  const b = await readJsonBody(req); const folder = String(b.folder || '').replace(/[^a-z0-9_]/gi, '');
+  if (!folder || !b.generated_voice_id) return sendJson(res, 400, { error: 'folder + generated_voice_id required' });
+  try {
+    const j = await elevenReq('POST', '/v1/text-to-voice', { voice_name: String(b.name || folder), voice_description: String(b.description || folder), generated_voice_id: String(b.generated_voice_id) }, true);
+    const V = readVoices(); const c = V.characters[folder] = V.characters[folder] || { active: null, voices: {} };
+    let key = String(b.key || '').replace(/[^a-z0-9_-]/gi, ''); if (!key) { let n = 1; while (c.voices['v' + n]) n++; key = 'v' + n; }
+    c.voices[key] = { id: j.voice_id, name: String(b.name || key), note: String(b.description || '').slice(0, 160), added: new Date().toISOString().slice(0, 10) }; if (!c.active) c.active = key;
+    writeVoices(V); return sendJson(res, 200, { ok: true, folder, key, voice_id: j.voice_id });
+  } catch (e) { return sendJson(res, 502, { error: String(e.message || e) }); }
+}
+// ---- loudness normalisation (ffmpeg loudnorm, if ffmpeg is on PATH; otherwise the file is kept as delivered) ----
+const { execFile } = require('child_process');
+const LOUDNESS = { voice: -19, sfx: -20, amb: -26, music: -22 };
+function normalizeMp3(absPath, kind, post) {
+  return new Promise((resolve) => {
+    post = post || {}; const L = Number(post.lufs); const I = (L && L <= -8 && L >= -40) ? L : (LOUDNESS[kind] != null ? LOUDNESS[kind] : -20); const tmp = absPath + '.norm.mp3';   // post.lufs: per-character loudness override (voice default -19)
+    const af = [];
+    if (post.trim !== false && kind === 'voice') af.push('silenceremove=start_periods=1:start_threshold=-45dB:start_silence=0.08', 'areverse', 'silenceremove=start_periods=1:start_threshold=-45dB:start_silence=0.15', 'areverse');   // trim leading/trailing silence (keep 80/150 ms)
+    const t = Number(post.tempo); if (t && t !== 1 && t >= 0.5 && t <= 2) af.push('atempo=' + t.toFixed(3));   // pitch-preserving speed
+    af.push(`loudnorm=I=${I}:TP=-1.5:LRA=11`);
+    execFile('ffmpeg', ['-v', 'error', '-y', '-i', absPath, '-af', af.join(','), '-ar', '44100', '-b:a', '128k', tmp], { timeout: 60000 }, (err) => {
+      if (err) { try { fs.unlinkSync(tmp); } catch (e) {} return resolve(false); }
+      try { fs.renameSync(tmp, absPath); resolve(true); } catch (e) { resolve(false); }
+    });
+  });
+}
+async function handleGenAudio(req, res) {
+  if (!ELEVEN_KEY) return sendJson(res, 400, { error: 'Set ELEVENLABS_API_KEY in .env (restart the dev server)' });
+  const b = await readJsonBody(req);
+  const kind = String(b.kind || 'sfx');
+  const relPath = String(b.relPath || '').trim();
+  if (!/^worlds\/[a-z0-9_/.-]+\.mp3$/i.test(relPath)) return sendJson(res, 400, { error: 'relPath must be worlds/… .mp3' });
+  const abs = path.join(ROOT, relPath);
+  if (!isInsideRoot(abs)) return sendJson(res, 403, { error: 'escapes root' });
+  try {
+    let buf;
+    if (kind === 'sfx') {
+      const prompt = String(b.prompt || '').trim(); if (!prompt) return sendJson(res, 400, { error: 'prompt required' });
+      const payload = { text: prompt };
+      if (b.duration != null) payload.duration_seconds = Math.max(0.5, Math.min(22, Number(b.duration)));
+      if (b.influence != null) payload.prompt_influence = Math.max(0, Math.min(1, Number(b.influence)));
+      if (b.loop) payload.loop = true;
+      buf = await elevenReq('POST', '/v1/sound-generation?output_format=mp3_44100_128', payload, false);
+    } else if (kind === 'music') {
+      const prompt = String(b.prompt || '').trim(); if (!prompt) return sendJson(res, 400, { error: 'prompt required' });
+      const payload = { prompt, model_id: b.model || 'music_v2_5', force_instrumental: b.instrumental !== false };
+      if (b.seconds != null) payload.music_length_ms = Math.max(3000, Math.min(600000, Math.round(Number(b.seconds) * 1000)));
+      buf = await elevenReq('POST', '/v1/music?output_format=mp3_44100_128', payload, false);
+    } else if (kind === 'tts') {
+      const text = String(b.text || '').trim(); const voiceId = String(b.voiceId || '').trim();
+      if (!text || !voiceId) return sendJson(res, 400, { error: 'text + voiceId required' });
+      const vs = {}; if (b.stability != null) vs.stability = Number(b.stability); if (b.similarity != null) vs.similarity_boost = Number(b.similarity); if (b.style != null) vs.style = Number(b.style); if (b.speed != null) vs.speed = Math.max(0.7, Math.min(1.2, Number(b.speed)));
+      const payload = { text, model_id: b.model || 'eleven_multilingual_v2' }; if (Object.keys(vs).length) payload.voice_settings = vs;
+      buf = await elevenReq('POST', '/v1/text-to-speech/' + encodeURIComponent(voiceId) + '?output_format=mp3_44100_128', payload, false);
+    } else return sendJson(res, 400, { error: 'kind must be sfx | music | tts' });
+    fs.mkdirSync(path.dirname(abs), { recursive: true });
+    fs.writeFileSync(abs, buf);
+    const normKind = (relPath.match(/\/audio\/(amb|sfx|music|voice)\//i) || [])[1] || (kind === 'tts' ? 'voice' : kind);
+    const normalized = b.normalize === false ? false : await normalizeMp3(abs, normKind, { tempo: b.tempo, trim: b.trim });
+    // register as a variant when the path follows audio/<kind>/<name>__<variant>.mp3
+    let slot = null; try { const mm = relPath.match(/\/audio\/(amb|sfx|music|voice)\/([a-z0-9_-]+)__([a-z0-9_-]+)\.mp3$/i);
+      if (mm) { const m = readAudioManifest(); slot = mm[1] + '.' + mm[2]; audioRegister(m, slot, mm[3], mm[1] + '/' + mm[2] + '__' + mm[3] + '.mp3', 'elevenlabs', String(b.note || b.prompt || b.text || '').slice(0, 120)); writeAudioManifest(m); } } catch (e) {}
+    return sendJson(res, 200, { ok: true, path: relPath, bytes: buf.length, kind, slot, normalized });
+  } catch (e) { return sendJson(res, 502, { error: String(e.message || e) }); }
+}
+async function handleElevenVoices(req, res) {
+  if (!ELEVEN_KEY) return sendJson(res, 400, { error: 'Set ELEVENLABS_API_KEY in .env' });
+  try { const j = await elevenReq('GET', '/v2/voices?page_size=100', null, true);
+    return sendJson(res, 200, { voices: (j.voices || []).map(v => ({ voice_id: v.voice_id, name: v.name, category: v.category, labels: v.labels || {}, preview_url: v.preview_url })) });
+  } catch (e) { return sendJson(res, 502, { error: String(e.message || e) }); }
+}
+async function handleElevenUsage(req, res) {
+  if (!ELEVEN_KEY) return sendJson(res, 400, { error: 'Set ELEVENLABS_API_KEY in .env' });
+  try { const j = await elevenReq('GET', '/v1/user/subscription', null, true);
+    return sendJson(res, 200, { tier: j.tier, used: j.character_count, limit: j.character_limit, remaining: (j.character_limit || 0) - (j.character_count || 0), resets: j.next_character_count_reset_unix });
+  } catch (e) { return sendJson(res, 502, { error: String(e.message || e) }); }
+}
+
+// ───────────────────────────────────────────────────────────────
 // Freepik / Magnific image generation (key from FREEPIK_API_KEY in .env).
 // Freepik's API was rebranded Magnific — same endpoints; we send both header
 // names and let FREEPIK_API_BASE pick the host. Async pattern: POST → task_id,
@@ -1204,6 +1474,20 @@ const server = http.createServer(async (req, res) => {
     if (req.method === 'GET'  && parsed.pathname === '/api/list-appearances') return handleListAppearances(req, res, parsed);
     if (req.method === 'POST' && parsed.pathname === '/api/author/script') return handleAuthorScript(req, res);
     if (req.method === 'POST' && parsed.pathname === '/api/author/gen-asset') return handleGenAsset(req, res);
+    if (req.method === 'POST' && parsed.pathname === '/api/author/gen-audio') return handleGenAudio(req, res);
+    if (req.method === 'POST' && parsed.pathname === '/api/author/audio-manifest') return handleAudioManifestSave(req, res);
+    if (req.method === 'POST' && parsed.pathname === '/api/author/audio-import') return handleAudioImport(req, res);
+    if (req.method === 'GET'  && parsed.pathname === '/api/author/voice-lines') return handleVoiceLines(req, res, parsed);
+    if (req.method === 'POST' && parsed.pathname === '/api/author/voices') return handleVoicesSave(req, res);
+    if (req.method === 'POST' && parsed.pathname === '/api/author/voice-build') return handleVoiceBuild(req, res);
+    if (req.method === 'POST' && parsed.pathname === '/api/author/voice-restore') return handleVoiceRestore(req, res);
+    if (req.method === 'POST' && parsed.pathname === '/api/author/voice-preview') return handleVoicePreview(req, res);
+    if (req.method === 'GET'  && parsed.pathname === '/api/author/voice-job') return handleVoiceJob(req, res, parsed);
+    if (req.method === 'POST' && parsed.pathname === '/api/author/voice-post') return handleVoicePost(req, res);
+    if (req.method === 'POST' && parsed.pathname === '/api/author/voice-design') return handleVoiceDesign(req, res);
+    if (req.method === 'POST' && parsed.pathname === '/api/author/voice-create') return handleVoiceCreate(req, res);
+    if (req.method === 'GET'  && parsed.pathname === '/api/author/eleven-voices') return handleElevenVoices(req, res);
+    if (req.method === 'GET'  && parsed.pathname === '/api/author/eleven-usage') return handleElevenUsage(req, res);
     if (req.method === 'GET'  && parsed.pathname === '/api/freepik/status') return handleFreepikStatus(req, res);
     if (req.method === 'GET'  && parsed.pathname === '/api/higgsfield/status') return handleHfStatus(req, res);
     if (req.method === 'POST' && parsed.pathname === '/api/higgsfield/generate') return handleHfGenerate(req, res);

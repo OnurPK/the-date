@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Voice samples — the Assembly cast</title>
+<style>
+body{margin:0;background:#0e0d13;color:#e7deff;font:500 14px/1.5 Inter,system-ui,sans-serif;padding:22px;max-width:640px}
+h1{font:600 20px Playfair Display,Georgia,serif;margin:0 0 4px}
+p.sub{color:#7a7290;margin:0 0 14px;font-size:12px}
+.packs{display:flex;gap:8px;margin:0 0 18px;flex-wrap:wrap}
+.packs button{flex:1;min-width:150px;background:#1b1826;color:#e7deff;border:1px solid #3a3450;border-radius:12px;padding:10px 12px;text-align:left;cursor:pointer}
+.packs button b{display:block;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:#ff9ec9}
+.packs button small{color:#9a90b4;font-size:11px}
+.packs button.on{border-color:#ff7eb9;background:#2a1f38}
+.packs button.playing{outline:2px solid #ff7eb9}
+.char{margin:14px 0;padding:12px;border:1px solid #2a2733;border-radius:12px}
+.char h2{font:600 15px Playfair Display,Georgia,serif;margin:0 0 8px;color:#fff}
+.row{display:flex;align-items:center;gap:10px;padding:7px 0;border-top:1px solid #221f2c}
+.row .t{width:22px;height:22px;border-radius:50%;display:grid;place-items:center;font:800 10px Inter;background:#2a2733}
+.row .t.A{background:#5d6b8a}.row .t.B{background:#8a5d7a}.row .t.C{background:#8a7a4a}.row .t.D{background:#3f4a6b}.row .t.E{background:#6b4a3f}.row .t.F{background:#4a6b5a}
+.row .d{flex:1;font-size:12px;color:#b8b0cc}
+.row button{background:#1b1826;color:#fff;border:1px solid #3a3450;border-radius:999px;padding:7px 12px;font:700 10px/1 Inter;letter-spacing:.08em;text-transform:uppercase;cursor:pointer}
+.row button.on{background:#8b7bd8;border-color:#8b7bd8}
+.row.pick .t{box-shadow:0 0 0 2px #ff7eb9}
+</style></head><body>
+<h1>The Assembly — voice samples</h1>
+<p class="sub">5 speakers × 6 designs. Round 1: A = period drama · B = intimate · C = theatrical. Round 2: D / E / F = three more registers per speaker (narrator D–F all male, deeper). Tap a package to hear the whole cast in sequence, or any single sample.</p>
+<div class="packs">
+  <button data-pack="A"><b>Package A · Period drama</b><small>RP, measured, BBC costume-drama register</small></button>
+  <button data-pack="B"><b>Package B · Intimate</b><small>close, soft, modern delivery</small></button>
+  <button data-pack="C"><b>Package C · Theatrical</b><small>bigger, characterful, stage-trained</small></button>
+  <button data-pack="D"><b>Package D · Velvet</b><small>darker, lower, controlled; narrator bass-baritone</small></button>
+  <button data-pack="E"><b>Package E · Warm</b><small>smooth, rich, charming; narrator gravelly baritone</small></button>
+  <button data-pack="F"><b>Package F · Bright</b><small>crisper, quicker, younger leads; narrator prestige-TV baritone</small></button>
+</div>
+<div class="char"><h2>Narrator — speed test (same paragraph)</h2>
+<div class="row"><span class="t">1</span><span class="d">speed 1.0 · reference</span><button data-spd="speed_1_ref">Play</button></div>
+<div class="row"><span class="t">2</span><span class="d">speed 1.10</span><button data-spd="speed_2_110">Play</button></div>
+<div class="row"><span class="t">3</span><span class="d">speed 1.20 (max)</span><button data-spd="speed_3_120">Play</button></div>
+<div class="row"><span class="t">4</span><span class="d">speed 1.10 + livelier (stability .35 / style .35)</span><button data-spd="speed_4_110_lively">Play</button></div>
+<div class="row"><span class="t">5</span><span class="d">speed 1.0 + ffmpeg tempo 1.15 (post only, no credits)</span><button data-spd="speed_5_post115">Play</button></div>
+</div>
+<div id="list"></div>
+<script>
+const B='../worlds/pride-and-prejudice/audio/_voice_samples/';
+const CH=[['mr_darcy','Mr Darcy'],['sir_william2','Sir William'],['capt_carter','Captain Carter'],['arabella2','Arabella'],['narrator','Narrator']];
+const DESC={mr_darcy:{A:'deep baritone, cool, precise',B:'low, soft, close, restrained warmth',C:'stage baritone, aristocratic, cutting',D:'velvet bass-baritone, cold courtesy',E:'warm smooth baritone, dry irony',F:'clear firm baritone, clipped, impatient'},sir_william2:{A:'jovial, ceremonious, brisk',B:'avuncular, chuckling, breathless',C:'boisterous, grandiose, comic',D:'plummy, courtly, effusive',E:'bustling, fast, wheezy laugh',F:'dignified, mellow, benevolent'},capt_carter:{A:'light tenor, eager, boyish',B:'warm, relaxed, self-deprecating',C:'bright, gallant, projected',D:'warm, plain, soldierly, ready laugh',E:'smooth light baritone, polished charm',F:'boyish tenor, earnest, a touch shy'},arabella2:{A:'clear mezzo, quick, dry',B:'low warm, sly, private',C:'bright, arch, theatrical',D:'velvety mid-range, poised, cool',E:'rich alto, playful, knowing',F:'light soprano, sparkling, impish'},narrator:{A:'woman 40s, warm literary',B:'woman, soft, candlelit',C:'man 50s, resonant period narrator',D:'man 50s, deep velvet bass-baritone, gravitas',E:'man, dark gravelly baritone, magnetic',F:'man 60s, sonorous RADA baritone, prestige TV'}};
+const list=document.getElementById('list'); let cur=null, seq=null;
+list.innerHTML=CH.map(([f,n])=>`<div class="char" data-f="${f}"><h2>${n}</h2>${['A','B','C','D','E','F'].map(t=>`<div class="row" data-t="${t}"><span class="t ${t}">${t}</span><span class="d">${DESC[f][t]}</span><button data-play="${f}/${t}">Play</button></div>`).join('')}</div>`).join('');
+function stop(){ if(cur){ cur.a.pause(); cur.btn.classList.remove('on'); cur=null; } if(seq){ seq=null; document.querySelectorAll('.packs button').forEach(b=>b.classList.remove('playing')); } }
+function play(key,onend){ stop(); const btn=document.querySelector(`button[data-play="${key}"]`); const a=new Audio(B+key.replace('/','/')+'_1.mp3'); btn.classList.add('on'); cur={a,btn}; a.onended=()=>{ btn.classList.remove('on'); if(cur&&cur.a===a) cur=null; onend&&onend(); }; a.play(); }
+document.querySelectorAll('button[data-spd]').forEach(b=>b.onclick=()=>{ stop(); const a=new Audio(B+'narrator/'+b.dataset.spd+'.mp3'); b.classList.add('on'); cur={a,btn:b}; a.onended=()=>{ b.classList.remove('on'); cur=null; }; a.play(); });
+document.querySelectorAll('button[data-play]').forEach(b=>b.onclick=()=>{ if(cur&&cur.btn===b){ stop(); return; } play(b.dataset.play); });
+document.querySelectorAll('.packs button').forEach(b=>b.onclick=()=>{ const t=b.dataset.pack; document.querySelectorAll('.packs button').forEach(x=>x.classList.toggle('on',x===b)); document.querySelectorAll('.row').forEach(r=>r.classList.toggle('pick',r.dataset.t===t)); if(seq===t){ stop(); return; } stop(); seq=t; b.classList.add('playing'); let i=0; const next=()=>{ if(seq!==t) return; if(i>=CH.length){ stop(); return; } play(CH[i++][0]+'/'+t,()=>setTimeout(next,350)); }; next(); });
+</script></body></html>

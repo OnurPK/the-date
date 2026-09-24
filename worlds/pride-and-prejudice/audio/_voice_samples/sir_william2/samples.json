@@ -1,0 +1,62 @@
+[
+  {
+    "file": "A_1.mp3",
+    "tag": "A",
+    "index": 1,
+    "generated_voice_id": "LnEEUq6aGhHceuQB3UVe",
+    "secs": 20.561125,
+    "description": "A jovial British gentleman in his sixties, warm rounded voice, received pronunciation, genial and a little pompous, delighted with everyone, ceremonious, brisk cheerful pacing.",
+    "text": "Miss Frost, allow me — Sir William Lucas — and I shall introduce you to everyone of consequence! Even Mr Darcy, who has danced at St James's itself, shall not escape the floor tonight. Between ourselves, I mean to put you before him before supper is served. Both, Miss Frost, both.",
+    "created": "2026-09-24T12:47:25.101Z"
+  },
+  {
+    "file": "B_1.mp3",
+    "tag": "B",
+    "index": 1,
+    "generated_voice_id": "tTcs3AoohX9saLRjjLDi",
+    "secs": 20.744,
+    "description": "A kindly older British man, soft and avuncular, chuckling warmth, slightly breathless enthusiasm, speaks as if sharing good news with a friend.",
+    "text": "Miss Frost, allow me — Sir William Lucas — and I shall introduce you to everyone of consequence! Even Mr Darcy, who has danced at St James's itself, shall not escape the floor tonight. Between ourselves, I mean to put you before him before supper is served. Both, Miss Frost, both.",
+    "created": "2026-09-24T12:47:25.642Z"
+  },
+  {
+    "file": "C_1.mp3",
+    "tag": "C",
+    "index": 1,
+    "generated_voice_id": "gqx7AYmQA6c7MxHxu6KY",
+    "secs": 21.083625,
+    "description": "A boisterous British character actor in his sixties, big theatrical voice, grandiose and self-important, rolling delivery, comic timing, loves the sound of his own introductions.",
+    "text": "Miss Frost, allow me — Sir William Lucas — and I shall introduce you to everyone of consequence! Even Mr Darcy, who has danced at St James's itself, shall not escape the floor tonight. Between ourselves, I mean to put you before him before supper is served. Both, Miss Frost, both.",
+    "created": "2026-09-24T12:47:26.928Z"
+  },
+  {
+    "file": "E_1.mp3",
+    "tag": "E",
+    "index": 1,
+    "generated_voice_id": "XI4UZoRX16ibnQHw8HOr",
+    "secs": 20.4828125,
+    "description": "A round cheerful Englishman in his sixties, tenor-baritone, bustling energy, talks a little too fast when excited, wheezes with laughter, kindly and eager to please everyone in the room.",
+    "text": "Miss Frost, allow me — Sir William Lucas — and I shall introduce you to everyone of consequence! Even Mr Darcy, who has danced at St James's itself, shall not escape the floor tonight. Between ourselves, I mean to put you before him before supper is served. Both, Miss Frost, both.",
+    "created": "2026-09-24T12:55:58.311Z"
+  },
+  {
+    "file": "D_1.mp3",
+    "tag": "D",
+    "index": 1,
+    "generated_voice_id": "1ral4UZn74ujliKT2TGr",
+    "secs": 21.2664375,
+    "description": "An elderly British gentleman, plummy fruity voice, beaming and effusive, old-fashioned courtly manners, rolling his r's slightly, delighted by titles and ceremony, warm and harmless.",
+    "text": "Miss Frost, allow me — Sir William Lucas — and I shall introduce you to everyone of consequence! Even Mr Darcy, who has danced at St James's itself, shall not escape the floor tonight. Between ourselves, I mean to put you before him before supper is served. Both, Miss Frost, both.",
+    "created": "2026-09-24T12:55:59.741Z"
+  },
+  {
+    "file": "F_1.mp3",
+    "tag": "F",
+    "index": 1,
+    "generated_voice_id": "0ZmG6njVNvYhY6iJTENj",
+    "secs": 21.6844375,
+    "description": "A dignified older British man, mellow measured baritone, benevolent and proud of his position, slightly formal, avuncular warmth, the country knight who once was presented at court.",
+    "text": "Miss Frost, allow me — Sir William Lucas — and I shall introduce you to everyone of consequence! Even Mr Darcy, who has danced at St James's itself, shall not escape the floor tonight. Between ourselves, I mean to put you before him before supper is served. Both, Miss Frost, both.",
+    "created": "2026-09-24T12:56:01.915Z"
+  }
+]

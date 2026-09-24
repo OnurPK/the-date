@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>SFX samples — UI, meters, map</title>
+<style>
+body{margin:0;background:#0e0d13;color:#e7deff;font:500 14px/1.5 Inter,system-ui,sans-serif;padding:22px;max-width:640px}
+h1{font:600 20px Playfair Display,Georgia,serif;margin:0 0 4px}
+p.sub{color:#7a7290;margin:0 0 14px;font-size:12px}
+.fam{margin:14px 0;padding:12px;border:1px solid #2a2733;border-radius:12px}
+.fam h2{font:600 15px Playfair Display,Georgia,serif;margin:0 0 2px;color:#fff}
+.fam .why{font-size:11.5px;color:#9a90b4;margin:0 0 8px}
+.row{display:flex;align-items:center;gap:10px;padding:7px 0;border-top:1px solid #221f2c}
+.row .t{width:22px;height:22px;border-radius:50%;display:grid;place-items:center;font:800 10px Inter;background:#2a2733}
+.row .d{flex:1;font-size:12px;color:#b8b0cc}
+.row button{background:#1b1826;color:#fff;border:1px solid #3a3450;border-radius:999px;padding:7px 12px;font:700 10px/1 Inter;letter-spacing:.08em;text-transform:uppercase;cursor:pointer}
+.row button.on{background:#8b7bd8;border-color:#8b7bd8}
+.row.missing{opacity:.35}
+</style></head><body>
+<h1>SFX samples</h1>
+<p class="sub">Picked so far: remember B · choice tapped B · map amb B (town) + C (forest) blended by pan · map music A · carriage A · gulls/bells both random. Tap to play (loops play until tapped again). Samples that failed to generate are dimmed.</p>
+<div id="list"></div>
+<script>
+const B='../worlds/pride-and-prejudice/audio/';
+const FAM=[
+ ['sfx/remember','“X will remember this”',[['a','quill scratch + low warm chime'],['b','single harp note, shimmer tail'],['c','page turn + muted bell']]],
+ ['sfx/heart_up','Desire up (heartbeat)',[['a','two soft heartbeats + rising tone'],['b','heartbeat + ascending harp pluck'],['c','heartbeat + warm string swell']]],
+ ['sfx/heart_up','Desire — two heartbeats (round 2)',[['d','2× lub-dub + string swell'],['e','2× lub-dub + cello swell'],['f','2 deep beats + harmonic tail']]],
+ ['sfx/trust','Trust (round 2)',[['a','wooden knock + low cello'],['b','handshake thuds + low chime'],['c','deep bell + muted drum']]],
+ ['sfx/affection','Affection (round 2)',[['a','two glockenspiel notes up'],['b','harp arpeggio, three up'],['c','breathy flute + sparkle']]],
+ ['sfx/heart_down','Desire down (unused — desire uses heart_up both ways)',[['a','dull heartbeat + descending tone'],['b','heartbeat + string dip'],['c','heavy thump, cold tail']]],
+ ['sfx/meter','Other progress bars (trust / affection / romance)',[['a','ascending glassy tick'],['b','two pizzicato notes'],['c','wooden tick + sparkle']]],
+ ['sfx/choice_open','Choices appear (currently sfx.choice)',[['a','paper fan unfolding'],['b','three ticks, cards laid out'],['c','quill dip + whoosh']]],
+ ['sfx/choice_pick','Choice tapped',[['a','wax seal press'],['b','quill tap'],['c','wooden click + tiny chime']]],
+ ['amb/map','Map ambience (loop)',[['a','countryside: breeze, birds, sheep'],['b','village: birds, wind, faint carriage'],['c','morning: skylarks, grass, rooks']]],
+ ['music/map','Map music (45 s)',[['a','pianoforte + light strings, pastoral'],['b','string quartet, Haydn-like minuet'],['c','harp + flute, morning']]],
+ ['sfx/map_carriage','Map random: carriage',[['a','gravel road, approach + fade'],['b','distant lane, creaking wheels']]],
+ ['sfx/map_gull','Map random: gulls',[['a','two–three cries, distant'],['b','single gull, twice, breezy']]],
+ ['sfx/map_bell','Map random: church bell',[['a','two tolls, distant'],['b','single toll, long tail']]],
+ ['sfx/map_dog','Map random: dog',[['a','two barks, distant']]],
+ ['sfx/map_horse','Map random: horse',[['a','whinny + short trot']]],
+ ['sfx/map_rooks','Map random: rooks',[['a','cawing in distant trees']]],
+];
+const list=document.getElementById('list'); let cur=null;
+list.innerHTML=FAM.map(([slot,title,vs])=>`<div class="fam"><h2>${title}</h2><div class="why">${slot}</div>${vs.map(([k,d])=>`<div class="row" data-f="${slot}__${k}"><span class="t">${k.toUpperCase()}</span><span class="d">${d}</span><button data-play="${slot}__${k}">Play</button></div>`).join('')}</div>`).join('');
+function stop(){ if(cur){ cur.a.pause(); cur.btn.classList.remove('on'); cur=null; } }
+document.querySelectorAll('button[data-play]').forEach(b=>{ const f=b.dataset.play; const a=new Audio(B+f+'.mp3'); a.loop=/^(amb|music)\//.test(f); a.onerror=()=>b.closest('.row').classList.add('missing');
+  b.onclick=()=>{ if(cur&&cur.btn===b){ stop(); return; } stop(); a.currentTime=0; a.play(); b.classList.add('on'); cur={a,btn:b}; a.onended=()=>{ if(!a.loop){ b.classList.remove('on'); cur=null; } }; }; });
+</script></body></html>

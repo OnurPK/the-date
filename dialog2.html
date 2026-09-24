@@ -11600,6 +11600,7 @@
        body.flow-intro → Start visible, logo centered
        body.flow-form  → Start fades, logo slides up, form slides in -->
 <div id="introScreen" class="intro-layer">
+  <button id="wpSound" type="button" aria-label="Sound" title="Sound on/off"></button>
   <!-- AI / Demo toggle (top-right). ON = real GPT Image generation.
        OFF = pull a random portrait from the local IndexedDB cache,
        useful for demos so we don't pay or wait every time. -->
@@ -12092,6 +12093,25 @@
 #worldPages .wp-dot.on{ width:22px; border-radius:5px; background:linear-gradient(90deg,#e0668a,#8b7bd8) }
 </style>
 <div id="worldPages"><div class="wp-switch" id="wpSwitch"></div></div>
+<style>
+#wpSound{ position:absolute; left:14px; top:max(64px, calc(env(safe-area-inset-top) + 58px)); z-index:6; width:42px; height:42px; border-radius:50%; border:1px solid rgba(255,255,255,.28); background:rgba(14,10,20,.55); -webkit-backdrop-filter:blur(14px); backdrop-filter:blur(14px); display:grid; place-items:center; cursor:pointer; padding:0 }
+#wpSound svg{ width:20px; height:20px; stroke:#fff; fill:none; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round }
+#wpSound.off{ opacity:.7 } #wpSound.off .on-only{ display:none } #wpSound:not(.off) .off-only{ display:none }
+</style>
+<script>
+(function(){
+  const isMuted=()=>{ try{ return !!(JSON.parse(localStorage.getItem('rai.audio')||'{}').muted); }catch(e){ return false; } };
+  const sync=()=>{ const m=isMuted();
+    const w=document.getElementById('wpSound'); if(w) w.classList.toggle('off',m);
+    const p=document.getElementById('peSound'); if(p){ p.classList.toggle('muted',m); p.title=m?'Sound off':'Sound on'; } };
+  const toggle=(e)=>{ e.stopPropagation(); let j={}; try{ j=JSON.parse(localStorage.getItem('rai.audio')||'{}'); }catch(e2){} j.muted=!j.muted; try{ localStorage.setItem('rai.audio',JSON.stringify(j)); }catch(e2){} if(window.prideAudio) window.prideAudio.setMuted(j.muted); sync(); };
+  const w=document.getElementById('wpSound');
+  if(w){ w.innerHTML='<svg viewBox="0 0 24 24"><path d="M4 9v6h4l5 4V5L8 9H4z"/><path class="on-only" d="M16 9a4 4 0 0 1 0 6"/><path class="on-only" d="M18.5 6.5a8 8 0 0 1 0 11"/><path class="off-only" d="M17 9l4 6M21 9l-4 6"/></svg>'; w.addEventListener('click',toggle); }
+  const bind=()=>{ const p=document.getElementById('peSound'); if(p && !p.dataset.bound){ p.dataset.bound='1'; p.addEventListener('click',toggle); } sync(); };
+  bind(); document.addEventListener('DOMContentLoaded',bind); window.addEventListener('storage',sync);
+  window.raiSoundSync=sync;
+})();
+</script>
 <script>
 (function(){
   let built=false;
@@ -14709,6 +14729,12 @@ function applyDialogState(updates) {
       applyUiState(currentDialogState.ui);
     }
   }
+  if ('amb' in updates && activePack === 'pride') {   // [amb:ballroom] / [amb:none] — ambience loop with crossfade
+    try { window.prideAudio && window.prideAudio.amb(String(updates.amb || '').trim().toLowerCase()); } catch (e) {}
+  }
+  if ('music' in updates && activePack === 'pride') {   // [music:assembly] / [music:none] — episode music loop with crossfade
+    try { window.prideAudio && window.prideAudio.music(String(updates.music || '').trim().toLowerCase()); } catch (e) {}
+  }
   if ('pose' in updates && activePack === 'pride') {
     // [pose:darcy=guarded] → play 16-frame pose on the stage sprite, hold last frame
     // (expression) or loop (idle_*). [pose:darcy=none] clears it.
@@ -15275,12 +15301,14 @@ function showMechToast(kind, parts) {
         return;
       }
       if (kind === 'relation' && typeof window.showRelation === 'function') {
+        try { const dim = (parts[1] || '').toLowerCase(); window.prideAudio && window.prideAudio.hook(dim === 'trust' ? 'trust' : dim === 'affection' ? 'affection' : 'desire'); } catch (_) {}
         const pc = (typeof window !== 'undefined' && window.__pridePC && window.__pridePC.portrait) || 'arabella_frost';
         const type = ((parts[1]||'').toLowerCase() === 'romance') ? 'Romance' : 'Trust';
         window.showRelation(pc, fig(parts[0]), type, parts[2] || '+1');
         return;
       }
       if (kind === 'memory' && typeof window.showMemory === 'function') {
+        try { window.prideAudio && window.prideAudio.hook('remember'); } catch (_) {}
         window.showMemory(fig(parts[0]));
         return;
       }
@@ -16173,6 +16201,8 @@ function renderLine() {
 
   const line = lines[idx];
   el.lineCounter.textContent = `${idx + 1} / ${lines.length}`;
+  // Voice-over: every rendered speaker line asks prideAudio for its file (no-op when none exists)
+  try { if (activePack === 'pride' && window.prideAudio) window.prideAudio.voiceLine(line); } catch (e) {}
 
   // Dialog architecture v2 — bracket directive event. Updates the
   // current visual stack (bg/fx/tr/ui) and advances silently. The
@@ -16642,6 +16672,7 @@ let prideDiscFullText = null;
 function pridePaintDiscovery(text) {
   text = (text || '').replace(/\*/g, '').trim();
   if (!text) { idx++; renderLine(); return; }
+  try { window.prideAudio && window.prideAudio.hook('discovery'); } catch (e) {}
   if (typeTimer) { clearInterval(typeTimer); typeTimer = null; }
   el.dialogBox.className = 'narrative pride-discovery';
   if (el.body) el.body.classList.add('narrative-active');
@@ -18371,6 +18402,7 @@ function startChoice(options) {
   Object.values(el.chars).forEach(c => c.classList.remove('active','exit-left','exit-right'));
   el.aura.className = 'voice-aura';
   el.body.classList.add('choosing');
+  try { if (activePack === 'pride' && window.prideAudio) window.prideAudio.hook('choice_open'); } catch (e) {}
   el.body.classList.remove('narrative-active');
   // Inside a narrative scene, tear down anything the previous line may have
   // put on screen so it doesn't collide with the choice panel:
@@ -18548,6 +18580,7 @@ function startChoice(options) {
 let lastChosenIdx = -1;
 
 function endChoice(chosenIdx, chosenOpt) {
+  try { if (activePack === 'pride' && window.prideAudio) window.prideAudio.hook('choice'); } catch (e) {}
   // Stash the player's typed-in text so later lines can use {{input}}.
   // Strip trailing punctuation so the narrative reads cleanly ("...clean
   // and whole, Hug her.") even if the player added their own period.
@@ -19051,6 +19084,7 @@ function inObject() {
 function next() {
   // Pride combat owns the dialog box while it runs — don't let taps walk the script.
   if (document.body.classList.contains('pe-combat')) return;
+  try { if (activePack === 'pride' && window.prideAudio && !el.body.classList.contains('choosing')) window.prideAudio.hook('advance'); } catch (e) {}
   // Object character mode: the main dialog box advances the object sub-dialog
   if (el.body.classList.contains('inObjectChar')) { advanceObjectLine(); return; }
   if (el.body.classList.contains('exploring')) return;
@@ -19723,7 +19757,11 @@ el.body.classList.add('rain-off');
   });
 })();
 
+// Map ambience blend: forest layer on the left/countryside, town layer as you pan right (smooth, per scroll).
+function prideMapMix(){ try { const sc = flowEl && flowEl.mapScroll; if (!sc || !window.prideAudio) return; const w = sc.scrollWidth - sc.clientWidth; const x = w > 0 ? (sc.scrollLeft + sc.clientWidth / 2) / sc.scrollWidth : .5; const t = Math.max(0, Math.min(1, (x - .3) / .3)); window.prideAudio.mapMix(t); } catch (e) {} }
+(function(){ let raf = null; document.addEventListener('scroll', (e) => { if (!(e.target && e.target.id === 'mapScroll')) return; if (raf) return; raf = requestAnimationFrame(() => { raf = null; prideMapMix(); }); }, true); })();
 function showMap() {
+  try { window.prideAudio && window.prideAudio.stopAll(); window.prideAudio && window.prideAudio.stopVoice(); if (activePack === 'pride' && window.prideAudio) { window.prideAudio.mapEnter(); prideMapMix(); } } catch (e) {}   // episode ambience + voice end; map soundscape starts
   setFlow('map');
   flowEl.mapScroll.scrollTo({ left: 0, behavior: 'auto' });
   // Tell the editor chrome we left the episode (hides its "Go to End" pill).
@@ -23715,6 +23753,7 @@ function setFlow(name) {
   // one, in the same synchronous JS turn. Browsers won't paint between
   // these two classList calls.
   const cl = el.body.classList;
+  try { if (name !== 'map' && cl.contains('flow-map') && window.prideAudio) window.prideAudio.stopAll(); } catch (e) {}
   cl.remove.apply(cl, _FLOW_CLASSES);
   if (name) cl.add('flow-' + name);
   // Whenever we explicitly re-enter an onboarding screen, drop the
@@ -34326,6 +34365,9 @@ body.fe-open #prideEpChrome{ display:none }
   background:linear-gradient(135deg, var(--acc), rgba(20,12,26,.55)); border-color:#fff;
   box-shadow:0 0 0 2px var(--accsoft), 0 0 16px var(--accsoft), 0 6px 16px rgba(0,0,0,.45) }
 #peIcons .pe-ic.active .pe-avr{ opacity:0; animation:none }
+#peIcons #peSound.muted{ border-color:rgba(255,255,255,.16) }
+#peIcons #peSound.muted svg{ opacity:.45 }
+#peIcons #peSound.muted .on-only{ display:none } #peIcons #peSound:not(.muted) .off-only{ display:none }
 #peIcons #peAvatar{ width:52px; height:52px; border-radius:15px; background-size:cover; background-position:50% 6%; background-repeat:no-repeat; background-color:#2a2233;
   border:2px solid rgba(255,255,255,.6); position:relative; overflow:visible }
 
@@ -34429,6 +34471,9 @@ body[data-pack="pride"] #dialogBox.pride-discovery .speaker::before{
 <div id="prideEpChrome">
   <div id="peObj"></div>
   <div id="peIcons">
+    <button class="pe-ic" id="peSound" title="Sound on/off" aria-label="Sound on/off">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9v6h4l5 4V5L8 9H4z"/><path class="on-only" d="M16 9a4 4 0 0 1 0 6"/><path class="on-only" d="M18.5 6.5a8 8 0 0 1 0 11"/><path class="off-only" d="M17 9l4 6M21 9l-4 6"/></svg>
+    </button>
     <div class="pe-ic" id="peAvatar" title="Logbook"></div>
     <button class="pe-ic" id="peMind" title="Inner world" aria-label="Inner world">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9.2"/><path d="M15.5 18c-.2-1.8-1.3-2.5-3-2.9-1.4-.3-2-.9-2-2 0-.5.3-.9.3-1.6 0-.4-.3-.6-.3-1.2 0-1.7 1.1-3 2.9-3 1.7 0 2.8 1.1 2.8 3.1 0 2.3-.7 3-.5 5.1" fill="currentColor" fill-opacity=".18"/></svg>
@@ -35239,6 +35284,106 @@ body.pe-combat.pe-beat #dialogBox{ opacity:1 !important; transform:none !importa
 })();
 </script>
 <!-- ===== /PRIDE STORY NOTIFICATIONS ===== -->
+<!-- ===== PRIDE AUDIO (manifest-driven: ambience loops, UI one-shots; files under worlds/pride-and-prejudice/audio/) ===== -->
+<script>
+(function prideAudioSetup(){
+  const BASE = 'worlds/pride-and-prejudice/audio/';
+  let M = null, loading = null, unlocked = false, muted = false;
+  const LS = 'rai.audio';
+  let levels = { amb: .55, sfx: .8, music: .6, voice: 1 };
+  try { const j = JSON.parse(localStorage.getItem(LS) || '{}'); if (j.levels) levels = Object.assign(levels, j.levels); muted = !!j.muted; } catch (e) {}
+  const save = () => { try { localStorage.setItem(LS, JSON.stringify({ levels, muted })); } catch (e) {} };
+  // two looping channels: ambience + music (each: one element at a time, crossfade on change)
+  const amb = { kind: 'amb', el: null, name: null, fade: null }, mus = { kind: 'music', el: null, name: null, fade: null }, amb2 = { kind: 'amb', el: null, name: null, fade: null, mix: 0 };   // amb2: second ambience layer (map forest↔town blend)
+  const vol = (ch) => gain(ch.kind + '.x') * (ch.mix == null ? 1 : ch.mix);
+  const pool = {};   // slot → Audio (sfx one-shots, cloned per play)
+  function load(force){ if (M && !force) return Promise.resolve(M); if (loading && !force) return loading;
+    loading = fetch(BASE + 'manifest.json' + (force ? '?v=' + Date.now() : ''), { cache: 'no-store' }).then(r => r.json()).then(j => { M = j; if (j.levels) { Object.keys(j.levels).forEach(k => { if (levels[k] == null) levels[k] = j.levels[k]; }); } tell(); return M; }).catch(() => (M = M || { slots: {}, hooks: {} }));
+    return loading; }
+  function fileOf(slot){ const s = M && M.slots && M.slots[slot]; if (!s) return null; const v = s.variants && s.variants[s.active]; return v ? BASE + v.file : null; }
+  function kindOf(slot){ return String(slot).split('.')[0]; }
+  // ducking: while a voice line plays, amb/music sit at DUCK× their level (smooth in/out)
+  const DUCK = .55; let duck = 1, duckRaf = null;
+  function gain(slot){ const k = kindOf(slot); const g = muted ? 0 : (levels[k] != null ? levels[k] : .8); return (k === 'amb' || k === 'music') ? g * duck : g; }
+  function duckTo(target, ms){ if (duckRaf) cancelAnimationFrame(duckRaf); const from = duck, t0 = performance.now();
+    const step = () => { const k = Math.min(1, (performance.now() - t0) / ms); duck = from + (target - from) * k;
+      [amb, amb2, mus].forEach(ch => { if (ch.el && !ch.fade) ch.el.volume = vol(ch); });
+      duckRaf = k < 1 ? requestAnimationFrame(step) : null; }; step(); }
+  // iOS: audio can only start after a user gesture. First pointerdown creates/unlocks.
+  function unlock(){ if (unlocked) return; unlocked = true; try { const a = new Audio(); a.muted = true; a.play().catch(() => {}); } catch (e) {} if (amb.name) startLoop(amb, amb.name, true); if (mus.name) startLoop(mus, mus.name, true); }
+  document.addEventListener('pointerdown', unlock, { capture: true, passive: true });
+  document.addEventListener('touchend', unlock, { capture: true, passive: true });
+  function playSfx(slot){ if (typeof activePack !== 'undefined' && activePack !== 'pride') return; load().then(() => { const f = fileOf(slot); if (!f || !unlocked) return; const a = new Audio(f); a.volume = gain(slot); a.play().catch(() => {}); }); }
+  function fadeTo(ch, el, target, ms, done){ if (!el) { done && done(); return; } const from = el.volume, t0 = performance.now(); if (ch.fade) cancelAnimationFrame(ch.fade);
+    const step = () => { const k = Math.min(1, (performance.now() - t0) / ms); el.volume = from + (target - from) * k; if (k < 1) ch.fade = requestAnimationFrame(step); else { ch.fade = null; done && done(); } }; step(); }
+  function startLoop(ch, name, instant){ load().then(() => { const slot = ch.kind + '.' + name; const f = fileOf(slot); if (!f) { stopLoop(ch); return; }
+    if (ch.el && ch.el.dataset.slot === slot && !ch.el.paused) { ch.el.volume = vol(ch); return; }
+    const old = ch.el; const el = new Audio(f); el.loop = true; el.dataset.slot = slot; el.volume = 0; ch.el = el; ch.name = name;
+    tell();
+    if (!unlocked) return;   // will start on first gesture
+    el.play().catch(() => {});
+    fadeTo(ch, el, vol(ch), instant ? 200 : 1200);
+    if (old) { const o = old; const t0 = performance.now(), v0 = o.volume; const st = () => { const k = Math.min(1, (performance.now() - t0) / 1000); o.volume = v0 * (1 - k); if (k < 1) requestAnimationFrame(st); else { o.pause(); o.src = ''; } }; st(); } }); }
+  function stopLoop(ch){ ch.name = null; const o = ch.el; ch.el = null; if (!o) return; fadeTo(ch, o, 0, 900, () => { o.pause(); o.src = ''; }); tell(); }
+  const startAmb = (n, i) => startLoop(amb, n, i), stopAmb = () => stopLoop(amb);
+  document.addEventListener('visibilitychange', () => { [amb, mus].forEach(ch => { if (!ch.el) return; if (document.hidden) ch.el.pause(); else if (ch.name && unlocked) ch.el.play().catch(() => {}); }); });
+  function tell(){ try { window.parent !== window && window.parent.postMessage({ type: 'audio', amb: amb.name, music: mus.name, levels, muted, manifest: M, episode: (typeof currentEpisodeBase === 'function' && activePack === 'pride') ? currentEpisodeBase() : null }, '*'); } catch (e) {} }
+  // ---- voice-over ----
+  let VO = null, voLoading = null, voEl = null; const voMissing = {};
+  function fnv1a(str){ let h = 0x811c9dc5; for (let i = 0; i < str.length; i++) { h ^= str.charCodeAt(i); h = Math.imul(h, 0x01000193) >>> 0; } return h.toString(16).padStart(8, '0'); }
+  function voiceClean(t){ return String(t || '').replace(/\[[^\]]*\]/g, '').replace(/\{([^{}|]*)\|[^{}]*\}/g, '$1').replace(/\*\*/g, '').replace(/\s+/g, ' ').trim(); }
+  function loadVoices(force){ if (VO && !force) return Promise.resolve(VO); if (voLoading && !force) return voLoading;
+    voLoading = fetch(BASE + 'voices.json' + (force ? '?v=' + Date.now() : ''), { cache: 'no-store' }).then(r => r.json()).then(j => (VO = j)).catch(() => (VO = VO || { characters: {} })); return voLoading; }
+  function stopVoice(){ if (voEl) { try { voEl.pause(); voEl.src = ''; } catch (e) {} voEl = null; } if (duck < 1) duckTo(1, 700); }
+  function voiceUrl(url){ stopVoice(); if (!url) return; const a = new Audio(url); a.volume = gain('voice.x'); voEl = a; a.onplaying = () => { if (voEl === a) duckTo(DUCK, 220); }; a.onended = a.onerror = () => { if (voEl === a) { voEl = null; duckTo(1, 700); } }; a.play().catch(() => {}); }
+  function voiceLine(line){ stopVoice(); if (!line || line.type !== 'line' || !line.speaker) return; if (muted) return;
+    const sp = String(line.speaker).toLowerCase(); const folder = sp === 'narrative' ? 'narrator' : ((typeof PRIDE_ACTORS !== 'undefined' && PRIDE_ACTORS[sp]) || sp);
+    try { window.parent !== window && window.parent.postMessage({ type: 'voiceLine', folder, speaker: sp, text: voiceClean(line.text) }, '*'); } catch (e) {}
+    loadVoices().then(() => { const c = VO.characters && VO.characters[folder]; if (!c || !c.active) return;
+      const text = voiceClean(line.text); if (!text) return; const hash = fnv1a(sp + '|' + text);
+      const ep = (typeof currentEpisodeBase === 'function') ? currentEpisodeBase() : ''; if (!ep) return;
+      const url = ep + '/voice/' + folder + '/' + c.active + '/' + hash + '.mp3'; if (voMissing[url]) return;
+      const a = new Audio(url); a.volume = gain('voice.x'); voEl = a; a.onerror = () => { voMissing[url] = true; if (voEl === a) { voEl = null; duckTo(1, 700); } };
+      a.onplaying = () => { if (voEl === a) duckTo(DUCK, 220); }; a.onended = () => { if (voEl === a) { voEl = null; duckTo(1, 700); } };
+      if (unlocked) a.play().catch(() => {}); }); }
+  window.prideAudio = {
+    voiceLine, stopVoice, reloadVoices(){ Object.keys(voMissing).forEach(k => delete voMissing[k]); return loadVoices(true); },
+    voices(){ return VO; },
+    amb(name){ if (!name || name === 'none' || name === 'off') stopAmb(); else { amb.name = name; startAmb(name); } tell(); },
+    music(name){ if (!name || name === 'none' || name === 'off') stopLoop(mus); else { mus.name = name; startLoop(mus, name); } tell(); },
+    hook(h){ load().then(() => { const slot = M && M.hooks && M.hooks[h]; if (slot) playSfx(slot); }); },
+    play: playSfx,
+    setLevel(kind, v){ levels[kind] = Math.max(0, Math.min(1, +v)); [amb, amb2, mus].forEach(ch => { if (ch.el && ch.kind === kind) ch.el.volume = vol(ch); }); save(); tell(); },
+    setMuted(m){ muted = !!m; [amb, amb2, mus].forEach(ch => { if (ch.el) ch.el.volume = vol(ch); }); if (m) stopVoice(); save(); tell(); },
+    setActive(slot, variant){ load().then(() => { if (!M.slots[slot] || !M.slots[slot].variants[variant]) return; M.slots[slot].active = variant; [amb, amb2, mus].forEach(ch => { if (ch.el && ch.el.dataset.slot === slot) { const n = ch.name; ch.el.dataset.slot = ''; startLoop(ch, n, true); } }); tell(); }); },
+    reload(){ return load(true).then(() => { [amb, amb2, mus].forEach(ch => { if (ch.name) { const n = ch.name; if (ch.el) ch.el.dataset.slot = ''; startLoop(ch, n, true); } }); }); },
+    state(){ return { amb: amb.name, music: mus.name, levels, muted, manifest: M }; },
+    stopAll(){ stopAmb(); stopLoop(amb2); stopLoop(mus); mapRandom(false); },
+    // ---- map soundscape: town+forest ambience blended by pan position, map music, sparse random one-shots ----
+    mapEnter(){ amb.name = 'map_town'; startLoop(amb, 'map_town'); amb2.name = 'map_forest'; startLoop(amb2, 'map_forest'); mus.name = 'map'; startLoop(mus, 'map'); mapRandom(true); tell(); },
+    mapMix(t){ t = Math.max(0, Math.min(1, +t || 0)); amb.mix = .35 + .65 * t; amb2.mix = 1 - t; [amb, amb2].forEach(ch => { if (ch.el && !ch.fade) ch.el.volume = vol(ch); }); },
+  };
+  // random distant one-shots on the map: never continuous — 25–60 s apart, quiet ("from far away")
+  const MAP_RANDOM = ['sfx.map_carriage', 'sfx.map_gull', 'sfx.map_gull', 'sfx.map_bell', 'sfx.map_bell', 'sfx.map_dog', 'sfx.map_horse', 'sfx.map_rooks']; let mapTimer = null;
+  function mapRandom(on){ if (mapTimer) { clearTimeout(mapTimer); mapTimer = null; } if (!on) return;
+    const tick = () => { mapTimer = setTimeout(() => { if (document.hidden || muted) { tick(); return; }
+        const slot = MAP_RANDOM[Math.floor(Math.random() * MAP_RANDOM.length)]; load().then(() => { const S = M && M.slots && M.slots[slot]; if (!S) return; const ids = Object.keys(S.variants || {}); if (!ids.length) return;
+          const id = ids[Math.floor(Math.random() * ids.length)]; const f = S.variants[id] && (BASE + S.variants[id].file); if (!f || !unlocked) return; const a = new Audio(f); a.volume = gain('sfx.x') * .3; a.play().catch(() => {}); });
+        tick(); }, 25000 + Math.random() * 35000); };
+    tick(); }
+  window.addEventListener('message', (e) => { const d = e && e.data; if (!d || !d.type) return;
+    if (d.type === 'audioSet') window.prideAudio.setActive(d.slot, d.variant);
+    else if (d.type === 'audioReload') window.prideAudio.reload();
+    else if (d.type === 'audioLevel') window.prideAudio.setLevel(d.kind, d.value);
+    else if (d.type === 'audioPreview') { if (/^amb\./.test(d.slot)) window.prideAudio.amb(d.slot.slice(4)); else if (/^music\./.test(d.slot)) window.prideAudio.music(d.slot.slice(6)); else window.prideAudio.play(d.slot); }
+    else if (d.type === 'voicesReload') window.prideAudio.reloadVoices();
+    else if (d.type === 'voiceReplay') { try { voiceLine(lines[idx]); } catch (e) {} }
+    else if (d.type === 'voicePlay') { try { voiceUrl(d.url); } catch (e) {} }
+    else if (d.type === 'audioState') tell(); });
+})();
+</script>
+<!-- ===== /PRIDE AUDIO ===== -->
+
 <!-- ===== PRIDE CHOICE EDITOR (long-press → word variants) — injected ===== -->
 <style id="pridechoiceedit-css">
 .choice-opt.has-variants{ -webkit-touch-callout:none; -webkit-user-select:none; user-select:none }

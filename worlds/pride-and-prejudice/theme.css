@@ -222,3 +222,6 @@ body[data-pack="pride"] .es-text{ font-family:"Playfair Display",Georgia,serif; 
 body[data-pack="pride"].ui-cast-small #focusCharacter.c-darcy,
 body[data-pack="pride"].ui-cast-small #focusCharacter.c-sir-william2,
 body[data-pack="pride"].ui-cast-small #focusCharacter.c-carter{ transform:scaleX(-1) !important; transition:opacity .4s ease !important; }
+
+/* cast-large only: the stage sprite fills a little more of the screen (84% → 91% of the 130vh slot; head ~16vh from the top instead of ~27vh) */
+body[data-pack="pride"].ui-cast-large .char.pride-actor{ background-size:auto 91% !important; }

@@ -424,6 +424,28 @@
     animation: sitPulse 2s ease-in-out infinite;
   }
   @keyframes sitPulse { 0%,100%{opacity:1} 50%{opacity:.4} }
+  /* ---- Audio panel (below Now Playing): active slots, variant switch, preview, levels, import ---- */
+  .sit-panel.show { pointer-events: auto; }
+  .aud-box { margin-top: 12px; padding-top: 10px; border-top: 1px solid rgba(255,255,255,0.1); }
+  .aud-row { display: flex; align-items: center; gap: 6px; margin: 5px 0; font-size: 11px; color: rgba(255,255,255,0.8); }
+  .aud-row .k { width: 84px; flex: none; font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: 10px; color: rgba(255,255,255,0.55); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .aud-row.on .k { color: #ff7eb9; }
+  .aud-row select { flex: 1; min-width: 0; background: rgba(255,255,255,0.06); color: #fff; border: 1px solid rgba(255,255,255,0.16); border-radius: 7px; font: 500 11px Inter, system-ui, sans-serif; padding: 3px 5px; }
+  .aud-row button { background: rgba(255,255,255,0.08); color: #fff; border: 1px solid rgba(255,255,255,0.16); border-radius: 7px; font: 700 10px Inter, system-ui, sans-serif; padding: 4px 7px; cursor: pointer; }
+  .aud-row button:hover { background: rgba(255,126,185,0.22); }
+  .aud-row input[type=range] { flex: 1; min-width: 0; accent-color: #ff7eb9; }
+  .aud-foot { display: flex; gap: 6px; margin-top: 8px; }
+  .aud-foot button { flex: 1; }
+  .aud-msg { font-size: 10px; color: rgba(255,255,255,0.45); margin-top: 6px; min-height: 12px; }
+  .vox-char { margin: 6px 0 4px; }
+  .vox-char .aud-row .k { width: 96px; }
+  .vox-add { display: none; gap: 4px; margin: 4px 0 2px 0; }
+  .vox-char.adding .vox-add { display: flex; }
+  .vox-add input { flex: 1; min-width: 0; background: rgba(255,255,255,0.06); color: #fff; border: 1px solid rgba(255,255,255,0.16); border-radius: 7px; font: 500 11px Inter, system-ui, sans-serif; padding: 3px 6px; }
+  .vox-set { display: grid; grid-template-columns: repeat(5, 1fr); align-items: end; gap: 3px; margin: 2px 0 3px; } .vox-set .btns { grid-column: 1 / -1; display: flex; justify-content: flex-end; gap: 4px; } .vox-set label { display: flex; flex-direction: column; min-width: 0; } .vox-set label span { font-size: 8.5px; color: rgba(255,255,255,.45); letter-spacing: .03em; } .vox-set input { width: 100%; min-width: 0; box-sizing: border-box; background: rgba(255,255,255,0.06); color: #fff; border: 1px solid rgba(255,255,255,0.16); border-radius: 6px; font: 500 9.5px Inter, system-ui, sans-serif; padding: 3px 0; text-align: center; -moz-appearance: textfield; letter-spacing: -.02em; } .vox-set input::-webkit-outer-spin-button, .vox-set input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; } .vox-set input::placeholder { color: rgba(255,255,255,.28); } .vox-set button { padding: 3px 5px; font-size: 9.5px; } .vox-set button[data-act=try] { background: #8b7bd8; border-color: #8b7bd8; color: #fff; } .vox-set button:disabled { opacity: .35; cursor: default; }
+  .vox-takes { display: flex; align-items: center; gap: 4px; margin: 2px 0 2px; } .vox-takes .k { width: 96px; font-size: 10px; color: rgba(255,255,255,.5); } .vox-takes select { flex: 1; min-width: 0; }
+  .vox-prog { height: 3px; background: rgba(255,255,255,0.1); border-radius: 2px; overflow: hidden; margin: 2px 0 4px; }
+  .vox-prog i { display: block; height: 100%; background: #ff7eb9; width: 0; transition: width .3s; }
   .sit-title {
     font-family: "Playfair Display", Georgia, serif;
     font-size: 19px; font-weight: 600; font-style: italic;
@@ -595,6 +617,17 @@
   <div class="sit-title" id="sitTitle">The Netherfield Ball</div>
   <div class="sit-desc" id="sitDesc">Launch the episode to follow the story situation by situation.</div>
   <div class="sit-id" id="sitId"></div>
+  <div class="aud-box" id="audBox" hidden>
+    <div class="sit-eyebrow" style="margin-top:0">Audio</div>
+    <div id="audSlots"></div>
+    <div id="audLevels"></div>
+    <div class="aud-foot"><button id="audImport" title="Move files from audio/_import/ into place and register them">Import</button><button id="audReload">Reload</button></div>
+    <div class="aud-msg" id="audMsg"></div>
+    <div class="sit-eyebrow" style="margin-top:12px">Voices</div>
+    <div id="voxList"></div>
+    <div class="aud-foot"><button id="voxRefresh">Refresh</button><button id="voxReplay" title="Replay the current line's voice">Replay line</button></div>
+    <div class="aud-msg" id="voxMsg"></div>
+  </div>
 </aside>
 
 <!-- Per-line cast tuner — edits the current dialogue line's narrative-mode
@@ -2446,6 +2479,76 @@
     if (sitId)    sitId.textContent    = d.id ? ('situation: ' + d.id) : '';
     if (sitPanel) sitPanel.classList.add('show');
   });
+
+
+  // ----- Audio panel: mirrors the game's audio state (manifest + active ambience),
+  // lets you switch variants per slot, preview, set levels, and import a family.
+  (function audioPanel(){
+    const box = document.getElementById('audBox'), slotsEl = document.getElementById('audSlots'), levEl = document.getElementById('audLevels'), msg = document.getElementById('audMsg');
+    const frame = document.getElementById('gameFrame'); const send = (m) => { try { frame.contentWindow.postMessage(m, '*'); } catch (e) {} };
+    let st = null;
+    function render(){ if (!st || !st.manifest || !st.manifest.slots) return; box.hidden = false; const M = st.manifest;
+      const rank = k => k.startsWith('amb') ? 0 : k.startsWith('music') ? 1 : 2; const order = Object.keys(M.slots).sort((a, b) => rank(a) - rank(b) || a.localeCompare(b));
+      slotsEl.innerHTML = order.map(slot => { const sl = M.slots[slot]; const on = (st.amb && slot === 'amb.' + st.amb) || (st.music && slot === 'music.' + st.music);
+        const opts = Object.keys(sl.variants).map(v => `<option value="${v}" ${v === sl.active ? 'selected' : ''} title="${(sl.variants[v].note || '').replace(/"/g, '&quot;')}">${v} · ${sl.variants[v].src || ''}</option>`).join('');
+        return `<div class="aud-row ${on ? 'on' : ''}" data-slot="${slot}"><span class="k" title="${slot}">${on ? '▶ ' : ''}${slot}</span><select>${opts}</select><button data-act="prev" title="Preview in the game">▶</button></div>`; }).join('');
+      levEl.innerHTML = ['amb', 'sfx', 'music'].map(k => `<div class="aud-row"><span class="k">${k} level</span><input type="range" min="0" max="100" value="${Math.round((st.levels[k] != null ? st.levels[k] : .8) * 100)}" data-kind="${k}"></div>`).join('');
+      slotsEl.querySelectorAll('select').forEach(sel => sel.onchange = async () => { const slot = sel.closest('.aud-row').dataset.slot; send({ type: 'audioSet', slot, variant: sel.value });
+        const r = await fetch('/api/author/audio-manifest', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ slots: { [slot]: { active: sel.value } } }) }).then(r => r.json()).catch(e => ({ error: String(e) }));
+        msg.textContent = r.ok ? slot + ' → ' + sel.value + ' (saved)' : ('save failed: ' + (r.error || '')); });
+      slotsEl.querySelectorAll('button[data-act=prev]').forEach(b => b.onclick = () => send({ type: 'audioPreview', slot: b.closest('.aud-row').dataset.slot }));
+      levEl.querySelectorAll('input[type=range]').forEach(r => r.oninput = () => send({ type: 'audioLevel', kind: r.dataset.kind, value: r.value / 100 }));
+    }
+    let curLine = null; window.addEventListener('message', (e) => { const d = e && e.data; if (!d || d.type !== 'voiceLine') return; curLine = d; document.querySelectorAll('.vox-char').forEach(box => { const b = box.querySelector('[data-act=try]'); if (b) { const on = box.dataset.folder === d.folder; b.disabled = !on; b.title = on ? 'Preview the line on screen with these settings (one line of credits; episode files untouched)' : 'Advance to a line spoken by this character'; } }); });
+    window.addEventListener('message', (e) => { const d = e && e.data; if (!d || d.type !== 'audio') return; const epChanged = !st || st.episode !== d.episode; st = d; render(); if (epChanged) voxRefresh(); });
+    // ----- Voices: per speaker in the current episode — ElevenLabs ids, active pick, generate lines
+    const voxList = document.getElementById('voxList'), voxMsg = document.getElementById('voxMsg'); let vox = null;
+    async function voxRefresh(){ if (!st || !st.episode) { voxList.innerHTML = ''; return; }
+      vox = await fetch('/api/author/voice-lines?episode=' + encodeURIComponent(st.episode)).then(r => r.json()).catch(e => ({ error: String(e) }));
+      if (!vox || vox.error) { voxList.innerHTML = ''; voxMsg.textContent = vox && vox.error ? vox.error : ''; return; } voxRender(); }
+    function voxRender(){ const by = {}; vox.lines.forEach(l => { (by[l.folder] = by[l.folder] || []).push(l); });
+      voxList.innerHTML = Object.keys(by).map(folder => { const c = vox.voices.characters[folder] || { active: null, voices: {} }; const n = by[folder].length;
+        const opts = ['<option value="">— none —</option>'].concat(Object.keys(c.voices).map(k => { const have = by[folder].filter(l => l.have && l.have[k]).length; return `<option value="${k}" ${k === c.active ? 'selected' : ''} title="${c.voices[k].id}">${c.voices[k].name || k} · ${have}/${n}</option>`; })).join('');
+        return `<div class="vox-char" data-folder="${folder}"><div class="aud-row"><span class="k" title="${folder} · ${n} lines">${folder} <small>${n}</small></span><select data-act="active">${opts}</select><button data-act="gen" title="Generate missing lines for the selected voice">Gen</button><button data-act="regen" title="Regenerate ALL lines with the current settings (previous take is kept under _prev)">Re</button><button data-act="add" title="Add an ElevenLabs voice id">＋</button></div>
+          ${(() => { const g = vox.voices.settings || {}, cs = c.settings || {}; const F = [['speed','speed',1,'ElevenLabs speed 0.7–1.2 (regen)'],['stability','stab',g.stability != null ? g.stability : .45,'stability 0–1: higher = flatter, steadier (regen)'],['style','style',g.style != null ? g.style : .2,'style 0–1: higher = more expressive (regen)'],['lufs','lufs',-19,'loudness target, voice default −19; −17 = louder (post)'],['tempo','tempo',1,'ffmpeg tempo 0.9–1.2, pitch kept (post)']];
+            return `<div class="vox-set">${F.map(([k,l,d,t]) => `<label title="${t}"><span>${l}</span><input data-set="${k}" type="number" step="0.05" value="${cs[k] != null ? cs[k] : ''}" placeholder="${d}"></label>`).join('')}<div class="btns"><button data-act="try" ${curLine && curLine.folder === folder ? '' : 'disabled'} title="Preview the line on screen with these settings (one line of credits; episode files untouched)">Try</button><button data-act="setsave" title="Save these settings for this character (used by Gen/Re; lufs+tempo also by Post)">Save</button><button data-act="post" title="Re-run only the post step (lufs/tempo/trim) on the existing files — no credits">Post</button></div></div>`; })()}
+          ${(() => { const t = (vox.takes || {})[folder + '/' + (c.active || '')] || []; if (!t.length) return ''; const fmt = d => d.slice(6,8)+'.'+d.slice(4,6)+' '+d.slice(8,10)+':'+d.slice(10,12); const desc = x => x.settings ? Object.keys(x.settings).filter(k=>['speed','tempo','stability','style','lufs'].includes(k)).map(k=>k+' '+x.settings[k]).join(' · ') : ''; return `<div class="vox-takes"><span class="k">takes</span><select data-act="take"><option value="">— current —</option>${t.map(x => `<option value="${x.stamp}" title="${desc(x)}">${fmt(x.stamp)} · ${x.n} lines${desc(x) ? ' · ' + desc(x) : ''}</option>`).join('')}</select><button data-act="restore" title="Swap the current take with this one (current is kept)">↺</button></div>`; })()}
+          <div class="vox-add"><input data-f="name" placeholder="name"><input data-f="id" placeholder="ElevenLabs voice id"><button data-act="save">Save</button></div><div class="vox-prog"><i></i></div></div>`; }).join('');
+      voxList.querySelectorAll('.vox-char').forEach(box => { const folder = box.dataset.folder;
+        box.querySelector('[data-act=active]').onchange = async (e) => { const r = await fetch('/api/author/voices', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ folder, active: e.target.value || null }) }).then(r => r.json());
+          if (!e.target.value) { /* none: keep ids, just no active — write null */ }
+          voxMsg.textContent = folder + ' → ' + (e.target.value || 'none'); send({ type: 'voicesReload' }); setTimeout(() => send({ type: 'voiceReplay' }), 300); };
+        box.querySelector('[data-act=add]').onclick = () => box.classList.toggle('adding');
+        box.querySelector('[data-act=save]').onclick = async () => { const name = box.querySelector('[data-f=name]').value.trim(), id = box.querySelector('[data-f=id]').value.trim(); if (!id) return;
+          await fetch('/api/author/voices', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ folder, add: { name, id } }) }); box.classList.remove('adding'); voxMsg.textContent = 'added ' + (name || id); await voxRefresh(); send({ type: 'voicesReload' }); };
+        const restoreBtn = box.querySelector('[data-act=restore]'); if (restoreBtn) restoreBtn.onclick = async () => { const key = box.querySelector('[data-act=active]').value, stamp = box.querySelector('[data-act=take]').value; if (!key || !stamp) return;
+          if (!confirm(folder + ': switch to the take from ' + stamp + '? (current files are kept under _prev)')) return;
+          const r = await fetch('/api/author/voice-restore', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ episode: st.episode, folder, voiceKey: key, stamp }) }).then(r => r.json());
+          voxMsg.textContent = r.ok ? folder + ': restored ' + r.restored + ' lines' : 'restore failed: ' + (r.error || ''); await voxRefresh(); send({ type: 'voicesReload' }); setTimeout(() => send({ type: 'voiceReplay' }), 300); };
+        const readSet = () => { const o = {}; box.querySelectorAll('[data-set]').forEach(i => { o[i.dataset.set] = i.value === '' ? null : Number(i.value); }); return o; };
+        box.querySelector('[data-act=try]').onclick = async (e) => { const key = box.querySelector('[data-act=active]').value; if (!key || !curLine || curLine.folder !== folder) return; e.target.disabled = true; voxMsg.textContent = folder + ': previewing…';
+          const r = await fetch('/api/author/voice-preview', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ folder, voiceKey: key, text: curLine.text, settings: readSet() }) }).then(r => r.json()).catch(e => ({ error: String(e) }));
+          e.target.disabled = false; if (!r.ok) { voxMsg.textContent = 'preview failed: ' + (r.error || ''); return; } voxMsg.textContent = folder + ': preview (' + r.chars + ' chars) — Re to apply to all lines'; send({ type: 'voicePlay', url: r.url + '?t=' + Date.now() }); };
+        box.querySelector('[data-act=setsave]').onclick = async () => { await fetch('/api/author/voices', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ folder, charSettings: readSet() }) }); voxMsg.textContent = folder + ': settings saved'; await voxRefresh(); };
+        box.querySelector('[data-act=post]').onclick = async () => { const key = box.querySelector('[data-act=active]').value; if (!key) return; const o = readSet(); if (!confirm(folder + ': re-run post (lufs ' + (o.lufs ?? -19) + ', tempo ' + (o.tempo ?? 1) + ') on existing files? Tempo stacks on already-processed files.')) return;
+          await fetch('/api/author/voices', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ folder, charSettings: o }) });
+          const r = await fetch('/api/author/voice-post', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ episode: st.episode, folder, voiceKey: key }) }).then(r => r.json());
+          voxMsg.textContent = r.ok ? folder + ': post applied to ' + r.processed + ' files' : 'post failed: ' + (r.error || ''); send({ type: 'voicesReload' }); setTimeout(() => send({ type: 'voiceReplay' }), 300); };
+        const genRun = async (force) => { await fetch('/api/author/voices', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ folder, charSettings: readSet() }) }); const key = box.querySelector('[data-act=active]').value; if (!key) { voxMsg.textContent = 'pick a voice first'; return; }
+          if (force) { const o = readSet(); const d = Object.keys(o).filter(k => o[k] != null).map(k => k + ' ' + o[k]).join(', ') || 'global defaults'; if (!confirm(folder + ': regenerate ALL lines with: ' + d + '? (costs credits; the previous take is kept)')) return; }
+          const r = await fetch('/api/author/voice-build', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ episode: st.episode, folder, voiceKey: key, force: !!force }) }).then(r => r.json());
+          if (!r.ok) { voxMsg.textContent = 'build failed: ' + (r.error || ''); return; } const bar = box.querySelector('.vox-prog i'); voxMsg.textContent = folder + ': generating ' + r.total + ' lines (' + r.skipped + ' exist)';
+          const poll = async () => { const j = await fetch('/api/author/voice-job?job=' + r.job).then(r => r.json()); bar.style.width = (j.total ? Math.round(j.done / j.total * 100) : 100) + '%';
+            if (j.running) setTimeout(poll, 800); else { voxMsg.textContent = folder + ': ' + j.done + ' generated, ' + j.chars + ' chars' + (j.errors.length ? ', ' + j.errors.length + ' errors: ' + j.errors[0] : ''); voxRefresh(); send({ type: 'voicesReload' }); } }; poll(); };
+        box.querySelector('[data-act=gen]').onclick = () => genRun(false); box.querySelector('[data-act=regen]').onclick = () => genRun(true); }); }
+    document.getElementById('voxRefresh').onclick = voxRefresh;
+    document.getElementById('voxReplay').onclick = () => send({ type: 'voiceReplay' });
+    document.getElementById('audImport').onclick = async () => { msg.textContent = 'importing…'; const r = await fetch('/api/author/audio-import', { method: 'POST' }).then(r => r.json()).catch(e => ({ error: String(e) }));
+      msg.textContent = r.ok ? (r.imported.length + ' imported' + (r.skipped.length ? ', ' + r.skipped.length + ' skipped: ' + r.skipped.join(', ') : '')) : ('import failed: ' + (r.error || '')); send({ type: 'audioReload' }); };
+    document.getElementById('audReload').onclick = () => { send({ type: 'audioReload' }); msg.textContent = 'reloaded'; };
+    // ask the game for its state once it is up
+    setTimeout(() => send({ type: 'audioState' }), 2500);
+  })();
 
   // ----- Per-line cast tuner: edits the current line's narrative-mode params
   // live (postMessage to the game) and auto-saves to the overrides sidecar.

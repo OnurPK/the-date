@@ -1,0 +1,407 @@
+{
+  "_note": "Audio catalog. slots[kind.name] = { active: variantId, variants: { variantId: { file, src, note } } }. Files live at audio/<kind>/<name>__<variant>.mp3. Import a family: drop files named <kind>/<name>__<variant>.mp3 (or <kind>.<name>__<variant>.mp3 flat) into audio/_import/ and POST /api/author/audio-import — they are moved into place and registered here. The editor's Audio panel switches `active`.",
+  "kinds": {
+    "amb": "ambience loops (one at a time, crossfade)",
+    "sfx": "one-shots",
+    "music": "music loops",
+    "voice": "spoken lines"
+  },
+  "slots": {
+    "amb.ballroom": {
+      "active": "el1",
+      "variants": {
+        "el1": {
+          "file": "amb/ballroom__el1.mp3",
+          "src": "elevenlabs",
+          "note": "distant string quartet + crowd murmur, 22 s loop"
+        }
+      }
+    },
+    "sfx.tap": {
+      "active": "el1",
+      "variants": {
+        "el1": {
+          "file": "sfx/tap__el1.mp3",
+          "src": "elevenlabs",
+          "note": "soft tap on paper"
+        }
+      }
+    },
+    "sfx.choice": {
+      "active": "el1",
+      "variants": {
+        "el1": {
+          "file": "sfx/choice__el1.mp3",
+          "src": "elevenlabs",
+          "note": "quill stroke + set down"
+        }
+      }
+    },
+    "sfx.discovery": {
+      "active": "el1",
+      "variants": {
+        "el1": {
+          "file": "sfx/discovery__el1.mp3",
+          "src": "elevenlabs",
+          "note": "short harp gliss"
+        }
+      }
+    },
+    "music.assembly": {
+      "active": "m4",
+      "variants": {
+        "m1": {
+          "file": "music/assembly__m1.mp3",
+          "src": "elevenlabs",
+          "note": "String quartet, Regency-era English country dance in a candlelit assembly room, moderate tempo, elegant and li"
+        },
+        "m2": {
+          "file": "music/assembly__m2.mp3",
+          "src": "elevenlabs",
+          "note": "Slow, intimate solo pianoforte nocturne with soft strings underneath, tender and restrained, a quiet confessio"
+        },
+        "m3": {
+          "file": "music/assembly__m3.mp3",
+          "src": "elevenlabs",
+          "note": "Cinematic period-drama underscore: warm string orchestra, gentle harp arpeggios, unhurried romantic theme with"
+        },
+        "m4": {
+          "file": "music/assembly__m4.mp3",
+          "src": "elevenlabs",
+          "note": "Playful chamber piece for strings and harpsichord, witty and light, quick pizzicato figures, a duel of wits be"
+        },
+        "m5": {
+          "file": "music/assembly__m5.mp3",
+          "src": "elevenlabs",
+          "note": "Sparse, tense underscore: low cello drone, single violin line, distant ballroom dance heard through a wall, wa"
+        }
+      }
+    },
+    "sfx.remember": {
+      "active": "b",
+      "variants": {
+        "a": {
+          "file": "sfx/remember__a.mp3",
+          "src": "elevenlabs",
+          "note": "soft quill pen scratching briefly on parchment, then a gentle low warm chime, intimate, short"
+        },
+        "b": {
+          "file": "sfx/remember__b.mp3",
+          "src": "elevenlabs",
+          "note": "a single soft harp note with a delicate whispery shimmer tail, memory tone, quiet"
+        },
+        "c": {
+          "file": "sfx/remember__c.mp3",
+          "src": "elevenlabs",
+          "note": "quiet page turn followed by a soft muted bell, close and intimate, short"
+        }
+      }
+    },
+    "sfx.heart_up": {
+      "active": "c",
+      "variants": {
+        "a": {
+          "file": "sfx/heart_up__a.mp3",
+          "src": "elevenlabs",
+          "note": "two soft warm heartbeats close to the ear, then a gentle rising tone, short"
+        },
+        "b": {
+          "file": "sfx/heart_up__b.mp3",
+          "src": "elevenlabs",
+          "note": "a single heartbeat thump followed by a delicate ascending harp pluck, short"
+        },
+        "c": {
+          "file": "sfx/heart_up__c.mp3",
+          "src": "elevenlabs",
+          "note": "soft heartbeat with a warm string swell rising, brief, romantic"
+        },
+        "d": {
+          "file": "sfx/heart_up__d.mp3",
+          "src": "elevenlabs",
+          "note": "two slow human heartbeats, lub-dub lub-dub, close and soft, followed by a warm string swell rising gently, brief"
+        },
+        "e": {
+          "file": "sfx/heart_up__e.mp3",
+          "src": "elevenlabs",
+          "note": "two distinct soft heartbeats, lub-dub, lub-dub, intimate and close, then a short warm cello note swelling, romantic"
+        },
+        "f": {
+          "file": "sfx/heart_up__f.mp3",
+          "src": "elevenlabs",
+          "note": "exactly two heartbeats, slow and deep, close-mic, with a faint warm rising harmonic tail, short"
+        }
+      }
+    },
+    "sfx.heart_down": {
+      "active": "a",
+      "variants": {
+        "a": {
+          "file": "sfx/heart_down__a.mp3",
+          "src": "elevenlabs",
+          "note": "a single dull heartbeat with a soft descending low tone, short, cold"
+        },
+        "b": {
+          "file": "sfx/heart_down__b.mp3",
+          "src": "elevenlabs",
+          "note": "soft heartbeat then a muted string dipping downward, brief"
+        },
+        "c": {
+          "file": "sfx/heart_down__c.mp3",
+          "src": "elevenlabs",
+          "note": "quiet heavy thump with a short cold reverb tail, disappointment, short"
+        }
+      }
+    },
+    "sfx.meter": {
+      "active": "a",
+      "variants": {
+        "a": {
+          "file": "sfx/meter__a.mp3",
+          "src": "elevenlabs",
+          "note": "soft short ascending glassy tick, user interface progress fill, subtle"
+        },
+        "b": {
+          "file": "sfx/meter__b.mp3",
+          "src": "elevenlabs",
+          "note": "gentle pizzicato string pluck, two ascending notes, quick, subtle"
+        },
+        "c": {
+          "file": "sfx/meter__c.mp3",
+          "src": "elevenlabs",
+          "note": "muted wooden tick with a faint sparkle, user interface, subtle, short"
+        }
+      }
+    },
+    "sfx.choice_open": {
+      "active": "a",
+      "variants": {
+        "a": {
+          "file": "sfx/choice_open__a.mp3",
+          "src": "elevenlabs",
+          "note": "a paper fan unfolding softly with a faint airy whoosh, Regency, short"
+        },
+        "b": {
+          "file": "sfx/choice_open__b.mp3",
+          "src": "elevenlabs",
+          "note": "three soft quick ticks ascending, like playing cards being laid out on a table, subtle"
+        },
+        "c": {
+          "file": "sfx/choice_open__c.mp3",
+          "src": "elevenlabs",
+          "note": "quill dipped in ink then a soft airy whoosh, brief, subtle"
+        }
+      }
+    },
+    "sfx.choice_pick": {
+      "active": "b",
+      "variants": {
+        "a": {
+          "file": "sfx/choice_pick__a.mp3",
+          "src": "elevenlabs",
+          "note": "a single soft wax seal pressed onto paper, gentle thud with a tiny click, short"
+        },
+        "b": {
+          "file": "sfx/choice_pick__b.mp3",
+          "src": "elevenlabs",
+          "note": "a short crisp quill tap on parchment, single, subtle"
+        },
+        "c": {
+          "file": "sfx/choice_pick__c.mp3",
+          "src": "elevenlabs",
+          "note": "a soft wooden click with a faint tiny chime, user interface confirm, short"
+        }
+      }
+    },
+    "amb.map": {
+      "active": "a",
+      "variants": {
+        "a": {
+          "file": "amb/map__a.mp3",
+          "src": "elevenlabs",
+          "note": "English countryside daytime ambience: light breeze, distant birdsong, sheep far away, gentle leaves, no music, seamless "
+        },
+        "b": {
+          "file": "amb/map__b.mp3",
+          "src": "elevenlabs",
+          "note": "quiet English village afternoon ambience: birds, soft wind, faint distant carriage wheels, no music, seamless loop"
+        },
+        "c": {
+          "file": "amb/map__c.mp3",
+          "src": "elevenlabs",
+          "note": "rural English morning ambience: skylarks, breeze through tall grass, distant rooks, no music, seamless loop"
+        }
+      }
+    },
+    "sfx.map_carriage": {
+      "active": "a",
+      "variants": {
+        "a": {
+          "file": "sfx/map_carriage__a.mp3",
+          "src": "elevenlabs",
+          "note": "horse-drawn carriage passing on a gravel road, hooves and wheels approaching then fading away"
+        },
+        "b": {
+          "file": "sfx/map_carriage__b.mp3",
+          "src": "elevenlabs",
+          "note": "distant horse and carriage trotting past on a country lane, wheels creaking, fades"
+        }
+      }
+    },
+    "sfx.map_gull": {
+      "active": "a",
+      "variants": {
+        "a": {
+          "file": "sfx/map_gull__a.mp3",
+          "src": "elevenlabs",
+          "note": "two or three seagull cries, distant, open air"
+        },
+        "b": {
+          "file": "sfx/map_gull__b.mp3",
+          "src": "elevenlabs",
+          "note": "a single seagull calling twice far away, breezy"
+        }
+      }
+    },
+    "sfx.map_bell": {
+      "active": "a",
+      "variants": {
+        "a": {
+          "file": "sfx/map_bell__a.mp3",
+          "src": "elevenlabs",
+          "note": "distant village church bell tolling twice, countryside"
+        },
+        "b": {
+          "file": "sfx/map_bell__b.mp3",
+          "src": "elevenlabs",
+          "note": "far away church bell single toll with a long soft tail"
+        }
+      }
+    },
+    "sfx.map_dog": {
+      "active": "a",
+      "variants": {
+        "a": {
+          "file": "sfx/map_dog__a.mp3",
+          "src": "elevenlabs",
+          "note": "a dog barking twice in the distance, countryside"
+        }
+      }
+    },
+    "sfx.map_horse": {
+      "active": "a",
+      "variants": {
+        "a": {
+          "file": "sfx/map_horse__a.mp3",
+          "src": "elevenlabs",
+          "note": "a horse whinnying once, then a short trot passing, outdoors"
+        }
+      }
+    },
+    "sfx.map_rooks": {
+      "active": "a",
+      "variants": {
+        "a": {
+          "file": "sfx/map_rooks__a.mp3",
+          "src": "elevenlabs",
+          "note": "a few rooks cawing in distant trees, countryside"
+        }
+      }
+    },
+    "music.map": {
+      "active": "a",
+      "variants": {
+        "a": {
+          "file": "music/map__a.mp3",
+          "src": "elevenlabs",
+          "note": "gentle pastoral Regency-era piece for solo pianoforte with light strings, calm and airy, unhurried, loopable, instrument"
+        },
+        "b": {
+          "file": "music/map__b.mp3",
+          "src": "elevenlabs",
+          "note": "light string quartet in a Haydn-like minuet feel, warm and unhurried, English countryside, loopable, instrumental"
+        },
+        "c": {
+          "file": "music/map__c.mp3",
+          "src": "elevenlabs",
+          "note": "soft harp and flute pastoral, English countryside morning, contemplative and light, loopable, instrumental"
+        }
+      }
+    },
+    "amb.map_town": {
+      "active": "b",
+      "variants": {
+        "b": {
+          "file": "amb/map__b.mp3",
+          "src": "elevenlabs",
+          "note": "village layer (map right/town)"
+        }
+      }
+    },
+    "amb.map_forest": {
+      "active": "c",
+      "variants": {
+        "c": {
+          "file": "amb/map__c.mp3",
+          "src": "elevenlabs",
+          "note": "countryside layer (map left/forest)"
+        }
+      }
+    },
+    "sfx.trust": {
+      "active": "a",
+      "variants": {
+        "a": {
+          "file": "sfx/trust__a.mp3",
+          "src": "elevenlabs",
+          "note": "a single warm low cello note, steady and grounded, with a soft firm wooden knock at the start, short, subtle"
+        },
+        "b": {
+          "file": "sfx/trust__b.mp3",
+          "src": "elevenlabs",
+          "note": "two soft low wooden thuds like a firm handshake, then a quiet warm low chime, steady, short"
+        },
+        "c": {
+          "file": "sfx/trust__c.mp3",
+          "src": "elevenlabs",
+          "note": "a soft deep bell tone with a short muted drum underneath, settled and reassuring, short"
+        }
+      }
+    },
+    "sfx.affection": {
+      "active": "a",
+      "variants": {
+        "a": {
+          "file": "sfx/affection__a.mp3",
+          "src": "elevenlabs",
+          "note": "two warm gentle glockenspiel notes rising, tender, soft, short"
+        },
+        "b": {
+          "file": "sfx/affection__b.mp3",
+          "src": "elevenlabs",
+          "note": "a soft tender harp arpeggio, three quick notes up, warm and delicate, short"
+        },
+        "c": {
+          "file": "sfx/affection__c.mp3",
+          "src": "elevenlabs",
+          "note": "a warm breathy flute note with a tiny sparkle, gentle and kind, short"
+        }
+      }
+    }
+  },
+  "hooks": {
+    "advance": "sfx.tap",
+    "choice_open": "sfx.choice",
+    "choice": "sfx.choice_pick",
+    "discovery": "sfx.discovery",
+    "remember": "sfx.remember",
+    "desire": "sfx.heart_up",
+    "trust": "sfx.trust",
+    "affection": "sfx.affection"
+  },
+  "levels": {
+    "amb": 0.55,
+    "sfx": 0.8,
+    "music": 0.6,
+    "voice": 1
+  }
+}
