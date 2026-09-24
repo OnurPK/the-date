@@ -55,21 +55,32 @@
       }
     },
     "sir_william2": {
-      "active": "e",
+      "active": "a",
       "voices": {
         "e": {
           "id": "XI4UZoRX16ibnQHw8HOr",
           "name": "Sir William (E bustling)",
           "note": "A round cheerful Englishman in his sixties, tenor-baritone, bustling energy, talks a little too fast when excited, wheezes with laughter, kindly and eager to pl",
           "added": "2026-09-24"
+        },
+        "j": {
+          "id": "MFW1vLqMeO8MI5Ouo01v",
+          "name": "Sir William (J grandfather)",
+          "note": "A gentle old English gentleman in his seventies, soft papery voice with a cracked warmth, kindly, quietly amused, like a beloved grandfather telling a story, cl",
+          "added": "2026-09-24"
+        },
+        "a": {
+          "id": "LnEEUq6aGhHceuQB3UVe",
+          "name": "Sir William (A period drama)",
+          "note": "A jovial British gentleman in his sixties, warm rounded voice, received pronunciation, genial and a little pompous, delighted with everyone, ceremonious, brisk ",
+          "added": "2026-09-24"
         }
       },
       "settings": {
-        "speed": 1.2,
-        "stability": 0.4,
+        "speed": 1,
+        "stability": 0.5,
         "style": 0.15,
-        "lufs": -19,
-        "tempo": 1
+        "lufs": -17
       }
     }
   }

@@ -14732,6 +14732,9 @@ function applyDialogState(updates) {
   if ('amb' in updates && activePack === 'pride') {   // [amb:ballroom] / [amb:none] — ambience loop with crossfade
     try { window.prideAudio && window.prideAudio.amb(String(updates.amb || '').trim().toLowerCase()); } catch (e) {}
   }
+  if ('random' in updates && activePack === 'pride') {   // [random:ballroom] / [random:none] — sparse random one-shots from manifest.randoms[name]
+    try { window.prideAudio && window.prideAudio.random(String(updates.random || '').trim().toLowerCase()); } catch (e) {}
+  }
   if ('music' in updates && activePack === 'pride') {   // [music:assembly] / [music:none] — episode music loop with crossfade
     try { window.prideAudio && window.prideAudio.music(String(updates.music || '').trim().toLowerCase()); } catch (e) {}
   }
@@ -18402,7 +18405,7 @@ function startChoice(options) {
   Object.values(el.chars).forEach(c => c.classList.remove('active','exit-left','exit-right'));
   el.aura.className = 'voice-aura';
   el.body.classList.add('choosing');
-  try { if (activePack === 'pride' && window.prideAudio) window.prideAudio.hook('choice_open'); } catch (e) {}
+  try { if (activePack === 'pride' && window.prideAudio) { window.prideAudio.focus(true); window.prideAudio.hook('choice_open'); } } catch (e) {}
   el.body.classList.remove('narrative-active');
   // Inside a narrative scene, tear down anything the previous line may have
   // put on screen so it doesn't collide with the choice panel:
@@ -18580,7 +18583,7 @@ function startChoice(options) {
 let lastChosenIdx = -1;
 
 function endChoice(chosenIdx, chosenOpt) {
-  try { if (activePack === 'pride' && window.prideAudio) window.prideAudio.hook('choice'); } catch (e) {}
+  try { if (activePack === 'pride' && window.prideAudio) { window.prideAudio.hook('choice'); window.prideAudio.focus(false); } } catch (e) {}
   // Stash the player's typed-in text so later lines can use {{input}}.
   // Strip trailing punctuation so the narrative reads cleanly ("...clean
   // and whole, Hug her.") even if the player added their own period.
@@ -35300,25 +35303,43 @@ body.pe-combat.pe-beat #dialogBox{ opacity:1 !important; transform:none !importa
   function load(force){ if (M && !force) return Promise.resolve(M); if (loading && !force) return loading;
     loading = fetch(BASE + 'manifest.json' + (force ? '?v=' + Date.now() : ''), { cache: 'no-store' }).then(r => r.json()).then(j => { M = j; if (j.levels) { Object.keys(j.levels).forEach(k => { if (levels[k] == null) levels[k] = j.levels[k]; }); } tell(); return M; }).catch(() => (M = M || { slots: {}, hooks: {} }));
     return loading; }
-  function fileOf(slot){ const s = M && M.slots && M.slots[slot]; if (!s) return null; const v = s.variants && s.variants[s.active]; return v ? BASE + v.file : null; }
+  // slot.active may be a variant id, or "random" / "a,b,c" (pick one at random each play)
+  function fileOf(slot){ const s = M && M.slots && M.slots[slot]; if (!s || !s.variants) return null; let id = s.active;
+    if (id === 'random' || id === '*' || (id && id.indexOf(',') > -1)) { const pool = (id === 'random' || id === '*') ? Object.keys(s.variants) : id.split(',').map(x => x.trim()).filter(x => s.variants[x]); id = pool[Math.floor(Math.random() * pool.length)]; }
+    const v = s.variants[id]; return v ? BASE + v.file : null; }
   function kindOf(slot){ return String(slot).split('.')[0]; }
   // ducking: while a voice line plays, amb/music sit at DUCK× their level (smooth in/out)
   const DUCK = .55; let duck = 1, duckRaf = null;
-  function gain(slot){ const k = kindOf(slot); const g = muted ? 0 : (levels[k] != null ? levels[k] : .8); return (k === 'amb' || k === 'music') ? g * duck : g; }
+  let focusK = 1;   // choice focus: music/amb sink (volume × focusK, low-pass, slower)
+  function gain(slot){ const k = kindOf(slot); const g = muted ? 0 : (levels[k] != null ? levels[k] : .8); return (k === 'amb' || k === 'music') ? g * duck * focusK : g; }
   function duckTo(target, ms){ if (duckRaf) cancelAnimationFrame(duckRaf); const from = duck, t0 = performance.now();
     const step = () => { const k = Math.min(1, (performance.now() - t0) / ms); duck = from + (target - from) * k;
       [amb, amb2, mus].forEach(ch => { if (ch.el && !ch.fade) ch.el.volume = vol(ch); });
       duckRaf = k < 1 ? requestAnimationFrame(step) : null; }; step(); }
   // iOS: audio can only start after a user gesture. First pointerdown creates/unlocks.
-  function unlock(){ if (unlocked) return; unlocked = true; try { const a = new Audio(); a.muted = true; a.play().catch(() => {}); } catch (e) {} if (amb.name) startLoop(amb, amb.name, true); if (mus.name) startLoop(mus, mus.name, true); }
+  // ---- choice focus ("underwater"): each loop element runs through a low-pass filter; on a choice the cutoff sinks, the tempo slows and the level drops ----
+  let ctx = null; const FOCUS = { gain: .62, cutoff: 520, rate: .86, inMs: 900, outMs: 700 };
+  function wire(el){ try { if (!ctx) { const AC = window.AudioContext || window.webkitAudioContext; if (!AC) return; ctx = new AC(); } const src = ctx.createMediaElementSource(el); const lp = ctx.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = focusOn ? FOCUS.cutoff : 20000; lp.Q.value = .8; src.connect(lp); lp.connect(ctx.destination); el._lp = lp; el.preservesPitch = false; el.mozPreservesPitch = false; el.webkitPreservesPitch = false; if (focusOn) el.playbackRate = FOCUS.rate; } catch (e) {} }
+  let focusOn = false, focusTimer = null;
+  let randSaved = null;
+  function focus(on){ on = !!on; if (on === focusOn) return; focusOn = on; if (ctx && ctx.state === 'suspended') ctx.resume().catch(() => {});
+    if (on) { randSaved = randName; randomSet('thinking'); } else { randomSet(randSaved); randSaved = null; }   // Arabella's idle hums while she decides
+    const ms = on ? FOCUS.inMs : FOCUS.outMs, t0 = performance.now(), k0 = focusK, k1 = on ? FOCUS.gain : 1; const els = [amb, amb2, mus].map(c => c.el).filter(Boolean);
+    els.forEach(el => { if (el._lp && ctx) { const f = el._lp.frequency; f.cancelScheduledValues(ctx.currentTime); f.setValueAtTime(Math.max(40, f.value), ctx.currentTime); f.exponentialRampToValueAtTime(on ? FOCUS.cutoff : 20000, ctx.currentTime + ms / 1000); } });
+    const r0 = els.length ? els[0].playbackRate : 1, r1 = on ? FOCUS.rate : 1;
+    if (focusTimer) clearInterval(focusTimer);
+    focusTimer = setInterval(() => { const k = Math.min(1, (performance.now() - t0) / ms); const e = k < .5 ? 2 * k * k : 1 - Math.pow(-2 * k + 2, 2) / 2; focusK = k0 + (k1 - k0) * e;
+      [amb, amb2, mus].forEach(ch => { if (ch.el) { if (!ch.fade) ch.el.volume = vol(ch); try { ch.el.playbackRate = r0 + (r1 - r0) * e; } catch (x) {} } });
+      if (k >= 1) { clearInterval(focusTimer); focusTimer = null; } }, 33); }
+  function unlock(){ if (unlocked) return; unlocked = true; if (ctx && ctx.state === 'suspended') ctx.resume().catch(() => {}); try { const a = new Audio(); a.muted = true; a.play().catch(() => {}); } catch (e) {} if (amb.name) startLoop(amb, amb.name, true); if (mus.name) startLoop(mus, mus.name, true); }
   document.addEventListener('pointerdown', unlock, { capture: true, passive: true });
   document.addEventListener('touchend', unlock, { capture: true, passive: true });
-  function playSfx(slot){ if (typeof activePack !== 'undefined' && activePack !== 'pride') return; load().then(() => { const f = fileOf(slot); if (!f || !unlocked) return; const a = new Audio(f); a.volume = gain(slot); a.play().catch(() => {}); }); }
+  function playSfx(slot){ if (typeof activePack !== 'undefined' && activePack !== 'pride') return; load().then(() => { const f = fileOf(slot); if (!f || !unlocked) return; const S = M.slots[slot]; const vid = Object.keys(S.variants).find(k => BASE + S.variants[k].file === f); const lv = (vid && S.variants[vid].level != null) ? S.variants[vid].level : 1; const a = new Audio(f); a.volume = Math.min(1, gain(slot) * lv); a.play().catch(() => {}); }); }
   function fadeTo(ch, el, target, ms, done){ if (!el) { done && done(); return; } const from = el.volume, t0 = performance.now(); if (ch.fade) cancelAnimationFrame(ch.fade);
     const step = () => { const k = Math.min(1, (performance.now() - t0) / ms); el.volume = from + (target - from) * k; if (k < 1) ch.fade = requestAnimationFrame(step); else { ch.fade = null; done && done(); } }; step(); }
   function startLoop(ch, name, instant){ load().then(() => { const slot = ch.kind + '.' + name; const f = fileOf(slot); if (!f) { stopLoop(ch); return; }
     if (ch.el && ch.el.dataset.slot === slot && !ch.el.paused) { ch.el.volume = vol(ch); return; }
-    const old = ch.el; const el = new Audio(f); el.loop = true; el.dataset.slot = slot; el.volume = 0; ch.el = el; ch.name = name;
+    const old = ch.el; const el = new Audio(f); el.loop = true; wire(el); el.dataset.slot = slot; el.volume = 0; ch.el = el; ch.name = name;
     tell();
     if (!unlocked) return;   // will start on first gesture
     el.play().catch(() => {});
@@ -35349,27 +35370,31 @@ body.pe-combat.pe-beat #dialogBox{ opacity:1 !important; transform:none !importa
   window.prideAudio = {
     voiceLine, stopVoice, reloadVoices(){ Object.keys(voMissing).forEach(k => delete voMissing[k]); return loadVoices(true); },
     voices(){ return VO; },
-    amb(name){ if (!name || name === 'none' || name === 'off') stopAmb(); else { amb.name = name; startAmb(name); } tell(); },
+    amb(name){ if (amb2.el || amb2.name) stopLoop(amb2); if (randName === 'map') randomSet(null); if (!name || name === 'none' || name === 'off') stopAmb(); else { amb.name = name; startAmb(name); } tell(); },
+    random(name){ randomSet(!name || name === 'none' || name === 'off' ? null : name); },
+    focus,
     music(name){ if (!name || name === 'none' || name === 'off') stopLoop(mus); else { mus.name = name; startLoop(mus, name); } tell(); },
     hook(h){ load().then(() => { const slot = M && M.hooks && M.hooks[h]; if (slot) playSfx(slot); }); },
     play: playSfx,
     setLevel(kind, v){ levels[kind] = Math.max(0, Math.min(1, +v)); [amb, amb2, mus].forEach(ch => { if (ch.el && ch.kind === kind) ch.el.volume = vol(ch); }); save(); tell(); },
     setMuted(m){ muted = !!m; [amb, amb2, mus].forEach(ch => { if (ch.el) ch.el.volume = vol(ch); }); if (m) stopVoice(); save(); tell(); },
-    setActive(slot, variant){ load().then(() => { if (!M.slots[slot] || !M.slots[slot].variants[variant]) return; M.slots[slot].active = variant; [amb, amb2, mus].forEach(ch => { if (ch.el && ch.el.dataset.slot === slot) { const n = ch.name; ch.el.dataset.slot = ''; startLoop(ch, n, true); } }); tell(); }); },
+    setActive(slot, variant){ load().then(() => { if (!M.slots[slot]) return; const okv = (v) => v === 'random' || M.slots[slot].variants[v] || (v.indexOf(',') > -1 && v.split(',').every(x => M.slots[slot].variants[x.trim()])); if (!okv(variant)) return; M.slots[slot].active = variant; [amb, amb2, mus].forEach(ch => { if (ch.el && ch.el.dataset.slot === slot) { const n = ch.name; ch.el.dataset.slot = ''; startLoop(ch, n, true); } }); tell(); }); },
     reload(){ return load(true).then(() => { [amb, amb2, mus].forEach(ch => { if (ch.name) { const n = ch.name; if (ch.el) ch.el.dataset.slot = ''; startLoop(ch, n, true); } }); }); },
-    state(){ return { amb: amb.name, music: mus.name, levels, muted, manifest: M }; },
-    stopAll(){ stopAmb(); stopLoop(amb2); stopLoop(mus); mapRandom(false); },
+    state(){ return { amb: amb.name, amb2: amb2.name, random: randName, music: mus.name, levels, muted, manifest: M, focus: focusOn, dbg: { ctx: ctx ? ctx.state : null, rate: mus.el ? mus.el.playbackRate : null, cutoff: (mus.el && mus.el._lp) ? Math.round(mus.el._lp.frequency.value) : null, vol: mus.el ? +mus.el.volume.toFixed(2) : null } }; },
+    stopAll(){ stopAmb(); stopLoop(amb2); stopLoop(mus); randomSet(null); focus(false); },
     // ---- map soundscape: town+forest ambience blended by pan position, map music, sparse random one-shots ----
-    mapEnter(){ amb.name = 'map_town'; startLoop(amb, 'map_town'); amb2.name = 'map_forest'; startLoop(amb2, 'map_forest'); mus.name = 'map'; startLoop(mus, 'map'); mapRandom(true); tell(); },
+    mapEnter(){ amb.name = 'map_town'; startLoop(amb, 'map_town'); amb2.name = 'map_forest'; startLoop(amb2, 'map_forest'); mus.name = 'map'; startLoop(mus, 'map'); randomSet('map'); tell(); },
     mapMix(t){ t = Math.max(0, Math.min(1, +t || 0)); amb.mix = .35 + .65 * t; amb2.mix = 1 - t; [amb, amb2].forEach(ch => { if (ch.el && !ch.fade) ch.el.volume = vol(ch); }); },
   };
-  // random distant one-shots on the map: never continuous — 25–60 s apart, quiet ("from far away")
-  const MAP_RANDOM = ['sfx.map_carriage', 'sfx.map_gull', 'sfx.map_gull', 'sfx.map_bell', 'sfx.map_bell', 'sfx.map_dog', 'sfx.map_horse', 'sfx.map_rooks']; let mapTimer = null;
-  function mapRandom(on){ if (mapTimer) { clearTimeout(mapTimer); mapTimer = null; } if (!on) return;
-    const tick = () => { mapTimer = setTimeout(() => { if (document.hidden || muted) { tick(); return; }
-        const slot = MAP_RANDOM[Math.floor(Math.random() * MAP_RANDOM.length)]; load().then(() => { const S = M && M.slots && M.slots[slot]; if (!S) return; const ids = Object.keys(S.variants || {}); if (!ids.length) return;
-          const id = ids[Math.floor(Math.random() * ids.length)]; const f = S.variants[id] && (BASE + S.variants[id].file); if (!f || !unlocked) return; const a = new Audio(f); a.volume = gain('sfx.x') * .3; a.play().catch(() => {}); });
-        tick(); }, 25000 + Math.random() * 35000); };
+  // sparse random one-shots: manifest.randoms[name] = { slots:[...], gap:[minS,maxS], level } — never continuous, one at a time.
+  // 'map' runs on the map; an episode picks its own set with [random:ballroom]; [random:none] / stopAll() clears it.
+  let randName = null, randTimer = null;
+  function randomSet(name){ if (randTimer) { clearTimeout(randTimer); randTimer = null; } randName = name || null; if (!randName) return;
+    const tick = () => { load().then(() => { const R = (M && M.randoms && M.randoms[randName]) || null; if (!R || !R.slots || !R.slots.length) return; const gap = R.gap || [25, 60];
+      randTimer = setTimeout(() => { if (randName !== name) return;
+        if (!document.hidden && !muted && unlocked) { const slot = R.slots[Math.floor(Math.random() * R.slots.length)]; const S = M.slots && M.slots[slot]; const ids = S ? Object.keys(S.variants || {}) : [];
+          if (ids.length) { const id = ids[Math.floor(Math.random() * ids.length)]; const f = BASE + S.variants[id].file; const a = new Audio(f); a.volume = gain('sfx.x') * (R.level != null ? R.level : .3); a.play().catch(() => {}); } }
+        tick(); }, (gap[0] + Math.random() * (gap[1] - gap[0])) * 1000); }); };
     tick(); }
   window.addEventListener('message', (e) => { const d = e && e.data; if (!d || !d.type) return;
     if (d.type === 'audioSet') window.prideAudio.setActive(d.slot, d.variant);

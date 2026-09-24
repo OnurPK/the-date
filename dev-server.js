@@ -403,7 +403,7 @@ function audioRegister(m, slot, variant, file, src, note) {
 // POST /api/author/audio-manifest  { slots?:{slot:{active}}, hooks?, levels? }  → merges `active` choices + hooks + levels
 async function handleAudioManifestSave(req, res) {
   const b = await readJsonBody(req); const m = readAudioManifest();
-  if (b.slots) Object.keys(b.slots).forEach(k => { if (m.slots[k] && b.slots[k] && b.slots[k].active && m.slots[k].variants[b.slots[k].active]) m.slots[k].active = b.slots[k].active; });
+  if (b.slots) Object.keys(b.slots).forEach(k => { if (m.slots[k] && b.slots[k] && b.slots[k].active) { const a = String(b.slots[k].active); const okv = a === 'random' || m.slots[k].variants[a] || (a.indexOf(',') > -1 && a.split(',').every(x => m.slots[k].variants[x.trim()])); if (okv) m.slots[k].active = a; } });
   if (b.hooks) m.hooks = Object.assign({}, m.hooks || {}, b.hooks);
   if (b.levels) m.levels = Object.assign({}, m.levels || {}, b.levels);
   writeAudioManifest(m); return sendJson(res, 200, { ok: true, manifest: m });

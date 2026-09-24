@@ -427,6 +427,14 @@
   /* ---- Audio panel (below Now Playing): active slots, variant switch, preview, levels, import ---- */
   .sit-panel.show { pointer-events: auto; }
   .aud-box { margin-top: 12px; padding-top: 10px; border-top: 1px solid rgba(255,255,255,0.1); }
+  /* the panel scrolls as a whole (sit-panel gets a max-height); Audio / Voices sections fold with the chevron */
+  .sit-panel { max-height: 62vh; overflow-y: auto; overscroll-behavior: contain; scrollbar-width: thin; scrollbar-color: rgba(255,255,255,.18) transparent; }
+  .sit-panel::-webkit-scrollbar { width: 5px; } .sit-panel::-webkit-scrollbar-thumb { background: rgba(255,255,255,.18); border-radius: 3px; }
+  .aud-tog { cursor: pointer; user-select: none; justify-content: space-between; }
+  .aud-tog span { flex: 1; }
+  .aud-tog .chev { width: 7px; height: 7px; border-right: 1.5px solid rgba(255,178,213,.85); border-bottom: 1.5px solid rgba(255,178,213,.85); transform: rotate(45deg); margin: -3px 4px 0 0; transition: transform .2s; }
+  .aud-tog.closed .chev { transform: rotate(-45deg); margin-top: 1px; }
+  .aud-tog.closed + .aud-sec { display: none; }
   .aud-row { display: flex; align-items: center; gap: 6px; margin: 5px 0; font-size: 11px; color: rgba(255,255,255,0.8); }
   .aud-row .k { width: 84px; flex: none; font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: 10px; color: rgba(255,255,255,0.55); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .aud-row.on .k { color: #ff7eb9; }
@@ -618,15 +626,19 @@
   <div class="sit-desc" id="sitDesc">Launch the episode to follow the story situation by situation.</div>
   <div class="sit-id" id="sitId"></div>
   <div class="aud-box" id="audBox" hidden>
-    <div class="sit-eyebrow" style="margin-top:0">Audio</div>
-    <div id="audSlots"></div>
-    <div id="audLevels"></div>
-    <div class="aud-foot"><button id="audImport" title="Move files from audio/_import/ into place and register them">Import</button><button id="audReload">Reload</button></div>
-    <div class="aud-msg" id="audMsg"></div>
-    <div class="sit-eyebrow" style="margin-top:12px">Voices</div>
-    <div id="voxList"></div>
-    <div class="aud-foot"><button id="voxRefresh">Refresh</button><button id="voxReplay" title="Replay the current line's voice">Replay line</button></div>
-    <div class="aud-msg" id="voxMsg"></div>
+    <div class="sit-eyebrow aud-tog" data-sec="audio" style="margin-top:0"><span>Audio</span><i class="chev"></i></div>
+    <div class="aud-sec" id="audSec">
+      <div id="audSlots"></div>
+      <div id="audLevels"></div>
+      <div class="aud-foot"><button id="audImport" title="Move files from audio/_import/ into place and register them">Import</button><button id="audReload">Reload</button></div>
+      <div class="aud-msg" id="audMsg"></div>
+    </div>
+    <div class="sit-eyebrow aud-tog" data-sec="voices" style="margin-top:12px"><span>Voices</span><i class="chev"></i></div>
+    <div class="aud-sec" id="voxSec">
+      <div id="voxList"></div>
+      <div class="aud-foot"><button id="voxRefresh">Refresh</button><button id="voxReplay" title="Replay the current line's voice">Replay line</button></div>
+      <div class="aud-msg" id="voxMsg"></div>
+    </div>
   </div>
 </aside>
 
@@ -2490,7 +2502,8 @@
     function render(){ if (!st || !st.manifest || !st.manifest.slots) return; box.hidden = false; const M = st.manifest;
       const rank = k => k.startsWith('amb') ? 0 : k.startsWith('music') ? 1 : 2; const order = Object.keys(M.slots).sort((a, b) => rank(a) - rank(b) || a.localeCompare(b));
       slotsEl.innerHTML = order.map(slot => { const sl = M.slots[slot]; const on = (st.amb && slot === 'amb.' + st.amb) || (st.music && slot === 'music.' + st.music);
-        const opts = Object.keys(sl.variants).map(v => `<option value="${v}" ${v === sl.active ? 'selected' : ''} title="${(sl.variants[v].note || '').replace(/"/g, '&quot;')}">${v} · ${sl.variants[v].src || ''}</option>`).join('');
+        const ids = Object.keys(sl.variants); const multi = sl.active && (sl.active === 'random' || sl.active.indexOf(',') > -1); const extra = ids.length > 1 ? `<option value="random" ${sl.active === 'random' ? 'selected' : ''}>random (all)</option>` + (multi && sl.active !== 'random' ? `<option value="${sl.active}" selected>random: ${sl.active}</option>` : '') : '';
+        const opts = ids.map(v => `<option value="${v}" ${v === sl.active ? 'selected' : ''} title="${(sl.variants[v].note || '').replace(/"/g, '&quot;')}">${v} · ${sl.variants[v].src || ''}</option>`).join('') + extra;
         return `<div class="aud-row ${on ? 'on' : ''}" data-slot="${slot}"><span class="k" title="${slot}">${on ? '▶ ' : ''}${slot}</span><select>${opts}</select><button data-act="prev" title="Preview in the game">▶</button></div>`; }).join('');
       levEl.innerHTML = ['amb', 'sfx', 'music'].map(k => `<div class="aud-row"><span class="k">${k} level</span><input type="range" min="0" max="100" value="${Math.round((st.levels[k] != null ? st.levels[k] : .8) * 100)}" data-kind="${k}"></div>`).join('');
       slotsEl.querySelectorAll('select').forEach(sel => sel.onchange = async () => { const slot = sel.closest('.aud-row').dataset.slot; send({ type: 'audioSet', slot, variant: sel.value });
@@ -2541,6 +2554,12 @@
           const poll = async () => { const j = await fetch('/api/author/voice-job?job=' + r.job).then(r => r.json()); bar.style.width = (j.total ? Math.round(j.done / j.total * 100) : 100) + '%';
             if (j.running) setTimeout(poll, 800); else { voxMsg.textContent = folder + ': ' + j.done + ' generated, ' + j.chars + ' chars' + (j.errors.length ? ', ' + j.errors.length + ' errors: ' + j.errors[0] : ''); voxRefresh(); send({ type: 'voicesReload' }); } }; poll(); };
         box.querySelector('[data-act=gen]').onclick = () => genRun(false); box.querySelector('[data-act=regen]').onclick = () => genRun(true); }); }
+    // the cast tuner (#cfgPanel) sits directly under the situation panel, whatever its height
+    (function(){ const sp = document.getElementById('sitPanel'), cp = document.getElementById('cfgPanel'); if (!sp || !cp) return;
+      const place = () => { const r = sp.getBoundingClientRect(); const top = Math.round(r.bottom + 10); cp.style.top = top + 'px'; cp.style.maxHeight = 'calc(100vh - ' + (top + 16) + 'px)'; };
+      new ResizeObserver(place).observe(sp); window.addEventListener('resize', place); place(); })();
+    document.querySelectorAll('.aud-tog').forEach(t => { const k = 'rai.ed.audsec.' + t.dataset.sec; const apply = () => t.classList.toggle('closed', localStorage.getItem(k) === '0'); apply();
+      t.onclick = () => { localStorage.setItem(k, t.classList.contains('closed') ? '1' : '0'); apply(); }; });
     document.getElementById('voxRefresh').onclick = voxRefresh;
     document.getElementById('voxReplay').onclick = () => send({ type: 'voiceReplay' });
     document.getElementById('audImport').onclick = async () => { msg.textContent = 'importing…'; const r = await fetch('/api/author/audio-import', { method: 'POST' }).then(r => r.json()).catch(e => ({ error: String(e) }));

@@ -13,7 +13,7 @@
 // SITUATION 1 · THE ASSEMBLY ROOM   (3 turns)
 // ═══════════════════════════════════════════════════════════
 (Situation: assembly_room | The Assembly Room | The Meryton rooms at the height of the evening — Sir William has seen you come in, and he has a plan for you.)
-[bg:scene=as_room.jpg] [amb:ballroom] [music:assembly] [ui:narrative]
+[bg:scene=as_room.jpg] [amb:ballroom] [random:ballroom] [music:assembly] [ui:narrative]
 Narrative: The Meryton rooms are full to the walls and bright as day.
 Narrative: Mr Bingley was to have come tonight and has not, and every eye in the room has gone instead to the friend who came without him: tall, handsome, worth ten thousand a year, standing by the far wall and pleased with nothing.
 Narrative: Sir William Lucas has seen you come in. He is already on his way.

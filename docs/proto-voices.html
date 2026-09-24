@@ -38,6 +38,20 @@ p.sub{color:#7a7290;margin:0 0 14px;font-size:12px}
 <div class="row"><span class="t">4</span><span class="d">speed 1.10 + livelier (stability .35 / style .35)</span><button data-spd="speed_4_110_lively">Play</button></div>
 <div class="row"><span class="t">5</span><span class="d">speed 1.0 + ffmpeg tempo 1.15 (post only, no credits)</span><button data-spd="speed_5_post115">Play</button></div>
 </div>
+<div class="char"><h2>Sir William — round 4 (old but spry: quick, lively, clear)</h2>
+<div class="row"><span class="t">L</span><span class="d">the life of the party: bright warm baritone, quick, chuckles between phrases</span><button data-sw="L">Play</button></div>
+<div class="row"><span class="t">M</span><span class="d">the bubbly one: light agile tenor-baritone, fast, sprightly, quick laughs</span><button data-sw="M">Play</button></div>
+<div class="row"><span class="t">N</span><span class="d">the innkeeper: robust chesty voice, quick warm rhythm, booming laugh</span><button data-sw="N">Play</button></div>
+<div class="row"><span class="t">O</span><span class="d">the dapper name-dropper: lively, twinkling, slightly high, rapid, theatrical</span><button data-sw="O">Play</button></div>
+<div class="row"><span class="t">P</span><span class="d">the confidant: resonant gravelly baritone, brisk, mischievous, conspiratorial chuckle</span><button data-sw="P">Play</button></div>
+</div>
+<div class="char"><h2>Sir William — round 3 (older, clearer, memorable)</h2>
+<div class="row"><span class="t">G</span><span class="d">the grandee: deep mellow bass-baritone, slow, savoured, gently pompous</span><button data-sw="G">Play</button></div>
+<div class="row"><span class="t">H</span><span class="d">the squire: hearty, booming but unhurried, laugh in the throat</span><button data-sw="H">Play</button></div>
+<div class="row"><span class="t">I</span><span class="d">the master of ceremonies: crisp, dry, nasal, fussy, sing-song</span><button data-sw="I">Play</button></div>
+<div class="row"><span class="t">J</span><span class="d">the grandfather: soft papery warmth, slow, kindly, quietly amused</span><button data-sw="J">Play</button></div>
+<div class="row"><span class="t">K</span><span class="d">the actor-manager: plummy, orotund, every line a proclamation</span><button data-sw="K">Play</button></div>
+</div>
 <div id="list"></div>
 <script>
 const B='../worlds/pride-and-prejudice/audio/_voice_samples/';
@@ -47,6 +61,7 @@ const list=document.getElementById('list'); let cur=null, seq=null;
 list.innerHTML=CH.map(([f,n])=>`<div class="char" data-f="${f}"><h2>${n}</h2>${['A','B','C','D','E','F'].map(t=>`<div class="row" data-t="${t}"><span class="t ${t}">${t}</span><span class="d">${DESC[f][t]}</span><button data-play="${f}/${t}">Play</button></div>`).join('')}</div>`).join('');
 function stop(){ if(cur){ cur.a.pause(); cur.btn.classList.remove('on'); cur=null; } if(seq){ seq=null; document.querySelectorAll('.packs button').forEach(b=>b.classList.remove('playing')); } }
 function play(key,onend){ stop(); const btn=document.querySelector(`button[data-play="${key}"]`); const a=new Audio(B+key.replace('/','/')+'_1.mp3'); btn.classList.add('on'); cur={a,btn}; a.onended=()=>{ btn.classList.remove('on'); if(cur&&cur.a===a) cur=null; onend&&onend(); }; a.play(); }
+document.querySelectorAll('button[data-sw]').forEach(b=>b.onclick=()=>{ stop(); const a=new Audio(B+'sir_william2/'+b.dataset.sw+'_1.mp3'); b.classList.add('on'); cur={a,btn:b}; a.onended=()=>{ b.classList.remove('on'); cur=null; }; a.play(); });
 document.querySelectorAll('button[data-spd]').forEach(b=>b.onclick=()=>{ stop(); const a=new Audio(B+'narrator/'+b.dataset.spd+'.mp3'); b.classList.add('on'); cur={a,btn:b}; a.onended=()=>{ b.classList.remove('on'); cur=null; }; a.play(); });
 document.querySelectorAll('button[data-play]').forEach(b=>b.onclick=()=>{ if(cur&&cur.btn===b){ stop(); return; } play(b.dataset.play); });
 document.querySelectorAll('.packs button').forEach(b=>b.onclick=()=>{ const t=b.dataset.pack; document.querySelectorAll('.packs button').forEach(x=>x.classList.toggle('on',x===b)); document.querySelectorAll('.row').forEach(r=>r.classList.toggle('pick',r.dataset.t===t)); if(seq===t){ stop(); return; } stop(); seq=t; b.classList.add('playing'); let i=0; const next=()=>{ if(seq!==t) return; if(i>=CH.length){ stop(); return; } play(CH[i++][0]+'/'+t,()=>setTimeout(next,350)); }; next(); });

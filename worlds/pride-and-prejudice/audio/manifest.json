@@ -1,5 +1,5 @@
 {
-  "_note": "Audio catalog. slots[kind.name] = { active: variantId, variants: { variantId: { file, src, note } } }. Files live at audio/<kind>/<name>__<variant>.mp3. Import a family: drop files named <kind>/<name>__<variant>.mp3 (or <kind>.<name>__<variant>.mp3 flat) into audio/_import/ and POST /api/author/audio-import — they are moved into place and registered here. The editor's Audio panel switches `active`.",
+  "_note": "Audio catalog. slots[kind.name] = { active: variantId, variants: { variantId: { file, src, note } } }. Files live at audio/<kind>/<name>__<variant>.mp3. Import a family: drop files named <kind>/<name>__<variant>.mp3 (or <kind>.<name>__<variant>.mp3 flat) into audio/_import/ and POST /api/author/audio-import — they are moved into place and registered here. The editor's Audio panel switches `active`. slot.active may also be \"random\" or \"a,b,c\" (one picked per play); a variant may carry \"level\" (gain multiplier).",
   "kinds": {
     "amb": "ambience loops (one at a time, crossfade)",
     "sfx": "one-shots",
@@ -386,11 +386,190 @@
           "note": "a warm breathy flute note with a tiny sparkle, gentle and kind, short"
         }
       }
+    },
+    "sfx.ball_glass": {
+      "active": "a",
+      "variants": {
+        "a": {
+          "file": "sfx/ball_glass__a.mp3",
+          "src": "elevenlabs",
+          "note": "two crystal glasses clinking once in a toast, distant, in a large hall with soft reverb"
+        },
+        "b": {
+          "file": "sfx/ball_glass__b.mp3",
+          "src": "elevenlabs",
+          "note": "a punch glass set down on a tray with a small clink, distant, ballroom reverb"
+        }
+      }
+    },
+    "sfx.ball_laugh": {
+      "active": "a",
+      "variants": {
+        "a": {
+          "file": "sfx/ball_laugh__a.mp3",
+          "src": "elevenlabs",
+          "note": "a small group of ladies laughing politely in the distance across a ballroom, muffled by the crowd"
+        },
+        "b": {
+          "file": "sfx/ball_laugh__b.mp3",
+          "src": "elevenlabs",
+          "note": "a single gentleman guffawing once far away in a crowded hall, then murmur"
+        }
+      }
+    },
+    "sfx.ball_fan": {
+      "active": "a",
+      "variants": {
+        "a": {
+          "file": "sfx/ball_fan__a.mp3",
+          "src": "elevenlabs",
+          "note": "a lady snapping a folding fan shut, then a soft flutter, nearby, indoors"
+        }
+      }
+    },
+    "sfx.ball_steps": {
+      "active": "a",
+      "variants": {
+        "a": {
+          "file": "sfx/ball_steps__a.mp3",
+          "src": "elevenlabs",
+          "note": "a few pairs of dance shoes stepping in time on a wooden floor, a short passing phrase, distant"
+        },
+        "b": {
+          "file": "sfx/ball_steps__b.mp3",
+          "src": "elevenlabs",
+          "note": "a brisk walk of leather shoes across a polished wooden floor passing by, indoors"
+        }
+      }
+    },
+    "sfx.ball_murmur": {
+      "active": "a",
+      "variants": {
+        "a": {
+          "file": "sfx/ball_murmur__a.mp3",
+          "src": "elevenlabs",
+          "note": "a crowd murmur swelling briefly and settling again, elegant party, distant, indoors"
+        }
+      }
+    },
+    "sfx.ball_cough": {
+      "active": "a",
+      "variants": {
+        "a": {
+          "file": "sfx/ball_cough__a.mp3",
+          "src": "elevenlabs",
+          "note": "a polite single cough from an older gentleman in a quiet hall, distant"
+        }
+      }
+    },
+    "sfx.ball_rustle": {
+      "active": "a",
+      "variants": {
+        "a": {
+          "file": "sfx/ball_rustle__a.mp3",
+          "src": "elevenlabs",
+          "note": "silk dress rustling as a lady turns and walks past, close, brief"
+        }
+      }
+    },
+    "sfx.ball_ladle": {
+      "active": "a",
+      "variants": {
+        "a": {
+          "file": "sfx/ball_ladle__a.mp3",
+          "src": "elevenlabs",
+          "note": "a silver ladle dipping into a punch bowl and pouring once, distant clink of china"
+        }
+      }
+    },
+    "sfx.shh": {
+      "active": "a",
+      "variants": {
+        "a": {
+          "file": "sfx/shh__a.mp3",
+          "src": "elevenlabs",
+          "note": "a soft human \"shhh\" hush, close and gentle, with a smooth airy whoosh sinking down in pitch, like the room going quiet, "
+        },
+        "b": {
+          "file": "sfx/shh__b.mp3",
+          "src": "elevenlabs",
+          "note": "a gentle breathy shush sound blended with a low reverse-cymbal swell that dips underwater, muffled, short"
+        },
+        "c": {
+          "file": "sfx/shh__c.mp3",
+          "src": "elevenlabs",
+          "note": "a quick soft whispered \"shh\" followed by a subtle low-pass whoosh, as if sound is submerged, intimate, short"
+        }
+      }
+    },
+    "sfx.shh_ara": {
+      "active": "random",
+      "variants": {
+        "a": {
+          "file": "sfx/shh_ara__a.mp3",
+          "src": "elevenlabs",
+          "note": "[whispers] Shhh…",
+          "level": 0.45
+        },
+        "b": {
+          "file": "sfx/shh_ara__b.mp3",
+          "src": "elevenlabs",
+          "note": "[softly] Shh, shh…",
+          "level": 0.45
+        },
+        "c": {
+          "file": "sfx/shh_ara__c.mp3",
+          "src": "elevenlabs",
+          "note": "Arabella: \"Hush…\" only (quiet now cut; full take in shh_ara__c_full.mp3)",
+          "level": 0.45
+        },
+        "d": {
+          "file": "sfx/shh_ara__d.mp3",
+          "src": "elevenlabs",
+          "note": "[breathy whisper] Sshhh.",
+          "level": 0.45
+        }
+      }
+    },
+    "sfx.think": {
+      "active": "a",
+      "variants": {
+        "a": {
+          "file": "sfx/think__a.mp3",
+          "src": "elevenlabs",
+          "note": "[thoughtful] Mmm…"
+        },
+        "b": {
+          "file": "sfx/think__b.mp3",
+          "src": "elevenlabs",
+          "note": "[hums softly] Hmm."
+        },
+        "e": {
+          "file": "sfx/think__e.mp3",
+          "src": "elevenlabs",
+          "note": "[softly, to herself] Well…"
+        },
+        "f": {
+          "file": "sfx/think__f.mp3",
+          "src": "elevenlabs",
+          "note": "[quiet hum] Hm-hm…"
+        },
+        "c": {
+          "file": "sfx/think__c.mp3",
+          "src": "elevenlabs",
+          "note": "[inhales deeply] … [exhales slowly] Hm."
+        },
+        "d": {
+          "file": "sfx/think__d.mp3",
+          "src": "elevenlabs",
+          "note": "[sighs softly] Oh…"
+        }
+      }
     }
   },
   "hooks": {
     "advance": "sfx.tap",
-    "choice_open": "sfx.choice",
+    "choice_open": "sfx.shh_ara",
     "choice": "sfx.choice_pick",
     "discovery": "sfx.discovery",
     "remember": "sfx.remember",
@@ -403,5 +582,53 @@
     "sfx": 0.8,
     "music": 0.6,
     "voice": 1
+  },
+  "randoms": {
+    "_note": "named random sets: slots (one picked at random, any variant), gap [min,max] seconds between plays, level = multiplier on the sfx level. Map uses \"map\"; an episode line [random:ballroom] picks a set, [random:none] clears.",
+    "map": {
+      "slots": [
+        "sfx.map_carriage",
+        "sfx.map_gull",
+        "sfx.map_gull",
+        "sfx.map_bell",
+        "sfx.map_bell",
+        "sfx.map_dog",
+        "sfx.map_horse",
+        "sfx.map_rooks"
+      ],
+      "gap": [
+        25,
+        60
+      ],
+      "level": 0.3
+    },
+    "ballroom": {
+      "slots": [
+        "sfx.ball_glass",
+        "sfx.ball_laugh",
+        "sfx.ball_fan",
+        "sfx.ball_steps",
+        "sfx.ball_murmur",
+        "sfx.ball_cough",
+        "sfx.ball_rustle",
+        "sfx.ball_ladle"
+      ],
+      "gap": [
+        18,
+        45
+      ],
+      "level": 0.28
+    },
+    "thinking": {
+      "slots": [
+        "sfx.think"
+      ],
+      "gap": [
+        7,
+        10
+      ],
+      "level": 0.9,
+      "_note": "Arabella's idle sounds while a choice is open (focus). Started/stopped by prideAudio.focus()."
+    }
   }
 }
