@@ -14279,6 +14279,9 @@ window.PRIDE_ACTORS = PRIDE_ACTORS;   // expose so the cast stage can map speake
     const folder = PRIDE_ACTORS[speaker] || speaker; const set = POSE_SETS[folder];
     if (el) el.dataset.poseFolder = folder;
     if (!set) { if (cur && cur.folder !== folder && !targets(cur.folder).length) stop(); return false; }
+    if (!set._preloaded) { set._preloaded = true; set.idles.forEach(p => frames(folder, p)); }   // base idles only; expression sets load when scripted
+    // paint the frame we are on right now (if this folder is already running) so no base-sprite flash
+    if (cur && cur.folder === folder && el) { const fr = frames(folder, cur.pose); const k = Math.min(Math.max(cur.k - 1, 0), N - 1); el.style.backgroundImage = 'url("' + fr[k].src + '")'; }
     const held = window.__pridePoseHeld[folder];
     if (held) {
       if (isIdle(held)) { if (!(cur && cur.folder === folder && timer)) run(folder, held); }
@@ -14293,6 +14296,7 @@ window.PRIDE_ACTORS = PRIDE_ACTORS;   // expose so the cast stage can map speake
     const folder = PRIDE_ACTORS[speaker] || speaker;
     if (pose === 'none' || pose === 'off') { delete window.__pridePoseHeld[folder]; if (cur && cur.folder === folder) stop(); if (targets(folder).length) window.pridePoseAttach(speaker); return; }
     window.__pridePoseHeld[folder] = pose; delete window.__pridePosePlayed[folder + '/' + pose];
+    try { const set = POSE_SETS[folder]; ((set && set.idleFor && set.idleFor[pose]) || []).forEach(p => frames(folder, p)); } catch (e) {}   // warm this expression's idle
     if (targets(folder).length) run(folder, pose);             // character on screen now → play immediately
   };
   window.pridePoseStop = stop;
@@ -14411,9 +14415,10 @@ function pridePaintStage(speaker) {
   if (path) {
     // A held pose (from [pose:speaker=name]) replaces the base sprite for this
     // speaker: the last frame of an expression clip, or a looping idle.
-    stageEl.style.backgroundImage = 'url("' + path + '")';
     stageEl.classList.add('active');
-    try { window.pridePoseAttach && window.pridePoseAttach(speaker, stageEl); } catch (e) {}   // pose clip / random idle if this character has them
+    let posed = false;
+    try { posed = !!(window.pridePoseAttach && window.pridePoseAttach(speaker, stageEl)); } catch (e) {}   // pose clip / random idle if this character has them
+    if (!posed) stageEl.style.backgroundImage = 'url("' + path + '")';
   } else {
     stageEl.classList.remove('active'); stageEl.dataset.poseFolder = '';   // narrative / unknown → empty stage
   }
@@ -15183,10 +15188,11 @@ function handleCastSmallLine(line) {
   // Show the bottom-left portrait. focus-character keys off c-{speaker}
   // for the background image.
   el.focusCharacter.className = 'focus-character c-' + speaker;
-  el.focusCharacter.style.backgroundImage = '';   // drop any pose frame left by the previous speaker (CSS c-* supplies the base portrait)
   void el.focusCharacter.offsetWidth;
   el.focusCharacter.classList.add('show');
-  try { if (activePack === 'pride' && window.pridePoseAttach) window.pridePoseAttach(speaker, el.focusCharacter); } catch (e) {}
+  let posed = false;
+  try { if (activePack === 'pride' && window.pridePoseAttach) posed = !!window.pridePoseAttach(speaker, el.focusCharacter); } catch (e) {}
+  if (!posed) el.focusCharacter.style.backgroundImage = '';   // no pose system → CSS c-* supplies the base portrait
   // Side-effects (cutscene / points) still fire so the script's other
   // directives keep working.
   if (line.cutscene === '__clear__') clearCutscene();
