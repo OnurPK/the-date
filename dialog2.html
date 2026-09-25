@@ -14336,9 +14336,17 @@ window.PRIDE_ACTORS = PRIDE_ACTORS;   // expose so the cast stage can map speake
     step(); timer = setInterval(step, 1000 / 3);
   }
   // Called by the stage / cast-small painters after they placed the character.
+  // Memory: decoded frames are ~2 MB each and a character has 50–140 of them. Keep the clips of the two most recent
+  // characters only (the whisper alternates two busts); older ones are released so iOS does not kill the web view.
+  const recentFolders = [];
+  function evictOld(folder){ const i = recentFolders.indexOf(folder); if (i > -1) recentFolders.splice(i, 1); recentFolders.push(folder);
+    while (recentFolders.length > 2) { const old = recentFolders.shift(); if (cur && cur.folder === old) { recentFolders.unshift(old); break; }
+      Object.keys(cache).forEach(k => { if (k.indexOf(old + '/') === 0) { cache[k].forEach(im => { try { im.src = ''; } catch (e) {} }); delete cache[k]; } });
+      if (POSE_SETS[old]) POSE_SETS[old]._preloaded = false; } }
   window.pridePoseAttach = function(speaker, el){
     const folder = PRIDE_ACTORS[speaker] || speaker; const set = POSE_SETS[folder];
     if (el) el.dataset.poseFolder = folder;
+    if (set) evictOld(folder);
     if (!set) { if (cur && cur.folder !== folder && !targets(cur.folder).length) stop(); return false; }
     if (!set._preloaded) { set._preloaded = true; set.idles.forEach(p => frames(folder, p)); }   // base idles only; expression sets load when scripted
     // paint the frame we are on right now (if this folder is already running) so no base-sprite flash
@@ -35679,6 +35687,11 @@ body.pe-combat.pe-beat #dialogBox{ opacity:1 !important; transform:none !importa
   let ctx = null, master = null;
   function ac(){ if (ctx) return ctx; const AC = window.AudioContext || window.webkitAudioContext; if (!AC) return null; ctx = new AC(); master = ctx.createGain(); master.gain.value = muted ? 0 : 1; master.connect(ctx.destination); return ctx; }
   const bufs = {};
+  // Decoded loops are big (a 60 s stereo track ≈ 20 MB); iOS kills the web view around ~1 GB, which reloads the game mid-episode.
+  // Keep only the loops that are playing (and the small one-shots); drop the rest a little after each swap.
+  let pruneT = 0;
+  function pruneBufs(){ clearTimeout(pruneT); pruneT = setTimeout(() => { const keep = new Set(CH.map(ch => ch.src && ch.src._url).filter(Boolean));
+    Object.keys(bufs).forEach(u => { if (/\/(amb|music)\//.test(u) && !keep.has(u)) delete bufs[u]; }); }, 2500); }
   function getBuf(url){ if (bufs[url]) return bufs[url]; const c = ac(); if (!c) return Promise.resolve(null);
     return bufs[url] = fetch(url).then(r => r.arrayBuffer()).then(ab => new Promise((res, rej) => { const p = c.decodeAudioData(ab, res, rej); if (p && p.then) p.then(res, rej); })).catch(() => { delete bufs[url]; return null; }); }
   const now = () => (ctx ? ctx.currentTime : 0);
@@ -35727,10 +35740,10 @@ body.pe-combat.pe-beat #dialogBox{ opacity:1 !important; transform:none !importa
     if (!unlocked) { tryAutoUnlock(); return; }   // will start on first gesture (or right away if the browser already allows it)
     const c = ac(); if (!c) return;
     getBuf(f).then(buf => { if (!buf || ch.slot !== slot) return; if (ch.src && ch.src._slot === slot) return;   // stale or already swapped
-      const old = ch.src, oldG = ch.g; const src = c.createBufferSource(); src.buffer = buf; src.loop = true; src._slot = slot;
+      const old = ch.src, oldG = ch.g; const src = c.createBufferSource(); src.buffer = buf; src.loop = true; src._slot = slot; src._url = f;
       const lp = c.createBiquadFilter(); lp.type = 'lowpass'; lp.Q.value = .8; lp.frequency.value = focusOn ? FOCUS.cutoff : 20000; const g = c.createGain(); g.gain.value = 0;
       src.playbackRate.value = focusOn ? FOCUS.rate : 1; src.connect(lp); lp.connect(g); g.connect(master); src.start();
-      ch.src = src; ch.g = g; ch.lp = lp; ramp(g.gain, vol(ch), instant ? 200 : 1200);
+      ch.src = src; ch.g = g; ch.lp = lp; ramp(g.gain, vol(ch), instant ? 200 : 1200); pruneBufs();
       if (old) { ramp(oldG.gain, 0, 1000); try { old.stop(c.currentTime + 1.1); } catch (e) {} old.onended = () => { try { old.disconnect(); oldG.disconnect(); } catch (e) {} }; } }); }); }
   function stopLoop(ch){ ch.name = null; ch.slot = null; const o = ch.src, g = ch.g; ch.src = null; ch.g = null; ch.lp = null; if (!o) return; ramp(g.gain, 0, 900); try { o.stop(now() + 1); } catch (e) {} o.onended = () => { try { o.disconnect(); g.disconnect(); } catch (e) {} }; tell(); }
   const startAmb = (n, i) => startLoop(amb, n, i), stopAmb = () => stopLoop(amb);
@@ -35768,7 +35781,7 @@ body.pe-combat.pe-beat #dialogBox{ opacity:1 !important; transform:none !importa
     setActive(slot, variant){ load().then(() => { if (!M.slots[slot]) return; const okv = (v) => v === 'random' || M.slots[slot].variants[v] || (v.indexOf(',') > -1 && v.split(',').every(x => M.slots[slot].variants[x.trim()])); if (!okv(variant)) return; M.slots[slot].active = variant; CH.forEach(ch => { if (ch.slot === slot) { const n = ch.name; ch.slot = null; startLoop(ch, n, true); } }); tell(); }); },
     reload(){ return load(true).then(() => { CH.forEach(ch => { if (ch.name) { const n = ch.name; ch.slot = null; startLoop(ch, n, true); } }); }); },
     state(){ return { amb: amb.name, amb2: amb2.name, random: randName, music: mus.name, levels, muted, manifest: M, focus: focusOn, dbg: { ctx: ctx ? ctx.state : null, rate: mus.src ? +mus.src.playbackRate.value.toFixed(2) : null, cutoff: mus.lp ? Math.round(mus.lp.frequency.value) : null, vol: mus.g ? +mus.g.gain.value.toFixed(2) : null } }; },
-    stopAll(){ stopAmb(); stopLoop(amb2); stopLoop(mus); randomSet(null); focus(false); try { window.prideChoiceFocus && window.prideChoiceFocus.close(); } catch (e) {} },
+    stopAll(){ stopAmb(); stopLoop(amb2); stopLoop(mus); randomSet(null); focus(false); pruneBufs(); try { window.prideChoiceFocus && window.prideChoiceFocus.close(); } catch (e) {} },
     // ---- map soundscape: town+forest ambience blended by pan position, map music, sparse random one-shots ----
     // day / night soundscape follows the map's time-of-day (pride-tod-night → *_night slots; dawn/sunset use the day set)
     mapEnter(){ const night = document.body.classList.contains('pride-tod-night') || window.prideMapTod === 'night'; const sfx = night ? '_night' : '';
