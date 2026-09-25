@@ -7,20 +7,22 @@ html,body{margin:0;height:100%;background:#07060a;color:#fff;font-family:Inter,s
 #wrap{position:fixed;inset:0;display:grid;place-items:center}
 #player{position:relative;background:#000;border-radius:14px;overflow:hidden;box-shadow:0 30px 80px rgba(0,0,0,.6),0 0 0 1px #221d2b}
 #player iframe{position:absolute;inset:0;width:100%;height:100%;border:0;display:block;background:#000}
-#fs{position:absolute;right:14px;bottom:14px;z-index:8;border:1px solid rgba(255,255,255,.3);background:rgba(10,8,14,.6);color:#fff;font:700 11px Inter;letter-spacing:.14em;text-transform:uppercase;padding:9px 14px;border-radius:999px;cursor:pointer;backdrop-filter:blur(10px);opacity:.5;transition:opacity .2s}
-#player:hover #fs{opacity:1}
+#fs,#sm{position:absolute;right:14px;bottom:14px;z-index:8;border:1px solid rgba(255,255,255,.3);background:rgba(10,8,14,.6);color:#fff;font:700 11px Inter;letter-spacing:.14em;text-transform:uppercase;padding:9px 14px;border-radius:999px;cursor:pointer;backdrop-filter:blur(10px);opacity:.5;transition:opacity .2s}
+#sm{right:auto;left:14px}
+#player:hover #fs,#player:hover #sm{opacity:1}
 #wrap:fullscreen{background:#000}
 #wrap:fullscreen #player{border-radius:0;box-shadow:none}
-#wrap:fullscreen #fs{opacity:0}
-#wrap:fullscreen #player:hover #fs{opacity:.8}
+#wrap:fullscreen #fs,#wrap:fullscreen #sm{opacity:0}
+#wrap:fullscreen #player:hover #fs,#wrap:fullscreen #player:hover #sm{opacity:.8}
 </style></head>
 <body class="rai-player">
-<div id="wrap"><div id="player"><iframe id="game" src="dialog2.html?wide=1" allow="autoplay; camera; fullscreen"></iframe><button id="fs" type="button">⛶ Fullscreen</button></div></div>
+<div id="wrap"><div id="player"><iframe id="game" src="dialog2.html?wide=1" allow="autoplay; camera; fullscreen"></iframe><button id="sm" type="button" title="New game, skip character creation, straight to the map">⤳ Start from map</button><button id="fs" type="button">⛶ Fullscreen</button></div></div>
 <script>
 // a 16:9 player at 90% of the window (100% in fullscreen); the game inside gets a real 16:9 viewport, so its vh/vw are right
 const pl=document.getElementById('player');
 function fit(){ const full=!!document.fullscreenElement; const k=full?1:.9; const w=Math.min(innerWidth*k, innerHeight*k*16/9); pl.style.width=w+'px'; pl.style.height=(w*9/16)+'px'; }
 fit(); addEventListener('resize',fit); document.addEventListener('fullscreenchange',fit);
+document.getElementById('sm').onclick=()=>{ try{ sessionStorage.removeItem('rai.live'); }catch(e){} const f=document.getElementById('game'); const u=new URL('dialog2.html', location.href); u.searchParams.set('wide','1'); u.searchParams.set('newgame','1'); u.searchParams.set('start','map'); u.searchParams.set('cb',Date.now()); f.src=u.toString(); };
 document.getElementById('fs').onclick=()=>{ const w=document.getElementById('wrap'); if(document.fullscreenElement) document.exitFullscreen(); else (w.requestFullscreen||w.webkitRequestFullscreen).call(w); };
 </script>
 </body></html>
