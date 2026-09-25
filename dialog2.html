@@ -16246,7 +16246,15 @@ function showEndContinue(){
   b.style.display = 'block';
 }
 
+// Crash forensics: while an episode is playing, a "live" marker is refreshed on every line. If the page comes back up with the
+// marker still set (no clean exit), the web view was reloaded under us (iOS memory kill) — log where, for diagnosis.
+(function(){
+  try { const raw = sessionStorage.getItem('rai.live'); if (raw) { const j = JSON.parse(raw); const log = JSON.parse(localStorage.getItem('rai.crashlog') || '[]'); log.push(Object.assign(j, { reloadedAt: new Date().toISOString() })); localStorage.setItem('rai.crashlog', JSON.stringify(log.slice(-8))); sessionStorage.removeItem('rai.live'); console.warn('[rai] unexpected reload during', j); } } catch (e) {}
+  window.prideLiveMark = function(idx){ try { sessionStorage.setItem('rai.live', JSON.stringify({ ep: (typeof currentEpisodeBase === 'function') ? currentEpisodeBase() : '', idx, t: new Date().toISOString(), mem: (performance.memory && performance.memory.usedJSHeapSize) || null })); } catch (e) {} };
+  window.prideLiveClear = function(){ try { sessionStorage.removeItem('rai.live'); } catch (e) {} };
+})();
 function renderLine() {
+  try { window.prideLiveMark && window.prideLiveMark(typeof idx === 'number' ? idx : -1); } catch (e) {}
   // Reset the cutscene-bubble box-hide by default; only cutscene bubble beats re-add it.
   if (el.body) el.body.classList.remove('cutscene-bubble');
   hideEndContinue();   // hide the end button on every non-END render
@@ -23861,6 +23869,7 @@ function setFlow(name) {
   // one, in the same synchronous JS turn. Browsers won't paint between
   // these two classList calls.
   const cl = el.body.classList;
+  try { if (name !== 'game' && window.prideLiveClear) window.prideLiveClear(); } catch (e) {}   // a normal exit from the episode is not a crash
   try { if (name !== 'map' && cl.contains('flow-map') && window.prideAudio) window.prideAudio.stopAll(); } catch (e) {}
   // back to the menus from anywhere (map or an episode): drop every scene layer (ambience, random sets, focus) and let the menu music come back
   try { const MENU = ['flow-intro','flow-form','flow-worlds','flow-loading','flow-survey','flow-addself','flow-gallery']; const wasMenu = MENU.some(c => cl.contains(c)) || !Array.from(cl).some(c => /^flow-/.test(c));
