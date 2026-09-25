@@ -1812,6 +1812,28 @@
   body.flow-loading .intro-overlay,
   body.flow-survey  .intro-overlay,
   body.flow-addself .intro-overlay { display: block; }
+  /* ---- intro cover v2 ---- */
+  #introCover{ position:fixed; inset:0; z-index:402; display:none; overflow:hidden; pointer-events:none; background:#0a0a0f }
+  body.flow-intro #introCover, body.flow-form #introCover{ display:block }
+  #introCover .ic-bg{ position:absolute; inset:0; background:url("assets/intro/cover.jpg") center/cover; transform:scale(1.03); filter:brightness(.86) contrast(.9) saturate(.95); animation:icBreathe 14s ease-in-out infinite }
+  @keyframes icBreathe{ 0%,100%{ transform:scale(1.03) translateY(0) } 50%{ transform:scale(1.06) translateY(-6px) } }
+  #introCover .ic-glow{ position:absolute; left:0; right:0; top:-40px; height:190px; background:radial-gradient(60% 100% at 50% 0%,rgba(255,196,120,.55),rgba(255,160,90,0) 70%); mix-blend-mode:screen; animation:icGlow 5s ease-in-out infinite }
+  @keyframes icGlow{ 0%,100%{ opacity:.55 } 50%{ opacity:1 } }
+  #introCover .ic-bulbs{ position:absolute; inset:0; mix-blend-mode:screen }
+  #introCover .ic-bulbs span{ position:absolute; width:18px; height:18px; border-radius:50%; background:radial-gradient(circle,rgba(255,240,200,.95) 0%,rgba(255,200,120,.55) 35%,rgba(255,170,80,0) 70%); transform:translate(-50%,-50%); opacity:.5 }
+  #introCover .ic-petals{ position:absolute; inset:0; width:100%; height:100% }
+  #introCover .ic-grade{ position:absolute; inset:0; background:linear-gradient(180deg,rgba(0,0,0,0) 55%,rgba(20,10,20,.55) 78%,rgba(20,10,20,.85) 100%) }
+  body.flow-form #introCover .ic-grade{ background:linear-gradient(180deg,rgba(20,10,20,.55),rgba(20,10,20,.85)) }
+  /* v2 layout: no logo, tagline above two equal buttons */
+  #introScreen .logo-wrap .logo-img{ display:none }
+  #introScreen .logo-wrap{ top:auto !important; bottom:calc(238px + env(safe-area-inset-bottom,0px)); transform:translateX(-50%) }
+  #introScreen .logo-wrap .logo-sub{ text-shadow:0 2px 12px rgba(0,0,0,.8) }
+  body.flow-form #introScreen .logo-wrap{ opacity:0; pointer-events:none }
+  #introStart{ top:auto !important; bottom:calc(158px + env(safe-area-inset-bottom,0px)); width:240px; padding:17px 0; margin:0; letter-spacing:.32em; font-size:15px }
+  #introSignIn{ top:auto !important; bottom:calc(92px + env(safe-area-inset-bottom,0px)); width:240px; padding:15px 0 !important; border:1.5px solid rgba(255,255,255,.75) !important; border-radius:999px; color:#fff !important; font-size:14px; letter-spacing:.3em; background:rgba(10,6,14,.22); -webkit-backdrop-filter:blur(6px); backdrop-filter:blur(6px) }
+  #introSignIn::after{ display:none !important; content:none !important }
+  #introNewGame{ display:none !important }
+  body.flow-form #introStart, body.flow-form #introSignIn{ opacity:0; pointer-events:none }
 
   .intro-layer {
     position: fixed; inset: 0;
@@ -11594,6 +11616,8 @@
   <source src="assets/intro/loop.mov" type="video/quicktime">
 </video>
 <div class="intro-overlay"></div>
+<!-- Intro cover (v2): painted key art + petals / marquee bulbs / warm glow. Shown on the welcome + form screens only. -->
+<div id="introCover" aria-hidden="true"><div class="ic-bg"></div><div class="ic-glow"></div><div class="ic-bulbs"></div><canvas class="ic-petals"></canvas><div class="ic-grade"></div></div>
 
 <!-- Welcome + Form share a single screen so the transition between
      them is a smooth in-place slide/fade. Body class controls state:
@@ -12237,7 +12261,8 @@
       else console.log('[worldpages] enter',pack);
     }catch(e){ console.warn('[worldpages] enter',e); }
   }
-  function show(){ if(!built) build(); const r=document.getElementById('worldPages'); if(r){ r.classList.add('on'); r.scrollLeft=0; trailerIdx=-1; playTrailer(0); } }
+  function show(){ if(!built) build(); const r=document.getElementById('worldPages'); if(r){ r.classList.add('on'); r.scrollLeft=0; trailerIdx=-1; playTrailer(0); }
+    try{ if(document.body.classList.contains('flow-map') && typeof setFlow==='function') setFlow('worlds'); }catch(e){} }   // backing out of the map (heroine chooser ×): leave the map flow so its audio stops and the menu music returns
   function hide(){ const r=document.getElementById('worldPages'); if(r) r.classList.remove('on'); stopTrailers(); }
   window.showWorldPages=show; window.hideWorldPages=hide; window.devWorldPages=function(){ show(); return true; };
 })();
@@ -14239,10 +14264,19 @@ window.PRIDE_ACTORS = PRIDE_ACTORS;   // expose so the cast stage can map speake
 // idle_* clips loop, and a character with idles but no held pose gets a random idle.
 (function(){
   const N = 16, FPS = 8;
+  const POSE_FRAMES = { 'arabella2/fan_flutter': 40 };   // clips that need more than 16 frames (real-time motion that 16 would chop)
+  const cnt = (folder, pose) => POSE_FRAMES[folder + '/' + pose] || N;
   // idles: base idles (no expression held). idleFor: idle clips that continue a held expression
   // (added as they are generated; until then a held expression breathes on its last frames).
   const POSE_SETS = { mr_darcy: { idles: ['idle_breath', 'idle_glance'], idleFor: { guarded: ['guarded_idle'], exposed: ['exposed_idle'], intent: ['intent_idle'] },
-                                  all: ['guarded', 'exposed', 'intent', 'idle_breath', 'idle_glance', 'guarded_idle', 'exposed_idle', 'intent_idle'] } };
+                                  all: ['guarded', 'exposed', 'intent', 'idle_breath', 'idle_glance', 'guarded_idle', 'exposed_idle', 'intent_idle'] },
+                      // Arabella (arms folded): three base idles; the "think" family plays on the choice screen (pridePoseFamily)
+                      arabella2: { idles: ['idle_breath', 'idle_glance', 'arms_shift'], idleFor: { think: ['think_tilt', 'think_lip', 'think_settle', 'fan_flutter', 'arms_shift'] },
+                                   all: ['idle_breath', 'idle_glance', 'arms_shift', 'think_tilt', 'think_lip', 'think_settle', 'fan_flutter'] },
+                      // whisper busts (map): base idles only
+                      arabella_frost: { idles: ['idle_breath', 'idle_glove', 'idle_brow'], idleFor: {}, all: ['idle_breath', 'idle_glove', 'idle_brow'] },
+                      mrs_frost: { idles: ['idle_breath', 'idle_fuss', 'idle_glance'], idleFor: {}, all: ['idle_breath', 'idle_fuss', 'idle_glance'] } };
+  window.__pridePoseFamily = window.__pridePoseFamily || {};   // folder → idleFor family to draw idles from (e.g. arabella2 → 'think' while choosing)
   const avail = {};   // folder/pose → true|false once probed (does f00.webp exist?)
   function probe(folder, pose, cb){ const key = folder + '/' + pose; if (key in avail) { cb(avail[key]); return; } const im = new Image(); im.onload = () => { avail[key] = true; cb(true); }; im.onerror = () => { avail[key] = false; cb(false); }; im.src = PRIDE_WORLD_BASE + '/characters/' + folder + '/poses/' + pose + '/f00.webp'; }
   const PAUSE = () => 1200 + Math.random() * 1600;   // ms held on the last frame between idle loops
@@ -14250,28 +14284,31 @@ window.PRIDE_ACTORS = PRIDE_ACTORS;   // expose so the cast stage can map speake
   window.__pridePoseHeld = window.__pridePoseHeld || {};      // folder → pose held (expression) or chosen idle
   window.__pridePosePlayed = window.__pridePosePlayed || {};  // folder/pose → true once the expression clip ran
   const cache = {};
-  function frames(folder, pose){ const key = folder + '/' + pose; if (!cache[key]) { cache[key] = []; for (let i = 0; i < N; i++) { const im = new Image(); im.src = PRIDE_WORLD_BASE + '/characters/' + folder + '/poses/' + pose + '/f' + String(i).padStart(2, '0') + '.webp'; cache[key].push(im); } } return cache[key]; }
+  function frames(folder, pose){ const key = folder + '/' + pose; if (!cache[key]) { cache[key] = []; for (let i = 0; i < cnt(folder, pose); i++) { const im = new Image(); im.src = PRIDE_WORLD_BASE + '/characters/' + folder + '/poses/' + pose + '/f' + String(i).padStart(2, '0') + '.webp'; cache[key].push(im); } } return cache[key]; }
   function targets(folder){
     const out = [];
     const st = document.getElementById('prideActor'); if (st && st.classList.contains('active') && st.dataset.poseFolder === folder) out.push(st);
     const fc = document.getElementById('focusCharacter'); if (fc && fc.classList.contains('show') && fc.dataset.poseFolder === folder) out.push(fc);
+    const pa = document.querySelector('#pcFocus.on .pcf-ara'); if (pa && pa.dataset.poseFolder === folder) out.push(pa);   // choice-screen figure
+    const wf = document.querySelector('#pcWhisper.on.show-say .ps-fig'); if (wf && wf.dataset.poseFolder === folder) out.push(wf);   // whisper bust on the map
     return out;
   }
   function paint(folder, im){ targets(folder).forEach(el => { el.style.backgroundImage = 'url("' + im.src + '")'; }); }
   function stop(){ if (timer) { clearInterval(timer); clearTimeout(timer); timer = null; } cur = null; }
   function pickIdle(folder, avoid, list){ const set = POSE_SETS[folder]; if (!set) return null; const pool = list || set.idles; const c = pool.filter(x => x !== avoid); return c[Math.floor(Math.random() * c.length)] || pool[0]; }
-  const isIdle = pose => /idle/.test(pose);
+  const isIdle = (pose, folder) => { if (/idle/.test(pose)) return true; const set = folder && POSE_SETS[folder]; if (!set) return false; if (set.idles.indexOf(pose) > -1) return true; return Object.keys(set.idleFor || {}).some(k => set.idleFor[k].indexOf(pose) > -1); };
+  function idlePool(folder){ const set = POSE_SETS[folder]; const fam = window.__pridePoseFamily[folder]; return (fam && set.idleFor && set.idleFor[fam]) || set.idles; }
   function run(folder, pose){
-    stop(); const fr = frames(folder, pose); const loop = isIdle(pose); cur = { folder, pose, k: 0, loop };
+    stop(); const fr = frames(folder, pose); const loop = isIdle(pose, folder); const n = fr.length; cur = { folder, pose, k: 0, loop };
     const step = () => {
       if (!targets(folder).length) { stop(); return; }            // character left both stages → stop painting
       paint(folder, fr[cur.k]); cur.k++;
-      if (cur.k >= N) {
+      if (cur.k >= n) {
         clearInterval(timer); timer = null;
         if (loop) {
           // pause on the last frame, then the next idle of the same family (random)
           const held = window.__pridePoseHeld[folder]; const set = POSE_SETS[folder];
-          const pool = (held && set.idleFor && set.idleFor[held]) ? set.idleFor[held] : set.idles;
+          const pool = (held && set.idleFor && set.idleFor[held]) ? set.idleFor[held] : idlePool(folder);
           timer = setTimeout(() => { timer = null; if (!targets(folder).length) { stop(); return; } run(folder, pickIdle(folder, pose, pool)); }, PAUSE());
         } else { window.__pridePosePlayed[folder + '/' + pose] = true; hold(folder, pose); }
       }
@@ -14281,8 +14318,8 @@ window.PRIDE_ACTORS = PRIDE_ACTORS;   // expose so the cast stage can map speake
   // Held expression → micro-idle: ping-pong over the clip's last 4 frames, slowly, so he
   // keeps breathing in the pose instead of freezing on one frame.
   function hold(folder, pose){
-    stop(); const fr = frames(folder, pose); cur = { folder, pose, k: N - 1, loop: false, hold: true };
-    paint(folder, fr[N - 1]);
+    stop(); const fr = frames(folder, pose); const n = fr.length; cur = { folder, pose, k: n - 1, loop: false, hold: true };
+    paint(folder, fr[n - 1]);
     // Prefer the expression's own idle clip (guarded_idle …) if it exists; otherwise breathe on the last frames.
     const set = POSE_SETS[folder]; const own = (set && set.idleFor && set.idleFor[pose]) || [];
     const first = own[0];
@@ -14290,8 +14327,8 @@ window.PRIDE_ACTORS = PRIDE_ACTORS;   // expose so the cast stage can map speake
     else microIdle(folder, pose);
   }
   function microIdle(folder, pose){
-    stop(); const fr = frames(folder, pose); cur = { folder, pose, k: N - 1, loop: false, hold: true }; let dir = -1;
-    const step = () => { if (!targets(folder).length) { stop(); return; } paint(folder, fr[cur.k]); cur.k += dir; if (cur.k <= N - 4 || cur.k >= N - 1) dir = -dir; };
+    stop(); const fr = frames(folder, pose); const n = fr.length; cur = { folder, pose, k: n - 1, loop: false, hold: true }; let dir = -1;
+    const step = () => { if (!targets(folder).length) { stop(); return; } paint(folder, fr[cur.k]); cur.k += dir; if (cur.k <= n - 4 || cur.k >= n - 1) dir = -dir; };
     step(); timer = setInterval(step, 1000 / 3);
   }
   // Called by the stage / cast-small painters after they placed the character.
@@ -14301,14 +14338,14 @@ window.PRIDE_ACTORS = PRIDE_ACTORS;   // expose so the cast stage can map speake
     if (!set) { if (cur && cur.folder !== folder && !targets(cur.folder).length) stop(); return false; }
     if (!set._preloaded) { set._preloaded = true; set.idles.forEach(p => frames(folder, p)); }   // base idles only; expression sets load when scripted
     // paint the frame we are on right now (if this folder is already running) so no base-sprite flash
-    if (cur && cur.folder === folder && el) { const fr = frames(folder, cur.pose); const k = Math.min(Math.max(cur.k - 1, 0), N - 1); el.style.backgroundImage = 'url("' + fr[k].src + '")'; }
+    if (cur && cur.folder === folder && el) { const fr = frames(folder, cur.pose); const k = Math.min(Math.max(cur.k - 1, 0), fr.length - 1); el.style.backgroundImage = 'url("' + fr[k].src + '")'; }
     const held = window.__pridePoseHeld[folder];
     if (held) {
-      if (isIdle(held)) { if (!(cur && cur.folder === folder && timer)) run(folder, held); }
+      if (isIdle(held, folder)) { if (!(cur && cur.folder === folder && timer)) run(folder, held); }
       else if (!window.__pridePosePlayed[folder + '/' + held]) { if (!(cur && cur.folder === folder && cur.pose === held && timer)) run(folder, held); }
-      else { if (cur && cur.folder === folder && timer && (cur.pose === held || isIdle(cur.pose))) return true; hold(folder, held); }
+      else { if (cur && cur.folder === folder && timer && (cur.pose === held || isIdle(cur.pose, folder))) return true; hold(folder, held); }
     } else {
-      if (!(cur && cur.folder === folder && cur.loop && timer)) run(folder, pickIdle(folder));   // random idle
+      if (!(cur && cur.folder === folder && cur.loop && timer)) run(folder, pickIdle(folder, null, idlePool(folder)));   // random idle (from the active family)
     }
     return true;
   };
@@ -14319,6 +14356,9 @@ window.PRIDE_ACTORS = PRIDE_ACTORS;   // expose so the cast stage can map speake
     try { const set = POSE_SETS[folder]; ((set && set.idleFor && set.idleFor[pose]) || []).forEach(p => frames(folder, p)); } catch (e) {}   // warm this expression's idle
     if (targets(folder).length) run(folder, pose);             // character on screen now → play immediately
   };
+  // Switch which idle family a character draws from (null = base idles); restarts the loop if on screen.
+  window.pridePoseFamily = function(speaker, fam){ const folder = PRIDE_ACTORS[speaker] || speaker; const set = POSE_SETS[folder]; if (!set) return; if (fam && set.idleFor && set.idleFor[fam]) { window.__pridePoseFamily[folder] = fam; set.idleFor[fam].forEach(p => frames(folder, p)); } else delete window.__pridePoseFamily[folder];
+    if (targets(folder).length && !window.__pridePoseHeld[folder]) run(folder, pickIdle(folder, cur && cur.pose, idlePool(folder))); };
   window.pridePoseStop = stop;
   window.pridePosePreload = function(speaker){ const folder = PRIDE_ACTORS[speaker] || speaker; const set = POSE_SETS[folder]; if (set) set.all.forEach(p => frames(folder, p)); };
 })();
@@ -18405,7 +18445,7 @@ function startChoice(options) {
   Object.values(el.chars).forEach(c => c.classList.remove('active','exit-left','exit-right'));
   el.aura.className = 'voice-aura';
   el.body.classList.add('choosing');
-  try { if (activePack === 'pride' && window.prideAudio) { window.prideAudio.focus(true); window.prideAudio.hook('choice_open'); } } catch (e) {}
+  try { if (activePack === 'pride' && window.prideAudio) { window.prideAudio.focus(true); window.prideAudio.hook('choice_open'); } if (activePack === 'pride' && window.prideChoiceFocus) window.prideChoiceFocus.open(); } catch (e) {}
   el.body.classList.remove('narrative-active');
   // Inside a narrative scene, tear down anything the previous line may have
   // put on screen so it doesn't collide with the choice panel:
@@ -18576,6 +18616,16 @@ function startChoice(options) {
   }
 
   requestAnimationFrame(() => el.choicePanel.classList.add('open'));
+  // P&P: the cards stand up one by one from the bottom of the stack (proto-choice-anim #2 "unfold up"),
+  // 260 ms apart so they land on the three pianoforte notes of the open sound.
+  if (activePack === 'pride') {
+    try {
+      const cards = [...el.choiceList.querySelectorAll('.choice-opt')]; const n = cards.length;
+      cards.forEach((c, i) => { c.style.opacity = '0'; c.style.transformOrigin = '50% 100%'; c.style.backfaceVisibility = 'hidden';
+        c.animate([{ transform: 'rotateX(95deg)', opacity: 0 }, { transform: 'rotateX(-12deg)', opacity: 1, offset: .7 }, { transform: 'rotateX(0deg)', opacity: 1 }],
+          { duration: 560, delay: (n - 1 - i) * 260, easing: 'cubic-bezier(.2,.8,.2,1)', fill: 'forwards' }); });
+    } catch (e) {}
+  }
 }
 
 // Tracks the index from the most recent (Choice:N), read by
@@ -18583,7 +18633,7 @@ function startChoice(options) {
 let lastChosenIdx = -1;
 
 function endChoice(chosenIdx, chosenOpt) {
-  try { if (activePack === 'pride' && window.prideAudio) { window.prideAudio.hook('choice'); window.prideAudio.focus(false); } } catch (e) {}
+  try { if (activePack === 'pride' && window.prideAudio) { window.prideAudio.hook('choice'); window.prideAudio.focus(false); } if (window.prideChoiceFocus) window.prideChoiceFocus.close(); } catch (e) {}
   // Stash the player's typed-in text so later lines can use {{input}}.
   // Strip trailing punctuation so the narrative reads cleanly ("...clean
   // and whole, Hug her.") even if the player added their own period.
@@ -18650,6 +18700,18 @@ function endChoice(chosenIdx, chosenOpt) {
     return;
   }
 
+  // P&P: Arabella says the pick out loud — a synthetic cast-small line spliced right after the (Choice) so it
+  // renders (and voices) like any other line, then the branch's own [ui:] takes over. Typed input is not echoed.
+  try {
+    if (activePack === 'pride' && chosenOpt && !chosenOpt.typed && chosenOpt.text && /^arabella/i.test(String(chosenOpt.speaker || '')) && !chosenOpt.giftPickAction && !chosenOpt.fakeGiftChoice) {
+      const prevUi = (currentDialogState && currentDialogState.ui) || 'narrative';
+      while (lines[idx + 1] && lines[idx + 1].synthetic) lines.splice(idx + 1, 1);
+      lines.splice(idx + 1, 0,
+        { type: 'state-update', updates: { ui: 'cast-small' }, synthetic: true },
+        { type: 'line', speaker: 'arabella2', text: chosenOpt.text, synthetic: true, echo: true },
+        { type: 'state-update', updates: { ui: prevUi }, synthetic: true });
+    }
+  } catch (e) {}
   setTimeout(() => {
     el.body.classList.remove('choosing');
     idx++;
@@ -22535,6 +22597,7 @@ function stopLondonAmbient() {
     window.prideMapTod=tod;
     if(tod!=='day') b.classList.add('pride-tod-'+tod);
     try{ if(window.prideReapplyFog) window.prideReapplyFog(); }catch(e){}
+    try{ if(window.prideAudio&&window.prideAudio.mapTod) window.prideAudio.mapTod(); }catch(e){}   // swap the map soundscape with the light
   };
   // ---- Pin state system (episode / short-stories / interactive) ----
   const PIN_ICO={
@@ -23757,6 +23820,10 @@ function setFlow(name) {
   // these two classList calls.
   const cl = el.body.classList;
   try { if (name !== 'map' && cl.contains('flow-map') && window.prideAudio) window.prideAudio.stopAll(); } catch (e) {}
+  // back to the menus from anywhere (map or an episode): drop every scene layer (ambience, random sets, focus) and let the menu music come back
+  try { const MENU = ['flow-intro','flow-form','flow-worlds','flow-loading','flow-survey','flow-addself','flow-gallery']; const wasMenu = MENU.some(c => cl.contains(c)) || !Array.from(cl).some(c => /^flow-/.test(c));
+    if (['intro','form','worlds'].indexOf(name) > -1 && !wasMenu && window.prideAudio) { window.prideAudio.stopAll(); window.prideAudio.stopVoice(); setTimeout(() => { try { window.prideMenuMusicRefresh && window.prideMenuMusicRefresh(); } catch (e) {} }, 60); } } catch (e) {}   // menu→menu keeps the music running uninterrupted
+  try { if (name !== 'map' && window.prideWhisperAbort) window.prideWhisperAbort(); } catch (e) {}   // whisper busts must not linger over other screens
   cl.remove.apply(cl, _FLOW_CLASSES);
   if (name) cl.add('flow-' + name);
   // Whenever we explicitly re-enter an onboarding screen, drop the
@@ -28423,10 +28490,9 @@ function applyPhotoTile(tile, dataUrl) {
 })();
 
 document.getElementById('introStart').addEventListener('click', () => {
-  // Start = always go through the onboarding form, even for returning
-  // users. The Sign in line button next to it is the explicit shortcut
-  // into the date picker.
-  showForm();
+  // v2: Continue (resume onto the map) when there is progress, otherwise Start game → World List.
+  if (prideHasProgress() && typeof window.prideResumeToMap === 'function') window.prideResumeToMap();
+  else showWorldList();
 });
 // Returning player? (progress = a chosen PC or any completed episode.)
 // If so, the line button becomes "Continue" and resumes straight onto the
@@ -28437,10 +28503,12 @@ function prideHasProgress(){
   return false;
 }
 function prideUpdateIntroCTA(){
-  const b=document.getElementById('introSignIn'); if(!b) return;
+  const b=document.getElementById('introSignIn'), a=document.getElementById('introStart'); if(!b||!a) return;
   const has = prideHasProgress();
-  b.textContent = has ? 'Continue' : 'Sign in';
-  const ng=document.getElementById('introNewGame'); if(ng) ng.hidden = !has;
+  // v2: no save → Start game / Register · with a save → Continue / New game
+  a.textContent = has ? 'Continue' : 'Start game';
+  b.textContent = has ? 'New game' : 'Register';
+  const ng=document.getElementById('introNewGame'); if(ng) ng.hidden = true;
 }
 prideUpdateIntroCTA();
 // New game (shown under Continue when there is progress): confirm, then reload with ?newgame=1 —
@@ -28451,14 +28519,41 @@ document.getElementById('introNewGame').addEventListener('click', () => {
   window.location.replace(u.toString());
 });
 document.getElementById('introSignIn').addEventListener('click', () => {
-  if (prideHasProgress() && typeof window.prideResumeToMap === 'function') {
-    // Returning user → resume onto their map at the right spot.
-    window.prideResumeToMap();
-  } else {
-    // First-timer → World List (new entry point).
-    showWorldList();
-  }
+  // v2: New game (wipe, same as the dev ?newgame=1 flag) when there is progress, otherwise Register → onboarding form.
+  if (prideHasProgress()) {
+    if (!confirm('Start a new game? Your current progress will be erased.')) return;
+    const u = new URL(window.location.href); u.searchParams.set('newgame', '1'); u.searchParams.set('cb', String(Date.now()));
+    window.location.replace(u.toString());
+  } else showForm();
 });
+// ---- intro cover effects: petals (canvas), marquee bulbs, run only while the cover is visible ----
+(function(){
+  const cover=document.getElementById('introCover'); if(!cover) return;
+  const cv=cover.querySelector('.ic-petals'), ctx=cv.getContext('2d'); let W=0,H=0;
+  const COL=[[255,150,120],[255,200,120],[250,120,150],[255,235,180],[240,170,90]]; const P=[];
+  const mk=(y)=>{ const d=Math.random(); return {x:Math.random()*W,y:y==null?Math.random()*H:y,d,r:(3+Math.random()*4)*(0.5+d),vy:(0.25+Math.random()*0.45)*(0.5+d),ph:Math.random()*6,sp:(Math.random()-.5)*0.03,rot:Math.random()*6,c:COL[Math.floor(Math.random()*COL.length)],a:.35+.5*d}; };
+  function size(){ const r=cover.getBoundingClientRect(); W=Math.max(1,Math.round(r.width)); H=Math.max(1,Math.round(r.height)); cv.width=W*2; cv.height=H*2; ctx.setTransform(2,0,0,2,0,0); P.length=0; for(let i=0;i<46;i++) P.push(mk()); }
+  function petal(p){ ctx.save(); ctx.translate(p.x,p.y); ctx.rotate(p.rot); ctx.globalAlpha=p.a; ctx.fillStyle='rgb('+p.c[0]+','+p.c[1]+','+p.c[2]+')'; ctx.beginPath(); ctx.moveTo(0,-p.r); ctx.bezierCurveTo(p.r*.9,-p.r*.6,p.r*.9,p.r*.6,0,p.r); ctx.bezierCurveTo(-p.r*.9,p.r*.6,-p.r*.9,-p.r*.6,0,-p.r); ctx.fill(); ctx.globalAlpha=p.a*.5; ctx.fillStyle='rgba(255,255,255,.6)'; ctx.beginPath(); ctx.ellipse(-p.r*.25,-p.r*.3,p.r*.25,p.r*.12,-.6,0,6.3); ctx.fill(); ctx.restore(); }
+  const bulbs=cover.querySelector('.ic-bulbs'); const B=[]; const N=15;
+  for(let i=0;i<N;i++){ const e=document.createElement('span'); bulbs.appendChild(e); B.push({e,i}); }
+  function placeBulbs(){ B.forEach(b=>{ const x=(W*0.02)+b.i*(W*0.96/(N-1)); const arch=Math.sin((b.i/(N-1))*Math.PI); b.e.style.left=x+'px'; b.e.style.top=(18+(1-arch)*10)+'px'; }); }
+  let running=false, t0=0;
+  function frame(){ if(!cover.offsetParent && getComputedStyle(cover).display==='none'){ running=false; return; }
+    const t=(performance.now()-t0)/1000; ctx.clearRect(0,0,W,H);
+    P.forEach(p=>{ p.y+=p.vy; p.x+=Math.sin(t*0.9+p.ph)*0.35+0.08; p.rot+=p.sp+Math.sin(t+p.ph)*0.004; if(p.y>H+12) Object.assign(p,mk(-12)); if(p.x>W+12) p.x=-12; petal(p); });
+    B.forEach(b=>{ const chase=0.5+0.5*Math.sin(t*2.2-b.i*0.55); const flick=Math.random()<0.02?0.3:1; b.e.style.opacity=(0.25+0.7*chase)*flick; b.e.style.transform='translate(-50%,-50%) scale('+(0.8+0.5*chase)+')'; });
+    requestAnimationFrame(frame); }
+  function start(){ if(running) return; running=true; t0=performance.now(); size(); placeBulbs(); requestAnimationFrame(frame); }
+  // menu music: starts with the cover (after the first gesture on iOS), stops when the flow leaves the intro/form screens
+  let menuOn=false; function menuMusic(on, force){ if(on===menuOn && !force) return; if(!window.prideAudio){ setTimeout(()=>menuMusic(on, force),300); return; } menuOn=on; try{ if(on){ window.prideAudio.music('menu'); } else if(window.prideAudio.state().music==='menu'){ window.prideAudio.music('none'); } }catch(e){} }
+  // menu music keeps playing through the whole pre-game flow (intro, form, world list / character select, loading, survey…) and stops at the map or an episode
+  const MENU_FLOWS=['flow-intro','flow-form','flow-worlds','flow-loading','flow-survey','flow-addself','flow-gallery'];
+  const inMenu=()=>MENU_FLOWS.some(c=>document.body.classList.contains(c));
+  const obs=new MutationObserver(()=>{ if(document.body.classList.contains('flow-intro')||document.body.classList.contains('flow-form')) start(); menuMusic(inMenu()); });
+  obs.observe(document.body,{attributes:true,attributeFilter:['class']}); window.addEventListener('resize',()=>{ if(running){ size(); placeBulbs(); } });
+  window.prideMenuMusicRefresh=function(){ menuMusic(inMenu(), true); };   // after a stopAll on the way back to the menus
+  if(document.body.classList.contains('flow-intro')||document.body.classList.contains('flow-form')) start(); if(inMenu()) menuMusic(true);
+})();
 
 document.getElementById('formContinue').addEventListener('click', () => {
   const name     = document.getElementById('formName').value.trim();
@@ -29192,7 +29287,7 @@ console.log('%c[caller] Episode 1 ready — run startCaller()', 'color:#e7b24c')
 #pcsel .d-scroll, #pcsel .d-footer{transition:transform .6s cubic-bezier(.4,0,.2,1), opacity .5s ease}
 #pcsel.revealing .d-scroll, #pcsel.revealing .d-footer{transform:translateY(110%); opacity:0; pointer-events:none}
 #pcsel .hero .hname, #pcsel .hero .face-arrow{transition:opacity .4s ease}
-#pcsel.revealing .hero .hname, #pcsel.revealing .hero .face-arrow{opacity:0; pointer-events:none}
+#pcsel.revealing .hero .hname, #pcsel.revealing .hero .face-arrow, #pcsel.revealing .hero .wd-arrow, #pcsel.revealing #pcsDClose, #pcsel.revealing .dclose{opacity:0 !important; pointer-events:none !important}   /* becoming: no close, no outfit / face arrows */
 /* ── "Make her you" step 1: the mirror page (full screen over the detail). Layers, bottom→top:
    dark base · room reflection (flipped, dimmed) · your photo (oval, at her head's scale) · sheen · room+frame (glass cut out)
    · candle glow · Arabella from behind (sprite, or characters/<id>/mirror_idle.webm when present) · UI */
@@ -29223,6 +29318,40 @@ console.log('%c[caller] Episode 1 ready — run startCaller()', 'color:#e7b24c')
 #pcsel .pcs-mirror.has-photo .pm-photo{filter:saturate(.9) contrast(1.04) sepia(.14) brightness(.96); transition:opacity .9s ease, transform 1.4s cubic-bezier(.2,.8,.2,1), filter 1.5s ease .15s}
 /* glass depth: inner vignette + a faint reflection of the room over the photo, like real silvered glass */
 #pcsel .pcs-mirror .pm-vig{background:radial-gradient(75% 70% at 50% 45%, rgba(0,0,0,0) 55%, rgba(8,5,10,.55) 100%)}
+/* ── in-app camera (looking-glass) ── */
+#pcsel .pcs-mirror .pm-cam{position:absolute; inset:0; z-index:12; display:none; background:#0b080e; animation:pcIn .35s ease both}
+#pcsel .pcs-mirror .pm-cam.on{display:block}
+@keyframes pcIn{from{opacity:0} to{opacity:1}}
+/* v2: the room itself (cam_i — the same dressing room as the portrait screen, mirror at full width). The art is 9:16, pinned to the top at full width; the live camera sits inside the mirror's glass through a mask cut from the painting. Below the art the table fades to dark where the shutter lives. */
+#pcsel .pcs-mirror .pm-cam .pc-bg{position:absolute; inset:0; background:#0b0a0c}
+#pcsel .pcs-mirror .pm-cam .pc-art{position:absolute; left:0; top:0; width:100%; aspect-ratio:9/16; background:url("worlds/pride-and-prejudice/pc-select/cam_room.jpg") center/100% 100% no-repeat; z-index:1}
+#pcsel .pcs-mirror .pm-cam .pc-art::after{content:""; position:absolute; left:0; right:0; bottom:-1px; height:34%; background:linear-gradient(180deg, rgba(11,10,12,0), rgba(11,10,12,.55) 55%, #0b0a0c 100%); pointer-events:none}
+#pcsel .pcs-mirror .pm-cam .pc-top{position:absolute; left:22px; right:70px; top:calc(env(safe-area-inset-top,0px) + 14px); z-index:3; color:#fff}
+#pcsel .pcs-mirror .pm-cam .pc-top .pm-t{margin:4px 0 0; font-size:24px; text-shadow:0 2px 14px rgba(0,0,0,.8)} #pcsel .pcs-mirror .pm-cam .pc-top .pm-s{display:none}
+#pcsel .pcs-mirror .pm-cam .pc-x{position:absolute; right:14px; top:max(18px, calc(env(safe-area-inset-top) + 8px)); z-index:5; width:42px; height:42px; border-radius:50%; display:grid; place-items:center; background:rgba(20,12,26,.6); color:#fff; border:1px solid rgba(255,255,255,.28); font-size:16px; cursor:pointer}
+/* the glass = the painting's mirror glass (bbox in % of the art), masked to its carved outline */
+#pcsel .pcs-mirror .pm-cam .pc-glass{position:absolute; left:14.51%; top:12.58%; width:71.32%; height:45.12%; overflow:hidden; background:#101014; -webkit-mask:url("worlds/pride-and-prejudice/pc-select/cam_glass_mask.png") center/100% 100% no-repeat; mask:url("worlds/pride-and-prejudice/pc-select/cam_glass_mask.png") center/100% 100% no-repeat}
+#pcsel .pcs-mirror .pm-cam video{position:absolute; inset:0; width:100%; height:100%; object-fit:cover; transform:scaleX(-1); filter:saturate(.92) contrast(1.02) brightness(.96)}
+#pcsel .pcs-mirror .pm-cam video.rear{transform:none}
+/* old glass, smoky corners + the candle's warm light caught in the lower-left of the pane */
+#pcsel .pcs-mirror .pm-cam .pc-frost{position:absolute; inset:0; pointer-events:none; background:radial-gradient(80% 80% at 50% 50%, rgba(0,0,0,0) 62%, rgba(20,16,12,.38) 100%)}
+#pcsel .pcs-mirror .pm-cam .pc-frost::before{content:""; position:absolute; inset:0; background:radial-gradient(38% 34% at 6% 92%, rgba(255,186,96,.42), rgba(255,186,96,0) 70%); mix-blend-mode:screen}
+#pcsel .pcs-mirror .pm-cam .pc-frost::after{content:""; position:absolute; inset:0; background:linear-gradient(112deg, rgba(255,255,255,0) 42%, rgba(255,240,220,.07) 50%, rgba(255,255,255,0) 58%); mix-blend-mode:screen}
+/* the gold guide — the same head box as the portrait mirror (a 3:4 crop centred on the glass), so the shot lands exactly */
+#pcsel .pcs-mirror .pm-cam .pc-guide{position:absolute; inset:0; pointer-events:none}
+#pcsel .pcs-mirror .pm-cam .pc-guide .head{position:absolute; left:35.5%; top:14.5%; width:29%; height:45%; border-radius:50%; border:2px dotted rgba(231,178,76,.95); box-shadow:0 0 18px rgba(231,178,76,.35), inset 0 0 18px rgba(231,178,76,.15); animation:pcGuide 2.4s ease-in-out infinite}
+#pcsel .pcs-mirror .pm-cam .pc-guide .shoulders{position:absolute; left:16%; right:16%; top:59.5%; height:44%; border-radius:50% 50% 0 0 / 60% 60% 0 0; border:2px dotted rgba(231,178,76,.55); border-bottom:none}
+#pcsel .pcs-mirror .pm-cam .pc-hint{position:absolute; left:0; right:0; bottom:7%; text-align:center; font:700 10px/1 Inter,system-ui,sans-serif; letter-spacing:.28em; color:rgba(231,178,76,.9); text-shadow:0 1px 6px rgba(0,0,0,.8); pointer-events:none}
+@keyframes pcGuide{0%,100%{box-shadow:0 0 14px rgba(231,178,76,.3), inset 0 0 14px rgba(231,178,76,.12)} 50%{box-shadow:0 0 26px rgba(231,178,76,.55), inset 0 0 22px rgba(231,178,76,.22)}}
+#pcsel .pcs-mirror .pm-cam .pc-bar{position:absolute; left:0; right:0; bottom:calc(env(safe-area-inset-bottom,0px) + 34px); z-index:3; display:flex; align-items:center; justify-content:center; gap:38px}
+#pcsel .pcs-mirror .pm-cam .pc-flip, #pcsel .pcs-mirror .pm-cam .pc-lib{width:50px; height:50px; border-radius:50%; border:1px solid rgba(255,255,255,.28); background:rgba(20,12,26,.55); color:#fff; display:grid; place-items:center; cursor:pointer}
+#pcsel .pcs-mirror .pm-cam .pc-flip svg, #pcsel .pcs-mirror .pm-cam .pc-lib svg{width:22px; height:22px}
+#pcsel .pcs-mirror .pm-cam .pc-shutter{width:78px; height:78px; border-radius:50%; border:4px solid rgba(255,255,255,.9); background:transparent; display:grid; place-items:center; cursor:pointer; padding:0}
+#pcsel .pcs-mirror .pm-cam .pc-shutter i{display:block; width:60px; height:60px; border-radius:50%; background:linear-gradient(120deg,#e0668a,#8b7bd8); box-shadow:0 8px 20px rgba(139,123,216,.4); transition:transform .12s}
+#pcsel .pcs-mirror .pm-cam .pc-shutter:active i{transform:scale(.88)}
+#pcsel .pcs-mirror .pm-cam .pc-err{position:absolute; left:22px; right:22px; bottom:calc(env(safe-area-inset-bottom,0px) + 130px); z-index:3; color:#ffb3c8; font-size:13px; text-align:center; display:none}
+#pcsel .pcs-mirror .pm-cam.flash .pc-glass::after{content:""; position:absolute; inset:0; background:#fff; animation:pcFlash .5s ease-out forwards}
+@keyframes pcFlash{0%{opacity:.95} 100%{opacity:0}}
 #pcsel .pcs-mirror .pm-over{opacity:0; mix-blend-mode:screen; transition:opacity 1.2s ease .4s}
 #pcsel .pcs-mirror.has-photo .pm-over{opacity:.16}
 #pcsel .pcs-mirror .pm-over::after{content:""; position:absolute; inset:0; background:linear-gradient(160deg, rgba(255,245,225,.20) 0%, rgba(255,255,255,0) 45%, rgba(255,255,255,0) 60%, rgba(255,240,220,.10) 100%)}
@@ -29480,6 +29609,18 @@ console.log('%c[caller] Episode 1 ready — run startCaller()', 'color:#e7b24c')
       <div class="pm-empty"><h2 class="pm-t">Sit for your portrait.</h2><div class="pm-s">Your face becomes hers. The photo is used once and never kept.</div></div>
       <div class="pm-full"><h2 class="pm-t">That will do nicely.</h2><div class="pm-s">Your photo is used once for the likeness and never stored.</div></div></div>
     <div class="pm-x" id="pmClose">&#10005;</div>
+    <!-- in-app camera: a tall frosted looking-glass with a live (mirrored) preview and a gold head guide; the crop it takes is
+         exactly the mirror's photo box (3:4, head 20% down, 38% tall), so the portrait lands in the glass above without any fitting -->
+    <div class="pm-cam" id="pmCam" aria-hidden="true">
+      <div class="pc-bg"></div>
+      <div class="pc-art"><div class="pc-glass"><video id="pmCamVideo" autoplay playsinline muted></video><div class="pc-frost"></div><div class="pc-guide"><i class="head"></i><i class="shoulders"></i></div><div class="pc-hint">HEAD INSIDE THE GOLD LINE</div></div></div>
+      <div class="pc-top"><div class="pm-k">Your likeness</div><h2 class="pm-t">Look into the glass.</h2><div class="pm-s">Place your head inside the gold line. Good light, no hat.</div></div>
+      <div class="pc-x" id="pmCamClose">&#10005;</div>
+      <div class="pc-bar"><button type="button" class="pc-flip" id="pmCamFlip" aria-label="Flip camera"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 0 1 15.5-6.3M21 12a9 9 0 0 1-15.5 6.3"/><path d="M18 3v4h-4M6 21v-4h4"/></svg></button>
+        <button type="button" class="pc-shutter" id="pmCamShot" aria-label="Take the photo"><i></i></button>
+        <button type="button" class="pc-lib" id="pmCamLib" aria-label="Choose from library"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="5" width="16" height="14" rx="2"/><path d="M4 16l5-5 4 4 3-3 4 4"/><circle cx="16" cy="9" r="1.5"/></svg></button></div>
+      <div class="pc-err" id="pmCamErr"></div>
+    </div>
     <div class="pm-card">
       <div class="pm-empty"><div class="pm-stack">
         <button type="button" class="pm-btn pri" id="pmTake"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg>Take a photo</button>
@@ -29949,6 +30090,28 @@ console.log('%c[caller] Episode 1 ready — run startCaller()', 'color:#e7b24c')
     const v=document.createElement('video'); v.muted=true; v.playsInline=true; v.loop=true; v.preload='auto'; v.style.opacity='0';
     v.addEventListener('loadeddata',()=>{ fig.style.backgroundImage='none'; v.style.opacity='1'; const pr=v.play(); if(pr&&pr.catch) pr.catch(()=>{}); },{once:true});
     v.addEventListener('error',()=>{ v.remove(); },{once:true}); v.src=BASE+'characters/'+id+'/mirror_idle'+CLIP_EXT; fig.appendChild(v); }
+  // ── in-app camera (looking-glass). Falls back to the native picker when getUserMedia is unavailable/denied.
+  let pmStream=null, pmCamFacing='user';
+  function pmCamStop(){ if(pmStream){ try{ pmStream.getTracks().forEach(t=>t.stop()); }catch(e){} pmStream=null; } const v=$('pmCamVideo'); if(v) v.srcObject=null; }
+  function pmCamStart(facing){ pmCamFacing=facing||'user'; pmCamStop(); const v=$('pmCamVideo'), err=$('pmCamErr'); err.style.display='none';
+    if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){ pmCamFallback(); return; }
+    navigator.mediaDevices.getUserMedia({ video:{ facingMode:pmCamFacing, width:{ideal:1280}, height:{ideal:1706} }, audio:false })
+      .then(st=>{ pmStream=st; v.srcObject=st; v.classList.toggle('rear', pmCamFacing!=='user'); const pr=v.play(); if(pr&&pr.catch) pr.catch(()=>{}); })
+      .catch(e=>{ err.textContent='The camera could not be opened — using the photo picker instead.'; err.style.display='block'; setTimeout(pmCamFallback, 900); }); }
+  function pmCamFallback(){ pmCamClose(); const i=pmEnsureInput(); i.setAttribute('capture','user'); i.click(); }
+  function pmCamOpen(){ const c=$('pmCam'); if(!c) return; c.classList.add('on'); c.setAttribute('aria-hidden','false'); void c.offsetWidth; setTimeout(()=>c.classList.add('live'), 20); pmCamStart('user'); }
+  function pmCamClose(){ const c=$('pmCam'); if(!c) return; pmCamStop(); c.classList.remove('live'); setTimeout(()=>{ if(!c.classList.contains('live')){ c.classList.remove('on'); c.setAttribute('aria-hidden','true'); } }, 380); }
+  function pmCamShoot(){ const v=$('pmCamVideo'), c=$('pmCam'); if(!v||!v.videoWidth){ return; }
+    // crop the video to the glass (3:4, object-fit: cover) so the saved photo is exactly what the guide framed
+    const vw=v.videoWidth, vh=v.videoHeight; const R=3/4; const gl=v.parentElement.getBoundingClientRect(); const sc=Math.max(gl.width/vw, gl.height/vh);   // object-fit: cover
+    let cw=Math.min(vw, Math.round(gl.width/sc)), ch=Math.round(cw/R); if(ch>vh){ ch=vh; cw=Math.round(vh*R); }   // 3:4 window centred on the glass, as wide as the glass shows
+    const sx=Math.round((vw-cw)/2), sy=Math.round((vh-ch)/2); const W=900, H=1200; const cv=document.createElement('canvas'); cv.width=W; cv.height=H; const g=cv.getContext('2d');
+    if(pmCamFacing==='user'){ g.translate(W,0); g.scale(-1,1); }   // keep the mirrored preview (what she saw is what she gets)
+    g.drawImage(v, sx,sy,cw,ch, 0,0,W,H);
+    c.classList.add('flash'); setTimeout(()=>c.classList.remove('flash'), 520);
+    let url=''; try{ url=cv.toDataURL('image/jpeg',.92); }catch(e){}
+    setTimeout(()=>{ pmCamClose(); if(url) pmSetPhoto(url); }, 260); }
+  window.pmCamClose=pmCamClose;
   let pmMode='reveal';   // 'reveal' (Make her you → curtain) | 'create' (+ Create your own → how does your story begin?)
   window.pcMirrorOpen=function(mode){ pmMode=mode||'reveal'; const m=$('pcsMirror'); if(!m) return; pmEnsureInput(); pmSetPhoto(null); pmFig(curChar); m.classList.add('on'); void m.offsetWidth; setTimeout(()=>m.classList.add('live'), 30); };
   // ── Create page (step 2 of "+ Create your own")
@@ -29959,10 +30122,13 @@ console.log('%c[caller] Episode 1 ready — run startCaller()', 'color:#e7b24c')
     document.querySelectorAll('#pcsCreatePage .cp-card').forEach(b=>b.addEventListener('click',()=>{ const mode=b.dataset.mode; window.pcCreateClose();
       setTimeout(()=>{ if(mode==='story'){ window.__psReturnDeck=true; $('pcsel').classList.remove('on'); }   // the story overlay sits under #pcsel → step out of the deck while it plays (psFinish/psExit bring it back)
         if(typeof window.pcCreateChoose==='function') window.pcCreateChoose(mode); }, 250); })); }
-  window.pcMirrorClose=function(){ const m=$('pcsMirror'); if(!m) return; m.classList.remove('live'); setTimeout(()=>{ if(m.classList.contains('live')) return; m.classList.remove('on'); [...$('pmFig').querySelectorAll('video')].forEach(v=>v.remove()); $('pmFig').style.backgroundImage=''; }, 600); };
+  window.pcMirrorClose=function(){ const m=$('pcsMirror'); if(!m) return; try{ pmCamClose(); }catch(e){} m.classList.remove('live'); setTimeout(()=>{ if(m.classList.contains('live')) return; m.classList.remove('on'); [...$('pmFig').querySelectorAll('video')].forEach(v=>v.remove()); $('pmFig').style.backgroundImage=''; }, 600); };
   { const on=(id,fn)=>{ const e=$(id); if(e) e.addEventListener('click',fn); };
     on('pmClose', ()=>window.pcMirrorClose());
-    on('pmTake', ()=>{ const i=pmEnsureInput(); i.setAttribute('capture','user'); i.click(); });
+    on('pmTake', ()=>{ pmCamOpen(); });
+    on('pmCamClose', ()=>pmCamClose()); on('pmCamFlip', ()=>pmCamStart(pmCamFacing==='user'?'environment':'user'));
+    on('pmCamLib', ()=>{ pmCamClose(); const i=pmEnsureInput(); i.removeAttribute('capture'); i.click(); });
+    on('pmCamShot', ()=>pmCamShoot());
     on('pmPick', ()=>{ const i=pmEnsureInput(); i.removeAttribute('capture'); i.click(); });
     on('pmRetake', ()=>pmSetPhoto(null));
     // skip the portrait: create flow → straight to 'how does your story begin?'; reveal flow → just play as her
@@ -32352,13 +32518,87 @@ body.pride-hud-on #pridePcHud{ display:none !important; }
 </script>
 <!-- ===== /PRIDE META METERS ===== -->
 
+
+<!-- ===== PRIDE SETTINGS (episode arc menu → Settings): full page slides up; sliders + actions at the bottom ===== -->
+<style id="pride-settings-css">
+  #peSettingsScreen{ position:fixed; inset:0; z-index:9722; display:flex; flex-direction:column; background:linear-gradient(180deg,rgba(21,15,30,.94),rgba(12,8,18,.97)); -webkit-backdrop-filter:blur(20px) saturate(120%); backdrop-filter:blur(20px) saturate(120%);
+    transform:translateY(100%); opacity:0; pointer-events:none; transition:transform .48s cubic-bezier(.2,.8,.2,1), opacity .3s ease; will-change:transform; color:#fff; font-family:Inter,system-ui,sans-serif }
+  #peSettingsScreen.on{ transform:translateY(0); opacity:1; pointer-events:auto }
+  #peSettingsScreen.closing{ transition:transform .38s cubic-bezier(.4,0,.8,.4), opacity .3s ease .1s }
+  #peSettingsScreen .pst-top{ display:flex; align-items:center; gap:10px; padding:calc(env(safe-area-inset-top,0px) + 16px) 16px 14px }
+  #peSettingsScreen .pst-h{ font-family:"Playfair Display",Georgia,serif; font-weight:700; font-size:24px; line-height:1 }
+  #peSettingsScreen .pst-close{ margin-left:auto; width:36px; height:36px; border-radius:50%; border:1px solid rgba(255,255,255,.28); background:rgba(20,12,26,.6); color:#fff; font-size:15px; cursor:pointer }
+  #peSettingsScreen .pst-body{ flex:1; overflow-y:auto; padding:6px 20px 20px }
+  #peSettingsScreen .pst-k{ font-size:10px; letter-spacing:.22em; text-transform:uppercase; color:#ff9ec9; font-weight:800; margin:18px 0 10px }
+  #peSettingsScreen .pst-row{ display:flex; align-items:center; gap:14px; padding:12px 0; border-bottom:1px solid rgba(255,255,255,.08) }
+  #peSettingsScreen .pst-row .nm{ width:96px; font-size:14px; font-weight:600 }
+  #peSettingsScreen .pst-row .nm small{ display:block; font-size:10.5px; font-weight:500; color:rgba(255,255,255,.5); margin-top:2px }
+  #peSettingsScreen input[type=range]{ flex:1; -webkit-appearance:none; appearance:none; height:4px; border-radius:2px; background:rgba(255,255,255,.18); outline:none }
+  #peSettingsScreen input[type=range]::-webkit-slider-thumb{ -webkit-appearance:none; width:26px; height:26px; border-radius:50%; background:#fff; border:3px solid #ff7eb9; box-shadow:0 4px 12px rgba(0,0,0,.4) }
+  #peSettingsScreen .pst-row .v{ width:34px; text-align:right; font-size:12px; color:rgba(255,255,255,.6); font-variant-numeric:tabular-nums }
+  #peSettingsScreen .pst-mute{ display:flex; align-items:center; justify-content:space-between; padding:14px 0 }
+  #peSettingsScreen .pst-tog{ width:52px; height:30px; border-radius:15px; background:rgba(255,255,255,.18); position:relative; cursor:pointer; transition:background .2s }
+  #peSettingsScreen .pst-tog::after{ content:""; position:absolute; top:3px; left:3px; width:24px; height:24px; border-radius:50%; background:#fff; transition:transform .2s }
+  #peSettingsScreen .pst-tog.on{ background:#ff7eb9 } #peSettingsScreen .pst-tog.on::after{ transform:translateX(22px) }
+  #peSettingsScreen .pst-foot{ padding:14px 20px calc(env(safe-area-inset-bottom,0px) + 22px); display:flex; flex-direction:column; gap:10px; background:linear-gradient(180deg,rgba(12,8,18,0),rgba(12,8,18,.9) 30%) }
+  #peSettingsScreen .pst-btn{ width:100%; padding:16px; border-radius:16px; font:700 14px Inter,system-ui,sans-serif; letter-spacing:.02em; cursor:pointer; border:1px solid rgba(255,255,255,.22); background:rgba(255,255,255,.08); color:#fff }
+  #peSettingsScreen .pst-btn.danger{ border-color:rgba(255,120,150,.5); color:#ffb3c8 }
+  #peSettingsScreen .pst-btn.primary{ background:linear-gradient(135deg,#ff7eb9,#8b7bd8); border:none }
+  #peSettingsScreen .pst-confirm{ position:absolute; inset:0; display:none; align-items:flex-end; background:rgba(5,3,8,.6); z-index:2 }
+  #peSettingsScreen .pst-confirm.on{ display:flex }
+  #peSettingsScreen .pst-sheet{ width:100%; background:#1a1324; border-radius:22px 22px 0 0; padding:22px 20px calc(env(safe-area-inset-bottom,0px) + 22px) }
+  #peSettingsScreen .pst-sheet h3{ font-family:"Playfair Display",Georgia,serif; font-size:20px; margin:0 0 6px } #peSettingsScreen .pst-sheet p{ margin:0 0 16px; color:rgba(255,255,255,.65); font-size:13px }
+</style>
+<div id="peSettingsScreen" aria-hidden="true">
+  <div class="pst-top"><span class="pst-h">Settings</span><button class="pst-close" id="psClose" type="button" aria-label="Close">&#10005;</button></div>
+  <div class="pst-body">
+    <div class="pst-k">Sound</div>
+    <div class="pst-mute"><span class="nm" style="font-size:14px;font-weight:600">All sound</span><div class="pst-tog" id="psMute" role="switch"></div></div>
+    <div class="pst-row"><span class="nm">Voice over<small>characters &amp; narrator</small></span><input type="range" id="psVoice" min="0" max="100" value="100"><span class="v" id="psVoiceV">100</span></div>
+    <div class="pst-row"><span class="nm">Music<small>background</small></span><input type="range" id="psMusic" min="0" max="100" value="60"><span class="v" id="psMusicV">60</span></div>
+    <div class="pst-row"><span class="nm">Ambience<small>room &amp; effects</small></span><input type="range" id="psAmb" min="0" max="100" value="55"><span class="v" id="psAmbV">55</span></div>
+  </div>
+  <div class="pst-foot">
+    <button class="pst-btn danger" id="psEnd" type="button">End the episode</button>
+    <button class="pst-btn danger" id="psRestart" type="button">Restart game</button>
+    <button class="pst-btn primary" id="psDone" type="button">Done</button>
+  </div>
+  <div class="pst-confirm" id="psConfirm"><div class="pst-sheet"><h3 id="psCfH">Are you sure?</h3><p id="psCfP"></p><button class="pst-btn danger" id="psCfYes" type="button">Yes</button><div style="height:10px"></div><button class="pst-btn" id="psCfNo" type="button">Cancel</button></div></div>
+</div>
+<script>
+(function(){
+  const $=id=>document.getElementById(id); const sc=$('peSettingsScreen'); if(!sc) return;
+  const PA=()=>window.prideAudio;
+  function sync(){ const st=PA()&&PA().state(); if(!st) return; const L=st.levels||{}; [['psVoice','voice'],['psMusic','music'],['psAmb','amb']].forEach(([id,k])=>{ const v=Math.round((L[k]!=null?L[k]:1)*100); $(id).value=v; $(id+'V').textContent=v; }); $('psMute').classList.toggle('on',!st.muted); }
+  function open(){ sync(); sc.classList.add('on'); sc.setAttribute('aria-hidden','false'); }
+  function close(){ sc.classList.add('closing'); sc.classList.remove('on'); sc.setAttribute('aria-hidden','true'); setTimeout(()=>sc.classList.remove('closing'),420); $('psConfirm').classList.remove('on'); }
+  window.prideOpenSettings=open; window.prideCloseSettings=close;
+  $('psClose').addEventListener('click',close); $('psDone').addEventListener('click',close);
+  [['psVoice','voice'],['psMusic','music'],['psAmb','amb']].forEach(([id,k])=>{ $(id).addEventListener('input',e=>{ const v=+e.target.value; $(id+'V').textContent=v; if(PA()) PA().setLevel(k,v/100); if(k==='amb'&&PA()) PA().setLevel('sfx',Math.min(1,.25+v/100*.75)); }); });
+  $('psMute').addEventListener('click',()=>{ const on=!$('psMute').classList.contains('on'); $('psMute').classList.toggle('on',on); let j={}; try{ j=JSON.parse(localStorage.getItem('rai.audio')||'{}'); }catch(e){} j.muted=!on; try{ localStorage.setItem('rai.audio',JSON.stringify(j)); }catch(e){} if(PA()) PA().setMuted(!on); if(window.raiSoundSync) window.raiSoundSync(); });
+  let pending=null;
+  function confirm(h,p,fn){ $('psCfH').textContent=h; $('psCfP').textContent=p; pending=fn; $('psConfirm').classList.add('on'); }
+  $('psCfNo').addEventListener('click',()=>{ pending=null; $('psConfirm').classList.remove('on'); });
+  $('psCfYes').addEventListener('click',()=>{ const fn=pending; pending=null; $('psConfirm').classList.remove('on'); close(); setTimeout(()=>{ try{ fn&&fn(); }catch(e){} },380); });
+  $('psEnd').addEventListener('click',()=>confirm('End the episode?','You will return to the map. This episode will not count as completed and you can play it again later.',()=>{
+    try{ window.prideAudio&&window.prideAudio.stopAll(); window.prideAudio&&window.prideAudio.stopVoice(); }catch(e){}
+    try{ if(typeof clearCutscene==='function') clearCutscene(); if(typeof clearNarrativeScene==='function') clearNarrativeScene(); }catch(e){}
+    try{ document.body.classList.remove('narrativeScene','scene-inner','cutscene-active','cutscene-bubble','ui-narrative','narrative-active','choosing','exploring','inner','pe-rail-open'); const cp=document.getElementById('choicePanel'); if(cp) cp.classList.remove('open'); }catch(e){}
+    try{ window.prideChoiceFocus&&window.prideChoiceFocus.close(); window.prideRail&&window.prideRail.close(); }catch(e){}
+    if(typeof showMap==='function') showMap(); }));
+  $('psRestart').addEventListener('click',()=>confirm('Restart the game?','Progress in this world will be reset and you will start again from the beginning.',()=>{ const b=document.getElementById('btnRestart'); if(b) b.click(); }));
+})();
+</script>
 <!-- ===== PRIDE SUITORS (card list) + SUITOR DETAIL ===== -->
 <style id="suitors-css">
   #suitorsScreen, #suitorDetail{ position:fixed; inset:0; z-index:9720; display:none; overflow-y:auto; }
   #suitorDetail{ background:linear-gradient(180deg,#150f1e 0%,#0c0812 100%); }
   /* suitors list opens OVER the map — translucent panel + blurred map behind */
-  #suitorsScreen{ background:rgba(11,8,18,.62); -webkit-backdrop-filter:blur(20px) saturate(120%); backdrop-filter:blur(20px) saturate(120%); }
-  #suitorsScreen.on, #suitorDetail.on{ display:block; }
+  #suitorsScreen{ background:rgba(11,8,18,.62); -webkit-backdrop-filter:blur(20px) saturate(120%); backdrop-filter:blur(20px) saturate(120%);
+    display:block; transform:translateY(100%); opacity:0; pointer-events:none; transition:transform .48s cubic-bezier(.2,.8,.2,1), opacity .3s ease; will-change:transform }
+  #suitorsScreen.on{ transform:translateY(0); opacity:1; pointer-events:auto; }
+  #suitorsScreen.closing{ transition:transform .38s cubic-bezier(.4,0,.8,.4), opacity .3s ease .1s; }
+  #suitorDetail.on{ display:block; }
   #suitorsScreen::-webkit-scrollbar, #suitorDetail::-webkit-scrollbar{ display:none; }
   .su-top{ position:sticky; top:0; z-index:2; display:flex; align-items:center; gap:10px; padding:calc(env(safe-area-inset-top,0px) + 16px) 16px 14px; background:linear-gradient(180deg,rgba(11,8,18,.85),rgba(11,8,18,0)); }
   .su-top .su-titles{ display:flex; flex-direction:column; gap:3px; }
@@ -33129,7 +33369,7 @@ body.pride-hud-on #pridePcHud{ display:none !important; }
     const known=ids.filter(id=>state(id).discovered).length;
     document.getElementById('suCount').textContent=known+'/'+WORLD_TOTAL+' Unlocked';
     document.getElementById('suitorsScreen').classList.add('on'); }
-  function closeSuitors(){ document.getElementById('suitorsScreen').classList.remove('on'); }
+  function closeSuitors(){ const sc=document.getElementById('suitorsScreen'); sc.classList.add('closing'); sc.classList.remove('on'); setTimeout(()=>sc.classList.remove('closing'),420); }
   const LOCK_SVG='<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>';
   const M_ICO={
     desire:'<svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M13 2c.5 3-1.4 4.6-2.8 6.3C9 10 8.2 11.4 8.2 13a3.8 3.8 0 0 0 7.6.3c.1-1.7-.8-3.1-1.7-4.3C13 7.5 12.5 5 13 2z"/></svg>',
@@ -34340,7 +34580,26 @@ body.fe-open #prideEpChrome{ display:none }
 #peObj .pe-obj.st-complete .t{ color:#6fe3c8 }
 #peObj .ic-new{ font-size:8px; font-weight:900; letter-spacing:.06em; color:#6fe3c8; padding:1px 4px; border:1px solid #6fe3c8; border-radius:4px; line-height:1 }
 
-#peIcons{ top:calc(env(safe-area-inset-top,0px) + 12px); right:14px; display:flex; flex-direction:column; gap:11px; align-items:center }
+#peIcons{ top:calc(env(safe-area-inset-top,0px) + 12px); right:14px; width:56px; height:56px; display:block }
+/* arc menu: the avatar is the only visible control; the four icons sit stacked under it and fan out (pridehud rail v2) */
+#peIcons > .pe-ic.pe-ic{ position:absolute; right:4px; top:4px; width:48px; height:48px; opacity:0; pointer-events:none; transform:translate(0,0) scale(.3) }
+#peIcons #peAvatar{ position:absolute !important; right:0 !important; top:0 !important; opacity:1 !important; pointer-events:auto !important; transform:none; z-index:3; cursor:pointer; transition:transform .25s cubic-bezier(.2,.8,.2,1.4), border-color .3s }
+#peIcons.open #peAvatar{ transform:scale(.92); border-color:#fff }
+#peIcons #peSound{ --dx:-19px; --dy:108px }
+#peIcons #peSuitors{ --dx:-66px; --dy:88px }
+#peIcons #peLogbook{ --dx:-99px; --dy:48px }
+#peIcons #peSettings{ --dx:-110px; --dy:-2px }
+#peIcons.open > .pe-ic.pe-ic{ pointer-events:auto }
+#peIcons #peMind, #peIcons #peEye, #peIcons #peTalk{ display:none !important }
+/* watercolour wash behind the open arc — the story-notification blots (blue base, red bleeding in from the lower left), feathered around the avatar */
+#peIcons .pe-scrim{ position:absolute; right:-90px; top:-90px; width:400px; height:400px; pointer-events:none; opacity:0; z-index:0; background:radial-gradient(circle at 70% 30%, rgba(10,8,14,.7) 0%, rgba(10,8,14,.45) 30%, transparent 58%); transform-origin:70% 30%; transform:scale(.6) rotate(-10deg); transition:opacity .35s ease, transform .5s cubic-bezier(.2,.8,.2,1);
+  -webkit-mask:radial-gradient(circle at 70% 30%, #000 30%, rgba(0,0,0,.6) 44%, transparent 58%); mask:radial-gradient(circle at 70% 30%, #000 30%, rgba(0,0,0,.6) 44%, transparent 58%) }
+#peIcons .pe-scrim::before, #peIcons .pe-scrim::after{ content:""; position:absolute; inset:-40px; background-repeat:no-repeat; background-size:cover }
+#peIcons .pe-scrim::before{ background-image:url('worlds/pride-and-prejudice/story-notif/bg-blue.png'); background-position:55% 45%; opacity:.7; transform:rotate(-20deg); filter:grayscale(1) brightness(.35) contrast(1.1) }
+#peIcons .pe-scrim::after{ background-image:url('worlds/pride-and-prejudice/story-notif/bg-red.png'); background-position:40% 60%; opacity:.35; transform:translate(-90px,90px) rotate(25deg); mix-blend-mode:screen; filter:grayscale(1) brightness(.6) }
+#peIcons.open .pe-scrim{ opacity:1; transform:scale(1) rotate(0deg) }
+body.pe-rail-open #peObj{ opacity:0; pointer-events:none; transform:translateX(-12px); transition:opacity .25s, transform .25s }
+#peObj{ transition:opacity .25s, transform .25s }
 #peIcons .pe-ic{ position:relative; overflow:visible; width:44px; height:44px; border-radius:50%; display:grid; place-items:center; cursor:pointer; flex:none;
   background:rgba(20,12,26,.55); border:1px solid rgba(255,255,255,.22); color:#fff;
   -webkit-backdrop-filter:blur(10px); backdrop-filter:blur(10px); box-shadow:0 6px 16px rgba(0,0,0,.4);
@@ -34477,7 +34736,16 @@ body[data-pack="pride"] #dialogBox.pride-discovery .speaker::before{
     <button class="pe-ic" id="peSound" title="Sound on/off" aria-label="Sound on/off">
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9v6h4l5 4V5L8 9H4z"/><path class="on-only" d="M16 9a4 4 0 0 1 0 6"/><path class="on-only" d="M18.5 6.5a8 8 0 0 1 0 11"/><path class="off-only" d="M17 9l4 6M21 9l-4 6"/></svg>
     </button>
-    <div class="pe-ic" id="peAvatar" title="Logbook"></div>
+    <div class="pe-ic" id="peAvatar" title="Menu" role="button" aria-label="Open menu"></div>
+    <button class="pe-ic" id="peSettings" title="Settings" aria-label="Settings">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3.2"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>
+    </button>
+    <button class="pe-ic" id="peSuitors" title="Suitors" aria-label="Suitors">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M20.8 5.1a5.4 5.4 0 0 0-7.6 0L12 6.3l-1.2-1.2a5.4 5.4 0 0 0-7.6 7.6l1.2 1.2L12 21.5l7.6-7.6 1.2-1.2a5.4 5.4 0 0 0 0-7.6z"/></svg>
+    </button>
+    <button class="pe-ic" id="peLogbook" title="Logbook" aria-label="Logbook">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4.5A2.5 2.5 0 0 1 6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15z"/><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M9 7h7M9 10.5h5"/></svg>
+    </button>
     <button class="pe-ic" id="peMind" title="Inner world" aria-label="Inner world">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9.2"/><path d="M15.5 18c-.2-1.8-1.3-2.5-3-2.9-1.4-.3-2-.9-2-2 0-.5.3-.9.3-1.6 0-.4-.3-.6-.3-1.2 0-1.7 1.1-3 2.9-3 1.7 0 2.8 1.1 2.8 3.1 0 2.3-.7 3-.5 5.1" fill="currentColor" fill-opacity=".18"/></svg>
     </button>
@@ -34650,7 +34918,22 @@ body[data-pack="pride"] #dialogBox.pride-discovery .speaker::before{
   document.addEventListener('DOMContentLoaded', ()=>{
     refreshAvatar();
     const chrome=$('prideEpChrome'); if(chrome) chrome.addEventListener('click', e=>e.stopPropagation());
-    const av=$('peAvatar'); if(av) av.addEventListener('click', ()=>toast('Logbook — coming soon'));
+    // ---- arc menu (rail v2): avatar opens/closes; icons fan out on a quarter circle; the objective chip hides while open ----
+    const rail=$('peIcons'); if(rail && !rail.querySelector('.pe-scrim')){ const sc=document.createElement('span'); sc.className='pe-scrim'; rail.insertBefore(sc, rail.firstChild); }
+    const ARC=['peSound','peSuitors','peLogbook','peSettings']; let railOpen=false;
+    const A=(el,k,o)=>{ try{ return el.animate(k,Object.assign({fill:'forwards'},o)); }catch(e){ return null; } };
+    function railSet(on){ if(on===railOpen) return; railOpen=on; rail.classList.toggle('open',on); document.body.classList.toggle('pe-rail-open',on);
+      try{ if(window.prideChoiceFocus){ if(on) window.prideChoiceFocus.openLite(); else window.prideChoiceFocus.closeLite(); } }catch(e){}
+      ARC.forEach((id,i)=>{ const el=$(id); if(!el) return; const dx=getComputedStyle(el).getPropertyValue('--dx').trim()||'0px', dy=getComputedStyle(el).getPropertyValue('--dy').trim()||'0px';
+        if(on){ el.style.zIndex=2; A(el,[{transform:'translate(0,0) scale(.3) rotate(-40deg)',opacity:0},{transform:`translate(calc(${dx} * 1.08), calc(${dy} * 1.08)) scale(1.05)`,opacity:1,offset:.75},{transform:`translate(${dx},${dy}) scale(1)`,opacity:1}],{duration:420,delay:i*60,easing:'cubic-bezier(.2,.8,.2,1)'}); }
+        else { A(el,[{transform:`translate(${dx},${dy}) scale(1)`,opacity:1},{transform:'translate(0,0) scale(.4)',opacity:0}],{duration:240,delay:(3-i)*35,easing:'cubic-bezier(.4,0,.8,.4)'}); } }); }
+    window.prideRail={ open:()=>railSet(true), close:()=>railSet(false), toggle:()=>railSet(!railOpen) };
+    const av=$('peAvatar'); if(av) av.addEventListener('click', (e)=>{ e.stopPropagation(); railSet(!railOpen); });
+    document.addEventListener('pointerdown', (e)=>{ if(railOpen && !e.target.closest('#peIcons')) railSet(false); }, true);
+    ARC.forEach(id=>{ const el=$(id); if(el) el.addEventListener('click', ()=>setTimeout(()=>railSet(false),120)); });
+    const lb=$('peLogbook'); if(lb) lb.addEventListener('click', ()=>toast('Logbook — coming soon'));
+    const su=$('peSuitors'); if(su) su.addEventListener('click', ()=>{ if(typeof window.prideOpenSuitors==='function') window.prideOpenSuitors(); else toast('Suitors — coming soon'); });
+    const se=$('peSettings'); if(se) se.addEventListener('click', ()=>{ if(typeof window.prideOpenSettings==='function') window.prideOpenSettings(); else toast('Settings — coming soon'); });
     objAdd('Work the room, orbit Darcy', true, REFLECT_DEFAULT);   // seed the current objective (script (Quest:…) adds more)
     const mind=$('peMind'); if(mind) mind.addEventListener('click', ()=>openInnerFromMind());
     const rfl=$('peReflect'); if(rfl) rfl.addEventListener('click', (e)=>{ e.stopPropagation(); if(e.target===rfl) exitReflect(); });
@@ -35287,6 +35570,55 @@ body.pe-combat.pe-beat #dialogBox{ opacity:1 !important; transform:none !importa
 })();
 </script>
 <!-- ===== /PRIDE STORY NOTIFICATIONS ===== -->
+<!-- ===== PRIDE CHOICE FOCUS (docs/proto-choice-arabella.html C2 + dream port): Arabella slides in on the right while the options are open ===== -->
+<style id="pride-choice-focus-css">
+#pcFocus{ position:fixed; inset:0; z-index:95; display:none; pointer-events:none; overflow:hidden }
+#pcFocus.on{ display:block }
+#pcFocus .pcf-sink{ position:absolute; inset:0; -webkit-backdrop-filter:blur(0px); backdrop-filter:blur(0px); background:rgba(7,5,10,0) }
+#pcFocus .pcf-edge{ position:absolute; inset:0; -webkit-backdrop-filter:blur(16px) saturate(.8) brightness(.85); backdrop-filter:blur(16px) saturate(.8) brightness(.85); opacity:0; transition:opacity 2s ease-out }
+#pcFocus.live .pcf-edge{ opacity:1 }
+#pcFocus .pcf-grain{ position:absolute; inset:-50%; width:200%; height:200%; opacity:.14; mix-blend-mode:overlay; background:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>"); animation:pcfGrain 1.2s steps(6) infinite }
+@keyframes pcfGrain{0%{transform:translate(0,0)}25%{transform:translate(-4%,3%)}50%{transform:translate(3%,-2%)}75%{transform:translate(-2%,-4%)}100%{transform:translate(0,0)}}
+#pcFocus .pcf-vig{ position:absolute; inset:0; background:radial-gradient(70% 60% at 50% 45%,rgba(7,5,10,0) 45%,rgba(7,5,10,.75) 100%) }
+#pcFocus .pcf-warm{ position:absolute; inset:0; background:radial-gradient(60% 50% at 50% 40%,rgba(255,196,150,.18),transparent 70%); animation:pcfWarm 5.5s ease-in-out infinite }
+@keyframes pcfWarm{0%,100%{opacity:.5}50%{opacity:1}}
+#pcFocus .pcf-ara{ position:absolute; right:-125px; top:235px; width:330px; height:815px; background:url("worlds/pride-and-prejudice/characters/arabella2/poses/idle_breath/f00.webp") no-repeat top center / 100% auto; transform:scaleX(-1); opacity:0;
+  -webkit-mask:linear-gradient(180deg,#000 45%,rgba(0,0,0,.5) 64%,transparent 83%); mask:linear-gradient(180deg,#000 45%,rgba(0,0,0,.5) 64%,transparent 83%); filter:drop-shadow(0 12px 18px rgba(0,0,0,.55)) }
+#pcFocus .pcf-iris{ position:absolute; inset:0; background:#07050a }
+#pcFocus.lite .pcf-ara{ display:none }
+</style>
+<div id="pcFocus"><div class="pcf-sink"></div><div class="pcf-edge"></div><div class="pcf-grain"></div><div class="pcf-vig"></div><div class="pcf-warm"></div><div class="pcf-ara"></div></div>
+<script>
+(function(){
+  const root=document.getElementById('pcFocus'); if(!root) return;
+  const sink=root.querySelector('.pcf-sink'), edge=root.querySelector('.pcf-edge'), ara=root.querySelector('.pcf-ara');
+  const A=(el,k,o)=>{ try{ return el.animate(k,Object.assign({fill:'forwards'},o)); }catch(e){ return null; } };
+  let alive=false, raf=null, iris=null;
+  function irisOpen(){ const d=document.createElement('div'); d.className='pcf-iris'; root.appendChild(d); iris=d;
+    const set=(r,soft)=>{ const m='radial-gradient(circle at 50% 50%, transparent '+Math.max(0,r-soft)+'%, #000 '+r+'%)'; d.style.webkitMaskImage=m; d.style.maskImage=m; };
+    set(0,0); const t0=performance.now(), D=1500; const step=()=>{ if(!d.isConnected) return; const t=Math.min(1,(performance.now()-t0)/D); let r; if(t<.18) r=6*(t/.18); else if(t<.3) r=6-2*((t-.18)/.12); else { const k=(t-.3)/.7; r=4+(150-4)*(1-Math.pow(1-k,2.2)); } set(r,8+r*.4); if(t<1) requestAnimationFrame(step); else { d.remove(); if(iris===d) iris=null; } }; requestAnimationFrame(step); }
+  function drift(){ const t0=performance.now(); const step=()=>{ if(!alive&&!lite) return; const t=(performance.now()-t0)/1000; const cx=50+Math.sin(t*.35)*6, cy=47+Math.cos(t*.27)*5; const m='radial-gradient(60% 50% at '+cx.toFixed(1)+'% '+cy.toFixed(1)+'%, transparent 30%, #000 72%)'; edge.style.webkitMaskImage=m; edge.style.maskImage=m; raf=setTimeout(()=>requestAnimationFrame(step),50); }; step(); }
+  function open(){ if(alive) return; if(lite){ lite=false; root.classList.remove('lite'); } alive=true; root.classList.add('on'); root.classList.add('live');
+    try{ ara.dataset.poseFolder='arabella2'; window.pridePoseFamily && window.pridePoseFamily('arabella2','think'); window.pridePoseAttach && window.pridePoseAttach('arabella2', ara); }catch(e){}
+    irisOpen();
+    A(sink,[{backdropFilter:'blur(0px)',background:'rgba(7,5,10,0)'},{backdropFilter:'blur(5px)',background:'rgba(7,5,10,.22)'}],{duration:2400,easing:'cubic-bezier(.2,.7,.2,1)'});
+    A(ara,[{opacity:0,transform:'translateX(60px) scaleX(-1)',filter:'blur(12px) drop-shadow(0 12px 18px rgba(0,0,0,.55))'},{opacity:1,transform:'translateX(0) scaleX(-1)',filter:'blur(0px) drop-shadow(0 12px 18px rgba(0,0,0,.55))'}],{duration:1400,delay:500,easing:'cubic-bezier(.2,.7,.2,1)'});
+    drift();
+    setTimeout(()=>{ if(alive) { try{ window.prideAudio&&window.prideAudio.hook('choice_settle'); }catch(e){} } },1300); }
+  function close(){ if(!alive) return; alive=false; try{ window.pridePoseFamily && window.pridePoseFamily('arabella2',null); }catch(e){} if(raf){ clearTimeout(raf); raf=null; } if(iris){ iris.remove(); iris=null; } root.classList.remove('live');
+    A(ara,[{opacity:1,transform:'translateX(0) scaleX(-1)'},{opacity:0,transform:'translateX(40px) scaleX(-1)'}],{duration:500,easing:'ease-in'});
+    A(sink,[{backdropFilter:'blur(5px)',background:'rgba(7,5,10,.22)'},{backdropFilter:'blur(0px)',background:'rgba(7,5,10,0)'}],{duration:700,easing:'ease-out'});
+    setTimeout(()=>{ if(!alive) root.classList.remove('on'); },720); }
+  let lite=false;
+  function openLite(){ if(alive||lite) return; lite=true; root.classList.add('on','live','lite');
+    A(sink,[{backdropFilter:'blur(0px)',background:'rgba(7,5,10,0)'},{backdropFilter:'blur(4px)',background:'rgba(7,5,10,.18)'}],{duration:900,easing:'cubic-bezier(.2,.7,.2,1)'}); drift(); }
+  function closeLite(){ if(!lite) return; lite=false; if(raf){ clearTimeout(raf); raf=null; } root.classList.remove('live');
+    A(sink,[{backdropFilter:'blur(4px)',background:'rgba(7,5,10,.18)'},{backdropFilter:'blur(0px)',background:'rgba(7,5,10,0)'}],{duration:500,easing:'ease-out'});
+    setTimeout(()=>{ if(!alive&&!lite) root.classList.remove('on','lite'); },520); }
+  window.prideChoiceFocus={ open, close, openLite, closeLite, get alive(){ return alive; } };
+})();
+</script>
+<!-- ===== /PRIDE CHOICE FOCUS ===== -->
 <!-- ===== PRIDE AUDIO (manifest-driven: ambience loops, UI one-shots; files under worlds/pride-and-prejudice/audio/) ===== -->
 <script>
 (function prideAudioSetup(){
@@ -35334,13 +35666,19 @@ body.pe-combat.pe-beat #dialogBox{ opacity:1 !important; transform:none !importa
   function unlock(){ const c = ac(); if (c && c.state !== 'running') c.resume().catch(() => {}); if (unlocked) return; unlocked = true; CH.forEach(ch => { if (ch.name && !ch.src) startLoop(ch, ch.name, true); }); }
   document.addEventListener('pointerdown', unlock, { capture: true, passive: true });
   document.addEventListener('touchend', unlock, { capture: true, passive: true });
+  // No gesture yet but the browser may already allow audio (same-origin reload after "New game", desktop tab with engagement): try once, and watch the context state.
+  let autoTried = false;
+  function tryAutoUnlock(){ if (unlocked || autoTried) return; autoTried = true; const c = ac(); if (!c) return;
+    const go = () => { if (!unlocked && c.state === 'running') unlock(); };
+    c.addEventListener('statechange', go); if (c.state === 'running') go(); else c.resume().then(go).catch(() => {}); }
   // one-shots: buffer → gain → master (never filtered / slowed)
   function playSfx(slot, mul){ if (typeof activePack !== 'undefined' && activePack !== 'pride') return; load().then(() => { const f = fileOf(slot); if (!f || !unlocked) return; const S = M.slots[slot]; const vid = Object.keys(S.variants).find(k => BASE + S.variants[k].file === f); const lv = (vid && S.variants[vid].level != null) ? S.variants[vid].level : 1;
     getBuf(f).then(buf => { const c = ctx; if (!buf || !c) return; const src = c.createBufferSource(); src.buffer = buf; const g = c.createGain(); g.gain.value = Math.min(1, gain(slot) * lv * (mul == null ? 1 : mul)); src.connect(g); g.connect(master); src.onended = () => { try { src.disconnect(); g.disconnect(); } catch (e) {} }; src.start(); }); }); }
+  function playFile(url, g0){ if (!unlocked) return; getBuf(url).then(buf => { const c = ctx; if (!buf || !c) return; const src = c.createBufferSource(); src.buffer = buf; const g = c.createGain(); g.gain.value = g0; src.connect(g); g.connect(master); src.onended = () => { try { src.disconnect(); g.disconnect(); } catch (e) {} }; src.start(); }); }
   function startLoop(ch, name, instant){ load().then(() => { const slot = ch.kind + '.' + name; const f = fileOf(slot); if (!f) { stopLoop(ch); return; }
     if (ch.slot === slot && ch.src) { ramp(ch.g.gain, vol(ch), 200); return; }
     ch.name = name; ch.slot = slot; tell();
-    if (!unlocked) return;   // will start on first gesture
+    if (!unlocked) { tryAutoUnlock(); return; }   // will start on first gesture (or right away if the browser already allows it)
     const c = ac(); if (!c) return;
     getBuf(f).then(buf => { if (!buf || ch.slot !== slot) return; if (ch.src && ch.src._slot === slot) return;   // stale or already swapped
       const old = ch.src, oldG = ch.g; const src = c.createBufferSource(); src.buffer = buf; src.loop = true; src._slot = slot;
@@ -35361,11 +35699,11 @@ body.pe-combat.pe-beat #dialogBox{ opacity:1 !important; transform:none !importa
   function stopVoice(){ if (voEl) { try { voEl.pause(); voEl.src = ''; } catch (e) {} voEl = null; } if (duck < 1) duckTo(1, 700); }
   function voiceUrl(url){ stopVoice(); if (!url) return; const a = new Audio(url); a.volume = gain('voice.x'); voEl = a; a.onplaying = () => { if (voEl === a) duckTo(DUCK, 220); }; a.onended = a.onerror = () => { if (voEl === a) { voEl = null; duckTo(1, 700); } }; a.play().catch(() => {}); }
   function voiceLine(line){ stopVoice(); if (!line || line.type !== 'line' || !line.speaker) return; if (muted) return;
-    const sp = String(line.speaker).toLowerCase(); const folder = sp === 'narrative' ? 'narrator' : ((typeof PRIDE_ACTORS !== 'undefined' && PRIDE_ACTORS[sp]) || sp);
+    const sp = String(line.speaker).toLowerCase(); let folder = sp === 'narrative' ? 'narrator' : ((typeof PRIDE_ACTORS !== 'undefined' && PRIDE_ACTORS[sp]) || sp); if (folder === 'arabella_frost') folder = 'arabella2';   // the PC's voice lives in arabella2
     try { window.parent !== window && window.parent.postMessage({ type: 'voiceLine', folder, speaker: sp, text: voiceClean(line.text) }, '*'); } catch (e) {}
     loadVoices().then(() => { const c = VO.characters && VO.characters[folder]; if (!c || !c.active) return;
       const text = voiceClean(line.text); if (!text) return; const hash = fnv1a(sp + '|' + text);
-      const ep = (typeof currentEpisodeBase === 'function') ? currentEpisodeBase() : ''; if (!ep) return;
+      const ep = line.voiceBase || ((typeof currentEpisodeBase === 'function') ? currentEpisodeBase() : ''); if (!ep) return;
       const url = ep + '/voice/' + folder + '/' + c.active + '/' + hash + '.mp3'; if (voMissing[url]) return;
       const a = new Audio(url); a.volume = gain('voice.x'); voEl = a; a.onerror = () => { voMissing[url] = true; if (voEl === a) { voEl = null; duckTo(1, 700); } };
       a.onplaying = () => { if (voEl === a) duckTo(DUCK, 220); }; a.onended = () => { if (voEl === a) { voEl = null; duckTo(1, 700); } };
@@ -35373,7 +35711,7 @@ body.pe-combat.pe-beat #dialogBox{ opacity:1 !important; transform:none !importa
   window.prideAudio = {
     voiceLine, stopVoice, reloadVoices(){ Object.keys(voMissing).forEach(k => delete voMissing[k]); return loadVoices(true); },
     voices(){ return VO; },
-    amb(name){ amb.mix = 1; if (amb2.src || amb2.name) stopLoop(amb2); if (randName === 'map') randomSet(null); if (!name || name === 'none' || name === 'off') stopAmb(); else { amb.name = name; startAmb(name); } tell(); },
+    amb(name){ amb.mix = 1; if (amb2.src || amb2.name) stopLoop(amb2); if (randName === 'map' || randName === 'map_night') randomSet(null); if (!name || name === 'none' || name === 'off') stopAmb(); else { amb.name = name; startAmb(name); } tell(); },
     random(name){ randomSet(!name || name === 'none' || name === 'off' ? null : name); },
     focus,
     music(name){ if (!name || name === 'none' || name === 'off') stopLoop(mus); else { mus.name = name; startLoop(mus, name); } tell(); },
@@ -35384,9 +35722,12 @@ body.pe-combat.pe-beat #dialogBox{ opacity:1 !important; transform:none !importa
     setActive(slot, variant){ load().then(() => { if (!M.slots[slot]) return; const okv = (v) => v === 'random' || M.slots[slot].variants[v] || (v.indexOf(',') > -1 && v.split(',').every(x => M.slots[slot].variants[x.trim()])); if (!okv(variant)) return; M.slots[slot].active = variant; CH.forEach(ch => { if (ch.slot === slot) { const n = ch.name; ch.slot = null; startLoop(ch, n, true); } }); tell(); }); },
     reload(){ return load(true).then(() => { CH.forEach(ch => { if (ch.name) { const n = ch.name; ch.slot = null; startLoop(ch, n, true); } }); }); },
     state(){ return { amb: amb.name, amb2: amb2.name, random: randName, music: mus.name, levels, muted, manifest: M, focus: focusOn, dbg: { ctx: ctx ? ctx.state : null, rate: mus.src ? +mus.src.playbackRate.value.toFixed(2) : null, cutoff: mus.lp ? Math.round(mus.lp.frequency.value) : null, vol: mus.g ? +mus.g.gain.value.toFixed(2) : null } }; },
-    stopAll(){ stopAmb(); stopLoop(amb2); stopLoop(mus); randomSet(null); focus(false); },
+    stopAll(){ stopAmb(); stopLoop(amb2); stopLoop(mus); randomSet(null); focus(false); try { window.prideChoiceFocus && window.prideChoiceFocus.close(); } catch (e) {} },
     // ---- map soundscape: town+forest ambience blended by pan position, map music, sparse random one-shots ----
-    mapEnter(){ amb.mix = .35; amb2.mix = 1; amb.name = 'map_town'; startLoop(amb, 'map_town'); amb2.name = 'map_forest'; startLoop(amb2, 'map_forest'); mus.name = 'map'; startLoop(mus, 'map'); randomSet('map'); tell(); },
+    // day / night soundscape follows the map's time-of-day (pride-tod-night → *_night slots; dawn/sunset use the day set)
+    mapEnter(){ const night = document.body.classList.contains('pride-tod-night') || window.prideMapTod === 'night'; const sfx = night ? '_night' : '';
+      amb.mix = .35; amb2.mix = 1; amb.name = 'map' + sfx + '_town'; startLoop(amb, amb.name); amb2.name = 'map' + sfx + '_forest'; startLoop(amb2, amb2.name); mus.name = 'map' + sfx; startLoop(mus, mus.name); randomSet(night ? 'map_night' : 'map'); tell(); },
+    mapTod(){ if (!document.body.classList.contains('flow-map')) return; const night = document.body.classList.contains('pride-tod-night'); if ((amb.name === 'map_night_town') === night) return; window.prideAudio.mapEnter(); },
     mapMix(t){ t = Math.max(0, Math.min(1, +t || 0)); amb.mix = .35 + .65 * t; amb2.mix = 1 - t; [amb, amb2].forEach(ch => { if (ch.g) ramp(ch.g.gain, vol(ch), 150); }); },
   };
   // sparse random one-shots: manifest.randoms[name] = { slots:[...], gap:[minS,maxS], level } — never continuous, one at a time.
@@ -35395,7 +35736,7 @@ body.pe-combat.pe-beat #dialogBox{ opacity:1 !important; transform:none !importa
   function randomSet(name){ if (randTimer) { clearTimeout(randTimer); randTimer = null; } randName = name || null; if (!randName) return;
     const tick = () => { load().then(() => { const R = (M && M.randoms && M.randoms[randName]) || null; if (!R || !R.slots || !R.slots.length) return; const gap = R.gap || [25, 60];
       randTimer = setTimeout(() => { if (randName !== name) return;
-        if (!document.hidden && !muted && unlocked) { const slot = R.slots[Math.floor(Math.random() * R.slots.length)]; const S = M.slots && M.slots[slot]; if (S) { const keep = S.active; S.active = 'random'; playSfx(slot, R.level != null ? R.level : .3); S.active = keep; } }
+        if (!document.hidden && !muted && unlocked) { const slot = R.slots[Math.floor(Math.random() * R.slots.length)]; const S = M.slots && M.slots[slot]; if (S) { const ids = Object.keys(S.variants || {}); const id = ids[Math.floor(Math.random() * ids.length)]; const v = id && S.variants[id]; if (v) playFile(BASE + v.file, Math.min(1, lvl('sfx') * (R.level != null ? R.level : .3) * (v.level != null ? v.level : 1))); } }
         tick(); }, (gap[0] + Math.random() * (gap[1] - gap[0])) * 1000); }); };
     tick(); }
   window.addEventListener('message', (e) => { const d = e && e.data; if (!d || !d.type) return;
@@ -36043,7 +36384,7 @@ body.pride-sketch .scene-bubble, body.pride-sketch #choicePanel, body.pride-sket
   function mapIdle(){ const b=document.body;
     if(!b.classList.contains('flow-map')) return false;
     if(window.__prideEncounterMode || b.classList.contains('in-game-locked') || b.classList.contains('pride-encounter')) return false;
-    if(['pcsel','poiModal','charChat','suitorsScreen','suitorDetail','storeSheet','zoomView','prideClockSheet','prideClockCard','prideUnlockCine','prideCharUnlock','prideEpiDash'].some(on)) return false;
+    if(['pcsel','worldPages','poiModal','charChat','suitorsScreen','suitorDetail','storeSheet','zoomView','prideClockSheet','prideClockCard','prideUnlockCine','prideCharUnlock','prideEpiDash'].some(on)) return false;   // worldPages = the world page shown over the map after backing out of the heroine chooser
     return true; }
   function eligible(e, evt){ const t=e.trigger; if(!t) return false;
     const a=t.arg;
@@ -36141,12 +36482,12 @@ body.pride-sketch .scene-bubble, body.pride-sketch #choicePanel, body.pride-sket
     const st=document.createElement('style'); st.id='pride-whisper-ui-css';
     st.textContent=(window.pcStoryCss?window.pcStoryCss():'').replace(/#pcStory/g,'#pcWhisper')
       +'\n#pcWhisper{ background:transparent; z-index:12040; }'                      // the map stays visible; above HUD/rail
-      +'\n#pcWhisper .ps-fig{ height:660px; bottom:-278px; left:-104px; transform:translateX(-14px); }'   // ~18% larger bust; NO mirror flip on either side
-      +'\n#pcWhisper.show-say .ps-fig{ transform:none; }'
+      +'\n#pcWhisper .ps-fig{ height:660px; bottom:-278px; left:-104px; transform:translateX(-14px) scaleX(-1); transition:opacity .35s ease; }'   // ~18% larger bust; the LEFT bust is mirrored so it faces the text (art + idle clips face viewer-left). No transform transition: switching sides must not "flip" the bust.
+      +'\n#pcWhisper.show-say .ps-fig{ transform:scaleX(-1); }'
       +'\n#pcWhisper .ps-dlg{ padding-left:162px; min-height:132px; }'
       +'\n#pcWhisper .ps-dlg.side-r{ padding:20px 162px 20px 22px; }'
       +'\n#pcWhisper .ps-dlg.side-r .ps-fig{ left:auto; right:-104px; transform:translateX(14px); }'
-      +'\n#pcWhisper.show-say .ps-dlg.side-r .ps-fig{ transform:none; }'
+      +'\n#pcWhisper.show-say .ps-dlg.side-r .ps-fig{ transform:none; }'   // right bust keeps the art's own (viewer-left) gaze
       +'\n#pcWhisper .ps-dlg.side-r .cont{ right:auto; left:18px; transform:scaleX(-1); }'
       +'\n#pcWhisper .ps-top{ justify-content:flex-end; }'
       +'\nbody.pride-whisper-on #prideMapChrome, body.pride-whisper-on #prideMeters, body.pride-whisper-on #prideMapRail, body.pride-whisper-on #pmcObjectives, body.pride-whisper-on #pmcShorts, body.pride-whisper-on #pmcStore{ opacity:0 !important; pointer-events:none !important; transition:opacity .3s; }'
@@ -36213,7 +36554,7 @@ body.pride-sketch .scene-bubble, body.pride-sketch #choicePanel, body.pride-sket
       if((m=s.match(/^\(\s*([A-Za-z]+)\s*:\s*(.+)\)$/))){ beats.push({t:'mech',kind:m[1].toLowerCase(),parts:m[2].split('|').map(x=>x.trim())}); continue; }
       if((m=s.match(/^([A-Za-z_-]+)\s*:\s*(.+)$/))){ const f=folderOf(m[1]);
         const sd = sides[f] || (f==='arabella_frost' ? (side==='left'?'right':'left') : side);
-        beats.push({t:'say', who:f, name:nameOf(f,m[1]), text:m[2], side:sd}); continue; }
+        beats.push({t:'say', who:f, name:nameOf(f,m[1]), text:m[2], side:sd, label:m[1]}); continue; }
       beats.push({t:'narr',text:s}); }
       return beats; }
     return block(null); }
@@ -36238,10 +36579,12 @@ body.pride-sketch .scene-bubble, body.pride-sketch #choicePanel, body.pride-sket
   function step(){ if(!run) return; const b=run.q.shift(); if(!b){ finish(false); return; }
     if(b.t==='mech'){ mech(b.kind,b.parts); return step(); }
     if(b.t==='q'){ return step(); }
-    if(b.t==='narr'){ el.querySelector('.ps-narr .tx').textContent=b.text; panel('narr'); return; }
+    if(b.t==='narr'){ el.querySelector('.ps-narr .tx').textContent=b.text; panel('narr'); try{ window.prideAudio&&window.prideAudio.voiceLine({type:'line', speaker:'narrative', text:b.text, voiceBase:'worlds/pride-and-prejudice/whispers'}); }catch(e){} return; }
     if(b.t==='say'){ const dlg=el.querySelector('.ps-dlg'); dlg.classList.toggle('side-r', b.side==='right');
-      el.querySelector('.ps-fig').style.backgroundImage="url('"+BASE+'characters/'+b.who+"/appearances/pride.png')";
+      try{ window.prideAudio&&window.prideAudio.voiceLine({type:'line', speaker:String(b.label||b.who||'').toLowerCase(), text:b.text, voiceBase:'worlds/pride-and-prejudice/whispers'}); }catch(e){}
+      const figEl=el.querySelector('.ps-fig'); figEl.style.backgroundImage="url('"+BASE+'characters/'+b.who+"/appearances/pride.png')";
       dlg.querySelector('.sp').textContent=b.name; dlg.querySelector('.tx').textContent=b.text; dlg.querySelector('.ps-chips').innerHTML=''; panel('say');
+      try{ if(window.pridePoseStop && figEl.dataset.poseFolder!==b.who) window.pridePoseStop(); figEl.dataset.poseFolder=b.who; window.pridePoseAttach&&window.pridePoseAttach(b.who, figEl); }catch(e){}   // idle clips if this bust has them
       // mechanics written right after this line fire WITH it (their chips show under the text)
       while(run.q.length && run.q[0].t==='mech'){ const m=run.q.shift(); mech(m.kind,m.parts); }
       return; }
@@ -36250,7 +36593,7 @@ body.pride-sketch .scene-bubble, body.pride-sketch #choicePanel, body.pride-sket
         btn.addEventListener('click',()=>{ run.q=o.branch.concat(run.q); step(); }); list.appendChild(btn); });
       panel('choices'); return; }
     step(); }
-  function finish(cancelled){ if(!run) return; const enc=run.enc; run=null;
+  function finish(cancelled){ if(!run) return; const enc=run.enc; run=null; try{ window.prideAudio&&window.prideAudio.stopVoice(); }catch(e){}
     el.classList.remove('on','show-narr','show-say','show-choices'); document.body.classList.remove('pride-whisper-on');
     window.__prideEncounterMode=false; window.__encActive=null;
     try{ if(enc && enc.unlocks && enc.unlocks.length && window.prideApplyUnlocks) window.prideApplyUnlocks(enc.unlocks); }catch(e){}
@@ -36293,6 +36636,8 @@ body.pride-sketch .scene-bubble, body.pride-sketch #choicePanel, body.pride-sket
     // the say panel is already showing the card; the next tap ends it (step() → empty queue → finish)
   };
   window.prideWhisperParse=parse;
+  // safety: a whisper is a map overlay — if the flow leaves the map (world list, intro, new game…) while one is up, drop it
+  window.prideWhisperAbort=function(){ if(run) finish(true); else if(el){ el.classList.remove('on','show-narr','show-say','show-choices'); document.body.classList.remove('pride-whisper-on'); } };
 })();
 </script>
 

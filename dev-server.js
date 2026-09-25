@@ -430,15 +430,19 @@ function fnv1a(str) { let h = 0x811c9dc5; for (let i = 0; i < str.length; i++) {
 function voiceClean(t) { return String(t || '').replace(/\[[^\]]*\]/g, '').replace(/\{([^{}|]*)\|[^{}]*\}/g, '$1').replace(/\*\*/g, '').replace(/\s*\(\+\d+\)\s*$/, '').replace(/\s*\([a-zA-Z0-9_.\-]+\.(?:png|jpe?g)\)\s*$/i, '').replace(/\s+/g, ' ').trim(); }
 // speaker lines of an episode script (excluding Narrative, Mechanics and (Choice:N) option lines)
 const epNorm = ep => String(ep || '').replace(/^worlds\/pride-and-prejudice\//, '').replace(/^\/+/, '');
+const VOICE_ALIAS = { arabella_frost: 'arabella2' };   // the PC's voice lives in the arabella2 folder
+function epVoiceRoot(ep) { ep = epNorm(ep); if (ep === 'whispers') return path.join(ROOT, 'worlds', 'pride-and-prejudice', 'whispers'); return path.join(ROOT, 'worlds', 'pride-and-prejudice', ep.startsWith('episodes/') ? ep : 'episodes/' + ep); }
 function voiceLinesOf(epRel) {
   epRel = epNorm(epRel);
-  const file = path.join(ROOT, 'worlds', 'pride-and-prejudice', epRel.startsWith('episodes/') ? epRel : 'episodes/' + epRel, 'scripts', 'main.txt');
-  let txt = ''; try { txt = fs.readFileSync(file, 'utf8'); } catch (e) { return null; }
+  let txt = '';
+  if (epRel === 'whispers') { try { const j = JSON.parse(fs.readFileSync(path.join(ROOT, 'worlds', 'pride-and-prejudice', 'whispers.json'), 'utf8')); txt = (j.whispers || []).map(w => w.script || '').join('\n\n'); } catch (e) { return null; } }
+  else { const file = path.join(epVoiceRoot(epRel), 'scripts', 'main.txt'); try { txt = fs.readFileSync(file, 'utf8'); } catch (e) { return null; } }
   const out = []; let inChoice = false;
   txt.split('\n').forEach(raw => { const l = raw.trim();
     if (/^\(\s*Choice\s*:\s*\d+\s*\)$/i.test(l)) { inChoice = true; return; }
     if (inChoice && l === '') { inChoice = false; return; }
-    if (inChoice || l.startsWith('//') || l.startsWith('#')) return;
+    if (inChoice) { const om = l.match(/^Arabella\s*:\s*(.+)$/i); if (om) { const t = voiceClean(om[1]); if (t) out.push({ speaker: 'arabella2', text: t, hash: fnv1a('arabella2|' + t), choice: true }); } return; }   // the pick is echoed by Arabella (arabella2) after choosing
+    if (l.startsWith('//') || l.startsWith('#')) return;
     const m = l.match(/^([A-Za-z][A-Za-z0-9-]*):\s*(.+)$/); if (!m) return;
     const sp = m[1].toLowerCase(); if (sp === 'mechanics') return;
     const text = voiceClean(m[2]); if (!text) return;
@@ -446,11 +450,11 @@ function voiceLinesOf(epRel) {
   return out;
 }
 const SPEAKER_FOLDER = { arabella: 'arabella_frost', bingley: 'mr_bingley', darcy: 'mr_darcy', wickham: 'mr_wickham', caroline: 'miss_bingley', 'mrs-bennet': 'mrs_bennet', charlotte: 'charlotte_lucas', lydia: 'lydia_bennet', jane: 'jane_bennet', elizabeth: 'elizabeth_bennet', 'sir-william': 'sir_william', 'sir-henry': 'sir_ashbourne', 'mrs-frost': 'mrs_frost', 'mr-frost': 'mr_frost', maid: 'the_maid', pryce: 'ens_pryce', vane: 'capt_vane', ravenscar: 'lord_ravenscar', collins: 'mr_collins', devereux: 'mr_devereux', fenwick: 'mr_fenwick', hale: 'mr_hale', quill: 'mr_quill', arabella2: 'arabella2', 'sir-william2': 'sir_william2', carter: 'capt_carter', 'mr-darcy': 'mr_darcy', 'ensign-pryce': 'ens_pryce', 'miss-bingley': 'miss_bingley', 'elderly-gentleman': 'elderly_gentleman' };
-const speakerFolder = sp => sp === 'narrative' ? 'narrator' : (SPEAKER_FOLDER[sp] || sp.replace(/-/g, '_'));
+const speakerFolder = sp => { const f = sp === 'narrative' ? 'narrator' : (SPEAKER_FOLDER[sp] || sp.replace(/-/g, '_')); return VOICE_ALIAS[f] || f; };
 // GET /api/author/voice-lines?episode=authored/the-assembly → { lines:[{speaker,folder,text,hash,have:{voiceKey:true}}], voices }
 function handleVoiceLines(req, res, parsed) {
   const ep = epNorm(parsed.query.episode); const lines = voiceLinesOf(ep); if (!lines) return sendJson(res, 404, { error: 'no script' });
-  const V = readVoices(); const epDir = path.join(ROOT, 'worlds', 'pride-and-prejudice', ep.startsWith('episodes/') ? ep : 'episodes/' + ep, 'voice');
+  const V = readVoices(); const epDir = path.join(epVoiceRoot(ep), 'voice');
   const out = lines.map(l => { const folder = speakerFolder(l.speaker); const have = {}; const c = V.characters[folder]; if (c) Object.keys(c.voices || {}).forEach(k => { have[k] = fs.existsSync(path.join(epDir, folder, k, l.hash + '.mp3')); });
     return Object.assign({ folder, have }, l); });
   // previous takes per folder/key: voice/<folder>/<key>/_prev/<stamp>/ (made by force regeneration)
@@ -461,7 +465,7 @@ function handleVoiceLines(req, res, parsed) {
 // POST /api/author/voice-restore { episode, folder, voiceKey, stamp } → swap the current take with _prev/<stamp> (current goes to _prev/<now>)
 async function handleVoiceRestore(req, res) {
   const b = await readJsonBody(req); const ep = epNorm(b.episode), folder = String(b.folder || ''), key = String(b.voiceKey || ''), stamp = String(b.stamp || '').replace(/[^0-9]/g, '');
-  const epDir = path.join(ROOT, 'worlds', 'pride-and-prejudice', ep.startsWith('episodes/') ? ep : 'episodes/' + ep, 'voice', folder, key); const src = path.join(epDir, '_prev', stamp);
+  const epDir = path.join(epVoiceRoot(ep), 'voice', folder, key); const src = path.join(epDir, '_prev', stamp);
   if (!stamp || !fs.existsSync(src)) return sendJson(res, 404, { error: 'no such take' });
   const V = readVoices(); const c = V.characters[folder] || {};
   const cur = fs.readdirSync(epDir).filter(f => /\.mp3$/i.test(f)); let moved = 0;
@@ -491,7 +495,7 @@ async function handleVoiceBuild(req, res) {
   const V = readVoices(); const c = V.characters[folder]; const voice = c && c.voices && c.voices[key]; if (!voice) return sendJson(res, 400, { error: 'unknown voice' });
   const all = voiceLinesOf(ep); if (!all) return sendJson(res, 404, { error: 'no script' });
   const lines = all.filter(l => speakerFolder(l.speaker) === folder);
-  const epDir = path.join(ROOT, 'worlds', 'pride-and-prejudice', ep.startsWith('episodes/') ? ep : 'episodes/' + ep, 'voice', folder, key); fs.mkdirSync(epDir, { recursive: true });
+  const epDir = path.join(epVoiceRoot(ep), 'voice', folder, key); fs.mkdirSync(epDir, { recursive: true });
   const todo = lines.filter(l => b.force || !fs.existsSync(path.join(epDir, l.hash + '.mp3')));
   // force = regenerate: keep the previous takes in <key>/_prev/<stamp>/ (never overwrite silently)
   if (b.force) { const olds = todo.filter(l => fs.existsSync(path.join(epDir, l.hash + '.mp3'))); if (olds.length) { const stamp = new Date().toISOString().slice(0, 16).replace(/[-:T]/g, ''); const pv = path.join(epDir, '_prev', stamp); fs.mkdirSync(pv, { recursive: true }); for (const l of olds) fs.renameSync(path.join(epDir, l.hash + '.mp3'), path.join(pv, l.hash + '.mp3')); try { fs.writeFileSync(path.join(pv, 'settings.json'), JSON.stringify(Object.assign({}, V.settings || {}, c.settings || {}), null, 2)); } catch (e) {} } }
@@ -524,7 +528,7 @@ async function handleVoicePreview(req, res) {
 // POST /api/author/voice-post { episode, folder, voiceKey, tempo?, trim? } → re-run ffmpeg post on existing line files (no ElevenLabs credits)
 async function handleVoicePost(req, res) {
   const b = await readJsonBody(req); const ep = epNorm(b.episode), folder = String(b.folder || ''), key = String(b.voiceKey || '');
-  const epDir = path.join(ROOT, 'worlds', 'pride-and-prejudice', ep.startsWith('episodes/') ? ep : 'episodes/' + ep, 'voice', folder, key);
+  const epDir = path.join(epVoiceRoot(ep), 'voice', folder, key);
   let files = []; try { files = fs.readdirSync(epDir).filter(f => /\.mp3$/i.test(f)); } catch (e) { return sendJson(res, 404, { error: 'no files' }); }
   const V = readVoices(); const c = V.characters[folder] || {}; const st = Object.assign({}, V.settings || {}, c.settings || {}, b);
   let ok = 0; for (const f of files) { if (await normalizeMp3(path.join(epDir, f), 'voice', { tempo: st.tempo, trim: st.trim, lufs: st.lufs })) ok++; }

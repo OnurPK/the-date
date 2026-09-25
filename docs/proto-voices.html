@@ -38,6 +38,16 @@ p.sub{color:#7a7290;margin:0 0 14px;font-size:12px}
 <div class="row"><span class="t">4</span><span class="d">speed 1.10 + livelier (stability .35 / style .35)</span><button data-spd="speed_4_110_lively">Play</button></div>
 <div class="row"><span class="t">5</span><span class="d">speed 1.0 + ffmpeg tempo 1.15 (post only, no credits)</span><button data-spd="speed_5_post115">Play</button></div>
 </div>
+<div class="char"><h2>Mrs Frost — 4 designs (whisper: "There you are. The Bingleys' carriage…")</h2>
+<div class="row"><span class="t">E</span><span class="d">round 2 · full rich contralto, warm resonant chest voice, dry amused edge</span><button data-mf="E">Play</button></div>
+<div class="row"><span class="t">F</span><span class="d">round 2 · deep velvety alto, commanding, theatrical relish, wicked humour</span><button data-mf="F">Play</button></div>
+<div class="row"><span class="t">G</span><span class="d">round 2 · low warm mezzo with weight, brisk but composed, practical</span><button data-mf="G">Play</button></div>
+<div class="row"><span class="t">H</span><span class="d">round 2 · rich smoky lower register, knowing, gently sardonic</span><button data-mf="H">Play</button></div>
+<div class="row"><span class="t">A</span><span class="d">bright, fluttering, breathless — comic matriarch, rises at phrase ends</span><button data-mf="A">Play</button></div>
+<div class="row"><span class="t">B</span><span class="d">warm plump mezzo, fussy and affectionate, sighs and tuts</span><button data-mf="B">Play</button></div>
+<div class="row"><span class="t">C</span><span class="d">sharp energetic matron, gossip's relish, clipped, a little shrill</span><button data-mf="C">Play</button></div>
+<div class="row"><span class="t">D</span><span class="d">kindly scatterbrained, soft, speeds up at money or marriage</span><button data-mf="D">Play</button></div>
+</div>
 <div class="char"><h2>Sir William — round 4 (old but spry: quick, lively, clear)</h2>
 <div class="row"><span class="t">L</span><span class="d">the life of the party: bright warm baritone, quick, chuckles between phrases</span><button data-sw="L">Play</button></div>
 <div class="row"><span class="t">M</span><span class="d">the bubbly one: light agile tenor-baritone, fast, sprightly, quick laughs</span><button data-sw="M">Play</button></div>
@@ -61,6 +71,7 @@ const list=document.getElementById('list'); let cur=null, seq=null;
 list.innerHTML=CH.map(([f,n])=>`<div class="char" data-f="${f}"><h2>${n}</h2>${['A','B','C','D','E','F'].map(t=>`<div class="row" data-t="${t}"><span class="t ${t}">${t}</span><span class="d">${DESC[f][t]}</span><button data-play="${f}/${t}">Play</button></div>`).join('')}</div>`).join('');
 function stop(){ if(cur){ cur.a.pause(); cur.btn.classList.remove('on'); cur=null; } if(seq){ seq=null; document.querySelectorAll('.packs button').forEach(b=>b.classList.remove('playing')); } }
 function play(key,onend){ stop(); const btn=document.querySelector(`button[data-play="${key}"]`); const a=new Audio(B+key.replace('/','/')+'_1.mp3'); btn.classList.add('on'); cur={a,btn}; a.onended=()=>{ btn.classList.remove('on'); if(cur&&cur.a===a) cur=null; onend&&onend(); }; a.play(); }
+document.querySelectorAll('button[data-mf]').forEach(b=>b.onclick=()=>{ stop(); const a=new Audio(B+'mrs_frost/'+b.dataset.mf+'_1.mp3'); b.classList.add('on'); cur={a,btn:b}; a.onended=()=>{ b.classList.remove('on'); cur=null; }; a.play(); });
 document.querySelectorAll('button[data-sw]').forEach(b=>b.onclick=()=>{ stop(); const a=new Audio(B+'sir_william2/'+b.dataset.sw+'_1.mp3'); b.classList.add('on'); cur={a,btn:b}; a.onended=()=>{ b.classList.remove('on'); cur=null; }; a.play(); });
 document.querySelectorAll('button[data-spd]').forEach(b=>b.onclick=()=>{ stop(); const a=new Audio(B+'narrator/'+b.dataset.spd+'.mp3'); b.classList.add('on'); cur={a,btn:b}; a.onended=()=>{ b.classList.remove('on'); cur=null; }; a.play(); });
 document.querySelectorAll('button[data-play]').forEach(b=>b.onclick=()=>{ if(cur&&cur.btn===b){ stop(); return; } play(b.dataset.play); });

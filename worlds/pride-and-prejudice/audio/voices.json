@@ -82,6 +82,23 @@
         "style": 0.15,
         "lufs": -17
       }
+    },
+    "mrs_frost": {
+      "active": "h",
+      "voices": {
+        "h": {
+          "id": "c2OfIZNpScxAcxZkhjJ9",
+          "name": "Mrs Frost (H smoky)",
+          "note": "A mature British actress in her late forties, rich smoky lower register, warm and knowing, gently sardonic, speaks with settled confidence and a smile in the vo",
+          "added": "2026-09-25"
+        }
+      },
+      "settings": {
+        "speed": 1,
+        "stability": 0.5,
+        "style": 0.2,
+        "lufs": -21
+      }
     }
   }
 }

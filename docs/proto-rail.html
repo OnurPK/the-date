@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Episode rail — avatar opens the icons</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@500;700;800&family=Playfair+Display:wght@600&display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#0e0d13;color:#e7deff;font:500 13px/1.5 Inter,system-ui,sans-serif;padding:20px}
+h1{font:600 20px "Playfair Display",Georgia,serif;margin:0 0 4px}
+p.sub{color:#8a80a4;margin:0 0 14px;font-size:12px;max-width:900px}
+.grid{display:flex;gap:22px;flex-wrap:wrap;align-items:flex-start}
+.card{width:390px;zoom:.72}
+.card h2{font:600 15px "Playfair Display",Georgia,serif;margin:0 0 3px;color:#fff}
+.card .why{font-size:11.5px;color:#9a90b4;margin:0 0 8px;min-height:44px}
+.ph{position:relative;width:390px;height:560px;border-radius:38px 38px 0 0;overflow:hidden;background:#000;border:6px solid #17141c;border-bottom:none;cursor:pointer}
+.bg{position:absolute;inset:0;background:url("../worlds/pride-and-prejudice/episodes/authored/the-assembly/cutscenes/as_room.jpg") center 30%/cover;filter:brightness(.85)}
+.obj{position:absolute;left:14px;top:26px;background:rgba(20,12,26,.62);color:#fff;font:800 9.5px Inter;letter-spacing:.1em;text-transform:uppercase;padding:9px 12px;border-radius:12px}
+/* rail */
+.rail{position:absolute;right:14px;top:26px;width:52px;height:52px}
+.av{position:absolute;right:0;top:0;width:52px;height:52px;border-radius:15px;background:url("../worlds/pride-and-prejudice/characters/arabella2/appearances/pride.png") 50% 6%/cover;border:2px solid rgba(255,255,255,.6);box-shadow:0 6px 16px rgba(0,0,0,.45);z-index:5;transition:transform .25s cubic-bezier(.2,.8,.2,1.4),border-color .3s}
+.ph.open .av{transform:scale(.92);border-color:#fff}
+.av .badge{position:absolute;right:-4px;bottom:-4px;width:16px;height:16px;border-radius:50%;background:#39d98a;border:2px solid #17141c;transition:opacity .3s}
+.ph.open .av .badge{opacity:0}
+.ic{position:absolute;right:6px;top:6px;width:40px;height:40px;border-radius:50%;display:grid;place-items:center;background:rgba(20,12,26,.55);border:1px solid rgba(255,255,255,.22);color:#fff;backdrop-filter:blur(10px);box-shadow:0 6px 16px rgba(0,0,0,.4);opacity:0;pointer-events:none;will-change:transform,opacity}
+.ph.open .ic{pointer-events:auto}
+.ic svg{width:19px;height:19px;stroke:currentColor;fill:none;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+.ic.avail{border-color:rgba(57,217,138,.6);box-shadow:0 0 10px rgba(57,217,138,.45),0 6px 16px rgba(0,0,0,.4)}
+.lbl{position:absolute;left:50%;top:44px;transform:translateX(-50%);white-space:nowrap;font:800 9px Inter;letter-spacing:.12em;text-transform:uppercase;color:#fff;text-shadow:0 1px 6px #000;opacity:0;pointer-events:none}
+.thread{position:absolute;right:0;top:0;width:300px;height:340px;pointer-events:none;overflow:visible;z-index:3}
+.thread path,.thread line{fill:none;stroke:rgba(255,255,255,.7);stroke-width:1.2;stroke-linecap:round;filter:drop-shadow(0 0 3px rgba(255,255,255,.35))}
+.thread circle{fill:rgba(255,255,255,.8)}
+.scrim{position:absolute;inset:0;background:radial-gradient(260px 260px at calc(100% - 40px) 52px,rgba(7,5,10,.55),transparent 70%);opacity:0;transition:opacity .35s;pointer-events:none}
+.ph.open .scrim{opacity:1}
+</style></head><body>
+<h1>Episode rail — one avatar, tap to open</h1>
+<p class="sub">Tap the avatar (or anywhere in a phone) to open/close. Four icons: sound, inner world, free explore, talk. The green badge on the avatar shows "something is available" while closed. Each variant is a different opening motion; the closed state is identical everywhere.</p>
+<div class="grid" id="grid"></div>
+<script>
+const ICONS=[
+ ['sound','<svg viewBox="0 0 24 24"><path d="M4 9v6h4l5 4V5L8 9H4z"/><path d="M16 9a4 4 0 0 1 0 6"/><path d="M18.5 6.5a8 8 0 0 1 0 11"/></svg>'],
+ ['inner','<svg viewBox="0 0 24 24" stroke-width="1.7"><circle cx="12" cy="12" r="9.2"/><path d="M15.5 18c-.2-1.8-1.3-2.5-3-2.9-1.4-.3-2-.9-2-2 0-.5.3-.9.3-1.6 0-.4-.3-.6-.3-1.2 0-1.7 1.1-3 2.9-3 1.7 0 2.8 1.1 2.8 3.1 0 2.3-.7 3-.5 5.1" fill="currentColor" fill-opacity=".18"/></svg>'],
+ ['explore','<svg viewBox="0 0 24 24"><path d="M1.5 12S5 5 12 5s10.5 7 10.5 7-3.5 7-10.5 7S1.5 12 1.5 12z"/><circle cx="12" cy="12" r="3"/></svg>'],
+ ['talk','<svg viewBox="0 0 24 24"><path d="M21 11.5a8.5 8.5 0 0 1-12.2 7.6L3 21l1.9-5.8A8.5 8.5 0 1 1 21 11.5z"/></svg>'],
+];
+// each variant: name, note, positions (dx,dy relative to the icon's collapsed spot, px), and an open/close animation builder
+const V=[
+ ['A · Arc (quarter fan)','Icons bloom out along a quarter circle to the lower-left of the avatar, staggered 60 ms, tiny overshoot. Compact, thumb-friendly, leaves the right edge free.',
+   [[-6,72],[-41,59],[-65,30],[-72,-6]],
+   (el,i,dx,dy,on)=>on?[{transform:'translate(0,0) scale(.3) rotate(-40deg)',opacity:0},{transform:`translate(${dx*1.08}px,${dy*1.08}px) scale(1.05)`,opacity:1,offset:.75},{transform:`translate(${dx}px,${dy}px) scale(1)`,opacity:1}]:null, 420, 60],
+ ['B · Column drop (spring)','Same column as today, but hidden until tapped: icons fall out from behind the avatar one by one with a spring bounce. Most familiar.',
+   [[0,62],[0,113],[0,164],[0,215]],
+   (el,i,dx,dy,on)=>on?[{transform:'translate(0,-10px) scale(.6)',opacity:0},{transform:`translate(0,${dy+8}px) scale(1.04)`,opacity:1,offset:.7},{transform:`translate(0,${dy}px) scale(1)`,opacity:1}]:null, 460, 55],
+ ['C · Drawer left (with labels)','Icons slide out to the left in a row just under the avatar, blur → sharp, a small label under each. Reads as a toolbar; the labels help new players.',
+   [[0,58],[-50,58],[-100,58],[-150,58]],
+   (el,i,dx,dy,on)=>on?[{transform:'translate(20px,0) scale(.8)',opacity:0,filter:'blur(6px)'},{transform:`translate(${dx}px,0) scale(1)`,opacity:1,filter:'blur(0)'}]:null, 380, 45],
+ ['D · Orbit-in','Icons start stacked behind the avatar and swing around it half a turn before settling on an arc — a nod to the Orbit screen.',
+   [[-6,72],[-41,59],[-65,30],[-72,-6]],
+   (el,i,dx,dy,on)=>{ if(!on) return null; const r=Math.hypot(dx,dy), a1=Math.atan2(dy,dx), a0=a1-Math.PI*.9; const k=[]; for(let j=0;j<=10;j++){ const t=j/10; const e=1-Math.pow(1-t,3); const a=a0+(a1-a0)*e, rr=r*(.4+.6*e); k.push({transform:`translate(${(Math.cos(a)*rr).toFixed(1)}px,${(Math.sin(a)*rr).toFixed(1)}px) scale(${(.4+.6*e).toFixed(2)})`,opacity:Math.min(1,t*2),offset:t}); } return k; }, 620, 50],
+ ['E · Card fan','Like a hand of cards: icons fan out from behind the avatar, rotating from −70° to their place while the avatar tilts a touch. Playful, very Regency-ballroom.',
+   [[-6,72],[-41,59],[-65,30],[-72,-6]],
+   (el,i,dx,dy,on)=>on?[{transform:'translate(0,0) rotate(-70deg) scale(.5)',opacity:0,transformOrigin:'80% 20%'},{transform:`translate(${dx}px,${dy}px) rotate(6deg) scale(1.03)`,opacity:1,offset:.7},{transform:`translate(${dx}px,${dy}px) rotate(0) scale(1)`,opacity:1}]:null, 520, 70],
+ ['F · Ripple bloom','The avatar pulses a ring; icons appear from its centre scaling up along a diagonal, like drops. Quietest of the six.',
+   [[-34,44],[-68,88],[-102,132],[-136,176]],
+   (el,i,dx,dy,on)=>on?[{transform:'translate(0,0) scale(0)',opacity:0},{transform:`translate(${dx}px,${dy}px) scale(1.08)`,opacity:1,offset:.65},{transform:`translate(${dx}px,${dy}px) scale(1)`,opacity:1}]:null, 480, 70],
+
+ // --- with a thin connecting line: icons at different distances, linked ---
+ ['G · Constellation','Icons sit at uneven distances like stars; hairlines draw from the avatar to each and between neighbours. Icons twinkle in as the lines reach them.',
+   [[-30,66],[-84,40],[-118,96],[-60,128]],
+   (el,i,dx,dy,on)=>on?[{transform:`translate(${dx}px,${dy}px) scale(0)`,opacity:0},{transform:`translate(${dx}px,${dy}px) scale(1.25)`,opacity:1,offset:.6},{transform:`translate(${dx}px,${dy}px) scale(1)`,opacity:1}]:null, 380, 110,
+   {type:'constellation'}],
+ ['H · String of pearls','A single curved thread drops from the avatar; the icons hang on it as beads at uneven spacing. The thread draws first, the beads slide into place along it.',
+   [[-22,58],[-38,118],[-70,170],[-118,208]],
+   (el,i,dx,dy,on)=>on?[{transform:`translate(${dx*.6}px,${dy*.6}px) scale(.4)`,opacity:0},{transform:`translate(${dx}px,${dy}px) scale(1)`,opacity:1}]:null, 420, 90,
+   {type:'thread'}],
+ ['I · Vine','A thin branch grows down-left from the avatar; icons unfurl on alternate sides like leaves, nearer ones first. Slow and organic.',
+   [[-34,54],[-90,70],[-104,128],[-156,150]],
+   (el,i,dx,dy,on)=>on?[{transform:`translate(${dx}px,${dy}px) rotate(${i%2?40:-40}deg) scale(.2)`,opacity:0,transformOrigin:i%2?'100% 0':'0 0'},{transform:`translate(${dx}px,${dy}px) rotate(0) scale(1)`,opacity:1}]:null, 520, 120,
+   {type:'vine'}],
+];
+const grid=document.getElementById('grid');
+const C=[26,26]; // icon centre offset inside the rail box (collapsed spot) → line coordinates: rail box origin at (248,0) in the svg
+function linkPaths(type,pos){ const P=pos.map(([x,y])=>[274+x,26+y]); const A=[274,26];
+  if(type==='constellation'){ const segs=[]; P.forEach(p=>segs.push(`M${A[0]},${A[1]} L${p[0]},${p[1]}`)); for(let i=0;i<P.length-1;i++) segs.push(`M${P[i][0]},${P[i][1]} L${P[i+1][0]},${P[i+1][1]}`); return segs; }
+  if(type==='thread'){ let d=`M${A[0]},${A[1]+20}`; let prev=[A[0],A[1]+20]; P.forEach(p=>{ const cx=(prev[0]+p[0])/2+14, cy=(prev[1]+p[1])/2; d+=` Q${cx},${cy} ${p[0]},${p[1]}`; prev=p; }); return [d]; }
+  if(type==='vine'){ const end=P[P.length-1]; const d=`M${A[0]-6},${A[1]+18} C${A[0]-10},${A[1]+90} ${end[0]+40},${end[1]-60} ${end[0]},${end[1]}`; const segs=[d]; P.slice(0,-1).forEach((p,i)=>{ const t=(i+1)/P.length; const bx=A[0]-6+(end[0]-A[0]+6)*t*.9, by=A[1]+18+(end[1]-A[1]-18)*t; segs.push(`M${bx},${by} Q${(bx+p[0])/2},${(by+p[1])/2-10} ${p[0]},${p[1]}`); }); return segs; }
+  return []; }
+V.forEach(([title,why,pos,anim,dur,stag,link],vi)=>{
+  const card=document.createElement('div'); card.className='card';
+  card.innerHTML=`<h2>${title}</h2><div class="why">${why}</div><div class="ph"><div class="bg"></div><div class="scrim"></div><div class="obj">📋 Take the measure of the room …</div>
+    <div class="rail">${link?`<svg class="thread" viewBox="0 0 300 340">${linkPaths(link.type,pos).map(d=>`<path d="${d}"/>`).join('')}</svg>`:''}${ICONS.map(([n,svg],i)=>`<div class="ic ${i===2?'avail':''}" data-i="${i}">${svg}${vi===2?`<span class="lbl">${n}</span>`:''}</div>`).join('')}<div class="av"><span class="badge"></span></div></div></div>`;
+  grid.appendChild(card);
+  const ph=card.querySelector('.ph'), av=card.querySelector('.av'), ics=[...card.querySelectorAll('.ic')]; let open=false;
+  const A=(el,k,o)=>el.animate(k,Object.assign({fill:'forwards'},o));
+  const paths=[...card.querySelectorAll('.thread path')]; paths.forEach(p=>{ const L=p.getTotalLength(); p.style.strokeDasharray=L; p.style.strokeDashoffset=L; p.style.opacity=0; });
+  function toggle(){ open=!open; ph.classList.toggle('open',open);
+    paths.forEach((p,i)=>{ const L=p.getTotalLength(); if(open) A(p,[{strokeDashoffset:L,opacity:.9},{strokeDashoffset:0,opacity:.9}],{duration:link&&link.type==='constellation'?260:700,delay:link&&link.type==='constellation'?i*90:i*160,easing:'ease-out'}); else A(p,[{opacity:.9},{opacity:0}],{duration:220}).onfinish=()=>{ p.style.strokeDashoffset=L; }; });
+    ics.forEach((el,i)=>{ const [dx,dy]=pos[i]; if(open){ el.style.zIndex=4-i; A(el,anim(el,i,dx,dy,true),{duration:dur,delay:i*stag,easing:'cubic-bezier(.2,.8,.2,1)'}); const l=el.querySelector('.lbl'); if(l) A(l,[{opacity:0,transform:'translate(-50%,-6px)'},{opacity:1,transform:'translate(-50%,0)'}],{duration:300,delay:i*stag+250}); }
+      else { const l=el.querySelector('.lbl'); if(l) A(l,[{opacity:1},{opacity:0}],{duration:150}); A(el,[{transform:`translate(${dx}px,${dy}px) scale(1)`,opacity:1},{transform:'translate(0,0) scale(.4)',opacity:0}],{duration:260,delay:(3-i)*35,easing:'cubic-bezier(.4,0,.8,.4)'}); } });
+    if(vi===5&&open){ const r=document.createElement('span'); r.style.cssText='position:absolute;right:0;top:0;width:52px;height:52px;border-radius:15px;border:2px solid rgba(255,255,255,.8);pointer-events:none;z-index:6'; card.querySelector('.rail').appendChild(r); A(r,[{transform:'scale(1)',opacity:.9},{transform:'scale(2.6)',opacity:0}],{duration:700,easing:'ease-out'}).onfinish=()=>r.remove(); }
+    if(vi===4){ A(av,open?[{transform:'rotate(0)'},{transform:'rotate(-8deg) scale(.92)'}]:[{transform:'rotate(-8deg) scale(.92)'},{transform:'rotate(0) scale(1)'}],{duration:400,easing:'cubic-bezier(.2,.8,.2,1.3)'}); }
+  }
+  ph.addEventListener('click',e=>{ if(e.target.closest('.ic')) return; toggle(); });
+});
+</script></body></html>

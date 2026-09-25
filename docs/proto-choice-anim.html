@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Choice cards — entrance animations</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@500;700;800&family=Playfair+Display:wght@600&display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#0e0d13;color:#e7deff;font:500 13px/1.5 Inter,system-ui,sans-serif;padding:20px}
+h1{font:600 20px "Playfair Display",Georgia,serif;margin:0 0 4px}
+p.sub{color:#8a80a4;margin:0 0 12px;font-size:12px;max-width:960px}
+.bar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin:0 0 16px}
+.bar select,.bar button{background:#1b1826;color:#e7deff;border:1px solid #3a3450;border-radius:999px;padding:8px 13px;font:700 10.5px Inter;letter-spacing:.06em;cursor:pointer}
+.bar button.on{background:#8b7bd8;border-color:#8b7bd8;color:#fff}
+.grid{display:flex;gap:22px;flex-wrap:wrap;align-items:flex-start}
+.card{width:390px;zoom:.62}
+.card h2{font:600 15px "Playfair Display",Georgia,serif;margin:0 0 3px;color:#fff}
+.card .why{font-size:11.5px;color:#9a90b4;margin:0 0 8px;min-height:44px}
+.ph{position:relative;width:390px;height:844px;border-radius:38px;overflow:hidden;background:#000;border:6px solid #17141c;cursor:pointer;perspective:900px}
+.bg{position:absolute;inset:0;background:url("../worlds/pride-and-prejudice/episodes/authored/the-assembly/cutscenes/as_room.jpg") center/cover;filter:blur(4px) brightness(.8) saturate(.9)}
+.vig{position:absolute;inset:0;background:radial-gradient(70% 60% at 50% 45%,rgba(7,5,10,0) 45%,rgba(7,5,10,.75) 100%)}
+.obj{position:absolute;left:14px;top:26px;background:rgba(20,12,26,.62);color:#fff;font:800 9.5px Inter;letter-spacing:.1em;text-transform:uppercase;padding:9px 12px;border-radius:12px}
+.av{position:absolute;right:14px;top:26px;width:52px;height:52px;border-radius:15px;background:url("../worlds/pride-and-prejudice/characters/arabella2/appearances/pride.png") 50% 6%/cover;border:2px solid rgba(255,255,255,.6)}
+.ara{position:absolute;right:-125px;top:235px;width:330px;height:815px;background:url("../worlds/pride-and-prejudice/characters/arabella2/poses/idle_breath/f00.webp") no-repeat top center/100% auto;transform:scaleX(-1);pointer-events:none;-webkit-mask:linear-gradient(180deg,#000 45%,rgba(0,0,0,.5) 64%,transparent 83%);mask:linear-gradient(180deg,#000 45%,rgba(0,0,0,.5) 64%,transparent 83%);filter:drop-shadow(0 12px 18px rgba(0,0,0,.55))}
+.stack{position:absolute;left:0;right:0;bottom:0;display:flex;flex-direction:column;gap:2px;z-index:5;transform-style:preserve-3d;perspective:900px}
+.ch{background:rgba(238,232,240,.92);color:#1a1524;padding:15px 16px;font:700 14.5px/1.35 Inter;display:flex;align-items:center;gap:10px;border-top:1px solid rgba(255,255,255,.6);backface-visibility:hidden;will-change:transform,opacity,clip-path;transform-style:preserve-3d;opacity:0}
+.ch span{flex:1}
+.ch b{flex:none;border:1.5px solid #a893e8;color:#7b63d6;border-radius:999px;padding:6px 10px;font:800 8.5px Inter;letter-spacing:.1em;text-transform:uppercase;text-align:center;max-width:124px;line-height:1.2}
+.ch.own{color:#8a80a4;font-style:italic;font-weight:500;padding:16px 16px 22px}
+.hint{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);font:800 11px Inter;letter-spacing:.2em;text-transform:uppercase;color:rgba(255,255,255,.55);pointer-events:none;transition:opacity .3s}
+.ph.played .hint{opacity:0}
+</style></head><body>
+<h1>Choice cards — entrance animations (3D / perspective / folding)</h1>
+<p class="sub">Tap a phone to play (tap again to replay). The sound plays at the moment the first card starts; card stagger is 260 ms to sit on the "three ticks". Pick the sound in the dropdown; the settle sound (optional) plays when the stack has landed.</p>
+<div class="bar">
+  <label>Open sound <select id="snd"><option value="choice_deal__a">deal A · cards on felt</option><option value="choice_deal__b">deal B · paper ticks, fanned</option><option value="choice_deal__c">deal C · wooden ticks + chime</option><option value="choice_deal__d">deal D · riffle + placements</option><option value="choice_deal__e">deal E · quill taps</option><option value="choice_deal__f">F · three pianoforte notes ↑</option><option value="choice_deal__g">G · three harpsichord notes ↑</option><option value="choice_deal__h">H · three pizzicato violin ↑</option><option value="choice_deal__i">I · three glass harmonica ↑</option><option value="choice_deal__j">J · three pianoforte notes ↓</option><option value="choice_paper__a">paper A · letter unfolded in three creases</option><option value="choice_paper__b">paper B · three sheets laid on a desk</option><option value="choice_paper__c">paper C · fold then unfold</option><option value="choice_paper__d">paper D · small fan opens in three clicks</option><option value="choice_paper__e">paper E · three pages turned</option><option value="choice_paper__f">paper F · parchment unrolls</option><option value="choice_paper__g">paper G · wax seal cracks, letter unfolds</option><option value="choice_open__b">old · three ticks, cards laid out</option><option value="">none</option></select></label>
+  <label>Settle sound <select id="snd2"><option value="">none</option><option value="choice_settle__a">A · sub thump + bloom</option><option value="choice_settle__b">B · harp → shimmer</option><option value="choice_settle__c">C · reverse swell → bell</option><option value="choice_settle__d">D · whoosh → pad</option><option value="choice_settle__e">E · heartbeat + crystal</option><option value="choice_settle__f">F · pianoforte chord bloom</option><option value="choice_settle__g">G · harpsichord chord → shimmer</option><option value="choice_settle__h">H · cello swell → shimmer</option><option value="choice_settle__i">I · glass harmonica bloom</option></select></label>
+  <button id="all">Play all</button>
+</div>
+<div class="grid" id="grid"></div>
+<script>
+const AUD='../worlds/pride-and-prejudice/audio/sfx/';
+const OPTS=[['Tell me, Sir William, does St James\'s improve a man\'s manners or merely his posture?',''],['I will not be placed before Mr Darcy like a dish at supper.','Small fortune, large spirit'],['Turn the fan slowly in your hand, and say nothing.','Weakness']];
+const STAG=260;
+// each variant: [title, why, keyframes(i, el) → array, options(i) → {duration, delay, easing}, stackStyle?]
+const E='cubic-bezier(.2,.8,.2,1)';
+const V=[
+ ['1 · Dealt (3D flip)','Each card flies in from the lower right, spinning on its long axis (rotateY −100° → 0) and lands with a small overshoot, one after the other — dealt like playing cards.',
+   i=>[{transform:'translate(140px,90px) rotateY(-100deg) rotateZ(8deg) scale(.9)',opacity:0},{transform:'translate(-6px,-4px) rotateY(8deg) rotateZ(-1deg) scale(1.02)',opacity:1,offset:.7},{transform:'none',opacity:1}], i=>({duration:640,delay:i*STAG,easing:E})],
+ ['2 · Unfold up (accordion, bottom → top)','Cards lie folded flat at their bottom edge (rotateX 95°, origin bottom) and stand up one by one from the bottom of the stack upwards — a paper accordion rising toward the player.',
+   i=>[{transform:'rotateX(95deg)',opacity:0,transformOrigin:'50% 100%'},{transform:'rotateX(-12deg)',opacity:1,offset:.7,transformOrigin:'50% 100%'},{transform:'rotateX(0)',opacity:1,transformOrigin:'50% 100%'}], i=>({duration:560,delay:(3-i)*STAG,easing:E})],
+ ['3 · Fanned hand','All cards start stacked and tilted at the bottom centre like a hand of cards; they fan out (rotateZ −18…+18) then straighten into the column.',
+   i=>{ const rz=(i-1.5)*18; return [{transform:`translateY(${(3-i)*-58}px) rotateZ(${rz}deg) scale(.86)`,opacity:0,transformOrigin:'50% 160%'},{transform:`translateY(${(3-i)*-58+10}px) rotateZ(${rz*.55}deg) scale(.95)`,opacity:1,offset:.4,transformOrigin:'50% 160%'},{transform:'none',opacity:1,transformOrigin:'50% 160%'}]; }, i=>({duration:820,delay:i*STAG*.6,easing:E})],
+ ['4 · From the depth (perspective crawl)','Cards rise out of the floor from far away (translateZ −700, rotateX 55°) and settle flat in front of the player — Star-Wars crawl in reverse.',
+   i=>[{transform:'translateZ(-700px) translateY(120px) rotateX(55deg)',opacity:0},{transform:'translateZ(30px) translateY(-6px) rotateX(-6deg)',opacity:1,offset:.75},{transform:'none',opacity:1}], i=>({duration:700,delay:i*STAG,easing:E})],
+ ['5 · Page turn','Each card turns in around its left edge (rotateY 90° → 0, origin left) like a page of a letter opening, with a soft shadow sweep.',
+   i=>[{transform:'rotateY(90deg)',opacity:0,transformOrigin:'0 50%',filter:'brightness(.6)'},{transform:'rotateY(-10deg)',opacity:1,offset:.7,transformOrigin:'0 50%',filter:'brightness(1.05)'},{transform:'rotateY(0)',opacity:1,transformOrigin:'0 50%',filter:'brightness(1)'}], i=>({duration:600,delay:i*STAG,easing:E})],
+ ['6 · Cube roll','Cards roll up into place as faces of a cube (rotateX 90° with a translateZ pivot), each one tumbling in from below the previous.',
+   i=>[{transform:'translateY(60px) rotateX(90deg) translateZ(40px)',opacity:0,transformOrigin:'50% 100%'},{transform:'translateY(0) rotateX(-8deg) translateZ(0)',opacity:1,offset:.7,transformOrigin:'50% 100%'},{transform:'none',opacity:1,transformOrigin:'50% 100%'}], i=>({duration:620,delay:i*STAG,easing:E})],
+ ['7 · Ink bloom','Each card blooms from a point at its left like ink spreading — a circular clip-path wipe with blur clearing, plus a tiny 3D tilt.',
+   i=>[{clipPath:'circle(0% at 8% 50%)',filter:'blur(8px)',transform:'rotateX(20deg)',opacity:1,transformOrigin:'50% 100%'},{clipPath:'circle(70% at 8% 50%)',filter:'blur(2px)',transform:'rotateX(-4deg)',opacity:1,offset:.7,transformOrigin:'50% 100%'},{clipPath:'circle(140% at 8% 50%)',filter:'blur(0)',transform:'none',opacity:1,transformOrigin:'50% 100%'}], i=>({duration:700,delay:i*STAG,easing:'ease-out'})],
+ ['8 · Shutter / skew','Cards open from a thin horizontal line at their centre (clip-path inset) while skewing back to flat — a shutter snapping open on each tick.',
+   i=>[{clipPath:'inset(50% 0 50% 0)',transform:'skewX(-14deg) scaleX(.94)',opacity:1},{clipPath:'inset(0 0 0 0)',transform:'skewX(3deg) scaleX(1.01)',opacity:1,offset:.7},{clipPath:'inset(0 0 0 0)',transform:'none',opacity:1}], i=>({duration:420,delay:i*STAG,easing:E})],
+];
+const grid=document.getElementById('grid');
+let cur=null;
+function play(file){ if(!file) return; const a=new Audio(AUD+file+'.mp3'); a.volume=.9; a.play().catch(()=>{}); }
+V.forEach(([title,why,kf,op])=>{
+  const card=document.createElement('div'); card.className='card';
+  card.innerHTML=`<h2>${title}</h2><div class="why">${why}</div><div class="ph"><div class="bg"></div><div class="vig"></div><div class="obj">📋 Take the measure of the room …</div><div class="av"></div><div class="ara"></div>
+   <div class="stack">${OPTS.map(([t,b])=>`<div class="ch"><span>${t}</span>${b?`<b>${b}</b>`:''}</div>`).join('')}<div class="ch own">Write your own…</div></div><div class="hint">tap to play</div></div>`;
+  grid.appendChild(card);
+  const ph=card.querySelector('.ph'); const cards=[...card.querySelectorAll('.ch')];
+  card.run=()=>{ ph.classList.add('played'); cards.forEach(c=>{ c.getAnimations().forEach(a=>a.cancel()); c.style.opacity=0; });
+    play(document.getElementById('snd').value);
+    cards.forEach((c,i)=>{ const o=op(i); c.animate(kf(i,c),Object.assign({fill:'forwards'},o)); });
+    const last=op(3); setTimeout(()=>play(document.getElementById('snd2').value), last.delay+last.duration-150); };
+  ph.addEventListener('click',card.run);
+});
+document.getElementById('all').onclick=()=>{ [...grid.children].forEach((c,i)=>setTimeout(()=>c.run(),i*120)); };
+</script></body></html>

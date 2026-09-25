@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Camera screen — background candidates</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@500;700;800&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#0e0d13;color:#e7deff;font:500 13px/1.5 Inter,system-ui,sans-serif;padding:20px}
+h1{font:600 20px "Playfair Display",Georgia,serif;margin:0 0 4px}
+p.sub{color:#8a80a4;margin:0 0 14px;font-size:12px}
+.grid{display:flex;gap:18px;flex-wrap:wrap}
+.card{width:390px;zoom:.72}
+.card h2{font:600 15px "Playfair Display",Georgia,serif;margin:0 0 8px;color:#fff}
+.ph{position:relative;width:390px;height:844px;border-radius:38px;overflow:hidden;background:#000;border:6px solid #17141c}
+.bg{position:absolute;inset:0;background-size:cover;background-position:center}
+.cam{position:absolute;background:radial-gradient(60% 50% at 50% 40%,#6a5a58 0%,#2e2628 70%,#1a1518 100%);overflow:hidden;box-shadow:inset 0 0 40px rgba(0,0,0,.6)}
+.cam.oval{border-radius:50%/50%}
+.cam .guide{position:absolute;left:50%;top:38%;width:44%;aspect-ratio:.78;transform:translate(-50%,-50%);border:2px dashed rgba(232,196,110,.85);border-radius:50%/48%;box-shadow:0 0 18px rgba(232,196,110,.35)}
+.cam .hint{position:absolute;left:0;right:0;bottom:8%;text-align:center;font:700 10px Inter;letter-spacing:.26em;color:rgba(232,196,110,.9)}
+.top{position:absolute;left:26px;right:26px;top:44px}
+.kicker{font:800 10.5px Inter;letter-spacing:.32em;color:#e8c46e}
+.title{font:700 30px/1.05 "Playfair Display",Georgia,serif;color:#fff;margin:6px 0 6px;text-shadow:0 2px 14px rgba(0,0,0,.7)}
+.desc{font:500 12.5px/1.45 Inter;color:rgba(255,255,255,.82);text-shadow:0 1px 8px rgba(0,0,0,.7)}
+.x{position:absolute;right:20px;top:26px;width:38px;height:38px;border-radius:50%;border:1px solid rgba(255,255,255,.28);background:rgba(14,10,20,.45);display:grid;place-items:center;color:#fff;font-size:16px}
+.bot{position:absolute;left:0;right:0;bottom:0;padding:18px 26px 34px;background:linear-gradient(180deg,rgba(10,6,12,0),rgba(10,6,12,.72) 40%,rgba(10,6,12,.9))}
+.shutter{width:72px;height:72px;border-radius:50%;margin:0 auto 14px;border:4px solid #fff;background:radial-gradient(circle,#fff 0 48%,transparent 52%);box-shadow:0 8px 24px rgba(0,0,0,.6)}
+.row{display:flex;justify-content:space-between;align-items:center;font:800 10.5px Inter;letter-spacing:.24em;color:#fff}
+.row span{opacity:.8}
+</style></head><body>
+<h1>Camera screen — backgrounds (gpt-image-2.5, same room as the portrait screen)</h1>
+<p class="sub">No character. The mirror glass is where the live camera goes (grey box = camera, dashed gold = head guide). Files: _mockups/camera_bg/cam_a…d.png (1440×2560).</p>
+<div class="grid" id="grid"></div>
+<script>
+const B='../worlds/pride-and-prejudice/_mockups/camera_bg/';
+// camera rect inside each mirror, in % of the 9:16 frame
+const V=[['cam_a','A · arched gilt mirror on the dressing table',{l:26,t:19,w:45,h:40}],['cam_b','B · tall oval cheval mirror, plain wall',{l:22,t:9,w:57,h:55,oval:1}],['cam_c','C · rounded square, carved frame, shelf',{l:22,t:19,w:59,h:39}],['cam_d','D · simple rectangle, bevelled, window light',{l:24,t:16,w:57,h:47}],
+['cam_e','E · C frame at max size, shelf',{l:9,t:12,w:82,h:53}],['cam_f','F · max size, cartouche top, twin candles, shelf',{l:9,t:12,w:82,h:52}],['cam_g','G · max size, marble shelf, roses',{l:9,t:13,w:82,h:51}],
+['cam_h','H · max size, DRESSING TABLE, pearls + brush + scent',{l:9,t:12,w:82,h:50}],['cam_i','I · max size, DRESSING TABLE, roses + fan + one candle',{l:9,t:12,w:82,h:50}]];
+document.getElementById('grid').innerHTML=V.map(([f,t,r])=>`<div class="card"><h2>${t}</h2><div class="ph"><div class="bg" style="background-image:url('${B}${f}.png')"></div>
+<div class="cam ${r.oval?'oval':''}" style="left:${r.l}%;top:${r.t}%;width:${r.w}%;height:${r.h}%"><div class="guide"></div><div class="hint">FACE IN THE FRAME</div></div>
+<div class="x">✕</div><div class="top"><div class="kicker">YOUR LIKENESS</div><div class="title">Sit for your portrait.</div><div class="desc">Look into the glass. The photo is used once and never kept.</div></div>
+<div class="bot"><div class="shutter"></div><div class="row"><span>LIBRARY</span><span>FLIP</span></div></div></div></div>`).join('');
+</script></body></html>

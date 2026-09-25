@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Sign-in screen — effects</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@500;700;800&display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#0e0d13;color:#e7deff;font:500 13px/1.5 Inter,system-ui,sans-serif;padding:20px}
+h1{font:600 20px "Playfair Display",Georgia,serif;margin:0 0 4px}
+p.sub{color:#8a80a4;margin:0 0 12px;font-size:12px}
+.bar{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 16px}
+.bar button{background:#1b1826;color:#e7deff;border:1px solid #3a3450;border-radius:999px;padding:8px 13px;font:700 10.5px Inter;letter-spacing:.08em;text-transform:uppercase;cursor:pointer}
+.bar button.on{background:#8b7bd8;border-color:#8b7bd8;color:#fff}
+.grid{display:flex;gap:26px;flex-wrap:wrap}
+.ph{position:relative;width:390px;height:844px;border-radius:38px;overflow:hidden;background:#000;border:6px solid #17141c;zoom:.9}
+.bg{position:absolute;inset:0;background:url("../worlds/pride-and-prejudice/_mockups/intro_bg/ra_worlds_bright.png") center/cover;transform:scale(1.03);animation:breathe 14s ease-in-out infinite;filter:brightness(.86) contrast(.9) saturate(.95)}
+@keyframes breathe{0%,100%{transform:scale(1.03) translateY(0)}50%{transform:scale(1.06) translateY(-6px)}}
+.grade{position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,0) 55%,rgba(20,10,20,.55) 78%,rgba(20,10,20,.85) 100%)}
+canvas{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+.bulbs{position:absolute;inset:0;pointer-events:none;mix-blend-mode:screen}
+.bulb{position:absolute;width:18px;height:18px;border-radius:50%;background:radial-gradient(circle,rgba(255,240,200,.95) 0%,rgba(255,200,120,.55) 35%,rgba(255,170,80,0) 70%);transform:translate(-50%,-50%);opacity:.5}
+.topglow{position:absolute;left:0;right:0;top:-40px;height:190px;background:radial-gradient(60% 100% at 50% 0%,rgba(255,196,120,.55),rgba(255,160,90,0) 70%);mix-blend-mode:screen;pointer-events:none;animation:glow 5s ease-in-out infinite}
+@keyframes glow{0%,100%{opacity:.55}50%{opacity:1}}
+.top{position:absolute;left:18px;top:26px;display:flex;gap:8px}
+.pill{border:1.5px solid rgba(255,255,255,.7);border-radius:999px;padding:8px 16px;font:800 12px Inter;color:#fff;background:rgba(0,0,0,.2)}
+.snd{position:absolute;left:18px;top:74px;width:42px;height:42px;border-radius:50%;border:1px solid rgba(255,255,255,.28);background:rgba(14,10,20,.45);backdrop-filter:blur(10px)}
+.demo{position:absolute;right:18px;top:26px;border:1.5px solid rgba(255,255,255,.7);border-radius:999px;padding:6px 14px;font:800 11px Inter;color:#fff;letter-spacing:.2em;background:rgba(0,0,0,.2)}
+.btns{position:absolute;left:0;right:0;bottom:calc(92px + env(safe-area-inset-bottom,0px));display:flex;flex-direction:column;align-items:center;gap:14px}
+.start{width:240px;padding:17px 0;border-radius:999px;background:#fff;color:#111;text-align:center;font:800 15px Inter;letter-spacing:.32em;box-shadow:0 10px 30px rgba(0,0,0,.5)}
+.line{width:240px;padding:15px 0;border-radius:999px;border:1.5px solid rgba(255,255,255,.75);color:#fff;text-align:center;font:800 14px Inter;letter-spacing:.3em;background:rgba(10,6,14,.22);backdrop-filter:blur(6px);text-shadow:0 2px 10px rgba(0,0,0,.6)}
+.tag{position:absolute;left:0;right:0;bottom:calc(238px + env(safe-area-inset-bottom,0px));text-align:center;font:700 11px Inter;letter-spacing:.34em;color:#fff;text-shadow:0 2px 12px rgba(0,0,0,.8);opacity:.9}
+</style></head><body>
+<h1>Sign-in — ra_worlds_bright + effects</h1>
+<p class="sub">No logo. Two buttons: a white action button and a large outlined line button. No save: START GAME / REGISTER · with a save: CONTINUE / NEW GAME (toggle). Cover slightly dimmed and lower contrast. Effects: falling petals/leaves (canvas, three depths, sway + spin), marquee bulbs at the top chasing and flickering, a slow warm glow breathing over the arch, and the picture itself breathing very slowly. Toggle each.</p>
+<div class="bar"><button id="tSave">Has save (Continue / New Game)</button><button class="on" id="tLeaf">Petals</button><button class="on" id="tBulb">Bulbs</button><button class="on" id="tGlow">Top glow</button><button class="on" id="tBreathe">Breathe</button></div>
+<div class="grid">
+<div class="ph" id="ph"><div class="bg"></div><div class="topglow" id="glow"></div><div class="bulbs" id="bulbs"></div><canvas id="cv"></canvas><div class="grade"></div>
+<div class="top"><span class="pill">V1 →</span></div><div class="snd"></div><div class="demo">DEMO</div>
+<div class="tag">NEW FRIENDS, BEST FRIENDS.</div>
+<div class="btns"><div class="start" id="b1">START GAME</div><div class="line" id="b2">REGISTER</div></div>
+</div></div>
+<script>
+// ---- petals / leaves ----
+const cv=document.getElementById('cv'), ctx=cv.getContext('2d'); const W=390,H=844; cv.width=W*2; cv.height=H*2; ctx.scale(2,2);
+const COL=[[255,150,120],[255,200,120],[250,120,150],[255,235,180],[240,170,90]];
+const P=[]; function mk(y){ const d=Math.random(); return {x:Math.random()*W,y:y==null?Math.random()*H:y,d,r:(3+Math.random()*4)*(0.5+d),vy:(0.25+Math.random()*0.45)*(0.5+d),ph:Math.random()*6,sp:(Math.random()-.5)*0.03,rot:Math.random()*6,c:COL[Math.floor(Math.random()*COL.length)],a:.35+.5*d}; }
+for(let i=0;i<46;i++) P.push(mk());
+let leaf=true,bulb=true;
+function petal(p,t){ ctx.save(); ctx.translate(p.x,p.y); ctx.rotate(p.rot); ctx.globalAlpha=p.a; ctx.fillStyle=`rgb(${p.c[0]},${p.c[1]},${p.c[2]})`; ctx.filter=p.d<.35?'blur(1.2px)':'none';
+  ctx.beginPath(); ctx.moveTo(0,-p.r); ctx.bezierCurveTo(p.r*.9,-p.r*.6,p.r*.9,p.r*.6,0,p.r); ctx.bezierCurveTo(-p.r*.9,p.r*.6,-p.r*.9,-p.r*.6,0,-p.r); ctx.fill();
+  ctx.globalAlpha=p.a*.5; ctx.fillStyle='rgba(255,255,255,.6)'; ctx.beginPath(); ctx.ellipse(-p.r*.25,-p.r*.3,p.r*.25,p.r*.12,-.6,0,6.3); ctx.fill(); ctx.restore(); }
+let t0=performance.now();
+function frame(){ const t=(performance.now()-t0)/1000; ctx.clearRect(0,0,W,H);
+  if(leaf){ P.forEach(p=>{ p.y+=p.vy; p.x+=Math.sin(t*0.9+p.ph)*0.35+0.08; p.rot+=p.sp+Math.sin(t+p.ph)*0.004; if(p.y>H+12){ Object.assign(p,mk(-12)); } if(p.x>W+12) p.x=-12; petal(p,t); }); }
+  requestAnimationFrame(frame); } frame();
+// ---- marquee bulbs along the top arch (screen-blended glows; chase + flicker) ----
+const bulbs=document.getElementById('bulbs'); const B=[]; const N=15;
+for(let i=0;i<N;i++){ const x=8+i*(374/(N-1)); const arch=Math.sin((i/(N-1))*Math.PI); const y=18+ (1-arch)*10; const e=document.createElement('span'); e.className='bulb'; e.style.left=x+'px'; e.style.top=y+'px'; bulbs.appendChild(e); B.push({e,ph:Math.random()*6}); }
+function bulbFrame(){ const t=performance.now()/1000; if(bulb){ B.forEach((b,i)=>{ const chase=0.5+0.5*Math.sin(t*2.2-i*0.55); const flick=Math.random()<0.02?0.3:1; b.e.style.opacity=(0.25+0.7*chase)*flick; b.e.style.transform='translate(-50%,-50%) scale('+(0.8+0.5*chase)+')'; }); } requestAnimationFrame(bulbFrame); } bulbFrame();
+// ---- toggles ----
+const tog=(id,fn)=>{ const b=document.getElementById(id); b.onclick=()=>{ b.classList.toggle('on'); fn(b.classList.contains('on')); }; };
+tog('tSave',v=>{ document.getElementById('b1').textContent=v?'CONTINUE':'START GAME'; document.getElementById('b2').textContent=v?'NEW GAME':'REGISTER'; });
+tog('tLeaf',v=>{ leaf=v; if(!v) ctx.clearRect(0,0,W,H); }); tog('tBulb',v=>{ bulb=v; bulbs.style.display=v?'':'none'; }); tog('tGlow',v=>document.getElementById('glow').style.display=v?'':'none'); tog('tBreathe',v=>document.querySelector('.bg').style.animationPlayState=v?'running':'paused');
+</script></body></html>

@@ -565,11 +565,373 @@
           "note": "[sighs softly] Oh…"
         }
       }
+    },
+    "sfx.choice_settle": {
+      "active": "a",
+      "variants": {
+        "a": {
+          "file": "sfx/choice_settle__a.mp3",
+          "src": "elevenlabs",
+          "note": "a soft deep sub-bass thump with a slow warm bloom, like a heavy velvet curtain settling, dreamy, short",
+          "level": 0.6
+        },
+        "b": {
+          "file": "sfx/choice_settle__b.mp3",
+          "src": "elevenlabs",
+          "note": "a single low harp note blooming into a soft glassy shimmer that fades, underwater feeling, short",
+          "level": 0.6
+        },
+        "c": {
+          "file": "sfx/choice_settle__c.mp3",
+          "src": "elevenlabs",
+          "note": "a gentle reverse swell resolving into a muted bell tone, as if the room exhaled, dreamy, short",
+          "level": 0.6
+        },
+        "d": {
+          "file": "sfx/choice_settle__d.mp3",
+          "src": "elevenlabs",
+          "note": "a soft breathy whoosh landing on a low warm pad note, everything settles, calm, short",
+          "level": 0.6
+        },
+        "e": {
+          "file": "sfx/choice_settle__e.mp3",
+          "src": "elevenlabs",
+          "note": "a quiet heartbeat-like thud followed by a faint crystal ring, intimate, dreamlike, short",
+          "level": 0.6
+        },
+        "f": {
+          "file": "sfx/choice_settle__f.mp3",
+          "src": "elevenlabs",
+          "note": "a single soft pianoforte chord blooming and fading, early 19th century fortepiano, warm, short"
+        },
+        "g": {
+          "file": "sfx/choice_settle__g.mp3",
+          "src": "elevenlabs",
+          "note": "a low harpsichord chord with a delicate glassy shimmer tail, dreamy, short"
+        },
+        "h": {
+          "file": "sfx/choice_settle__h.mp3",
+          "src": "elevenlabs",
+          "note": "a low cello note swelling gently then dissolving into a soft glassy shimmer, underwater feeling, short"
+        },
+        "i": {
+          "file": "sfx/choice_settle__i.mp3",
+          "src": "elevenlabs",
+          "note": "a single glass harmonica note blooming into a soft shimmer, ethereal, short"
+        }
+      }
+    },
+    "sfx.choice_deal": {
+      "active": "j",
+      "variants": {
+        "a": {
+          "file": "sfx/choice_deal__a.mp3",
+          "src": "elevenlabs",
+          "note": "three playing cards dealt onto a felt table one after another, soft crisp ticks, evenly spaced, subtle"
+        },
+        "b": {
+          "file": "sfx/choice_deal__b.mp3",
+          "src": "elevenlabs",
+          "note": "three quick soft paper ticks ascending in pitch, like cards fanned open in a hand, delicate"
+        },
+        "c": {
+          "file": "sfx/choice_deal__c.mp3",
+          "src": "elevenlabs",
+          "note": "three small wooden ticks with a faint glassy chime on the last one, user interface, elegant"
+        },
+        "d": {
+          "file": "sfx/choice_deal__d.mp3",
+          "src": "elevenlabs",
+          "note": "a short riffle of cards followed by three soft placements on a table, close and dry"
+        },
+        "e": {
+          "file": "sfx/choice_deal__e.mp3",
+          "src": "elevenlabs",
+          "note": "three gentle quill taps on parchment, evenly spaced, the last slightly softer, intimate"
+        },
+        "f": {
+          "file": "sfx/choice_deal__f.mp3",
+          "src": "elevenlabs",
+          "note": "three soft pianoforte notes played one after another, ascending, evenly spaced, intimate early 19th century fortepiano, "
+        },
+        "g": {
+          "file": "sfx/choice_deal__g.mp3",
+          "src": "elevenlabs",
+          "note": "three harpsichord notes plucked one after another, ascending, crisp and delicate, Regency drawing room"
+        },
+        "h": {
+          "file": "sfx/choice_deal__h.mp3",
+          "src": "elevenlabs",
+          "note": "three pizzicato violin notes ascending, evenly spaced, soft and elegant chamber music"
+        },
+        "i": {
+          "file": "sfx/choice_deal__i.mp3",
+          "src": "elevenlabs",
+          "note": "three glass harmonica touches ascending, ethereal, evenly spaced, quiet"
+        },
+        "j": {
+          "file": "sfx/choice_deal__j.mp3",
+          "src": "elevenlabs",
+          "note": "three descending pianoforte notes, gentle, evenly spaced, thoughtful, dry",
+          "level": 0.45
+        }
+      }
+    },
+    "sfx.choice_paper": {
+      "active": "g",
+      "variants": {
+        "a": {
+          "file": "sfx/choice_paper__a.mp3",
+          "src": "elevenlabs",
+          "note": "a folded letter being unfolded in three crisp movements, paper creases opening one after another, close, dry, quiet"
+        },
+        "b": {
+          "file": "sfx/choice_paper__b.mp3",
+          "src": "elevenlabs",
+          "note": "three sheets of stiff writing paper laid down on a wooden desk one after another, soft paper slaps, evenly spaced"
+        },
+        "c": {
+          "file": "sfx/choice_paper__c.mp3",
+          "src": "elevenlabs",
+          "note": "paper being folded once then unfolded, crisp crease sounds, three distinct movements, intimate"
+        },
+        "d": {
+          "file": "sfx/choice_paper__d.mp3",
+          "src": "elevenlabs",
+          "note": "a small paper fan opening in three clicks of its ribs, delicate, Regency, close"
+        },
+        "e": {
+          "file": "sfx/choice_paper__e.mp3",
+          "src": "elevenlabs",
+          "note": "three pages of a letter turned slowly one after another, soft paper sliding, quiet room"
+        },
+        "f": {
+          "file": "sfx/choice_paper__f.mp3",
+          "src": "elevenlabs",
+          "note": "thick parchment unrolling and settling flat with a soft rustle, one smooth movement, quiet"
+        },
+        "g": {
+          "file": "sfx/choice_paper__g.mp3",
+          "src": "elevenlabs",
+          "note": "a sealed letter opened: wax seal cracks softly then the paper unfolds in two crisp movements, close",
+          "level": 0.7
+        }
+      }
+    },
+    "amb.map_night_forest": {
+      "active": "b",
+      "variants": {
+        "a": {
+          "file": "amb/map_night_forest__a.mp3",
+          "src": "elevenlabs",
+          "note": "English countryside at night ambience: crickets, soft wind in trees, a distant owl now and then, very quiet, no music, s"
+        },
+        "b": {
+          "file": "amb/map_night_forest__b.mp3",
+          "src": "elevenlabs",
+          "note": "rural night ambience: gentle breeze through grass, crickets, distant stream, occasional rustle, no music, seamless loop"
+        }
+      }
+    },
+    "amb.map_night_town": {
+      "active": "e",
+      "variants": {
+        "a": {
+          "file": "amb/map_night_town__a.mp3",
+          "src": "elevenlabs",
+          "note": "small English town at night ambience: quiet streets, faint wind, a far-off tavern murmur, distant dog, no music, seamles"
+        },
+        "b": {
+          "file": "amb/map_night_town__b.mp3",
+          "src": "elevenlabs",
+          "note": "Regency town late evening ambience: sparse footsteps far away, creaking sign in the wind, muffled voices behind walls, n"
+        },
+        "c": {
+          "file": "amb/map_night_town__c.mp3",
+          "src": "elevenlabs",
+          "note": "a tiny English market town at night in 1810, almost empty: very quiet, soft breeze, a single cricket, a shutter creaking"
+        },
+        "d": {
+          "file": "amb/map_night_town__d.mp3",
+          "src": "elevenlabs",
+          "note": "a sleepy Regency village at night: near silence, gentle wind, distant sheep bell once, a far dog, no crowd, no city, sea"
+        },
+        "e": {
+          "file": "amb/map_night_town__e.mp3",
+          "src": "elevenlabs",
+          "note": "English village night ambience with a faint stream and rustling leaves, one distant tavern door closing, otherwise still"
+        }
+      }
+    },
+    "music.map_night": {
+      "active": "a",
+      "variants": {
+        "a": {
+          "file": "music/map_night__a.mp3",
+          "src": "elevenlabs",
+          "note": "slow nocturne for solo pianoforte, moonlit English countryside, tender and a little uneasy, sparse, loopable, instrument"
+        },
+        "b": {
+          "file": "music/map_night__b.mp3",
+          "src": "elevenlabs",
+          "note": "quiet night piece for string quartet with muted cello, dark and velvety, slow, loopable, instrumental"
+        },
+        "c": {
+          "file": "music/map_night__c.mp3",
+          "src": "elevenlabs",
+          "note": "soft harp and low clarinet nocturne, mysterious and calm, Regency night, loopable, instrumental"
+        }
+      }
+    },
+    "sfx.night_owl": {
+      "active": "a",
+      "variants": {
+        "a": {
+          "file": "sfx/night_owl__a.mp3",
+          "src": "elevenlabs",
+          "note": "a tawny owl hooting twice in the distance at night"
+        },
+        "b": {
+          "file": "sfx/night_owl__b.mp3",
+          "src": "elevenlabs",
+          "note": "a single long owl call far away, night forest, echo"
+        }
+      }
+    },
+    "sfx.night_glass": {
+      "active": "a",
+      "variants": {
+        "a": {
+          "file": "sfx/night_glass__a.mp3",
+          "src": "elevenlabs",
+          "note": "a glass bottle dropped and shattering on cobblestones, distant, at night, echoing between houses"
+        },
+        "b": {
+          "file": "sfx/night_glass__b.mp3",
+          "src": "elevenlabs",
+          "note": "a bottle smashing against a wall far away, night street, short echo"
+        }
+      }
+    },
+    "sfx.night_run": {
+      "active": "a",
+      "variants": {
+        "a": {
+          "file": "sfx/night_run__a.mp3",
+          "src": "elevenlabs",
+          "note": "a single person running past on a cobblestone street at night, hard leather soles, footsteps approaching quickly then fa"
+        },
+        "b": {
+          "file": "sfx/night_run__b.mp3",
+          "src": "elevenlabs",
+          "note": "two people running away down a narrow street at night, hurried footsteps fading, distant"
+        }
+      }
+    },
+    "sfx.night_laugh": {
+      "active": "a",
+      "variants": {
+        "a": {
+          "file": "sfx/night_laugh__a.mp3",
+          "src": "elevenlabs",
+          "note": "drunken laughter of two men far away at night, muffled, brief"
+        }
+      }
+    },
+    "sfx.night_dog": {
+      "active": "a",
+      "variants": {
+        "a": {
+          "file": "sfx/night_dog__a.mp3",
+          "src": "elevenlabs",
+          "note": "a dog barking three times far away at night, then silence"
+        }
+      }
+    },
+    "sfx.night_fox": {
+      "active": "a",
+      "variants": {
+        "a": {
+          "file": "sfx/night_fox__a.mp3",
+          "src": "elevenlabs",
+          "note": "a fox screaming once in the distance at night, eerie, countryside"
+        }
+      }
+    },
+    "sfx.night_wind": {
+      "active": "a",
+      "variants": {
+        "a": {
+          "file": "sfx/night_wind__a.mp3",
+          "src": "elevenlabs",
+          "note": "a gust of night wind through trees rising and falling, leaves rustling, distant"
+        }
+      }
+    },
+    "sfx.night_bell": {
+      "active": "a",
+      "variants": {
+        "a": {
+          "file": "sfx/night_bell__a.mp3",
+          "src": "elevenlabs",
+          "note": "a distant church bell tolling midnight, only three slow tolls, far away at night"
+        }
+      }
+    },
+    "sfx.night_door": {
+      "active": "a",
+      "variants": {
+        "a": {
+          "file": "sfx/night_door__a.mp3",
+          "src": "elevenlabs",
+          "note": "a heavy wooden door slamming shut far away at night, echo in an empty street"
+        }
+      }
+    },
+    "sfx.night_cart": {
+      "active": "a",
+      "variants": {
+        "a": {
+          "file": "sfx/night_cart__a.mp3",
+          "src": "elevenlabs",
+          "note": "a horse cart rolling slowly over cobblestones at night, passing, distant, creaking"
+        }
+      }
+    },
+    "music.menu": {
+      "active": "a,b,d,e",
+      "variants": {
+        "a": {
+          "file": "music/menu__a.mp3",
+          "src": "elevenlabs",
+          "note": "warm inviting main-menu theme: solo pianoforte with light strings, a hopeful lilting melody, theatre-curtain-rising feel"
+        },
+        "b": {
+          "file": "music/menu__b.mp3",
+          "src": "elevenlabs",
+          "note": "main-menu theme: string quartet and harp, a graceful waltz-like melody with a sense of many stories waiting, Regency ele"
+        },
+        "c": {
+          "file": "music/menu__c.mp3",
+          "src": "elevenlabs",
+          "note": "main-menu theme: soft glass-harmonica and celesta shimmer over a slow warm string bed, magical and welcoming, like doors"
+        },
+        "d": {
+          "file": "music/menu__d.mp3",
+          "src": "elevenlabs",
+          "note": "main-menu theme: playful chamber piece, pizzicato strings and flute, light-hearted and curious, a game about friends and"
+        },
+        "e": {
+          "file": "music/menu__e.mp3",
+          "src": "elevenlabs",
+          "note": "main-menu theme: cinematic piano and cello duet, tender and nostalgic with a rising hopeful chorus, warm, loopable, inst"
+        }
+      }
     }
   },
   "hooks": {
     "advance": "sfx.tap",
-    "choice_open": "sfx.shh_ara",
+    "choice_open": "sfx.choice_paper",
     "choice": "sfx.choice_pick",
     "discovery": "sfx.discovery",
     "remember": "sfx.remember",
@@ -629,6 +991,27 @@
       ],
       "level": 0.9,
       "_note": "Arabella's idle sounds while a choice is open (focus). Started/stopped by prideAudio.focus()."
+    },
+    "map_night": {
+      "slots": [
+        "sfx.night_owl",
+        "sfx.night_owl",
+        "sfx.night_glass",
+        "sfx.night_run",
+        "sfx.night_laugh",
+        "sfx.night_dog",
+        "sfx.night_fox",
+        "sfx.night_wind",
+        "sfx.night_wind",
+        "sfx.night_bell",
+        "sfx.night_door",
+        "sfx.night_cart"
+      ],
+      "gap": [
+        20,
+        50
+      ],
+      "level": 0.3
     }
   }
 }

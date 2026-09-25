@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Choice screen — where does Arabella go?</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@500;700;800&family=Playfair+Display:ital,wght@0,600;1,500&display=swap" rel="stylesheet">
+<style>
+:root{--w:390px;--h:844px}
+body{margin:0;background:#0e0d13;color:#e7deff;font:500 13px/1.5 Inter,system-ui,sans-serif;padding:20px}
+h1{font:600 20px "Playfair Display",Georgia,serif;margin:0 0 4px}
+p.sub{color:#8a80a4;margin:0 0 12px;font-size:12px;max-width:900px}
+.bar{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 18px}
+.bar button{background:#1b1826;color:#e7deff;border:1px solid #3a3450;border-radius:999px;padding:8px 13px;font:700 10.5px Inter;letter-spacing:.08em;text-transform:uppercase;cursor:pointer}
+.bar button.on{background:#8b7bd8;border-color:#8b7bd8;color:#fff}
+.grid{display:flex;gap:26px;flex-wrap:wrap;align-items:flex-start}
+.card{width:var(--w);zoom:.62}
+.card h2{font:600 15px "Playfair Display",Georgia,serif;margin:0 0 3px;color:#fff}
+.card .why{font-size:11.5px;color:#9a90b4;margin:0 0 8px;min-height:50px}
+.ph{position:relative;width:var(--w);height:var(--h);border-radius:38px;overflow:hidden;background:#000;border:6px solid #17141c;box-shadow:0 30px 60px -20px #000}
+.bg{position:absolute;inset:0;background:url("../worlds/pride-and-prejudice/episodes/authored/the-assembly/cutscenes/as_room.jpg") center/cover;filter:blur(3px) brightness(.9)}
+.ph.busy .bg{background-image:url("../worlds/pride-and-prejudice/episodes/authored/the-assembly/cutscenes/as_large_cast.jpg")}
+.scrim{position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,.05),rgba(0,0,0,.2) 60%,rgba(0,0,0,.5))}
+/* chrome */
+.obj{position:absolute;left:14px;top:26px;background:rgba(20,12,26,.62);color:#fff;font:800 9.5px Inter;letter-spacing:.1em;text-transform:uppercase;padding:9px 12px;border-radius:12px;backdrop-filter:blur(8px)}
+.rail{position:absolute;right:14px;top:26px;display:flex;flex-direction:column;gap:11px;align-items:center}
+.rail i{width:40px;height:40px;border-radius:50%;background:rgba(20,12,26,.55);border:1px solid rgba(255,255,255,.22);display:block}
+.rail i.av{width:46px;height:46px;border-radius:13px;border:2px solid rgba(255,255,255,.6);background:url("../worlds/pride-and-prejudice/characters/arabella2/appearances/pride.png") 50% 6%/cover}
+/* choices */
+.choices{position:absolute;left:0;right:0;bottom:0;display:flex;flex-direction:column;gap:2px;z-index:5}
+.ch{background:rgba(238,232,240,.92);color:#1a1524;padding:15px 16px;font:700 14.5px/1.35 Inter;display:flex;align-items:center;gap:10px;border-top:1px solid rgba(255,255,255,.6)}
+.ch span{flex:1}
+.ch b{flex:none;border:1.5px solid #a893e8;color:#7b63d6;border-radius:999px;padding:6px 10px;font:800 8.5px Inter;letter-spacing:.1em;text-transform:uppercase;text-align:center;max-width:124px;line-height:1.2}
+.ch.own{color:#8a80a4;font-style:italic;font-weight:500;padding:16px 16px 22px}
+/* arabella figure base */
+.ara{position:absolute;background:url("../worlds/pride-and-prejudice/characters/arabella2/appearances/pride_cool.png") no-repeat;background-size:100% auto;pointer-events:none;z-index:3;filter:drop-shadow(0 12px 18px rgba(0,0,0,.55))}
+/* A: cast-small bust bottom-left, cards indented */
+.A .ara{left:-70px;bottom:150px;width:300px;height:440px;z-index:2;-webkit-mask:linear-gradient(180deg,#000 70%,transparent 100%);mask:linear-gradient(180deg,#000 70%,transparent 100%)}
+.A .choices .ch:not(.own){padding-left:120px}
+.A .choices .ch{background:rgba(238,232,240,.9)}
+/* B: small portrait "thinking" chip above the cards */
+.B .chip{position:absolute;left:14px;bottom:302px;z-index:6;display:flex;align-items:flex-end;gap:8px}
+.B .chip .pic{width:64px;height:64px;border-radius:50%;border:2px solid rgba(255,255,255,.7);background:url("../worlds/pride-and-prejudice/characters/arabella2/appearances/pride_cool.png") 50% 4%/220% auto;box-shadow:0 8px 20px rgba(0,0,0,.5)}
+.B .chip .bub{background:rgba(255,255,255,.92);color:#5a4a80;border-radius:14px 14px 14px 3px;padding:7px 11px;font:700 11px Inter;letter-spacing:.06em;margin-bottom:8px;box-shadow:0 8px 20px rgba(0,0,0,.35)}
+.B .chip .bub i{display:inline-block;width:5px;height:5px;border-radius:50%;background:#8b7bd8;margin:0 1.5px;animation:dot 1.2s infinite}
+.B .chip .bub i:nth-child(2){animation-delay:.2s}.B .chip .bub i:nth-child(3){animation-delay:.4s}
+@keyframes dot{0%,80%,100%{opacity:.25}40%{opacity:1}}
+/* C: half-body on the right, under the rail, cards full width */
+.C .ara{right:-70px;top:250px;width:330px;height:520px;-webkit-mask:linear-gradient(180deg,#000 55%,transparent 92%);mask:linear-gradient(180deg,#000 55%,transparent 92%);opacity:.95}
+/* D: large bust behind the cards, right side, head above the stack */
+.D .ara{right:-40px;bottom:120px;width:360px;height:560px;z-index:2;-webkit-mask:linear-gradient(180deg,#000 45%,rgba(0,0,0,.6) 70%,transparent 100%);mask:linear-gradient(180deg,#000 45%,rgba(0,0,0,.6) 70%,transparent 100%)}
+.D .choices{z-index:5}
+.D .choices .ch{background:rgba(238,232,240,.86);backdrop-filter:blur(6px)}
+/* E: "her thoughts" — ghost figure centered, low opacity, vignette */
+.E .bg{filter:blur(6px) brightness(.55)}
+.E .ara{left:50%;top:90px;width:420px;height:640px;transform:translateX(-50%);opacity:.55;-webkit-mask:radial-gradient(ellipse at 50% 30%,#000 35%,transparent 72%);mask:radial-gradient(ellipse at 50% 30%,#000 35%,transparent 72%);filter:none}
+.E .vig{position:absolute;inset:0;background:radial-gradient(ellipse at 50% 45%,transparent 40%,rgba(0,0,0,.55) 100%)}
+/* F: cast-small exactly as in dialogue (figure left, cards indented), but figure sits lower & smaller, first card only indented */
+.F .ara{left:-52px;bottom:236px;width:230px;height:330px;z-index:2;-webkit-mask:linear-gradient(180deg,#000 55%,transparent 100%);mask:linear-gradient(180deg,#000 55%,transparent 100%)}
+.F .choices .ch:first-child{padding-left:118px}
+/* notification demo (left, vertically centred, like #peNotif) */
+.notif{position:absolute;left:0;top:50%;transform:translate(-115%,-50%);z-index:9;width:250px;height:205px;transition:transform .35s ease,opacity .35s;opacity:0}
+.ph.notif-on .notif{transform:translate(0,-50%);opacity:1}
+.notif .pose{position:absolute;left:-58px;top:0;width:250px;height:205px;background:url("../worlds/pride-and-prejudice/characters/mr_darcy/appearances/pride.png") top center/auto 470px no-repeat;-webkit-mask:linear-gradient(180deg,#000 60%,transparent);mask:linear-gradient(180deg,#000 60%,transparent)}
+.notif .cap{position:absolute;left:110px;top:70px}
+.notif .cap .l{width:152px;height:2px;margin:0 0 9px;background:linear-gradient(90deg,#ff6f9d,rgba(255,111,157,.12))}
+.notif .cap .nm{display:block;font:800 16px Inter;letter-spacing:.05em;color:#fff;text-shadow:0 2px 8px #000}
+.notif .cap .sub{display:block;margin-top:3px;font:700 9.5px Inter;letter-spacing:.14em;text-transform:uppercase;color:#ff9ab8}
+
+/* C variants: bigger, closer to the right edge, lower (body sinks behind the cards) */
+.C1 .ara{right:-95px;top:300px;width:400px;height:640px;z-index:2;-webkit-mask:linear-gradient(180deg,#000 55%,rgba(0,0,0,.5) 75%,transparent 95%);mask:linear-gradient(180deg,#000 55%,rgba(0,0,0,.5) 75%,transparent 95%)}
+.C2 .ara{right:-190px;top:235px;width:460px;height:740px;z-index:2;transform:scaleX(-1);-webkit-mask:linear-gradient(180deg,#000 50%,rgba(0,0,0,.5) 70%,transparent 92%);mask:linear-gradient(180deg,#000 50%,rgba(0,0,0,.5) 70%,transparent 92%)}
+.C3 .ara{right:-150px;top:330px;width:500px;height:800px;z-index:2;-webkit-mask:linear-gradient(180deg,#000 45%,rgba(0,0,0,.5) 65%,transparent 90%);mask:linear-gradient(180deg,#000 45%,rgba(0,0,0,.5) 65%,transparent 90%)}
+.C1 .choices .ch,.C2 .choices .ch,.C3 .choices .ch{background:rgba(238,232,240,.9);backdrop-filter:blur(4px)}
+
+/* dream effect (ported from the memory screen): grain + vignette + a blurred copy of the bg drifting under a moving radial mask + slow warm pulse */
+.ph.dream .bg{filter:blur(4px) brightness(.8) saturate(.9)}
+.ph.dream .dream-edge{position:absolute;inset:0;background:inherit;background:url("../worlds/pride-and-prejudice/episodes/authored/the-assembly/cutscenes/as_room.jpg") center/cover;filter:blur(16px) saturate(.8) brightness(.85);transform:scale(1.06);opacity:0;transition:opacity 2s ease-out;pointer-events:none}
+.ph.dream.busy .dream-edge{background-image:url("../worlds/pride-and-prejudice/episodes/authored/the-assembly/cutscenes/as_large_cast.jpg")}
+.ph.dream .dream-edge.on{opacity:1}
+.ph.dream .dream-grain{position:absolute;inset:-50%;width:200%;height:200%;pointer-events:none;opacity:.16;mix-blend-mode:overlay;background:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");animation:grain 1.2s steps(6) infinite}
+@keyframes grain{0%{transform:translate(0,0)}25%{transform:translate(-4%,3%)}50%{transform:translate(3%,-2%)}75%{transform:translate(-2%,-4%)}100%{transform:translate(0,0)}}
+.ph.dream .dream-vig{position:absolute;inset:0;pointer-events:none;background:radial-gradient(70% 60% at 50% 45%,rgba(7,5,10,0) 45%,rgba(7,5,10,.75) 100%)}
+.ph.dream .dream-warm{position:absolute;inset:0;pointer-events:none;background:radial-gradient(60% 50% at 50% 40%,rgba(255,196,150,.18),transparent 70%);animation:warm 5.5s ease-in-out infinite}
+@keyframes warm{0%,100%{opacity:.5}50%{opacity:1}}
+.ph:not(.dream) .dream-edge,.ph:not(.dream) .dream-grain,.ph:not(.dream) .dream-vig,.ph:not(.dream) .dream-warm{display:none}
+</style></head><body>
+<h1>Choice screen — where does Arabella go?</h1>
+<p class="sub">Six placements on the real focus screen (blurred cutscene, three cards + "write your own"). Toggle a busy background and the left-side Desire notification to see what collides. Figure = arabella2 · pride_cool.</p>
+<div class="bar"><button id="tBusy">Busy background</button><button id="tNotif">Desire notification</button><button id="tDream">Dream effect</button></div>
+<div class="grid" id="grid"></div>
+<script>
+const V=[
+ ['C1','C · bigger, edge-hugging, lower','400px wide, right edge −95px, top 300 — head at the last rail icon, waist behind the first card.'],
+ ['C2','C · picked: higher, further right, mirrored','460px wide, right −160px, top 235, flipped so she faces the room (and the cards).'],
+ ['C3','C · largest, lowest','500px wide, right −150px, top 330 — only head and chest above the cards; the rest sinks behind.'],
+ ['A','Cast-small bust, cards indented','Same grammar as dialogue (figure bottom-left, text starts after her). Costs ~35% of card width; pills wrap. Collides head-on with the left notification.'],
+ ['B','Portrait chip + thinking dots','Smallest footprint: a 64px portrait with a "…" bubble just above the stack. Cards untouched, background stays readable. Notification passes above it.'],
+ ['C','Half-body on the right, under the rail','She stands where the rail ends, fading out before the cards. Left side stays free for notifications; busy backgrounds get one clear anchor on the right.'],
+ ['D','Large bust behind the cards (right)','Her head rises above the stack, body sinks behind semi-transparent cards. Most "present", but the pills sit on her — cards need blur/opacity.'],
+ ['E','Ghost figure, "her thoughts"','Background darkens, a translucent centred Arabella with a radial fade — the screen becomes her mind. Strong mood, weakest legibility on busy art.'],
+ ['F','Small bust, only first card indented','Compromise of A: smaller figure, only the top card yields space. Still meets the notification at its shoulder.'],
+];
+document.getElementById('grid').innerHTML=V.map(([k,t,w])=>`<div class="card"><h2>${k} · ${t}</h2><div class="why">${w}</div>
+<div class="ph ${k}"><div class="bg"></div><div class="dream-edge"></div><div class="dream-grain"></div><div class="dream-vig"></div><div class="dream-warm"></div><div class="scrim"></div>${k==='E'?'<div class="vig"></div>':''}
+<div class="obj">📋 Take the measure of the room …</div><div class="rail"><i></i><i class="av"></i><i></i><i></i><i></i></div>
+${k==='B'?'<div class="chip"><div class="pic"></div><div class="bub"><i></i><i></i><i></i></div></div>':'<div class="ara"></div>'}
+<div class="choices"><div class="ch"><span>Tell me, Sir William, does St James's improve a man's manners or merely his posture?</span></div>
+<div class="ch"><span>I will not be placed before Mr Darcy like a dish at supper.</span><b>Small fortune, large spirit</b></div>
+<div class="ch"><span>Turn the fan slowly in your hand, and say nothing.</span><b>Weakness</b></div>
+<div class="ch own">Write your own…</div></div>
+<div class="notif"><div class="pose"></div><div class="cap"><div class="l"></div><span class="nm">Mr Darcy</span><span class="sub">Desire +1</span></div></div>
+</div></div>`).join('');
+const tog=(id,cls)=>{ const b=document.getElementById(id); b.onclick=()=>{ b.classList.toggle('on'); document.querySelectorAll('.ph').forEach(p=>p.classList.toggle(cls,b.classList.contains('on'))); }; };
+tog('tBusy','busy'); tog('tNotif','notif-on');
+// Dream effect = the memory screen's entrance, ported: iris open, background sinks (scale+blur), warm motes rise, Arabella slides in from the right out of a blur
+const A=(el,k,o)=>el.animate(k,Object.assign({fill:'forwards'},o));
+function irisOpen(ph){ const d=document.createElement('div'); d.className='dream-x'; d.style.cssText='position:absolute;inset:0;z-index:4;pointer-events:none;background:#07050a'; ph.appendChild(d);
+  const set=(r,soft)=>{ const m='radial-gradient(circle at 50% 50%, transparent '+Math.max(0,r-soft)+'%, #000 '+r+'%)'; d.style.webkitMaskImage=m; d.style.maskImage=m; };
+  set(0,0); const t0=performance.now(), D=1500; const step=()=>{ if(!d.isConnected) return; const t=Math.min(1,(performance.now()-t0)/D); let r; if(t<.18) r=6*(t/.18); else if(t<.3) r=6-2*((t-.18)/.12); else { const k=(t-.3)/.7; r=4+(150-4)*(1-Math.pow(1-k,2.2)); } set(r,8+r*.4); if(t<1) requestAnimationFrame(step); else d.remove(); }; requestAnimationFrame(step); }
+function motes(ph){ const c=document.createElement('canvas'); c.className='dream-x'; c.width=195; c.height=422; c.style.cssText='position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:3;opacity:0;mix-blend-mode:screen'; ph.appendChild(c); A(c,[{opacity:0},{opacity:.85}],{duration:2400,easing:'ease-out'});
+  const ctx=c.getContext('2d'); const P=[]; for(let i=0;i<70;i++) P.push({x:Math.random(),y:Math.random(),r:2+Math.random()*7,vy:-.006-Math.random()*.012,vx:(Math.random()-.5)*.004,ph:Math.random()*6,bl:Math.random()<.5});
+  const wY=y=>{ const d=Math.abs(y-.5)*2; return Math.pow(Math.max(0,(d-.62)/.38),1.4); };
+  const t0=performance.now(); const step=()=>{ if(!c.isConnected) return; const t=(performance.now()-t0)/1000, W=c.width, H=c.height; ctx.clearRect(0,0,W,H);
+    P.forEach(p=>{ p.y+=p.vy/60*8; p.x+=p.vx/60*8+Math.sin(t*.8+p.ph)*.0006; if(p.y<-.05){p.y=1.05;p.x=Math.random();} const w=wY(p.y); if(w<.02) return; const x=p.x*W,y=p.y*H; const tw=.5+.5*Math.sin(t*1.5+p.ph); const a=(0.35+0.5*tw)*w; const g=ctx.createRadialGradient(x,y,0,x,y,p.r*(p.bl?3:1.4)); g.addColorStop(0,'rgba(255,236,200,'+a.toFixed(2)+')'); g.addColorStop(1,'rgba(255,236,200,0)'); ctx.fillStyle=g; ctx.fillRect(x-p.r*3,y-p.r*3,p.r*6,p.r*6); });
+    const gx=ctx.createLinearGradient(0,0,W,0); gx.addColorStop(0,'rgba(0,0,0,.35)'); gx.addColorStop(.25,'rgba(0,0,0,1)'); gx.addColorStop(.75,'rgba(0,0,0,1)'); gx.addColorStop(1,'rgba(0,0,0,.35)'); ctx.globalCompositeOperation='destination-in'; ctx.fillStyle=gx; ctx.fillRect(0,0,W,H); ctx.globalCompositeOperation='source-over'; requestAnimationFrame(step); }; step(); }
+function dreamOn(ph){ ph.classList.add('dream'); irisOpen(ph); const bg=ph.querySelector('.bg'); A(bg,[{filter:'blur(0px) brightness(1) saturate(1)',transform:'scale(1)'},{filter:'blur(5px) brightness(.8) saturate(.9)',transform:'scale(1.06)'}],{duration:2400,easing:'cubic-bezier(.2,.7,.2,1)'});
+  const ara=ph.querySelector('.ara'); if(ara){ const flip=/C2/.test(ph.className)?' scaleX(-1)':''; A(ara,[{opacity:0,transform:'translateX(60px)'+flip,filter:'blur(12px)'},{opacity:1,transform:'translateX(0)'+flip,filter:'blur(0px)'}],{duration:1400,delay:500,easing:'cubic-bezier(.2,.7,.2,1)'}); }
+  setTimeout(()=>motes(ph),1200); }
+function dreamOff(ph){ ph.querySelectorAll('.dream-x').forEach(e=>{ A(e,[{opacity:1},{opacity:0}],{duration:500}); setTimeout(()=>e.remove(),520); }); const bg=ph.querySelector('.bg'); A(bg,[{filter:'blur(5px) brightness(.8) saturate(.9)',transform:'scale(1.06)'},{filter:'blur(3px) brightness(.9)',transform:'scale(1)'}],{duration:800}); setTimeout(()=>ph.classList.remove('dream'),800); }
+document.getElementById('tDream').onclick=function(){ this.classList.toggle('on'); const on=this.classList.contains('on'); document.querySelectorAll('.ph').forEach(p=>on?dreamOn(p):dreamOff(p)); };
+// drifting soft-focus edge, as in the memory screen
+(function(){ const t0=performance.now(); const step=()=>{ const t=(performance.now()-t0)/1000; const cx=50+Math.sin(t*.35)*6, cy=47+Math.cos(t*.27)*5; const m='radial-gradient(60% 50% at '+cx.toFixed(1)+'% '+cy.toFixed(1)+'%, transparent 30%, #000 72%)';
+  document.querySelectorAll('.ph.dream .dream-edge').forEach(e=>{ e.classList.add('on'); e.style.webkitMaskImage=m; e.style.maskImage=m; }); setTimeout(()=>requestAnimationFrame(step),50); }; step(); })();
+</script></body></html>
