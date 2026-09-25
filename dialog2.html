@@ -16249,7 +16249,9 @@ function showEndContinue(){
 // Crash forensics: while an episode is playing, a "live" marker is refreshed on every line. If the page comes back up with the
 // marker still set (no clean exit), the web view was reloaded under us (iOS memory kill) — log where, for diagnosis.
 (function(){
-  try { const raw = sessionStorage.getItem('rai.live'); if (raw) { const j = JSON.parse(raw); const log = JSON.parse(localStorage.getItem('rai.crashlog') || '[]'); log.push(Object.assign(j, { reloadedAt: new Date().toISOString() })); localStorage.setItem('rai.crashlog', JSON.stringify(log.slice(-8))); sessionStorage.removeItem('rai.live'); console.warn('[rai] unexpected reload during', j); } } catch (e) {}
+  try { const raw = sessionStorage.getItem('rai.live'); if (raw) { const j = JSON.parse(raw); const log = JSON.parse(localStorage.getItem('rai.crashlog') || '[]'); log.push(Object.assign(j, { reloadedAt: new Date().toISOString() })); localStorage.setItem('rai.crashlog', JSON.stringify(log.slice(-8))); sessionStorage.removeItem('rai.live'); console.warn('[rai] unexpected reload during', j);
+      setTimeout(() => { try { const t = document.createElement('div'); t.textContent = 'Reloaded during ' + String(j.ep || '').split('/').pop() + ' at line ' + j.idx + (j.hidden ? ' (app was in background)' : ''); t.style.cssText = 'position:fixed;left:12px;right:12px;top:max(14px,calc(env(safe-area-inset-top,0px) + 8px));z-index:99999;background:rgba(120,20,40,.92);color:#fff;font:600 12px/1.4 Inter,system-ui,sans-serif;padding:10px 14px;border-radius:12px;text-align:center'; document.body.appendChild(t); setTimeout(() => t.remove(), 9000); } catch (e) {} }, 1500); } } catch (e) {}
+  document.addEventListener('visibilitychange', () => { try { const raw = sessionStorage.getItem('rai.live'); if (!raw) return; const j = JSON.parse(raw); j.hidden = document.hidden; sessionStorage.setItem('rai.live', JSON.stringify(j)); } catch (e) {} });
   window.prideLiveMark = function(idx){ try { sessionStorage.setItem('rai.live', JSON.stringify({ ep: (typeof currentEpisodeBase === 'function') ? currentEpisodeBase() : '', idx, t: new Date().toISOString(), mem: (performance.memory && performance.memory.usedJSHeapSize) || null })); } catch (e) {} };
   window.prideLiveClear = function(){ try { sessionStorage.removeItem('rai.live'); } catch (e) {} };
 })();
@@ -32619,6 +32621,8 @@ body.pride-hud-on #pridePcHud{ display:none !important; }
     <div class="pst-row"><span class="nm">Voice over<small>characters &amp; narrator</small></span><input type="range" id="psVoice" min="0" max="100" value="100"><span class="v" id="psVoiceV">100</span></div>
     <div class="pst-row"><span class="nm">Music<small>background</small></span><input type="range" id="psMusic" min="0" max="100" value="60"><span class="v" id="psMusicV">60</span></div>
     <div class="pst-row"><span class="nm">Ambience<small>room &amp; effects</small></span><input type="range" id="psAmb" min="0" max="100" value="55"><span class="v" id="psAmbV">55</span></div>
+    <div class="pst-k">Diagnostics</div>
+    <div id="psDiag" style="font:500 11.5px/1.5 Inter,system-ui,sans-serif;color:rgba(255,255,255,.6);white-space:pre-wrap"></div>
   </div>
   <div class="pst-foot">
     <button class="pst-btn danger" id="psEnd" type="button">End the episode</button>
@@ -32632,7 +32636,10 @@ body.pride-hud-on #pridePcHud{ display:none !important; }
   const $=id=>document.getElementById(id); const sc=$('peSettingsScreen'); if(!sc) return;
   const PA=()=>window.prideAudio;
   function sync(){ const st=PA()&&PA().state(); if(!st) return; const L=st.levels||{}; [['psVoice','voice'],['psMusic','music'],['psAmb','amb']].forEach(([id,k])=>{ const v=Math.round((L[k]!=null?L[k]:1)*100); $(id).value=v; $(id+'V').textContent=v; }); $('psMute').classList.toggle('on',!st.muted); }
-  function open(o){ sync(); sc.classList.toggle('menu', !!(o&&o.menu)); sc.classList.add('on'); sc.setAttribute('aria-hidden','false'); }   // menu:true = opened from the intro (no End episode / Restart)
+  function diag(){ let log=[]; try{ log=JSON.parse(localStorage.getItem('rai.crashlog')||'[]'); }catch(e){}
+    const lines=log.slice().reverse().map(j=>(j.reloadedAt||'').replace('T',' ').slice(5,19)+'  '+String(j.ep||'').split('/').pop()+' #'+j.idx+(j.mem?'  '+Math.round(j.mem/1048576)+'MB':'')+(j.hidden?'  (bg)':''));
+    $('psDiag').textContent=(lines.length?('Unexpected reloads:\n'+lines.join('\n')):'No unexpected reloads.')+'\n'+(navigator.userAgent.match(/OS \d+_\d+/)||[''])[0]; }
+  function open(o){ sync(); diag(); sc.classList.toggle('menu', !!(o&&o.menu)); sc.classList.add('on'); sc.setAttribute('aria-hidden','false'); }   // menu:true = opened from the intro (no End episode / Restart)
   window.prideSettings={ open, close:()=>close() };
   function close(){ sc.classList.add('closing'); sc.classList.remove('on'); sc.setAttribute('aria-hidden','true'); setTimeout(()=>sc.classList.remove('closing'),420); $('psConfirm').classList.remove('on'); }
   window.prideOpenSettings=open; window.prideCloseSettings=close;
