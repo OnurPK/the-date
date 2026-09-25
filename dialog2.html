@@ -14436,7 +14436,7 @@ window.prideRegisterCastSpeakers = function (txt) {
       '}',
       // gyro parallax (cast-large only): the room drifts one way, the figure the other. --px-* are set by pridePARALLAX below.
       'body.pride-parallax.ui-cast-large .char.pride-actor.active { transform: translateX(-50%) translate3d(var(--px-fx,0px), var(--px-fy,0px), 0); }',
-      'body.pride-parallax.ui-cast-large #cutsceneLayer, body.pride-parallax.ui-cast-large #backdrop { transform: scale(1.06) translate3d(var(--px-bx,0px), var(--px-by,0px), 0); }',
+      'body.pride-parallax.ui-cast-large #cutsceneLayer, body.pride-parallax.ui-cast-large #backdrop, body.pride-parallax.ui-cast-small #cutsceneLayer, body.pride-parallax.ui-cast-small #backdrop { transform: scale(1.06) translate3d(var(--px-bx,0px), var(--px-by,0px), 0); }',
     ];
     // Per-speaker accent colours: Arabella blush, the men slate/ink,
     // the women a warm rose. Drives the dialog-box left border, the
@@ -29375,7 +29375,7 @@ console.log('%c[caller] Episode 1 ready — run startCaller()', 'color:#e7b24c')
 /* the gold guide — the same head box as the portrait mirror (a 3:4 crop centred on the glass), so the shot lands exactly */
 #pcsel .pcs-mirror .pm-cam .pc-guide{position:absolute; inset:0; pointer-events:none}
 #pcsel .pcs-mirror .pm-cam .pc-guide .head{position:absolute; left:28%; top:12%; width:44%; height:66%; border-radius:50%; border:2px dotted rgba(231,178,76,.95); box-shadow:0 0 18px rgba(231,178,76,.35), inset 0 0 18px rgba(231,178,76,.15); animation:pcGuide 2.4s ease-in-out infinite}
-#pcsel .pcs-mirror .pm-cam .pc-guide .shoulders{position:absolute; left:4%; right:4%; top:80%; height:40%; border-radius:50% 50% 0 0 / 60% 60% 0 0; border:2px dotted rgba(231,178,76,.55); border-bottom:none}
+#pcsel .pcs-mirror .pm-cam .pc-guide .shoulders{display:none; position:absolute; left:4%; right:4%; top:80%; height:40%; border-radius:50% 50% 0 0 / 60% 60% 0 0; border:2px dotted rgba(231,178,76,.55); border-bottom:none}
 #pcsel .pcs-mirror .pm-cam .pc-hint{position:absolute; left:0; right:0; bottom:4%; text-align:center; font:700 10px/1 Inter,system-ui,sans-serif; letter-spacing:.28em; color:rgba(231,178,76,.9); text-shadow:0 1px 6px rgba(0,0,0,.8); pointer-events:none}
 @keyframes pcGuide{0%,100%{box-shadow:0 0 14px rgba(231,178,76,.3), inset 0 0 14px rgba(231,178,76,.12)} 50%{box-shadow:0 0 26px rgba(231,178,76,.55), inset 0 0 22px rgba(231,178,76,.22)}}
 #pcsel .pcs-mirror .pm-cam .pc-bar{position:absolute; left:0; right:0; bottom:calc(env(safe-area-inset-bottom,0px) + 34px); z-index:3; display:flex; align-items:center; justify-content:center; gap:38px}
@@ -30137,13 +30137,21 @@ console.log('%c[caller] Episode 1 ready — run startCaller()', 'color:#e7b24c')
   function pmCamFallback(){ pmCamClose(); const i=pmEnsureInput(); i.setAttribute('capture','user'); i.click(); }
   function pmCamOpen(){ const c=$('pmCam'); if(!c) return; c.classList.add('on'); c.setAttribute('aria-hidden','false'); void c.offsetWidth; setTimeout(()=>c.classList.add('live'), 20); pmCamStart('user'); }
   function pmCamClose(){ const c=$('pmCam'); if(!c) return; pmCamStop(); c.classList.remove('live'); setTimeout(()=>{ if(!c.classList.contains('live')){ c.classList.remove('on'); c.setAttribute('aria-hidden','true'); } }, 380); }
+  // The gold oval in the glass (HL/HT/HW/HH, % of the glass) is mapped onto the portrait mirror's head box (TL/TT/TW/TH, % of the
+  // 3:4 photo), so whatever size the face is in the camera, it lands where the mirror expects it. What the glass does not cover
+  // is padded with a blurred, darkened stretch of the same frame.
+  const PM_GUIDE={ HL:.28, HT:.12, HW:.44, HH:.66, TL:.355, TT:.20, TW:.29, TH:.38 };
   function pmCamShoot(){ const v=$('pmCamVideo'), c=$('pmCam'); if(!v||!v.videoWidth){ return; }
-    // crop the video to the glass (3:4, object-fit: cover) so the saved photo is exactly what the guide framed
-    const vw=v.videoWidth, vh=v.videoHeight; const R=3/4; const gl=v.parentElement.getBoundingClientRect(); const sc=Math.max(gl.width/vw, gl.height/vh);   // object-fit: cover
-    let cw=Math.min(vw, Math.round(gl.width/sc)), ch=Math.round(cw/R); if(ch>vh){ ch=vh; cw=Math.round(vh*R); }   // 3:4 window centred on the glass, as wide as the glass shows
-    const sx=Math.round((vw-cw)/2), sy=Math.round((vh-ch)/2); const W=900, H=1200; const cv=document.createElement('canvas'); cv.width=W; cv.height=H; const g=cv.getContext('2d');
+    const vw=v.videoWidth, vh=v.videoHeight; const gl=v.parentElement.getBoundingClientRect(); const sc=Math.max(gl.width/vw, gl.height/vh);   // object-fit: cover
+    const fw=gl.width/sc, fh=gl.height/sc, fx=(vw-fw)/2, fy=(vh-fh)/2;                       // the part of the feed the glass shows
+    const G=PM_GUIDE; const hx=fx+G.HL*fw, hy=fy+G.HT*fh, hw=G.HW*fw, hh=G.HH*fh;           // the oval, in feed pixels
+    const W=900, H=1200; const k=(G.TW*W)/hw;                                                 // feed px → photo px
+    const ox=G.TL*W - hx*k, oy=(G.TT*H + G.TH*H/2) - (hy + hh/2)*k;                          // oval centre → target centre
+    const cv=document.createElement('canvas'); cv.width=W; cv.height=H; const g=cv.getContext('2d');
     if(pmCamFacing==='user'){ g.translate(W,0); g.scale(-1,1); }   // keep the mirrored preview (what she saw is what she gets)
-    g.drawImage(v, sx,sy,cw,ch, 0,0,W,H);
+    // padding: the same frame, blown up to cover, blurred and dimmed
+    const cs=Math.max(W/vw, H/vh)*1.1; try{ g.filter='blur(22px)'; }catch(e){} g.drawImage(v, (W-vw*cs)/2, (H-vh*cs)/2, vw*cs, vh*cs); try{ g.filter='none'; }catch(e){} g.fillStyle='rgba(10,8,12,.5)'; g.fillRect(-W,0,3*W,H);   // (older Safari has no canvas filter: still dimmed)
+    g.drawImage(v, ox, oy, vw*k, vh*k);
     c.classList.add('flash'); setTimeout(()=>c.classList.remove('flash'), 520);
     let url=''; try{ url=cv.toDataURL('image/jpeg',.92); }catch(e){}
     setTimeout(()=>{ pmCamClose(); if(url) pmSetPhoto(url); }, 260); }
@@ -37219,9 +37227,10 @@ body[data-pack="pride"] .poi-btn.start:active, .poi-card .pc-btn:active{ transfo
 }
 #pcsel .dclose, #pcsel .dback, #pcsel .pcs-createpg .pm-x, #pcsel .pcs-mirror .pm-x, #zoomView .zv-back, body[data-pack="pride"] .poi-close{ display:grid; }
 #pcsel .pcs-rclose{ display:none; }   /* roster ✕ only in overmap/switch (rule below) */
-#pcsel .dclose, #pcsel .pcs-rclose, #pcsel .pcs-createpg .pm-x, #pcsel .pcs-mirror .pm-x, body[data-pack="pride"] .poi-close{ right:14px; top:18px; }
-#pcsel .dback{ left:14px; top:18px; }
-#pcsel.overmap .pcs-rclose, #pcsel.switch .pcs-rclose{ display:grid; top:18px; background:var(--glass-dark); border-color:var(--glass-dark-line); color:#fff; }
+#pcsel .dclose, #pcsel .pcs-rclose, #pcsel .pcs-createpg .pm-x, #pcsel .pcs-mirror .pm-x, body[data-pack="pride"] .poi-close{ right:14px; top:max(18px, calc(env(safe-area-inset-top,0px) + 10px)); }
+#pcsel .dclose.back{ right:auto; left:14px; }
+#pcsel .dback{ left:14px; top:max(18px, calc(env(safe-area-inset-top,0px) + 10px)); }
+#pcsel.overmap .pcs-rclose, #pcsel.switch .pcs-rclose{ display:grid; top:max(18px, calc(env(safe-area-inset-top,0px) + 10px)); background:var(--glass-dark); border-color:var(--glass-dark-line); color:#fff; }
 #pcsel .dclose:active, #pcsel .pcs-rclose:active, #pcsel .dback:active, #pcsel .pm-x:active, #zoomView .zv-back:active, body[data-pack="pride"] .poi-close:active{ transform:scale(.94); }
 /* ---- BTN-4L icon square 54 · r16 ---- */
 #pcsel .btn-ghost{ width:54px; min-height:var(--btn-h); border-radius:var(--r-m); background:var(--glass-dark); border:1px solid var(--glass-dark-line); }
