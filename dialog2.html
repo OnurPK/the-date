@@ -10,6 +10,8 @@
 <meta http-equiv="Pragma" content="no-cache" />
 <meta http-equiv="Expires" content="0" />
 <title>roles.ai</title>
+<!-- WIDE (desktop 16:9) mode — only with ?wide=1 (or inside play.html). Adds html.wide + wide.css before first paint; the phone build is untouched. -->
+<script>(function(){ try{ var q=new URLSearchParams(location.search); var on=q.get('wide')==='1' || (window.top!==window && window.top.document && window.top.document.body && window.top.document.body.classList.contains('rai-player')); if(!on) return; document.documentElement.classList.add('wide'); var l=document.createElement('link'); l.rel='stylesheet'; l.href='wide.css?v='+Date.now(); document.head.appendChild(l); window.__RAI_WIDE=true; document.addEventListener('DOMContentLoaded',function(){ document.body.classList.add('wide'); }); }catch(e){} })();</script>
 <!-- Boot screen: paints before anything else (inline, no dependencies) and matches the native iOS launch image
      (same #0a0a0f + logo at 15.9% of screen height), so splash → loading → intro reads as one continuous shot. -->
 <style id="bootCss">
@@ -14880,7 +14882,7 @@ function applyBgState(bgValue) {
     // request foo.png.png.
     let nm = (bgValue.split('=')[1] || 'ballroom').trim().replace(/\.(png|jpe?g|webp)$/i, '');
     const bd = document.getElementById('backdrop');
-    if (bd) { bd.style.backgroundImage = `url("${currentLocationBase()}/explore/${nm}.png")`; bd.style.opacity = '1'; }
+    if (bd) { const u = `${currentLocationBase()}/explore/${nm}.png`; bd.style.backgroundImage = `url("${u}")`; bd.style.opacity = '1'; prideWideSwap(bd, u); }
     return;
   }
   if (bgValue === 'explore') {
@@ -15076,6 +15078,19 @@ function resolveWorldAsset(filename, kind) {
   return `${currentLocationBase()}/${folder}/${filename}`;
 }
 
+// WIDE mode: prefer a 16:9 variant of a background when one exists (<folder>/wide/<name>.png), else keep the phone art.
+// The phone url is painted first; the wide one swaps in once it is known to load (no flash, no 404 on the phone build).
+const _wideKnown = {};
+function prideWideSwap(layer, url) {
+  try {
+    if (!window.__RAI_WIDE || !layer || !url || /^data:/.test(url)) return;
+    const m = url.match(/^(.*\/)(cutscenes|explore|scenes)\/([^\/]+?)\.(png|jpe?g|webp)$/i); if (!m) return;
+    const wide = m[1] + m[2] + '/wide/' + m[3] + '.jpg'; if (_wideKnown[wide] === false) return;
+    const apply = () => { if ((layer.style.backgroundImage || '').indexOf(url) > -1) layer.style.backgroundImage = 'url("' + wide + '")'; };
+    if (_wideKnown[wide] === true) { apply(); return; }
+    const im = new Image(); im.onload = () => { _wideKnown[wide] = true; apply(); }; im.onerror = () => { _wideKnown[wide] = false; }; im.src = wide;
+  } catch (e) {}
+}
 function setCutscene(filename) {
   if (!filename) return;
   const layer = document.getElementById('cutsceneLayer');
@@ -15083,7 +15098,7 @@ function setCutscene(filename) {
   if (filename === activeCutscene) return;     // no-op
   activeCutscene = filename;
   const url = resolveWorldAsset(filename, 'scenes');
-  layer.style.backgroundImage = `url("${url}")`;
+  layer.style.backgroundImage = `url("${url}")`; prideWideSwap(layer, url);
   layer.classList.add('active');
   el.body.classList.add('cutscene-active');
 }
@@ -15119,7 +15134,7 @@ function setNarrativeScene(image) {
     // the data URI).
     const isDataUrl = typeof image === 'string' && image.indexOf('data:') === 0;
     const url = isDataUrl ? image : resolveWorldAsset(image, 'scenes');
-    layer.style.backgroundImage = `url("${url}")`;
+    layer.style.backgroundImage = `url("${url}")`; prideWideSwap(layer, url);
   }
   el.body.classList.add('narrativeScene');
   el.body.classList.remove('scene-inner');
@@ -16246,6 +16261,23 @@ function showEndContinue(){
   b.style.display = 'block';
 }
 
+// WIDE mode: the bust inside a talk card is cut exactly at the card's bottom edge, whatever the card's height (text length)
+(function(){ if (!window.__RAI_WIDE || !('ResizeObserver' in window)) return;
+  const fit = (card) => { try { const fig = card.querySelector('.ps-fig, #focusCharacter'); if (!fig) return; const fh = fig.getBoundingClientRect().height || 1000; const top = parseFloat(getComputedStyle(fig).top) || -150; const cut = Math.max(0, fh - (card.getBoundingClientRect().height - top)); fig.style.setProperty('--wcut', cut.toFixed(0) + 'px'); } catch (e) {} };
+  const ro = new ResizeObserver(entries => entries.forEach(en => fit(en.target)));
+  const arm = () => { document.querySelectorAll('#objectDialog, #pcWhisper .ps-dlg').forEach(c => { if (!c.dataset.wfit) { c.dataset.wfit = '1'; ro.observe(c); } fit(c); }); };
+  document.addEventListener('DOMContentLoaded', arm); setInterval(arm, 1500);
+})();
+// WIDE mode keyboard: Space/Enter advance (whisper, dialogue, narrative), 1-9 pick a choice, Esc closes the rail / settings.
+(function(){ if (!window.__RAI_WIDE) return;
+  document.addEventListener('keydown', (e) => { try {
+    if (e.target && /INPUT|TEXTAREA|SELECT/.test(e.target.tagName)) return;
+    const vis = (el) => el && el.offsetParent !== null && getComputedStyle(el).visibility !== 'hidden' && getComputedStyle(el).opacity !== '0';
+    if (/^[1-9]$/.test(e.key)) { const opts = [...document.querySelectorAll('#choicePanel .choice-opt, #pcWhisper.on .ps-opt')].filter(vis); const o = opts[+e.key - 1]; if (o) { e.preventDefault(); o.click(); } return; }
+    if (e.key === ' ' || e.key === 'Enter') { const t = [ document.querySelector('#pcWhisper.on.show-say .ps-dlg'), document.querySelector('#pcWhisper.on.show-narr .ps-narr'), document.getElementById('objectDialog'), document.getElementById('dialogBox') ].find(vis); if (t && !document.querySelector('#choicePanel.open')) { e.preventDefault(); t.click(); } return; }
+    if (e.key === 'Escape') { try { window.prideRail && window.prideRail.close(); } catch (x) {} try { window.prideSettings && window.prideSettings.close(); } catch (x) {} }
+  } catch (x) {} });
+})();
 // Crash forensics: while an episode is playing, a "live" marker is refreshed on every line. If the page comes back up with the
 // marker still set (no clean exit), the web view was reloaded under us (iOS memory kill) — log where, for diagnosis.
 (function(){
@@ -16256,7 +16288,7 @@ function showEndContinue(){
   window.prideLiveClear = function(){ try { sessionStorage.removeItem('rai.live'); } catch (e) {} };
 })();
 function renderLine() {
-  try { window.prideLiveMark && window.prideLiveMark(typeof idx === 'number' ? idx : -1); } catch (e) {}
+  try { if (window.prideLiveMark && activePack === 'pride' && idx > 0 && !Array.from(document.body.classList).some(c => /^flow-/.test(c))) window.prideLiveMark(idx); } catch (e) {}
   // Reset the cutscene-bubble box-hide by default; only cutscene bubble beats re-add it.
   if (el.body) el.body.classList.remove('cutscene-bubble');
   hideEndContinue();   // hide the end button on every non-END render
@@ -23837,6 +23869,12 @@ try {
       .forEach(k => { try { localStorage.removeItem(k); } catch (e) {} });
     // one-shot: drop the flag from the address bar so a plain reload doesn't wipe again
     try { const u = new URL(window.location.href); u.searchParams.delete('newgame'); u.searchParams.delete('reset'); u.searchParams.delete('cb'); history.replaceState(null, '', u.toString()); } catch (e) {}
+  }
+  // dev: ?start=map → skip the welcome / heroine creation, play as the default Arabella straight from the map
+  if (qs.get('start') === 'map') {
+    try { localStorage.setItem('rai.activePC', 'pc_arabella'); } catch (e) {}   // the premade Arabella (characters/pcs.json)
+    try { const u = new URL(window.location.href); u.searchParams.delete('start'); history.replaceState(null, '', u.toString()); } catch (e) {}
+    window.addEventListener('load', () => { setTimeout(() => { try { window.prideResumeToMap && window.prideResumeToMap(); } catch (e) {} }, 300); });
   }
 } catch (e) {}
 

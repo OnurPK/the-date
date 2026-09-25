@@ -594,6 +594,7 @@
 <div class="sizes">
   <button id="authorLaunch" type="button" title="Episode & location manager">✍ Episode Manager</button>
   <button id="newGameBtn" class="size-pill" type="button" title="Reset progress and start fresh">⟲ New game</button>
+  <button id="startMapBtn" class="size-pill" type="button" title="New game, skip character creation, straight to the map">⤳ Start from map</button>
   <button id="gotoEndBtn" class="size-pill" type="button" title="Skip to the episode's end screen" style="display:none">⏭ Go to End</button>
   <button class="size-pill" data-w="375" data-h="812">SE</button>
   <button class="size-pill active" data-w="390" data-h="844">14</button>
@@ -1232,8 +1233,15 @@
   { const ng=document.getElementById('newGameBtn'); if(ng) ng.addEventListener('click',()=>{
       if(!confirm('Yeni oyun başlat? Tüm ilerleme (tamamlanan bölümler, ilişkiler) sıfırlanır.'))return;
       ['rai.completedEps','cowork.room.prideMeta.v1','rai_pride_pcs','rai.activePC','cowork.room.currentScenario','cowork.room.userProfile'].forEach(k=>{ try{localStorage.removeItem(k);}catch(e){} });
+      try{ sessionStorage.removeItem('rai.live'); }catch(e){}
       const fr=document.getElementById('gameFrame');
       if(fr){ let u; try{ u=new URL(fr.src||'dialog2.html', location.href); }catch(e){ u=new URL('dialog2.html', location.href); } u.searchParams.set('newgame','1'); u.searchParams.set('cb',Date.now()); fr.src=u.toString(); }
+    }); }
+  { const sm=document.getElementById('startMapBtn'); if(sm) sm.addEventListener('click',()=>{
+      ['rai.completedEps','cowork.room.prideMeta.v1','rai_pride_pcs','rai.activePC','cowork.room.currentScenario'].forEach(k=>{ try{localStorage.removeItem(k);}catch(e){} });
+      try{ sessionStorage.removeItem('rai.live'); }catch(e){}   // an editor-driven reload is not a crash
+      const fr=document.getElementById('gameFrame');
+      if(fr){ let u; try{ u=new URL(fr.src||'dialog2.html', location.href); }catch(e){ u=new URL('dialog2.html', location.href); } u.searchParams.set('newgame','1'); u.searchParams.set('start','map'); u.searchParams.set('cb',Date.now()); fr.src=u.toString(); }
     }); }
   // "Go to End" — jump the running episode to its end screen (→ dashboard).
   // Only visible while an episode is playing; toggled by epFlow/situation

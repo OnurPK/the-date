@@ -249,6 +249,9 @@ function openaiImageEdit(prompt, refAbs, size, model, opts) {
       add(`--${boundary}\r\nContent-Disposition: form-data; name="image[]"; filename="ref${i}.png"\r\nContent-Type: image/png\r\n\r\n`);
       parts.push(fs.readFileSync(p)); add(`\r\n`);
     });
+    // outpaint / inpaint: a PNG mask whose transparent pixels mark what to (re)generate; applies to the first image
+    if (opts.mask) { add(`--${boundary}\r\nContent-Disposition: form-data; name="mask"; filename="mask.png"\r\nContent-Type: image/png\r\n\r\n`); parts.push(fs.readFileSync(opts.mask)); add(`\r\n`); }
+    if (opts.fidelity) add(`--${boundary}\r\nContent-Disposition: form-data; name="input_fidelity"\r\n\r\n${opts.fidelity}\r\n`);
     add(`--${boundary}--\r\n`);
     const body = Buffer.concat(parts);
     const req = https.request({ hostname:'api.openai.com', path:'/v1/images/edits', method:'POST',
@@ -352,7 +355,8 @@ async function handleGenAsset(req, res) {
       .map(r => path.join(ROOT, 'worlds', 'pride-and-prejudice', 'characters', r, 'appearances', 'pride.png'))
       .filter(p => fs.existsSync(p)).concat(refPaths);
     const model = pickImageModel(b.model);
-    if (refAbss.length) j = await openaiImageEdit(prompt, refAbss, size, model, { transparent: !!b.transparent });
+    const maskAbs = b.maskPath ? worldsAbs(b.maskPath) : null;   // optional outpaint mask (worlds/… path)
+    if (refAbss.length) j = await openaiImageEdit(prompt, refAbss, size, model, { transparent: !!b.transparent, mask: maskAbs, fidelity: b.fidelity });
     else j = await openaiJson('/v1/images/generations', Object.assign({ model, prompt, size }, b.transparent ? { background: 'transparent', output_format: 'png' } : {}));
     const b64 = j.data && j.data[0] && j.data[0].b64_json;
     if (!b64) return sendJson(res, 502, { error: 'no image returned' });
