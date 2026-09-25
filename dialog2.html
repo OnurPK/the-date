@@ -5236,6 +5236,7 @@
   body.flow-gallery #playerControls, body.flow-addself #playerControls,
   body.flow-final   #playerControls, body.flow-worlds #playerControls,
   body.flow-date    #playerControls, body.flow-map   #playerControls,
+  body[data-pack="pride"] #topControls,   /* P&P: restart lives in the rail's Settings page */
   body.flow-intro   #topControls, body.flow-form    #topControls,
   body.flow-loading #topControls, body.flow-survey  #topControls,
   body.flow-gallery #topControls, body.flow-addself #topControls,
@@ -11624,7 +11625,7 @@
        body.flow-intro → Start visible, logo centered
        body.flow-form  → Start fades, logo slides up, form slides in -->
 <div id="introScreen" class="intro-layer">
-  <button id="wpSound" type="button" aria-label="Sound" title="Sound on/off"></button>
+  <button id="wpSound" type="button" aria-label="Settings" title="Settings"></button>
   <!-- AI / Demo toggle (top-right). ON = real GPT Image generation.
        OFF = pull a random portrait from the local IndexedDB cache,
        useful for demos so we don't pay or wait every time. -->
@@ -12110,17 +12111,19 @@
 /* character sits further right and always faces left (right-facing ones flipped) */
 #worldPages .wl-cast-character{ right:-40px; width:86%; }
 #worldPages .wl-cast-tile.flip .wl-cast-character{ transform:scaleX(-1); }
+#worldPages .wp-back{ position:fixed; z-index:21; left:14px; top:max(18px, calc(env(safe-area-inset-top,0px) + 10px)); width:42px; height:42px; border-radius:50%; border:1px solid rgba(255,255,255,.28); background:rgba(14,10,20,.55); -webkit-backdrop-filter:blur(14px); backdrop-filter:blur(14px); color:#fff; display:grid; place-items:center; cursor:pointer; padding:0 }
+#worldPages .wp-back svg{ width:20px; height:20px }
 #worldPages .wp-switch{ position:fixed; z-index:20; left:50%; bottom:calc(env(safe-area-inset-bottom,0px) + 18px); transform:translateX(-50%);
   display:flex; align-items:center; gap:9px; padding:9px 15px; border-radius:999px;
   background:rgba(18,12,26,.6); border:1px solid rgba(255,255,255,.15); -webkit-backdrop-filter:blur(16px); backdrop-filter:blur(16px); box-shadow:0 8px 24px rgba(0,0,0,.45) }
 #worldPages .wp-dot{ width:8px; height:8px; border-radius:50%; background:rgba(255,255,255,.32); cursor:pointer; transition:width .25s ease, background .25s ease }
 #worldPages .wp-dot.on{ width:22px; border-radius:5px; background:linear-gradient(90deg,#e0668a,#8b7bd8) }
 </style>
-<div id="worldPages"><div class="wp-switch" id="wpSwitch"></div></div>
+<div id="worldPages"><button class="wp-back" id="wpBack" type="button" aria-label="Back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></button><div class="wp-switch" id="wpSwitch"></div></div>
 <style>
 #wpSound{ position:absolute; left:14px; top:max(64px, calc(env(safe-area-inset-top) + 58px)); z-index:6; width:42px; height:42px; border-radius:50%; border:1px solid rgba(255,255,255,.28); background:rgba(14,10,20,.55); -webkit-backdrop-filter:blur(14px); backdrop-filter:blur(14px); display:grid; place-items:center; cursor:pointer; padding:0 }
 #wpSound svg{ width:20px; height:20px; stroke:#fff; fill:none; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round }
-#wpSound.off{ opacity:.7 } #wpSound.off .on-only{ display:none } #wpSound:not(.off) .off-only{ display:none }
+#wpSound.off{ opacity:1 }
 </style>
 <script>
 (function(){
@@ -12130,7 +12133,7 @@
     const p=document.getElementById('peSound'); if(p){ p.classList.toggle('muted',m); p.title=m?'Sound off':'Sound on'; } };
   const toggle=(e)=>{ e.stopPropagation(); let j={}; try{ j=JSON.parse(localStorage.getItem('rai.audio')||'{}'); }catch(e2){} j.muted=!j.muted; try{ localStorage.setItem('rai.audio',JSON.stringify(j)); }catch(e2){} if(window.prideAudio) window.prideAudio.setMuted(j.muted); sync(); };
   const w=document.getElementById('wpSound');
-  if(w){ w.innerHTML='<svg viewBox="0 0 24 24"><path d="M4 9v6h4l5 4V5L8 9H4z"/><path class="on-only" d="M16 9a4 4 0 0 1 0 6"/><path class="on-only" d="M18.5 6.5a8 8 0 0 1 0 11"/><path class="off-only" d="M17 9l4 6M21 9l-4 6"/></svg>'; w.addEventListener('click',toggle); }
+  if(w){ w.innerHTML='<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>'; w.addEventListener('click',e=>{ e.stopPropagation(); if(window.prideSettings) window.prideSettings.open({menu:true}); }); }   // v2: the intro button opens Settings (volumes live there)
   const bind=()=>{ const p=document.getElementById('peSound'); if(p && !p.dataset.bound){ p.dataset.bound='1'; p.addEventListener('click',toggle); } sync(); };
   bind(); document.addEventListener('DOMContentLoaded',bind); window.addEventListener('storage',sync);
   window.raiSoundSync=sync;
@@ -12264,6 +12267,7 @@
   function show(){ if(!built) build(); const r=document.getElementById('worldPages'); if(r){ r.classList.add('on'); r.scrollLeft=0; trailerIdx=-1; playTrailer(0); }
     try{ if(document.body.classList.contains('flow-map') && typeof setFlow==='function') setFlow('worlds'); }catch(e){} }   // backing out of the map (heroine chooser ×): leave the map flow so its audio stops and the menu music returns
   function hide(){ const r=document.getElementById('worldPages'); if(r) r.classList.remove('on'); stopTrailers(); }
+  { const b=document.getElementById('wpBack'); if(b) b.addEventListener('click',()=>{ hide(); try{ if(typeof setFlow==='function') setFlow('intro'); }catch(e){} }); }   // back to the welcome screen
   window.showWorldPages=show; window.hideWorldPages=hide; window.devWorldPages=function(){ show(); return true; };
 })();
 </script>
@@ -14479,9 +14483,10 @@ window.prideRegisterCastSpeakers = function (txt) {
     st.setProperty('--px-fx', (-cx * FG).toFixed(1) + 'px'); st.setProperty('--px-fy', (-cy * FG * .6).toFixed(1) + 'px');
     if (Math.abs(tx - cx) > .002 || Math.abs(ty - cy) > .002) raf = requestAnimationFrame(tick); }
   function listen(){ if (listening) return; listening = true; window.addEventListener('deviceorientation', onOri, true); document.body.classList.add('pride-parallax'); }
-  function arm(){ document.removeEventListener('pointerdown', arm, true);
-    try { if (typeof DeviceOrientationEvent.requestPermission === 'function') DeviceOrientationEvent.requestPermission().then(r => { if (r === 'granted') listen(); }).catch(() => {}); else listen(); } catch (e) {} }
-  if (typeof DeviceOrientationEvent.requestPermission === 'function') document.addEventListener('pointerdown', arm, { capture: true, passive: true });
+  // WebKit only treats click / touchend / keydown as user activation for requestPermission (pointerdown is not enough)
+  function arm(){ ['click','touchend'].forEach(t => document.removeEventListener(t, arm, true));
+    try { DeviceOrientationEvent.requestPermission().then(r => { window.__prideGyro = r; if (r === 'granted') listen(); }).catch(e => { window.__prideGyro = 'error:' + (e && e.message); }); } catch (e) { window.__prideGyro = 'throw:' + (e && e.message); } }
+  if (typeof DeviceOrientationEvent.requestPermission === 'function') ['click','touchend'].forEach(t => document.addEventListener(t, arm, { capture: true, passive: true }));
   else listen();
   window.prideParallax = { on: listen, off(){ window.removeEventListener('deviceorientation', onOri, true); listening = false; document.body.classList.remove('pride-parallax'); } };
 })();
@@ -29117,7 +29122,7 @@ console.log('%c[caller] Episode 1 ready — run startCaller()', 'color:#e7b24c')
    create button becomes a filled gradient pill. */
 #pcsel.overmap .pcs-rtop{ padding-top:calc(env(safe-area-inset-top,0px) + 64px); }
 #pcsel.overmap .pcs-rfoot{ padding-bottom:calc(env(safe-area-inset-bottom,0px) + 42px); }
-#pcsel.overmap .pcs-rclose{ display:grid; top:18px; width:42px; height:42px; background:rgba(20,12,26,.5); border-color:rgba(255,255,255,.3); color:#fff; }
+#pcsel.overmap .pcs-rclose{ display:grid; top:max(18px, calc(env(safe-area-inset-top,0px) + 10px)); width:42px; height:42px; background:rgba(20,12,26,.5); border-color:rgba(255,255,255,.3); color:#fff; }
 #pcsel.overmap .pcs-h1{ color:#fff; text-shadow:none; font-size:28px; }
 #pcsel.overmap .pcs-kick{ color:#f4b8cf; text-shadow:0 1px 10px rgba(0,0,0,.7); }
 #pcsel.overmap .dcard{ box-shadow:none; }
@@ -29355,8 +29360,9 @@ console.log('%c[caller] Episode 1 ready — run startCaller()', 'color:#e7b24c')
 #pcsel .pcs-mirror .pm-cam .pc-bg{position:absolute; inset:0; background:#0b0a0c}
 #pcsel .pcs-mirror .pm-cam .pc-art{position:absolute; left:0; top:0; width:100%; aspect-ratio:9/16; background:url("worlds/pride-and-prejudice/pc-select/cam_room.jpg") center/100% 100% no-repeat; z-index:1}
 #pcsel .pcs-mirror .pm-cam .pc-art::after{content:""; position:absolute; left:0; right:0; bottom:-1px; height:34%; background:linear-gradient(180deg, rgba(11,10,12,0), rgba(11,10,12,.55) 55%, #0b0a0c 100%); pointer-events:none}
-#pcsel .pcs-mirror .pm-cam .pc-top{position:absolute; left:22px; right:70px; top:calc(env(safe-area-inset-top,0px) + 14px); z-index:3; color:#fff}
-#pcsel .pcs-mirror .pm-cam .pc-top .pm-t{margin:4px 0 0; font-size:24px; text-shadow:0 2px 14px rgba(0,0,0,.8)} #pcsel .pcs-mirror .pm-cam .pc-top .pm-s{display:none}
+/* the words sit in the dark below the table (the wall above the mirror is under the notch on the phone) */
+#pcsel .pcs-mirror .pm-cam .pc-top{position:absolute; left:22px; right:22px; bottom:calc(env(safe-area-inset-bottom,0px) + 136px); z-index:3; color:#fff; text-align:center}
+#pcsel .pcs-mirror .pm-cam .pc-top .pm-t{margin:4px 0 4px; font-size:22px; text-shadow:0 2px 14px rgba(0,0,0,.8)} #pcsel .pcs-mirror .pm-cam .pc-top .pm-s{color:rgba(255,255,255,.62); font-size:12.5px}
 #pcsel .pcs-mirror .pm-cam .pc-x{position:absolute; right:14px; top:max(18px, calc(env(safe-area-inset-top) + 8px)); z-index:5; width:42px; height:42px; border-radius:50%; display:grid; place-items:center; background:rgba(20,12,26,.6); color:#fff; border:1px solid rgba(255,255,255,.28); font-size:16px; cursor:pointer}
 /* the glass = the painting's mirror glass (bbox in % of the art), masked to its carved outline */
 #pcsel .pcs-mirror .pm-cam .pc-glass{position:absolute; left:14.51%; top:12.58%; width:71.32%; height:45.12%; overflow:hidden; background:#101014; -webkit-mask:url("worlds/pride-and-prejudice/pc-select/cam_glass_mask.png") center/100% 100% no-repeat; mask:url("worlds/pride-and-prejudice/pc-select/cam_glass_mask.png") center/100% 100% no-repeat}
@@ -29368,9 +29374,9 @@ console.log('%c[caller] Episode 1 ready — run startCaller()', 'color:#e7b24c')
 #pcsel .pcs-mirror .pm-cam .pc-frost::after{content:""; position:absolute; inset:0; background:linear-gradient(112deg, rgba(255,255,255,0) 42%, rgba(255,240,220,.07) 50%, rgba(255,255,255,0) 58%); mix-blend-mode:screen}
 /* the gold guide — the same head box as the portrait mirror (a 3:4 crop centred on the glass), so the shot lands exactly */
 #pcsel .pcs-mirror .pm-cam .pc-guide{position:absolute; inset:0; pointer-events:none}
-#pcsel .pcs-mirror .pm-cam .pc-guide .head{position:absolute; left:35.5%; top:14.5%; width:29%; height:45%; border-radius:50%; border:2px dotted rgba(231,178,76,.95); box-shadow:0 0 18px rgba(231,178,76,.35), inset 0 0 18px rgba(231,178,76,.15); animation:pcGuide 2.4s ease-in-out infinite}
-#pcsel .pcs-mirror .pm-cam .pc-guide .shoulders{position:absolute; left:16%; right:16%; top:59.5%; height:44%; border-radius:50% 50% 0 0 / 60% 60% 0 0; border:2px dotted rgba(231,178,76,.55); border-bottom:none}
-#pcsel .pcs-mirror .pm-cam .pc-hint{position:absolute; left:0; right:0; bottom:7%; text-align:center; font:700 10px/1 Inter,system-ui,sans-serif; letter-spacing:.28em; color:rgba(231,178,76,.9); text-shadow:0 1px 6px rgba(0,0,0,.8); pointer-events:none}
+#pcsel .pcs-mirror .pm-cam .pc-guide .head{position:absolute; left:28%; top:12%; width:44%; height:66%; border-radius:50%; border:2px dotted rgba(231,178,76,.95); box-shadow:0 0 18px rgba(231,178,76,.35), inset 0 0 18px rgba(231,178,76,.15); animation:pcGuide 2.4s ease-in-out infinite}
+#pcsel .pcs-mirror .pm-cam .pc-guide .shoulders{position:absolute; left:4%; right:4%; top:80%; height:40%; border-radius:50% 50% 0 0 / 60% 60% 0 0; border:2px dotted rgba(231,178,76,.55); border-bottom:none}
+#pcsel .pcs-mirror .pm-cam .pc-hint{position:absolute; left:0; right:0; bottom:4%; text-align:center; font:700 10px/1 Inter,system-ui,sans-serif; letter-spacing:.28em; color:rgba(231,178,76,.9); text-shadow:0 1px 6px rgba(0,0,0,.8); pointer-events:none}
 @keyframes pcGuide{0%,100%{box-shadow:0 0 14px rgba(231,178,76,.3), inset 0 0 14px rgba(231,178,76,.12)} 50%{box-shadow:0 0 26px rgba(231,178,76,.55), inset 0 0 22px rgba(231,178,76,.22)}}
 #pcsel .pcs-mirror .pm-cam .pc-bar{position:absolute; left:0; right:0; bottom:calc(env(safe-area-inset-bottom,0px) + 34px); z-index:3; display:flex; align-items:center; justify-content:center; gap:38px}
 #pcsel .pcs-mirror .pm-cam .pc-flip, #pcsel .pcs-mirror .pm-cam .pc-lib{width:50px; height:50px; border-radius:50%; border:1px solid rgba(255,255,255,.28); background:rgba(20,12,26,.55); color:#fff; display:grid; place-items:center; cursor:pointer}
@@ -29487,7 +29493,7 @@ console.log('%c[caller] Episode 1 ready — run startCaller()', 'color:#e7b24c')
 #pcsel .hero.has-wardrobe .wd-arrow{display:grid; opacity:1}
 #pcsel .hero.avatar-edit .wd-arrow, #pcsel.revealing .wd-arrow, #pcsel #pcs-detail.entering .wd-arrow{opacity:0; pointer-events:none}
 #pcsel .wd-arrow:active{background:rgba(255,255,255,.22)}
-#pcsel .dclose{position:absolute; right:14px; top:max(18px, calc(env(safe-area-inset-top) + 8px)); z-index:10; width:42px; height:42px; border-radius:50%; background:rgba(255,255,255,.26); border:1px solid rgba(255,255,255,.5); color:#fff; font-size:15px; display:grid; place-items:center; cursor:pointer}
+#pcsel .dclose{position:absolute; right:14px; top:max(18px, calc(env(safe-area-inset-top,0px) + 10px)); z-index:10; width:42px; height:42px; border-radius:50%; background:rgba(255,255,255,.26); border:1px solid rgba(255,255,255,.5); color:#fff; font-size:15px; display:grid; place-items:center; cursor:pointer}
 #pcsel .d-scroll{position:absolute; inset:0; overflow-y:auto; z-index:3; will-change:opacity,transform}
 #pcsel .d-spacer{height:72%; pointer-events:none}
 #pcsel .d-content{position:relative; z-index:3; background:#f6f2fb; padding:18px 22px 0; border-radius:20px 20px 0 0; box-shadow:0 -20px 40px rgba(120,90,150,.16)}
@@ -29534,6 +29540,7 @@ console.log('%c[caller] Episode 1 ready — run startCaller()', 'color:#e7b24c')
 #pcsel .tp-desc{font-size:13px; line-height:1.55; color:#6a5d78; margin-top:7px}
 #pcsel .dback{position:absolute; left:14px; top:18px; z-index:10; width:38px; height:38px; border-radius:50%; background:rgba(20,12,26,.5); border:1px solid rgba(255,255,255,.6); color:#fff; font-size:17px; display:grid; place-items:center; cursor:pointer}
 #pcsel #pcs-types .dclose{right:14px}
+#pcsel .dclose.back{right:auto; left:14px; background:rgba(20,12,26,.5); border-color:rgba(255,255,255,.3)}   /* the heroine bio: a back arrow on the left, not a close */
 /* survey */
 #pcsel #pcs-survey{background:#0d0912}
 #pcsel .sv-bg{position:absolute; inset:0; background-size:cover; background-position:center; z-index:0}
@@ -29578,7 +29585,7 @@ console.log('%c[caller] Episode 1 ready — run startCaller()', 'color:#e7b24c')
     <div class="pcs-rfoot"><div class="pcs-dots" id="pcsDots"></div><button class="pcs-continue" id="pcsContinue">Continue &#8594;</button><button class="pcs-play" id="pcsPlayCard">Play as Arabella &#10022;</button><button class="pcs-create-text" id="pcsCreateBtn">+ Create your own</button></div>
   </section>
   <section class="pcs-view" id="pcs-detail">
-    <div class="dclose" id="pcsDClose">&#10005;</div>
+    <div class="dclose back" id="pcsDClose" aria-label="Back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:20px;height:20px"><path d="M15 5l-7 7 7 7"/></svg></div>
     <div class="hero" id="pcsHero">
       <div class="hbg" id="pcsBg"></div><div class="hfig" id="pcsFig"></div><div class="hveil"></div>
       <button class="face-arrow left" id="pcsFaceL">&#8249;</button><button class="face-arrow right" id="pcsFaceR">&#8250;</button>
@@ -29642,8 +29649,8 @@ console.log('%c[caller] Episode 1 ready — run startCaller()', 'color:#e7b24c')
          exactly the mirror's photo box (3:4, head 20% down, 38% tall), so the portrait lands in the glass above without any fitting -->
     <div class="pm-cam" id="pmCam" aria-hidden="true">
       <div class="pc-bg"></div>
-      <div class="pc-art"><div class="pc-glass"><video id="pmCamVideo" autoplay playsinline muted></video><div class="pc-frost"></div><div class="pc-guide"><i class="head"></i><i class="shoulders"></i></div><div class="pc-hint">HEAD INSIDE THE GOLD LINE</div></div></div>
-      <div class="pc-top"><div class="pm-k">Your likeness</div><h2 class="pm-t">Look into the glass.</h2><div class="pm-s">Place your head inside the gold line. Good light, no hat.</div></div>
+      <div class="pc-art"><div class="pc-glass"><video id="pmCamVideo" autoplay playsinline muted></video><div class="pc-frost"></div><div class="pc-guide"><i class="head"></i><i class="shoulders"></i></div><div class="pc-hint">FACE IN THE GOLD LINE</div></div></div>
+      <div class="pc-top"><div class="pm-k">Your likeness</div><h2 class="pm-t">Look into the glass.</h2><div class="pm-s">Face inside the gold line · good light · no hat</div></div>
       <div class="pc-x" id="pmCamClose">&#10005;</div>
       <div class="pc-bar"><button type="button" class="pc-flip" id="pmCamFlip" aria-label="Flip camera"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 0 1 15.5-6.3M21 12a9 9 0 0 1-15.5 6.3"/><path d="M18 3v4h-4M6 21v-4h4"/></svg></button>
         <button type="button" class="pc-shutter" id="pmCamShot" aria-label="Take the photo"><i></i></button>
@@ -32572,6 +32579,7 @@ body.pride-hud-on #pridePcHud{ display:none !important; }
   #peSettingsScreen .pst-foot{ padding:14px 20px calc(env(safe-area-inset-bottom,0px) + 22px); display:flex; flex-direction:column; gap:10px; background:linear-gradient(180deg,rgba(12,8,18,0),rgba(12,8,18,.9) 30%) }
   #peSettingsScreen .pst-btn{ width:100%; padding:16px; border-radius:16px; font:700 14px Inter,system-ui,sans-serif; letter-spacing:.02em; cursor:pointer; border:1px solid rgba(255,255,255,.22); background:rgba(255,255,255,.08); color:#fff }
   #peSettingsScreen .pst-btn.danger{ border-color:rgba(255,120,150,.5); color:#ffb3c8 }
+  #peSettingsScreen.menu #psEnd, #peSettingsScreen.menu #psRestart{ display:none }
   #peSettingsScreen .pst-btn.primary{ background:linear-gradient(135deg,#ff7eb9,#8b7bd8); border:none }
   #peSettingsScreen .pst-confirm{ position:absolute; inset:0; display:none; align-items:flex-end; background:rgba(5,3,8,.6); z-index:2 }
   #peSettingsScreen .pst-confirm.on{ display:flex }
@@ -32599,7 +32607,8 @@ body.pride-hud-on #pridePcHud{ display:none !important; }
   const $=id=>document.getElementById(id); const sc=$('peSettingsScreen'); if(!sc) return;
   const PA=()=>window.prideAudio;
   function sync(){ const st=PA()&&PA().state(); if(!st) return; const L=st.levels||{}; [['psVoice','voice'],['psMusic','music'],['psAmb','amb']].forEach(([id,k])=>{ const v=Math.round((L[k]!=null?L[k]:1)*100); $(id).value=v; $(id+'V').textContent=v; }); $('psMute').classList.toggle('on',!st.muted); }
-  function open(){ sync(); sc.classList.add('on'); sc.setAttribute('aria-hidden','false'); }
+  function open(o){ sync(); sc.classList.toggle('menu', !!(o&&o.menu)); sc.classList.add('on'); sc.setAttribute('aria-hidden','false'); }   // menu:true = opened from the intro (no End episode / Restart)
+  window.prideSettings={ open, close:()=>close() };
   function close(){ sc.classList.add('closing'); sc.classList.remove('on'); sc.setAttribute('aria-hidden','true'); setTimeout(()=>sc.classList.remove('closing'),420); $('psConfirm').classList.remove('on'); }
   window.prideOpenSettings=open; window.prideCloseSettings=close;
   $('psClose').addEventListener('click',close); $('psDone').addEventListener('click',close);

@@ -225,6 +225,8 @@ body[data-pack="pride"].ui-cast-small #focusCharacter.c-carter{ transform:scaleX
 
 /* cast-large only: the stage sprite fills a little more of the screen (84% → 91% of the 130vh slot; head ~16vh from the top instead of ~27vh) */
 body[data-pack="pride"].ui-cast-large .char.pride-actor{ background-size:auto 91% !important; }
+/* leaving cast-large: keep the big size while the sprite fades out (otherwise it snaps to 84% and reads as "shrinking") */
+body[data-pack="pride"] .char.pride-actor:not(.active){ background-size:auto 91% !important; transition:opacity .45s ease, filter .5s ease; }
 
 /* choice cards: the panel no longer slides as a block — each card unfolds up (dialog2 startChoice animates them) */
 body[data-pack="pride"] #choicePanel{ transform:none !important; transition:opacity .2s ease !important; }
