@@ -14430,6 +14430,9 @@ window.prideRegisterCastSpeakers = function (txt) {
       '  background-size: auto 84%;',
       '  transform: translateX(-50%) translateX(0);',
       '}',
+      // gyro parallax (cast-large only): the room drifts one way, the figure the other. --px-* are set by pridePARALLAX below.
+      'body.pride-parallax.ui-cast-large .char.pride-actor.active { transform: translateX(-50%) translate3d(var(--px-fx,0px), var(--px-fy,0px), 0); }',
+      'body.pride-parallax.ui-cast-large #cutsceneLayer, body.pride-parallax.ui-cast-large #backdrop { transform: scale(1.06) translate3d(var(--px-bx,0px), var(--px-by,0px), 0); }',
     ];
     // Per-speaker accent colours: Arabella blush, the men slate/ink,
     // the women a warm rose. Drives the dialog-box left border, the
@@ -14455,6 +14458,32 @@ window.prideRegisterCastSpeakers = function (txt) {
     tag.textContent = css.join('\n');
     document.head.appendChild(tag);
   } catch (e) { console.warn('[pride] sprite css inject failed', e); }
+})();
+// ---- PRIDE PARALLAX: tilt the phone and the cast-large scene shifts a little (background one way, figure the other).
+// deviceorientation: gamma = left/right tilt, beta = forward/back. A slow-moving baseline makes "how you hold it now"
+// the neutral pose, so only the change in tilt moves the scene. iOS needs DeviceOrientationEvent.requestPermission()
+// from a user gesture — asked once, on the first tap.
+(function pridePARALLAX(){
+  if (typeof window === 'undefined' || !('DeviceOrientationEvent' in window)) return;
+  if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  const BG = 9, FG = 15, MAX = 18;                     // px at full tilt (±MAX degrees from the baseline)
+  let baseG = null, baseB = null, tx = 0, ty = 0, cx = 0, cy = 0, raf = 0, listening = false;
+  const st = document.documentElement.style;
+  function onOri(e){ const g = e.gamma, b = e.beta; if (g == null || b == null) return;
+    if (baseG == null) { baseG = g; baseB = b; }
+    baseG += (g - baseG) * .01; baseB += (b - baseB) * .01;   // baseline drifts toward the current hold (~2 s)
+    const dg = Math.max(-MAX, Math.min(MAX, g - baseG)) / MAX, db = Math.max(-MAX, Math.min(MAX, b - baseB)) / MAX;
+    tx = dg; ty = db * .5; if (!raf) raf = requestAnimationFrame(tick); }
+  function tick(){ raf = 0; cx += (tx - cx) * .12; cy += (ty - cy) * .12;
+    st.setProperty('--px-bx', (cx * BG).toFixed(1) + 'px'); st.setProperty('--px-by', (cy * BG).toFixed(1) + 'px');
+    st.setProperty('--px-fx', (-cx * FG).toFixed(1) + 'px'); st.setProperty('--px-fy', (-cy * FG * .6).toFixed(1) + 'px');
+    if (Math.abs(tx - cx) > .002 || Math.abs(ty - cy) > .002) raf = requestAnimationFrame(tick); }
+  function listen(){ if (listening) return; listening = true; window.addEventListener('deviceorientation', onOri, true); document.body.classList.add('pride-parallax'); }
+  function arm(){ document.removeEventListener('pointerdown', arm, true);
+    try { if (typeof DeviceOrientationEvent.requestPermission === 'function') DeviceOrientationEvent.requestPermission().then(r => { if (r === 'granted') listen(); }).catch(() => {}); else listen(); } catch (e) {} }
+  if (typeof DeviceOrientationEvent.requestPermission === 'function') document.addEventListener('pointerdown', arm, { capture: true, passive: true });
+  else listen();
+  window.prideParallax = { on: listen, off(){ window.removeEventListener('deviceorientation', onOri, true); listening = false; document.body.classList.remove('pride-parallax'); } };
 })();
 // Paint the reusable #prideActor sprite for the active speaker
 // (cast-large). Called from applyStage() when activePack === 'pride'.
