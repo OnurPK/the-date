@@ -8,55 +8,185 @@
   },
   "characters": {
     "arabella2": {
-      "active": "e",
+      "active": "v4",
       "voices": {
         "e": {
           "id": "mOUhDo8jDpNHQMrvB2xS",
           "name": "Arabella (E warm alto)",
           "note": "A young British woman, warm rich alto, quietly confident, playful intelligence, a smile in the voice, intimate and knowing, modern ease with period diction.",
           "added": "2026-09-24"
+        },
+        "v4": {
+          "id": "mOUhDo8jDpNHQMrvB2xS",
+          "name": "Arabella (E warm alto) · v4",
+          "note": "eleven_v4 take of key e (same voice id); per-line directions from voice/directions.json",
+          "added": "2026-09-29",
+          "from": "e"
         }
+      },
+      "acting": {
+        "stability": 0.5,
+        "register": "Composed, quick, understated. Wit delivered flat; pleasure shown by a smile in the voice, never a laugh.",
+        "allow": [
+          "dry",
+          "amused",
+          "sharp",
+          "cool",
+          "quietly pleased",
+          "guarded",
+          "teasing, unhurried",
+          "half to herself",
+          "a smile in it"
+        ],
+        "never": [
+          "giggly",
+          "gushing",
+          "shouting",
+          "tearful",
+          "breathless",
+          "sweet"
+        ]
+      },
+      "settings": {
+        "model": "eleven_v4",
+        "stability": 0.5
       }
     },
     "capt_carter": {
-      "active": "d",
+      "active": "v4",
       "voices": {
         "d": {
           "id": "isVXDL63vyUwhY0Sjudu",
           "name": "Carter (D soldierly)",
           "note": "A cheerful young Englishman in his twenties, warm mid-range voice with a ready laugh, open and honest, slightly rough around the edges, soldierly plainness, fri",
           "added": "2026-09-24"
+        },
+        "v4": {
+          "id": "isVXDL63vyUwhY0Sjudu",
+          "name": "Carter (D soldierly) · v4",
+          "note": "eleven_v4 take of key d (same voice id); per-line directions from voice/directions.json",
+          "added": "2026-09-29",
+          "from": "d"
         }
+      },
+      "acting": {
+        "stability": 0.5,
+        "register": "Warm, eager, charming, a touch too pleased with himself. A soldier's ease.",
+        "allow": [
+          "warm",
+          "eager",
+          "charming",
+          "easy",
+          "a little too pleased",
+          "light"
+        ],
+        "never": [
+          "cold",
+          "sinister",
+          "whispering",
+          "mournful"
+        ]
+      },
+      "settings": {
+        "model": "eleven_v4",
+        "stability": 0.5
       }
     },
     "mr_darcy": {
-      "active": "e",
+      "active": "v4",
       "voices": {
         "e": {
           "id": "rQQMHnNa2cAEj0aiZWeo",
           "name": "Darcy (E warm baritone)",
           "note": "A British gentleman in his early thirties, warm smooth baritone, cultured and precise, dry irony just under the surface, calm and self-possessed, medium-slow pa",
           "added": "2026-09-24"
+        },
+        "v4": {
+          "id": "rQQMHnNa2cAEj0aiZWeo",
+          "name": "Darcy (E warm baritone) · v4",
+          "note": "eleven_v4 take of key e (same voice id); per-line directions from voice/directions.json",
+          "added": "2026-09-29",
+          "from": "e"
         }
+      },
+      "acting": {
+        "stability": 0.5,
+        "register": "Contained, low, precise. Every line is under control; softening is a drop in volume, not a change of colour.",
+        "allow": [
+          "cold",
+          "measured",
+          "clipped",
+          "dry",
+          "faintly contemptuous",
+          "quietly softening",
+          "low, firm",
+          "guarded",
+          "not to be argued with"
+        ],
+        "never": [
+          "warm and loud",
+          "laughing",
+          "gushing",
+          "breathless",
+          "cheerful",
+          "pleading"
+        ]
+      },
+      "settings": {
+        "model": "eleven_v4",
+        "stability": 0.5
       }
     },
     "narrator": {
-      "active": "e",
+      "active": "v4",
       "voices": {
         "e": {
           "id": "OZdgrvu6DSYlY6aipsN7",
           "name": "Narrator (E gravelly)",
           "note": "A mature British man, rich dark baritone with a gravelly edge, commanding storyteller presence, intimate close-mic warmth, slow and deliberate, magnetic and sli",
           "added": "2026-09-24"
+        },
+        "v4": {
+          "id": "OZdgrvu6DSYlY6aipsN7",
+          "name": "Narrator (E gravelly) · v4",
+          "note": "eleven_v4 take of key e (same voice id); per-line directions from voice/directions.json",
+          "added": "2026-09-29",
+          "from": "e"
         }
       },
       "settings": {
-        "speed": 1.2,
-        "tempo": 1.12
+        "speed": 1.0,
+        "tempo": 1.06,
+        "model": "eleven_v4",
+        "stability": 1.0
+      },
+      "acting": {
+        "stability": 1.0,
+        "register": "A gravelly baritone storyteller: low, dry, unhurried, close to the mic. He never performs the emotion, he reports it; emphasis is a shade of tone, not volume.",
+        "allow": [
+          "dry",
+          "quiet",
+          "unhurried",
+          "wry",
+          "a shade darker",
+          "almost amused",
+          "deliberate",
+          "a storyteller's hush"
+        ],
+        "never": [
+          "warm",
+          "bright",
+          "expansive",
+          "booming",
+          "excited",
+          "emotional",
+          "cheerful",
+          "tender"
+        ]
       }
     },
     "sir_william2": {
-      "active": "a",
+      "active": "v4",
       "voices": {
         "e": {
           "id": "XI4UZoRX16ibnQHw8HOr",
@@ -75,84 +205,213 @@
           "name": "Sir William (A period drama)",
           "note": "A jovial British gentleman in his sixties, warm rounded voice, received pronunciation, genial and a little pompous, delighted with everyone, ceremonious, brisk ",
           "added": "2026-09-24"
+        },
+        "v4": {
+          "id": "LnEEUq6aGhHceuQB3UVe",
+          "name": "Sir William (A period drama) · v4",
+          "note": "eleven_v4 take of key a (same voice id); per-line directions from voice/directions.json",
+          "added": "2026-09-29",
+          "from": "a"
         }
       },
       "settings": {
         "speed": 1,
         "stability": 0.5,
         "style": 0.15,
-        "lufs": -17
+        "lufs": -17,
+        "model": "eleven_v4"
+      },
+      "acting": {
+        "stability": 0.5,
+        "register": "Jovial, ceremonious, a little grand. Delight is his default; his secrets are stage whispers.",
+        "allow": [
+          "delighted",
+          "booming",
+          "beaming",
+          "chuckling",
+          "conspiratorial",
+          "hushed",
+          "gleeful",
+          "ceremonious"
+        ],
+        "never": [
+          "cold",
+          "sad",
+          "menacing",
+          "sarcastic",
+          "weary"
+        ]
       }
     },
     "mrs_frost": {
-      "active": "h",
+      "active": "v4",
       "voices": {
         "h": {
           "id": "c2OfIZNpScxAcxZkhjJ9",
           "name": "Mrs Frost (H smoky)",
           "note": "A mature British actress in her late forties, rich smoky lower register, warm and knowing, gently sardonic, speaks with settled confidence and a smile in the vo",
           "added": "2026-09-25"
+        },
+        "v4": {
+          "id": "c2OfIZNpScxAcxZkhjJ9",
+          "name": "Mrs Frost (H smoky) · v4",
+          "note": "eleven_v4 take of key h (same voice id); per-line directions from voice/directions.json",
+          "added": "2026-09-29",
+          "from": "h"
         }
       },
       "settings": {
         "speed": 1,
         "stability": 0.5,
         "style": 0.2,
-        "lufs": -21
+        "lufs": -21,
+        "model": "eleven_v4"
+      },
+      "acting": {
+        "stability": 0.5,
+        "register": "Smoky, worldly, fond and exasperated in the same breath.",
+        "allow": [
+          "fond",
+          "exasperated",
+          "dry",
+          "knowing",
+          "sighing",
+          "brisk"
+        ],
+        "never": [
+          "girlish",
+          "shouting",
+          "cold"
+        ]
       }
     },
     "arabella_mind": {
-      "active": "e",
+      "active": "v4",
       "voices": {
         "e": {
           "id": "mOUhDo8jDpNHQMrvB2xS",
           "name": "Arabella (E) · inner voice, v3",
           "note": "Same Arabella voice, eleven_v3 with a whispered, intimate delivery for her private thoughts.",
           "added": "2026-09-29"
+        },
+        "v4": {
+          "id": "mOUhDo8jDpNHQMrvB2xS",
+          "name": "Arabella (E) · inner voice, v3 · v4",
+          "note": "eleven_v4 take of key e (same voice id); per-line directions from voice/directions.json",
+          "added": "2026-09-29",
+          "from": "e"
         }
       },
       "settings": {
-        "model": "eleven_v3",
+        "model": "eleven_v4",
         "stability": 0.5,
         "prefix": "[whispers][softly] ",
         "lufs": -20,
         "lowpass": 3400,
         "echo": 0.35
+      },
+      "acting": {
+        "stability": 0.5,
+        "register": "Her own voice from inside her head: whispered, intimate, wry. Same composure, no audience.",
+        "allow": [
+          "whispers",
+          "intrigued",
+          "wry",
+          "satisfied",
+          "tired",
+          "slow",
+          "curious"
+        ],
+        "never": [
+          "loud",
+          "shouting",
+          "sing-song",
+          "excited"
+        ]
       }
     },
     "lady": {
-      "active": "a",
+      "active": "v4",
       "voices": {
         "a": {
           "id": "pFZP5JQG7iQjIQuC4Bku",
           "name": "Lily (premade, British)",
           "note": "A young lady behind her fan — overheard, whispered, v3.",
           "added": "2026-09-29"
+        },
+        "v4": {
+          "id": "pFZP5JQG7iQjIQuC4Bku",
+          "name": "Lily (premade, British) · v4",
+          "note": "eleven_v4 take of key a (same voice id); per-line directions from voice/directions.json",
+          "added": "2026-09-29",
+          "from": "a"
         }
       },
       "settings": {
-        "model": "eleven_v3",
-        "stability": 0.45,
+        "model": "eleven_v4",
+        "stability": 0.5,
         "prefix": "[whispers][gossiping] ",
         "lufs": -21
+      },
+      "acting": {
+        "stability": 0.5,
+        "register": "A gossip behind a fan: whispered, quick, scandalized and delighted in equal measure.",
+        "allow": [
+          "whispers",
+          "gossiping",
+          "scandalized",
+          "delighted",
+          "arch",
+          "quick"
+        ],
+        "never": [
+          "loud",
+          "angry",
+          "tender"
+        ]
       }
     },
     "officer": {
-      "active": "a",
+      "active": "v4",
       "voices": {
         "a": {
           "id": "JBFqnCBsd6RMkjVDRZzb",
           "name": "George (premade, British)",
           "note": "A militia officer by the card-room door — amused, half under his breath, v3.",
           "added": "2026-09-29"
+        },
+        "v4": {
+          "id": "JBFqnCBsd6RMkjVDRZzb",
+          "name": "George (premade, British) · v4",
+          "note": "eleven_v4 take of key a (same voice id); per-line directions from voice/directions.json",
+          "added": "2026-09-29",
+          "from": "a"
         }
       },
       "settings": {
-        "model": "eleven_v3",
-        "stability": 0.45,
+        "model": "eleven_v4",
+        "stability": 0.5,
         "prefix": "[quietly][amused] ",
         "lufs": -20
+      },
+      "acting": {
+        "stability": 0.5,
+        "register": "A young officer in the corner: hushed, amused, dry; he is telling a story he has told before.",
+        "allow": [
+          "hushed",
+          "amused",
+          "dry",
+          "quick",
+          "quietly",
+          "wry"
+        ],
+        "never": [
+          "booming",
+          "angry",
+          "solemn"
+        ]
       }
     }
-  }
+  },
+  "_acting_note": "Per-character acting envelope for eleven_v4: directions in [brackets] go before the line; pick only from allow, never from never; one or two tags at most; stability per character (1.0 = robust/tone-stable narrator, 0.5 = natural for the actors)."
 }

@@ -14,6 +14,11 @@
           "file": "amb/ballroom__el1.mp3",
           "src": "elevenlabs",
           "note": "distant string quartet + crowd murmur, 22 s loop"
+        },
+        "n": {
+          "file": "amb/ballroom__n.mp3",
+          "src": "elevenlabs",
+          "note": "regen 2026-09-29 · distant string quartet + crowd murmur, 22 s loop"
         }
       }
     },
@@ -24,6 +29,11 @@
           "file": "sfx/tap__el1.mp3",
           "src": "elevenlabs",
           "note": "soft tap on paper"
+        },
+        "n": {
+          "file": "sfx/tap__n.mp3",
+          "src": "elevenlabs",
+          "note": "regen 2026-09-29 · soft tap on paper"
         }
       }
     },
@@ -34,6 +44,11 @@
           "file": "sfx/choice__el1.mp3",
           "src": "elevenlabs",
           "note": "quill stroke + set down"
+        },
+        "n": {
+          "file": "sfx/choice__n.mp3",
+          "src": "elevenlabs",
+          "note": "regen 2026-09-29 · quill stroke + set down"
         }
       }
     },
@@ -44,6 +59,11 @@
           "file": "sfx/discovery__el1.mp3",
           "src": "elevenlabs",
           "note": "short harp gliss"
+        },
+        "n": {
+          "file": "sfx/discovery__n.mp3",
+          "src": "elevenlabs",
+          "note": "regen 2026-09-29 · short harp gliss"
         }
       }
     },
@@ -74,6 +94,11 @@
           "file": "music/assembly__m5.mp3",
           "src": "elevenlabs",
           "note": "Sparse, tense underscore: low cello drone, single violin line, distant ballroom dance heard through a wall, wa"
+        },
+        "n": {
+          "file": "music/assembly__n.mp3",
+          "src": "elevenlabs",
+          "note": "regen 2026-09-29 · Playful chamber piece for strings and harpsichord, witty and light, quick pizzicato figure"
         }
       }
     },
@@ -94,6 +119,11 @@
           "file": "sfx/remember__c.mp3",
           "src": "elevenlabs",
           "note": "quiet page turn followed by a soft muted bell, close and intimate, short"
+        },
+        "n": {
+          "file": "sfx/remember__n.mp3",
+          "src": "elevenlabs",
+          "note": "regen 2026-09-29 · a single soft harp note with a delicate whispery shimmer tail, memory tone, quiet"
         }
       }
     },
@@ -129,6 +159,11 @@
           "file": "sfx/heart_up__f.mp3",
           "src": "elevenlabs",
           "note": "exactly two heartbeats, slow and deep, close-mic, with a faint warm rising harmonic tail, short"
+        },
+        "n": {
+          "file": "sfx/heart_up__n.mp3",
+          "src": "elevenlabs",
+          "note": "regen 2026-09-29 · soft heartbeat with a warm string swell rising, brief, romantic"
         }
       }
     },
@@ -149,6 +184,11 @@
           "file": "sfx/heart_down__c.mp3",
           "src": "elevenlabs",
           "note": "quiet heavy thump with a short cold reverb tail, disappointment, short"
+        },
+        "n": {
+          "file": "sfx/heart_down__n.mp3",
+          "src": "elevenlabs",
+          "note": "regen 2026-09-29 · a single dull heartbeat with a soft descending low tone, short, cold"
         }
       }
     },
@@ -169,6 +209,11 @@
           "file": "sfx/meter__c.mp3",
           "src": "elevenlabs",
           "note": "muted wooden tick with a faint sparkle, user interface, subtle, short"
+        },
+        "n": {
+          "file": "sfx/meter__n.mp3",
+          "src": "elevenlabs",
+          "note": "regen 2026-09-29 · soft short ascending glassy tick, user interface progress fill, subtle"
         }
       }
     },
@@ -189,6 +234,11 @@
           "file": "sfx/choice_open__c.mp3",
           "src": "elevenlabs",
           "note": "quill dipped in ink then a soft airy whoosh, brief, subtle"
+        },
+        "n": {
+          "file": "sfx/choice_open__n.mp3",
+          "src": "elevenlabs",
+          "note": "regen 2026-09-29 · a paper fan unfolding softly with a faint airy whoosh, Regency, short"
         }
       }
     },
@@ -209,6 +259,11 @@
           "file": "sfx/choice_pick__c.mp3",
           "src": "elevenlabs",
           "note": "a soft wooden click with a faint tiny chime, user interface confirm, short"
+        },
+        "n": {
+          "file": "sfx/choice_pick__n.mp3",
+          "src": "elevenlabs",
+          "note": "regen 2026-09-29 · a short crisp quill tap on parchment, single, subtle"
         }
       }
     },
@@ -229,6 +284,11 @@
           "file": "amb/map__c.mp3",
           "src": "elevenlabs",
           "note": "rural English morning ambience: skylarks, breeze through tall grass, distant rooks, no music, seamless loop"
+        },
+        "n": {
+          "file": "amb/map__n.mp3",
+          "src": "elevenlabs",
+          "note": "regen 2026-09-29 · English countryside daytime ambience: light breeze, distant birdsong, sheep far away, gent"
         }
       }
     },
@@ -244,6 +304,11 @@
           "file": "sfx/map_carriage__b.mp3",
           "src": "elevenlabs",
           "note": "distant horse and carriage trotting past on a country lane, wheels creaking, fades"
+        },
+        "n": {
+          "file": "sfx/map_carriage__n.mp3",
+          "src": "elevenlabs",
+          "note": "regen 2026-09-29 · horse-drawn carriage passing on a gravel road, hooves and wheels approaching then fading a"
         }
       }
     },
@@ -259,6 +324,11 @@
           "file": "sfx/map_gull__b.mp3",
           "src": "elevenlabs",
           "note": "a single seagull calling twice far away, breezy"
+        },
+        "n": {
+          "file": "sfx/map_gull__n.mp3",
+          "src": "elevenlabs",
+          "note": "regen 2026-09-29 · two or three seagull cries, distant, open air"
         }
       }
     },
@@ -274,6 +344,11 @@
           "file": "sfx/map_bell__b.mp3",
           "src": "elevenlabs",
           "note": "far away church bell single toll with a long soft tail"
+        },
+        "n": {
+          "file": "sfx/map_bell__n.mp3",
+          "src": "elevenlabs",
+          "note": "regen 2026-09-29 · distant village church bell tolling twice, countryside"
         }
       }
     },
@@ -284,6 +359,11 @@
           "file": "sfx/map_dog__a.mp3",
           "src": "elevenlabs",
           "note": "a dog barking twice in the distance, countryside"
+        },
+        "n": {
+          "file": "sfx/map_dog__n.mp3",
+          "src": "elevenlabs",
+          "note": "regen 2026-09-29 · a dog barking twice in the distance, countryside"
         }
       }
     },
@@ -294,6 +374,11 @@
           "file": "sfx/map_horse__a.mp3",
           "src": "elevenlabs",
           "note": "a horse whinnying once, then a short trot passing, outdoors"
+        },
+        "n": {
+          "file": "sfx/map_horse__n.mp3",
+          "src": "elevenlabs",
+          "note": "regen 2026-09-29 · a horse whinnying once, then a short trot passing, outdoors"
         }
       }
     },
@@ -304,6 +389,11 @@
           "file": "sfx/map_rooks__a.mp3",
           "src": "elevenlabs",
           "note": "a few rooks cawing in distant trees, countryside"
+        },
+        "n": {
+          "file": "sfx/map_rooks__n.mp3",
+          "src": "elevenlabs",
+          "note": "regen 2026-09-29 · a few rooks cawing in distant trees, countryside"
         }
       }
     },
@@ -324,6 +414,11 @@
           "file": "music/map__c.mp3",
           "src": "elevenlabs",
           "note": "soft harp and flute pastoral, English countryside morning, contemplative and light, loopable, instrumental"
+        },
+        "n": {
+          "file": "music/map__n.mp3",
+          "src": "elevenlabs",
+          "note": "regen 2026-09-29 · gentle pastoral Regency-era piece for solo pianoforte with light strings, calm and airy, u"
         }
       }
     },
@@ -334,6 +429,11 @@
           "file": "amb/map__b.mp3",
           "src": "elevenlabs",
           "note": "village layer (map right/town)"
+        },
+        "n": {
+          "file": "amb/map_town__n.mp3",
+          "src": "elevenlabs",
+          "note": "regen 2026-09-29 · village layer (map right/town)"
         }
       }
     },
@@ -344,6 +444,11 @@
           "file": "amb/map__c.mp3",
           "src": "elevenlabs",
           "note": "countryside layer (map left/forest)"
+        },
+        "n": {
+          "file": "amb/map_forest__n.mp3",
+          "src": "elevenlabs",
+          "note": "regen 2026-09-29 · countryside layer (map left/forest)"
         }
       }
     },
@@ -364,6 +469,11 @@
           "file": "sfx/trust__c.mp3",
           "src": "elevenlabs",
           "note": "a soft deep bell tone with a short muted drum underneath, settled and reassuring, short"
+        },
+        "n": {
+          "file": "sfx/trust__n.mp3",
+          "src": "elevenlabs",
+          "note": "regen 2026-09-29 · a single warm low cello note, steady and grounded, with a soft firm wooden knock at the st"
         }
       }
     },
@@ -384,6 +494,11 @@
           "file": "sfx/affection__c.mp3",
           "src": "elevenlabs",
           "note": "a warm breathy flute note with a tiny sparkle, gentle and kind, short"
+        },
+        "n": {
+          "file": "sfx/affection__n.mp3",
+          "src": "elevenlabs",
+          "note": "regen 2026-09-29 · two warm gentle glockenspiel notes rising, tender, soft, short"
         }
       }
     },
@@ -399,6 +514,11 @@
           "file": "sfx/ball_glass__b.mp3",
           "src": "elevenlabs",
           "note": "a punch glass set down on a tray with a small clink, distant, ballroom reverb"
+        },
+        "n": {
+          "file": "sfx/ball_glass__n.mp3",
+          "src": "elevenlabs",
+          "note": "regen 2026-09-29 · two crystal glasses clinking once in a toast, distant, in a large hall with soft reverb"
         }
       }
     },
@@ -414,6 +534,11 @@
           "file": "sfx/ball_laugh__b.mp3",
           "src": "elevenlabs",
           "note": "a single gentleman guffawing once far away in a crowded hall, then murmur"
+        },
+        "n": {
+          "file": "sfx/ball_laugh__n.mp3",
+          "src": "elevenlabs",
+          "note": "regen 2026-09-29 · a small group of ladies laughing politely in the distance across a ballroom, muffled by th"
         }
       }
     },
@@ -424,6 +549,11 @@
           "file": "sfx/ball_fan__a.mp3",
           "src": "elevenlabs",
           "note": "a lady snapping a folding fan shut, then a soft flutter, nearby, indoors"
+        },
+        "n": {
+          "file": "sfx/ball_fan__n.mp3",
+          "src": "elevenlabs",
+          "note": "regen 2026-09-29 · a lady snapping a folding fan shut, then a soft flutter, nearby, indoors"
         }
       }
     },
@@ -439,6 +569,11 @@
           "file": "sfx/ball_steps__b.mp3",
           "src": "elevenlabs",
           "note": "a brisk walk of leather shoes across a polished wooden floor passing by, indoors"
+        },
+        "n": {
+          "file": "sfx/ball_steps__n.mp3",
+          "src": "elevenlabs",
+          "note": "regen 2026-09-29 · a few pairs of dance shoes stepping in time on a wooden floor, a short passing phrase, dis"
         }
       }
     },
@@ -449,6 +584,11 @@
           "file": "sfx/ball_murmur__a.mp3",
           "src": "elevenlabs",
           "note": "a crowd murmur swelling briefly and settling again, elegant party, distant, indoors"
+        },
+        "n": {
+          "file": "sfx/ball_murmur__n.mp3",
+          "src": "elevenlabs",
+          "note": "regen 2026-09-29 · a crowd murmur swelling briefly and settling again, elegant party, distant, indoors"
         }
       }
     },
@@ -459,6 +599,11 @@
           "file": "sfx/ball_cough__a.mp3",
           "src": "elevenlabs",
           "note": "a polite single cough from an older gentleman in a quiet hall, distant"
+        },
+        "n": {
+          "file": "sfx/ball_cough__n.mp3",
+          "src": "elevenlabs",
+          "note": "regen 2026-09-29 · a polite single cough from an older gentleman in a quiet hall, distant"
         }
       }
     },
@@ -469,6 +614,11 @@
           "file": "sfx/ball_rustle__a.mp3",
           "src": "elevenlabs",
           "note": "silk dress rustling as a lady turns and walks past, close, brief"
+        },
+        "n": {
+          "file": "sfx/ball_rustle__n.mp3",
+          "src": "elevenlabs",
+          "note": "regen 2026-09-29 · silk dress rustling as a lady turns and walks past, close, brief"
         }
       }
     },
@@ -479,6 +629,11 @@
           "file": "sfx/ball_ladle__a.mp3",
           "src": "elevenlabs",
           "note": "a silver ladle dipping into a punch bowl and pouring once, distant clink of china"
+        },
+        "n": {
+          "file": "sfx/ball_ladle__n.mp3",
+          "src": "elevenlabs",
+          "note": "regen 2026-09-29 · a silver ladle dipping into a punch bowl and pouring once, distant clink of china"
         }
       }
     },
@@ -499,6 +654,11 @@
           "file": "sfx/shh__c.mp3",
           "src": "elevenlabs",
           "note": "a quick soft whispered \"shh\" followed by a subtle low-pass whoosh, as if sound is submerged, intimate, short"
+        },
+        "n": {
+          "file": "sfx/shh__n.mp3",
+          "src": "elevenlabs",
+          "note": "regen 2026-09-29 · a soft human \"shhh\" hush, close and gentle, with a smooth airy whoosh sinking down in pitc"
         }
       }
     },
@@ -528,6 +688,11 @@
           "src": "elevenlabs",
           "note": "[breathy whisper] Sshhh.",
           "level": 0.45
+        },
+        "n": {
+          "file": "sfx/shh_ara__n.mp3",
+          "src": "elevenlabs",
+          "note": "regen 2026-09-29 · a young woman softly shushing, close and intimate: \"shh\", gentle, brief"
         }
       }
     },
@@ -563,6 +728,11 @@
           "file": "sfx/think__d.mp3",
           "src": "elevenlabs",
           "note": "[sighs softly] Oh…"
+        },
+        "n": {
+          "file": "sfx/think__n.mp3",
+          "src": "elevenlabs",
+          "note": "regen 2026-09-29 · [thoughtful] Mmm…"
         }
       }
     },
@@ -618,6 +788,11 @@
           "file": "sfx/choice_settle__i.mp3",
           "src": "elevenlabs",
           "note": "a single glass harmonica note blooming into a soft shimmer, ethereal, short"
+        },
+        "n": {
+          "file": "sfx/choice_settle__n.mp3",
+          "src": "elevenlabs",
+          "note": "regen 2026-09-29 · a soft deep sub-bass thump with a slow warm bloom, like a heavy velvet curtain settling, d"
         }
       }
     },
@@ -674,6 +849,11 @@
           "src": "elevenlabs",
           "note": "three descending pianoforte notes, gentle, evenly spaced, thoughtful, dry",
           "level": 0.45
+        },
+        "n": {
+          "file": "sfx/choice_deal__n.mp3",
+          "src": "elevenlabs",
+          "note": "regen 2026-09-29 · three descending pianoforte notes, gentle, evenly spaced, thoughtful, dry"
         }
       }
     },
@@ -715,6 +895,11 @@
           "src": "elevenlabs",
           "note": "a sealed letter opened: wax seal cracks softly then the paper unfolds in two crisp movements, close",
           "level": 0.7
+        },
+        "n": {
+          "file": "sfx/choice_paper__n.mp3",
+          "src": "elevenlabs",
+          "note": "regen 2026-09-29 · a sealed letter opened: wax seal cracks softly then the paper unfolds in two crisp movemen"
         }
       }
     },
@@ -730,6 +915,11 @@
           "file": "amb/map_night_forest__b.mp3",
           "src": "elevenlabs",
           "note": "rural night ambience: gentle breeze through grass, crickets, distant stream, occasional rustle, no music, seamless loop"
+        },
+        "n": {
+          "file": "amb/map_night_forest__n.mp3",
+          "src": "elevenlabs",
+          "note": "regen 2026-09-29 · rural night ambience: gentle breeze through grass, crickets, distant stream, occasional ru"
         }
       }
     },
@@ -760,6 +950,11 @@
           "file": "amb/map_night_town__e.mp3",
           "src": "elevenlabs",
           "note": "English village night ambience with a faint stream and rustling leaves, one distant tavern door closing, otherwise still"
+        },
+        "n": {
+          "file": "amb/map_night_town__n.mp3",
+          "src": "elevenlabs",
+          "note": "regen 2026-09-29 · English village night ambience with a faint stream and rustling leaves, one distant tavern"
         }
       }
     },
@@ -780,6 +975,11 @@
           "file": "music/map_night__c.mp3",
           "src": "elevenlabs",
           "note": "soft harp and low clarinet nocturne, mysterious and calm, Regency night, loopable, instrumental"
+        },
+        "n": {
+          "file": "music/map_night__n.mp3",
+          "src": "elevenlabs",
+          "note": "regen 2026-09-29 · slow nocturne for solo pianoforte, moonlit English countryside, tender and a little uneasy"
         }
       }
     },
@@ -795,6 +995,11 @@
           "file": "sfx/night_owl__b.mp3",
           "src": "elevenlabs",
           "note": "a single long owl call far away, night forest, echo"
+        },
+        "n": {
+          "file": "sfx/night_owl__n.mp3",
+          "src": "elevenlabs",
+          "note": "regen 2026-09-29 · a tawny owl hooting twice in the distance at night"
         }
       }
     },
@@ -810,6 +1015,11 @@
           "file": "sfx/night_glass__b.mp3",
           "src": "elevenlabs",
           "note": "a bottle smashing against a wall far away, night street, short echo"
+        },
+        "n": {
+          "file": "sfx/night_glass__n.mp3",
+          "src": "elevenlabs",
+          "note": "regen 2026-09-29 · a glass bottle dropped and shattering on cobblestones, distant, at night, echoing between "
         }
       }
     },
@@ -825,6 +1035,11 @@
           "file": "sfx/night_run__b.mp3",
           "src": "elevenlabs",
           "note": "two people running away down a narrow street at night, hurried footsteps fading, distant"
+        },
+        "n": {
+          "file": "sfx/night_run__n.mp3",
+          "src": "elevenlabs",
+          "note": "regen 2026-09-29 · a single person running past on a cobblestone street at night, hard leather soles, footste"
         }
       }
     },
@@ -835,6 +1050,11 @@
           "file": "sfx/night_laugh__a.mp3",
           "src": "elevenlabs",
           "note": "drunken laughter of two men far away at night, muffled, brief"
+        },
+        "n": {
+          "file": "sfx/night_laugh__n.mp3",
+          "src": "elevenlabs",
+          "note": "regen 2026-09-29 · drunken laughter of two men far away at night, muffled, brief"
         }
       }
     },
@@ -845,6 +1065,11 @@
           "file": "sfx/night_dog__a.mp3",
           "src": "elevenlabs",
           "note": "a dog barking three times far away at night, then silence"
+        },
+        "n": {
+          "file": "sfx/night_dog__n.mp3",
+          "src": "elevenlabs",
+          "note": "regen 2026-09-29 · a dog barking three times far away at night, then silence"
         }
       }
     },
@@ -855,6 +1080,11 @@
           "file": "sfx/night_fox__a.mp3",
           "src": "elevenlabs",
           "note": "a fox screaming once in the distance at night, eerie, countryside"
+        },
+        "n": {
+          "file": "sfx/night_fox__n.mp3",
+          "src": "elevenlabs",
+          "note": "regen 2026-09-29 · a fox screaming once in the distance at night, eerie, countryside"
         }
       }
     },
@@ -865,6 +1095,11 @@
           "file": "sfx/night_wind__a.mp3",
           "src": "elevenlabs",
           "note": "a gust of night wind through trees rising and falling, leaves rustling, distant"
+        },
+        "n": {
+          "file": "sfx/night_wind__n.mp3",
+          "src": "elevenlabs",
+          "note": "regen 2026-09-29 · a gust of night wind through trees rising and falling, leaves rustling, distant"
         }
       }
     },
@@ -875,6 +1110,11 @@
           "file": "sfx/night_bell__a.mp3",
           "src": "elevenlabs",
           "note": "a distant church bell tolling midnight, only three slow tolls, far away at night"
+        },
+        "n": {
+          "file": "sfx/night_bell__n.mp3",
+          "src": "elevenlabs",
+          "note": "regen 2026-09-29 · a distant church bell tolling midnight, only three slow tolls, far away at night"
         }
       }
     },
@@ -885,6 +1125,11 @@
           "file": "sfx/night_door__a.mp3",
           "src": "elevenlabs",
           "note": "a heavy wooden door slamming shut far away at night, echo in an empty street"
+        },
+        "n": {
+          "file": "sfx/night_door__n.mp3",
+          "src": "elevenlabs",
+          "note": "regen 2026-09-29 · a heavy wooden door slamming shut far away at night, echo in an empty street"
         }
       }
     },
@@ -895,6 +1140,11 @@
           "file": "sfx/night_cart__a.mp3",
           "src": "elevenlabs",
           "note": "a horse cart rolling slowly over cobblestones at night, passing, distant, creaking"
+        },
+        "n": {
+          "file": "sfx/night_cart__n.mp3",
+          "src": "elevenlabs",
+          "note": "regen 2026-09-29 · a horse cart rolling slowly over cobblestones at night, passing, distant, creaking"
         }
       }
     },
@@ -925,6 +1175,11 @@
           "file": "music/menu__e.mp3",
           "src": "elevenlabs",
           "note": "main-menu theme: cinematic piano and cello duet, tender and nostalgic with a rising hopeful chorus, warm, loopable, inst"
+        },
+        "n": {
+          "file": "music/menu__n.mp3",
+          "src": "elevenlabs",
+          "note": "regen 2026-09-29 · Elegant Regency drawing-room piece for pianoforte and string quartet, warm, unhurried, inv"
         }
       }
     },
@@ -955,6 +1210,11 @@
           "file": "music/assembly_far__e.mp3",
           "src": "elevenlabs",
           "note": "An English country dance reel for violins and cello with pianoforte, brisk but refined, the sound of a real Regency asse"
+        },
+        "n": {
+          "file": "music/assembly_far__n.mp3",
+          "src": "elevenlabs",
+          "note": "regen 2026-09-29 · An English country dance reel for violins and cello with pianoforte, brisk but refined, th"
         }
       },
       "level": 0.55
@@ -966,6 +1226,11 @@
           "file": "amb/ballroom_near__a.mp3",
           "src": "elevenlabs",
           "note": "close crowd murmur, fans, silk, glasses, dance steps, no music, 22 s loop"
+        },
+        "n": {
+          "file": "amb/ballroom_near__n.mp3",
+          "src": "elevenlabs",
+          "note": "regen 2026-09-29 · close crowd murmur, fans, silk, glasses, dance steps, no music, 22 s loop"
         }
       },
       "level": 0.8
@@ -984,6 +1249,11 @@
           "src": "elevenlabs",
           "note": "door opens onto a ball, murmur + strings swell, one step",
           "level": 0.8
+        },
+        "n": {
+          "file": "sfx/look_enter__n.mp3",
+          "src": "elevenlabs",
+          "note": "regen 2026-09-29 · double doors open, murmur swells, three steps"
         }
       }
     },
@@ -1007,6 +1277,11 @@
           "src": "elevenlabs",
           "note": "silk rustle + intake of breath",
           "level": 0.7
+        },
+        "n": {
+          "file": "sfx/look__n.mp3",
+          "src": "elevenlabs",
+          "note": "regen 2026-09-29 · a soft glance sound: a short breathy whoosh with a faint glassy shimmer, subtle UI, very s"
         }
       }
     },
@@ -1024,6 +1299,11 @@
           "src": "elevenlabs",
           "note": "reverse air swell",
           "level": 0.6
+        },
+        "n": {
+          "file": "sfx/look_back__n.mp3",
+          "src": "elevenlabs",
+          "note": "regen 2026-09-29 · a soft return sound: a short reversed breathy whoosh settling, subtle UI, very short"
         }
       }
     },
@@ -1041,6 +1321,11 @@
           "src": "elevenlabs",
           "note": "band cadence + polite applause",
           "level": 0.8
+        },
+        "n": {
+          "file": "sfx/look_cut__n.mp3",
+          "src": "elevenlabs",
+          "note": "regen 2026-09-29 · pianoforte flourish + chord"
         }
       }
     },
@@ -1062,6 +1347,11 @@
           "src": "ffmpeg",
           "note": "a, pitched down 16%, low-passed: deeper, from inside",
           "level": 0.7
+        },
+        "n": {
+          "file": "sfx/reveal_breath__n.mp3",
+          "src": "elevenlabs",
+          "note": "regen 2026-09-29 · A young woman takes one slow, deep breath in through the nose, holds it a moment, then a s"
         }
       }
     },
@@ -1077,6 +1367,11 @@
           "file": "music/darcy_reveal__b.mp3",
           "src": "elevenlabs",
           "note": "darcy reveal cue B"
+        },
+        "n": {
+          "file": "music/darcy_reveal__n.mp3",
+          "src": "elevenlabs",
+          "note": "regen 2026-09-29 · Regency ballroom reveal cue, cinematic and intimate: a lone cello holds a low note, then a"
         }
       },
       "level": 0.5
@@ -1093,6 +1388,11 @@
           "file": "sfx/whisper_ear__a.mp3",
           "src": "elevenlabs",
           "note": "Charlotte at her ear"
+        },
+        "n": {
+          "file": "sfx/whisper_ear__n.mp3",
+          "src": "elevenlabs",
+          "note": "regen 2026-09-29 · Charlotte at her ear"
         }
       },
       "level": 0.8

@@ -1,0 +1,162 @@
+[
+ {
+  "speaker": "narrative",
+  "folder": "narrator",
+  "key": "e",
+  "text": "Sir William's voice falls away behind you. Across the floor, a man turns his head.",
+  "tag": "[dry, unhurried]",
+  "hash": "3f6fa132",
+  "today": "voice/narrator/e/3f6fa132.mp3",
+  "exists": true
+ },
+ {
+  "speaker": "narrative",
+  "folder": "narrator",
+  "key": "e",
+  "text": "Mr Darcy has not yet spoken; he simply looks at you, measuring.",
+  "tag": "[quiet, deliberate]",
+  "hash": "0c76d525",
+  "today": "voice/narrator/e/0c76d525.mp3",
+  "exists": true
+ },
+ {
+  "speaker": "narrative",
+  "folder": "narrator",
+  "key": "e",
+  "text": "The Meryton rooms are full to the walls and bright as day.",
+  "tag": "[unhurried, almost amused]",
+  "hash": "37f99213",
+  "today": "voice/narrator/e/37f99213.mp3",
+  "exists": true
+ },
+ {
+  "speaker": "arabella2",
+  "folder": "arabella2",
+  "key": "e",
+  "text": "A bet against the room. Charlotte does love a sure thing.",
+  "tag": "[dry, amused, half to herself]",
+  "hash": "2eb9b799",
+  "today": "voice/arabella2/e/2eb9b799.mp3",
+  "exists": true
+ },
+ {
+  "speaker": "arabella2",
+  "folder": "arabella2",
+  "key": "e",
+  "text": "He claimed the set. I never said yes \u2014 and I never once said no.",
+  "tag": "[quiet, pleased with herself, a smile in it]",
+  "hash": "2602c182",
+  "today": "voice/arabella2/e/2602c182.mp3",
+  "exists": true
+ },
+ {
+  "speaker": "arabella2",
+  "folder": "arabella2",
+  "key": "e",
+  "text": "Hertfordshire's ceiling, Mr Darcy, is rather your floor.",
+  "tag": "[sharp, teasing, unhurried]",
+  "hash": "8c760618",
+  "today": "voice/arabella2/e/8c760618.mp3",
+  "exists": true
+ },
+ {
+  "speaker": "darcy",
+  "folder": "mr_darcy",
+  "key": "e",
+  "text": "Hertfordshire sets a modest ceiling, Miss Frost. I wonder if you find it so.",
+  "tag": "[cold, measured, faintly contemptuous]",
+  "hash": "fd5526f8",
+  "today": "voice/mr_darcy/e/fd5526f8.mp3",
+  "exists": true
+ },
+ {
+  "speaker": "darcy",
+  "folder": "mr_darcy",
+  "key": "e",
+  "text": "My sister is sixteen. She would sooner face a regiment than a room like this one.",
+  "tag": "[softening, quiet, guarded tenderness]",
+  "hash": "1e6bf876",
+  "today": "voice/mr_darcy/e/1e6bf876.mp3",
+  "exists": true
+ },
+ {
+  "speaker": "darcy",
+  "folder": "mr_darcy",
+  "key": "e",
+  "text": "The lady is engaged to me for this set, Carter.",
+  "tag": "[low, firm, not to be argued with]",
+  "hash": "0e0a6fe5",
+  "today": "voice/mr_darcy/e/0e0a6fe5.mp3",
+  "exists": true
+ },
+ {
+  "speaker": "sir-william2",
+  "folder": "sir_william2",
+  "key": "a",
+  "text": "A dish! My dear Miss Frost, a dish does not answer back. That is precisely why I want you at the table.",
+  "tag": "[delighted, booming, laughing]",
+  "hash": "258e6a20",
+  "today": "voice/sir_william2/a/258e6a20.mp3",
+  "exists": true
+ },
+ {
+  "speaker": "sir-william2",
+  "folder": "sir_william2",
+  "key": "a",
+  "text": "Between ourselves, Miss Frost, I mean to put you before Mr Darcy before supper is served.",
+  "tag": "[conspiratorial, hushed, gleeful]",
+  "hash": "7fa040aa",
+  "today": "voice/sir_william2/a/7fa040aa.mp3",
+  "exists": true
+ },
+ {
+  "speaker": "arabella-mind",
+  "folder": "arabella_mind",
+  "key": "e",
+  "text": "A man who brings his own weather. I wonder who taught him.",
+  "tag": "[whispers, intrigued, slow]",
+  "hash": "85e375ab",
+  "today": "voice/arabella_mind/e/85e375ab.mp3",
+  "exists": true
+ },
+ {
+  "speaker": "arabella-mind",
+  "folder": "arabella_mind",
+  "key": "e",
+  "text": "There. Now he is the only person in the room who has not seen you. Good.",
+  "tag": "[whispers, wry, satisfied]",
+  "hash": "488d86f2",
+  "today": "voice/arabella_mind/e/488d86f2.mp3",
+  "exists": true
+ },
+ {
+  "speaker": "lady",
+  "folder": "lady",
+  "key": "a",
+  "text": "Ten thousand a year, and he has not asked anyone. Not even Miss Long.",
+  "tag": "[whispers, gossiping, scandalized]",
+  "hash": "aeaa41a8",
+  "today": "voice/lady/a/aeaa41a8.mp3",
+  "exists": true
+ },
+ {
+  "speaker": "officer",
+  "folder": "officer",
+  "key": "a",
+  "text": "Quiet. The one by the door is listening.",
+  "tag": "[hushed, amused, quick]",
+  "hash": "53e1e75d",
+  "today": "voice/officer/a/53e1e75d.mp3",
+  "exists": true
+ },
+ {
+  "speaker": "carter",
+  "folder": "capt_carter",
+  "key": "d",
+  "text": "Miss Frost. The set is forming, and I find I cannot bear to see it form without you.",
+  "tag": "[warm, eager, charming]",
+  "hash": "81de51e8",
+  "today": "voice/capt_carter/d/81de51e8.mp3",
+  "exists": true
+ }
+]
