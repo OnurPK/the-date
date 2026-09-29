@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Map — location card alternatives</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@500;600;700;800&family=Playfair+Display:ital,wght@0,500;0,700;1,500&family=Cormorant+Garamond:ital,wght@0,500;1,500&display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#0e0d13;color:#e7deff;font:500 13px/1.5 Inter,system-ui,sans-serif;padding:20px}
+h1{font:600 20px "Playfair Display",Georgia,serif;margin:0 0 4px}
+p.sub{color:#8a80a4;margin:0 0 16px;font-size:12px;max-width:960px}
+.grid{display:flex;gap:26px;flex-wrap:wrap;align-items:flex-start}
+.card h3{font:700 11px Inter;letter-spacing:.18em;text-transform:uppercase;color:#b9aee0;margin:0 0 8px}
+.card p{color:#8a80a4;font-size:11.5px;margin:8px 0 0;max-width:390px}
+.ph{position:relative;width:390px;height:844px;border-radius:38px;overflow:hidden;background:#000;border:6px solid #17141c;zoom:.82}
+.map{position:absolute;inset:0;background:url("../worlds/pride-and-prejudice/map_sunset.jpeg") 60% 40%/cover;filter:blur(6px) brightness(.55) saturate(.9);transform:scale(1.06)}
+.grip{position:absolute;left:50%;top:10px;width:44px;height:4px;border-radius:2px;background:rgba(255,255,255,.55);transform:translateX(-50%);z-index:5}
+.x{position:absolute;right:16px;top:16px;width:40px;height:40px;border-radius:50%;background:rgba(10,6,14,.55);border:1px solid rgba(255,255,255,.28);color:#fff;display:grid;place-items:center;font:600 16px Inter;z-index:5;-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px)}
+.cta{display:flex;align-items:center;justify-content:center;height:54px;border-radius:16px;background:linear-gradient(120deg,#e0668a,#8b7bd8);color:#fff;font:600 15px Inter;box-shadow:0 12px 26px rgba(139,123,216,.32)}
+.face{width:44px;height:44px;border-radius:50%;background:url("../worlds/pride-and-prejudice/characters/mr_darcy/appearances/pride.png") 50% 4%/220% auto no-repeat #2a2233;border:2px solid rgba(255,255,255,.7);box-shadow:0 4px 12px rgba(0,0,0,.4)}
+.chips{display:flex;gap:8px;flex-wrap:wrap}
+.chip{display:inline-flex;align-items:center;gap:6px;padding:7px 11px;border-radius:999px;font:700 10.5px Inter;letter-spacing:.1em;text-transform:uppercase}
+svg.i{width:12px;height:12px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+
+/* ---- A · the invitation: cream card, letterpress, gold rule ---- */
+.A .sheet{position:absolute;left:0;right:0;bottom:0;height:560px;border-radius:28px 28px 0 0;background:#f4ecdd;color:#2a2020;box-shadow:0 -20px 60px rgba(0,0,0,.5);overflow:hidden}
+.A .img{position:absolute;left:0;right:0;top:0;height:250px;background:url("../worlds/pride-and-prejudice/episodes/authored/the-assembly/cover.jpg") 50% 30%/cover}
+.A .img::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(244,236,221,0) 55%,#f4ecdd 100%)}
+.A .body{position:absolute;left:28px;right:28px;top:262px;bottom:24px;display:flex;flex-direction:column}
+.A .kick{font:600 11px "Cormorant Garamond",serif;letter-spacing:.34em;text-transform:uppercase;color:#9a6f2a;text-align:center}
+.A .rule{width:54px;height:1px;background:#c9a24a;margin:10px auto 12px;position:relative}
+.A .rule::after{content:"";position:absolute;left:50%;top:-3px;width:7px;height:7px;background:#c9a24a;transform:translateX(-50%) rotate(45deg)}
+.A .title{font:700 34px/1.05 "Playfair Display",serif;text-align:center;color:#1e1614}
+.A .desc{margin:12px 0 0;font:italic 500 17px/1.4 "Cormorant Garamond",serif;color:#5a4a44;text-align:center}
+.A .meta{margin-top:auto;display:flex;align-items:center;justify-content:space-between;padding:12px 0 16px;border-top:1px solid rgba(0,0,0,.08)}
+.A .who{display:flex;align-items:center;gap:10px}
+.A .who b{display:block;font:700 13px Inter;color:#1e1614}.A .who small{font:600 10.5px Inter;letter-spacing:.12em;text-transform:uppercase;color:#9a6f2a}
+.A .time{font:600 11px Inter;letter-spacing:.14em;text-transform:uppercase;color:#7a6a64;display:flex;align-items:center;gap:6px}
+.A .cta{background:#1e1614;box-shadow:0 12px 26px rgba(0,0,0,.25);border-radius:14px;letter-spacing:.06em}
+
+/* ---- B · cinematic: the painting fills the sheet, text on the dark, his bust on the edge ---- */
+.B .sheet{position:absolute;left:0;right:0;bottom:0;height:600px;border-radius:28px 28px 0 0;overflow:hidden;background:#0a070c;box-shadow:0 -20px 60px rgba(0,0,0,.6)}
+.B .img{position:absolute;inset:0;background:url("../worlds/pride-and-prejudice/episodes/authored/the-assembly/cover.jpg") 50% 20%/cover}
+.B .img::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(10,7,12,0) 30%,rgba(10,7,12,.75) 62%,#0a070c 100%)}
+.B .bust{position:absolute;right:-30px;bottom:215px;width:200px;height:300px;background:url("../worlds/pride-and-prejudice/characters/mr_darcy/appearances/pride.png") 50% 0/100% auto no-repeat;filter:drop-shadow(0 10px 24px rgba(0,0,0,.7));-webkit-mask:linear-gradient(#000 78%,transparent);mask:linear-gradient(#000 78%,transparent)}
+.B .body{position:absolute;left:24px;right:24px;bottom:24px}
+.B .chips{margin-bottom:12px}.B .chip{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.22);color:#fff;-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px)}
+.B .chip.gold{color:#f0d47c;border-color:rgba(240,212,124,.5)}
+.B .title{font:700 38px/1.02 "Playfair Display",serif;color:#fff;text-shadow:0 3px 20px rgba(0,0,0,.7)}
+.B .desc{margin:10px 0 18px;font:italic 500 17px/1.4 "Cormorant Garamond",serif;color:#e6dcf0;max-width:300px}
+
+/* ---- C · the programme: dark sheet, framed painting, a dance-card row (who · when · cost) ---- */
+.C .sheet{position:absolute;left:0;right:0;bottom:0;height:590px;border-radius:28px 28px 0 0;background:#151019;box-shadow:0 -20px 60px rgba(0,0,0,.6);overflow:hidden}
+.C .img{position:absolute;left:18px;right:18px;top:30px;height:236px;border-radius:18px;background:url("../worlds/pride-and-prejudice/episodes/authored/the-assembly/cover.jpg") 50% 30%/cover;box-shadow:0 0 0 1px rgba(240,212,124,.35),0 0 0 5px #151019,0 0 0 6px rgba(240,212,124,.18)}
+.C .body{position:absolute;left:24px;right:24px;top:288px;bottom:24px;display:flex;flex-direction:column}
+.C .kick{font:800 10.5px Inter;letter-spacing:.3em;text-transform:uppercase;color:#f0c46a}
+.C .title{margin-top:8px;font:700 32px/1.05 "Playfair Display",serif;color:#fff}
+.C .desc{margin:8px 0 0;font:500 13.5px/1.45 Inter;color:#b9aec8}
+.C .row{margin-top:auto;display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;padding:14px 0 16px;border-top:1px dashed rgba(255,255,255,.14)}
+.C .cell{display:flex;flex-direction:column;gap:6px;align-items:flex-start}
+.C .cell small{font:700 9.5px Inter;letter-spacing:.18em;text-transform:uppercase;color:#7f7395}
+.C .cell b{font:600 13px Inter;color:#fff;display:flex;align-items:center;gap:8px}
+.C .face{width:26px;height:26px;border-width:1.5px}
+
+/* ---- D · the whisper card: the map's own glass card, his bust breaking out of the box ---- */
+.D .sheet{position:absolute;left:14px;right:14px;bottom:24px;height:420px;border-radius:26px;background:rgba(14,10,20,.72);border:1px solid rgba(255,255,255,.16);-webkit-backdrop-filter:blur(18px);backdrop-filter:blur(18px);box-shadow:0 24px 60px rgba(0,0,0,.6);overflow:visible}
+.D .img{position:absolute;left:0;right:0;top:0;height:200px;border-radius:26px 26px 0 0;background:url("../worlds/pride-and-prejudice/episodes/authored/the-assembly/cover.jpg") 50% 35%/cover;overflow:hidden}
+.D .img::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(14,10,20,0) 50%,rgba(14,10,20,.9) 100%)}
+.D .bust{position:absolute;right:-6px;top:-118px;width:210px;height:330px;background:url("../worlds/pride-and-prejudice/characters/mr_darcy/appearances/pride.png") 50% 0/100% auto no-repeat;filter:drop-shadow(0 12px 22px rgba(0,0,0,.65));-webkit-mask:linear-gradient(#000 70%,transparent 96%);mask:linear-gradient(#000 70%,transparent 96%);z-index:2}
+.D .body{position:absolute;left:22px;right:22px;top:150px;bottom:20px;display:flex;flex-direction:column;z-index:3}
+.D .kick{font:800 10.5px Inter;letter-spacing:.3em;text-transform:uppercase;color:#f4a6c0}
+.D .title{margin-top:6px;font:700 30px/1.05 "Playfair Display",serif;color:#fff;text-shadow:0 2px 14px rgba(0,0,0,.6);max-width:230px}
+.D .desc{margin:10px 0 0;font:italic 500 16px/1.4 "Cormorant Garamond",serif;color:#e6dcf0;max-width:250px}
+.D .chips{margin-top:auto;margin-bottom:14px}.D .chip{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.18);color:#d9d0ee}
+.D .x{right:12px;top:12px}
+</style></head><body>
+<h1>Map — the location card, four alternatives</h1>
+<p class="sub">Same data the card has today (cover, kind, title, desc) plus what the location already knows but doesn't show: the suitor (Darcy), time of day, whether it passes a turn. Each is a phone with the map blurred behind.</p>
+<div class="grid">
+
+<div class="card"><h3>A · the invitation</h3><div class="ph A"><div class="map"></div>
+<div class="sheet"><div class="img"></div><div class="grip" style="background:rgba(0,0,0,.25)"></div><div class="x" style="background:rgba(255,255,255,.6);color:#1e1614;border-color:rgba(0,0,0,.1)">✕</div>
+<div class="body"><div class="kick">You are invited</div><div class="rule"></div><div class="title">The Assembly Rooms</div><div class="desc">The Meryton assembly at the height of the evening. Sir William has seen you come in, and he has a plan for you.</div>
+<div class="meta"><div class="who"><div class="face"></div><div><small>You will meet</small><b>Mr Darcy</b></div></div><div class="time"><svg class="i" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>Evening · 1 turn</div></div>
+<div class="cta">Attend</div></div></div></div>
+<p>A card, not a sheet: cream paper, gold rule, Cormorant kicker. Reads as an invitation to the ball. Suitor + time in a quiet footer row; the button is ink-black, not the app gradient.</p></div>
+
+<div class="card"><h3>B · cinematic</h3><div class="ph B"><div class="map"></div>
+<div class="sheet"><div class="img"></div><div class="bust"></div><div class="grip"></div><div class="x">✕</div>
+<div class="body"><div class="chips"><span class="chip gold">Episode 1</span><span class="chip"><svg class="i" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>Evening</span><span class="chip">1 turn</span></div>
+<div class="title">The Assembly Rooms</div><div class="desc">Sir William has seen you come in, and he has a plan for you.</div>
+<div class="cta">Go to Here</div></div></div></div>
+<p>The painting is the whole sheet; text sits on the dark. Darcy's bust stands at the right edge, so you know who waits there before you tap. Closest to the map's mood.</p></div>
+
+<div class="card"><h3>C · the programme</h3><div class="ph C"><div class="map"></div>
+<div class="sheet"><div class="grip"></div><div class="img"></div><div class="x">✕</div>
+<div class="body"><div class="kick">Episode · Meryton</div><div class="title">The Assembly Rooms</div><div class="desc">The Meryton assembly at the height of the evening. Sir William has seen you come in, and he has a plan for you.</div>
+<div class="row"><div class="cell"><small>Suitor</small><b><span class="face"></span>Mr Darcy</b></div><div class="cell"><small>When</small><b>Evening</b></div><div class="cell"><small>Cost</small><b>1 turn</b></div></div>
+<div class="cta">Go to Here</div></div></div></div>
+<p>Dark sheet, the painting in a thin gold frame, and a dance-card row under a dashed rule: suitor · when · cost. Most informative, still calm.</p></div>
+
+<div class="card"><h3>D · the whisper card</h3><div class="ph D"><div class="map"></div>
+<div class="sheet"><div class="img"></div><div class="bust"></div><div class="x">✕</div>
+<div class="body"><div class="kick">Episode</div><div class="title">The Assembly Rooms</div><div class="desc">Sir William has seen you come in, and he has a plan for you.</div>
+<div class="chips"><span class="chip">Evening</span><span class="chip">1 turn</span><span class="chip">Mr Darcy</span></div>
+<div class="cta">Go to Here</div></div></div></div>
+<p>Floating glass card like the map's whisper cards, Darcy breaking out of the top edge (the way Arabella does on the whispers). Consistent with what's already on the map.</p></div>
+
+</div>
+</body></html>

@@ -51,7 +51,8 @@
         }
       },
       "settings": {
-        "speed": 1.2
+        "speed": 1.2,
+        "tempo": 1.12
       }
     },
     "sir_william2": {
@@ -98,6 +99,59 @@
         "stability": 0.5,
         "style": 0.2,
         "lufs": -21
+      }
+    },
+    "arabella_mind": {
+      "active": "e",
+      "voices": {
+        "e": {
+          "id": "mOUhDo8jDpNHQMrvB2xS",
+          "name": "Arabella (E) · inner voice, v3",
+          "note": "Same Arabella voice, eleven_v3 with a whispered, intimate delivery for her private thoughts.",
+          "added": "2026-09-29"
+        }
+      },
+      "settings": {
+        "model": "eleven_v3",
+        "stability": 0.5,
+        "prefix": "[whispers][softly] ",
+        "lufs": -20,
+        "lowpass": 3400,
+        "echo": 0.35
+      }
+    },
+    "lady": {
+      "active": "a",
+      "voices": {
+        "a": {
+          "id": "pFZP5JQG7iQjIQuC4Bku",
+          "name": "Lily (premade, British)",
+          "note": "A young lady behind her fan — overheard, whispered, v3.",
+          "added": "2026-09-29"
+        }
+      },
+      "settings": {
+        "model": "eleven_v3",
+        "stability": 0.45,
+        "prefix": "[whispers][gossiping] ",
+        "lufs": -21
+      }
+    },
+    "officer": {
+      "active": "a",
+      "voices": {
+        "a": {
+          "id": "JBFqnCBsd6RMkjVDRZzb",
+          "name": "George (premade, British)",
+          "note": "A militia officer by the card-room door — amused, half under his breath, v3.",
+          "added": "2026-09-29"
+        }
+      },
+      "settings": {
+        "model": "eleven_v3",
+        "stability": 0.45,
+        "prefix": "[quietly][amused] ",
+        "lufs": -20
       }
     }
   }

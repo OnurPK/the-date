@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Intro — turning doors</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@500;700;800&display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#0e0d13;color:#e7deff;font:500 13px/1.5 Inter,system-ui,sans-serif;padding:20px}
+h1{font:600 20px "Playfair Display",Georgia,serif;margin:0 0 4px}
+p.sub{color:#8a80a4;margin:0 0 12px;font-size:12px;max-width:900px}
+.bar{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 16px;align-items:center}
+.bar button{background:#1b1826;color:#e7deff;border:1px solid #3a3450;border-radius:999px;padding:8px 13px;font:700 10.5px Inter;letter-spacing:.08em;text-transform:uppercase;cursor:pointer}
+.bar button.on{background:#8b7bd8;border-color:#8b7bd8;color:#fff}
+.bar label{font-size:11px;color:#9a90b4}
+.ph{position:relative;width:390px;height:844px;border-radius:38px;overflow:hidden;background:#000;border:6px solid #17141c;zoom:.9}
+/* the room: the original cover, softened, as the wall behind the ring */
+.wall{position:absolute;inset:0;background:url("../worlds/pride-and-prejudice/_mockups/doors/wall.png") center/cover;filter:brightness(.6) saturate(.85) blur(1.5px);transform:scale(1.05)}
+.wall::after{content:"";position:absolute;inset:0;background:radial-gradient(70% 55% at 50% 45%,rgba(0,0,0,0) 30%,rgba(10,6,12,.55) 100%)}
+/* the ring of doors: a 3D carousel behind the girl */
+.scene{position:absolute;inset:0;perspective:1100px;perspective-origin:50% 42%}
+.ring{position:absolute;left:50%;top:44%;width:0;height:0;transform-style:preserve-3d;animation:spin var(--dur,90s) linear infinite}
+.ring.paused{animation-play-state:paused}
+@keyframes spin{from{transform:rotateY(0)}to{transform:rotateY(-360deg)}}
+.door{position:absolute;left:-110px;top:-190px;width:220px;height:330px;transform-style:preserve-3d;backface-visibility:hidden;background-size:cover;background-position:center;border-radius:110px 110px 6px 6px;box-shadow:0 30px 50px rgba(0,0,0,.55);-webkit-mask:linear-gradient(#000 0 0);mask:linear-gradient(#000 0 0)}
+.door::after{content:"";position:absolute;inset:0;border-radius:inherit;box-shadow:inset 0 0 0 4px rgba(232,196,110,.85),inset 0 0 60px rgba(255,200,120,.25)}
+/* the girl on top, and the glow + bulbs from the intro */
+.girl{position:absolute;left:50%;bottom:-2%;width:120%;height:96%;transform:translateX(-50%);background:url("../worlds/pride-and-prejudice/_mockups/doors/girl.png") bottom center/contain no-repeat;pointer-events:none;filter:drop-shadow(0 20px 40px rgba(0,0,0,.6))}
+.grade{position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,0) 55%,rgba(20,10,20,.55) 78%,rgba(20,10,20,.85) 100%);pointer-events:none}
+.topglow{position:absolute;left:0;right:0;top:-40px;height:190px;background:radial-gradient(60% 100% at 50% 0%,rgba(255,196,120,.55),rgba(255,160,90,0) 70%);mix-blend-mode:screen;pointer-events:none;animation:glow 5s ease-in-out infinite}
+@keyframes glow{0%,100%{opacity:.55}50%{opacity:1}}
+.btns{position:absolute;left:0;right:0;bottom:92px;display:flex;flex-direction:column;align-items:center;gap:14px}
+.start{width:240px;padding:17px 0;border-radius:999px;background:#fff;color:#111;text-align:center;font:800 15px Inter;letter-spacing:.32em;box-shadow:0 10px 30px rgba(0,0,0,.5)}
+.line{width:240px;padding:15px 0;border-radius:999px;border:1.5px solid rgba(255,255,255,.75);color:#fff;text-align:center;font:800 14px Inter;letter-spacing:.3em;background:rgba(10,6,14,.22);backdrop-filter:blur(6px)}
+.tag{position:absolute;left:0;right:0;bottom:238px;text-align:center;font:700 11px Inter;letter-spacing:.34em;color:#fff;text-shadow:0 2px 12px rgba(0,0,0,.8);opacity:.9}
+.grid{display:flex;gap:26px;flex-wrap:wrap;align-items:flex-start}
+.sheet{display:grid;grid-template-columns:repeat(4,120px);gap:8px}
+.sheet img{width:120px;height:180px;object-fit:cover;border-radius:8px;background:#222}
+</style></head><body>
+<h1>Intro — the doors turn</h1>
+<p class="sub">The cover's girl (cut out) stays in front; behind her a ring of eight gilded doors — each opening onto another world — turns slowly (one lap every 90 s). The room behind is the original painting, dimmed. Change the speed / radius / door size with the controls; pause to inspect.</p>
+<div class="bar"><label>lap</label><button data-dur="45s">45 s</button><button data-dur="90s" class="on">90 s</button><button data-dur="180s">180 s</button><label>radius</label><button data-r="260">260</button><button data-r="330" class="on">330</button><button data-r="420">420</button><label>doors</label><button data-sz="180">S</button><button data-sz="220" class="on">M</button><button data-sz="270">L</button><button id="pause">pause</button><button id="girlTog" class="on">girl</button></div>
+<div class="grid">
+<div class="ph"><div class="wall"></div><div class="scene"><div class="ring" id="ring"></div></div><div class="topglow"></div><div class="girl" id="girl"></div><div class="grade"></div>
+<div class="tag">NEW FRIENDS, BEST FRIENDS.</div><div class="btns"><div class="start">START GAME</div><div class="line">REGISTER</div></div></div>
+<div><div class="sheet" id="sheet"></div></div>
+</div>
+<script>
+const B='../worlds/pride-and-prejudice/_mockups/doors/';
+const W=['city','country','office','space','pirate','jazz','castle','beach'];
+const ring=document.getElementById('ring'); let R=330, SZ=220;
+function build(){ ring.innerHTML=''; W.forEach((w,i)=>{ const d=document.createElement('div'); d.className='door'; d.style.backgroundImage='url("'+B+'door_'+w+'.png")'; const a=i*360/W.length; d.style.width=SZ+'px'; d.style.height=(SZ*1.5)+'px'; d.style.left=(-SZ/2)+'px'; d.style.top=(-SZ*1.5/2-25)+'px'; d.style.transform='rotateY('+a+'deg) translateZ('+R+'px)'; ring.appendChild(d); }); }
+build();
+document.getElementById('sheet').innerHTML=W.map(w=>'<img src="'+B+'door_'+w+'.png" title="'+w+'">').join('');
+const bar=document.querySelector('.bar');
+bar.querySelectorAll('button[data-dur]').forEach(b=>b.onclick=()=>{ bar.querySelectorAll('button[data-dur]').forEach(x=>x.classList.toggle('on',x===b)); ring.style.setProperty('--dur',b.dataset.dur); });
+bar.querySelectorAll('button[data-r]').forEach(b=>b.onclick=()=>{ bar.querySelectorAll('button[data-r]').forEach(x=>x.classList.toggle('on',x===b)); R=+b.dataset.r; build(); });
+bar.querySelectorAll('button[data-sz]').forEach(b=>b.onclick=()=>{ bar.querySelectorAll('button[data-sz]').forEach(x=>x.classList.toggle('on',x===b)); SZ=+b.dataset.sz; build(); });
+document.getElementById('pause').onclick=e=>{ ring.classList.toggle('paused'); e.target.classList.toggle('on'); };
+document.getElementById('girlTog').onclick=e=>{ const g=document.getElementById('girl'); g.style.display=g.style.display==='none'?'':'none'; e.target.classList.toggle('on'); };
+</script></body></html>

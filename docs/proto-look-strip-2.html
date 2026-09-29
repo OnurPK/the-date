@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>The Look — approach meter, five more</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@500;700;800&family=Cormorant+Garamond:ital,wght@0,500;1,500;1,600&display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#0e0d13;color:#e7deff;font:500 13px/1.5 Inter,system-ui,sans-serif;padding:20px}
+h1{font:600 20px "Playfair Display",Georgia,serif;margin:0 0 4px}
+p.sub{color:#8a80a4;margin:0 0 12px;font-size:12px;max-width:960px}
+.bar{display:flex;gap:14px;align-items:center;margin:0 0 16px;flex-wrap:wrap}
+.bar label{font-size:11px;color:#9a90b4;display:flex;align-items:center;gap:8px}
+.bar input[type=range]{width:260px;accent-color:#8b7bd8}
+.bar button{background:#1b1826;color:#e7deff;border:1px solid #3a3450;border-radius:999px;padding:8px 13px;font:700 10.5px Inter;letter-spacing:.08em;text-transform:uppercase;cursor:pointer}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,390px);gap:26px}
+.card h3{font:700 11px Inter;letter-spacing:.18em;text-transform:uppercase;color:#b9aee0;margin:0 0 8px}
+.card p{color:#8a80a4;font-size:11.5px;margin:8px 0 0;max-width:390px}
+.ph{position:relative;width:390px;height:300px;overflow:hidden;background:#000;border-radius:0 0 38px 38px;border:6px solid #17141c;border-top:0}
+.room{position:absolute;inset:0;background:url("../worlds/pride-and-prejudice/episodes/authored/the-assembly/explore/look_assembly.jpg") 42% 100%/auto 250% no-repeat;filter:brightness(.9)}
+.av{position:absolute;bottom:14px;width:64px;height:80px;background-size:auto 440%;background-position:50% 1%;background-repeat:no-repeat;filter:drop-shadow(0 4px 10px rgba(0,0,0,.7));z-index:3}
+.her{left:14px;background-image:url("../worlds/pride-and-prejudice/characters/arabella_frost/appearances/pride.png")}
+.him{left:calc(100% - 78px);background-image:url("../worlds/pride-and-prejudice/characters/sir_william2/appearances/pride.png");transition:left .9s cubic-bezier(.3,.7,.3,1)}
+.cap{position:absolute;left:84px;right:84px;bottom:112px;text-align:center;color:#fff;text-shadow:0 2px 10px rgba(0,0,0,.95),0 0 18px rgba(0,0,0,.7);font:700 12.5px/1.3 Inter;letter-spacing:.03em;pointer-events:none;z-index:4}
+svg.m{position:absolute;left:0;bottom:0;width:100%;height:120px;z-index:2;overflow:visible}
+.scrim{position:absolute;left:0;right:0;bottom:0;height:120px;background:linear-gradient(180deg,rgba(6,4,10,0),rgba(6,4,10,.6));pointer-events:none}
+</style></head><body>
+<h1>The Look — five more meters (no line)</h1>
+<p class="sub">Same busts; the "he is coming" meter is a drawn object instead of a bar. Drag / play. E ribbon stitched toward her · F his footsteps on the parquet · G her fan closing · H a taper burning down · I a sand-glass running out.</p>
+<div class="bar"><label>approach <input type="range" id="p" min="0" max="1" step="0.01" value="0.35"></label><button id="play">play</button></div>
+<div class="grid">
+
+<div class="card"><h3>E · the ribbon</h3><div class="ph E"><div class="room"></div><div class="scrim"></div>
+<svg class="m" viewBox="0 0 390 120"><defs><linearGradient id="gold" x1="0" x2="1"><stop offset="0" stop-color="#ffe3a3"/><stop offset="1" stop-color="#c9a24a"/></linearGradient></defs>
+<path id="ribBase" d="M84 92 C 150 60, 240 124, 306 92" fill="none" stroke="rgba(255,255,255,.14)" stroke-width="4" stroke-linecap="round"/>
+<path id="rib" d="M84 92 C 150 60, 240 124, 306 92" fill="none" stroke="url(#gold)" stroke-width="4" stroke-linecap="round" stroke-dasharray="0 400" style="filter:drop-shadow(0 0 6px rgba(255,214,130,.8))"/>
+<path id="stitch" d="M84 92 C 150 60, 240 124, 306 92" fill="none" stroke="#3a2210" stroke-width="1.2" stroke-dasharray="3 5" opacity=".9"/>
+<circle id="seal" cx="84" cy="92" r="7" fill="#7a1f2b" stroke="#ffd9a0" stroke-width="1.2" opacity=".55"/></svg>
+<div class="av her"></div><div class="av him"></div><div class="cap">Sir William Lucas has seen you. He is making his way over.</div></div>
+<p>A silk ribbon looped between them, like the cord of a dance card. The gold thread runs from his end toward hers; the wax seal at her side warms as he closes. Curve, not a bar.</p></div>
+
+<div class="card"><h3>F · footsteps</h3><div class="ph F"><div class="room"></div><div class="scrim"></div>
+<svg class="m" viewBox="0 0 390 120" id="feet"></svg>
+<div class="av her"></div><div class="av him"></div><div class="cap">Sir William Lucas has seen you. He is making his way over.</div></div>
+<p>Buckled-shoe prints appear on the parquet, one pair at a time, from his side toward hers; each glints once as it lands, then settles into the floor. The distance is literally his steps.</p></div>
+
+<div class="card"><h3>G · her fan</h3><div class="ph G"><div class="room"></div><div class="scrim"></div>
+<svg class="m" viewBox="0 0 390 120" id="fan"></svg>
+<div class="av her"></div><div class="av him"></div><div class="cap">Sir William Lucas has seen you. He is making his way over.</div></div>
+<p>A lace fan open at the bottom centre; its leaves fold one by one as he nears, until it snaps shut — the period signal that a conversation is about to begin. Nothing between the busts but the fan.</p></div>
+
+<div class="card"><h3>H · the taper</h3><div class="ph H"><div class="room"></div><div class="scrim"></div>
+<svg class="m" viewBox="0 0 390 120" id="taper"></svg>
+<div class="av her"></div><div class="av him"></div><div class="cap">Sir William Lucas has seen you. He is making his way over.</div></div>
+<p>A single candle beside his bust, burning down as he comes; the flame leans toward her and gutters at the end. Time, not distance — reads as a countdown without a bar.</p></div>
+
+<div class="card"><h3>I · the sand-glass</h3><div class="ph I"><div class="room"></div><div class="scrim"></div>
+<svg class="m" viewBox="0 0 390 120" id="glass"></svg>
+<div class="av her"></div><div class="av him"></div><div class="cap">Sir William Lucas has seen you. He is making his way over.</div></div>
+<p>A small brass sand-glass between them; the sand runs from the upper bulb into the lower with a thin falling thread. When the top is empty, he is at her elbow.</p></div>
+
+</div>
+<script>
+const s=document.getElementById('p'); let timer=null; const W=390;
+const rib=document.getElementById('rib'); const ribLen=rib.getTotalLength(); rib.setAttribute('stroke-dasharray','0 '+ribLen);
+function feetSvg(p){ const n=6; let h=''; const L=96,R=300; for(let i=0;i<n;i++){ const x=R-(R-L)*i/(n-1); const on=i<=Math.floor(p*(n-1)+0.0001); const fresh=on&&i===Math.floor(p*(n-1)+0.0001); const y=92+((i%2)?-8:8); const rot=(i%2)?-16:16;
+  h+=`<g transform="translate(${x} ${y}) rotate(${rot})" opacity="${on?(fresh?1:.55):0}" style="transition:opacity .5s"><path d="M-6 -12 C 2 -14, 8 -8, 7 -1 C 6 5, 5 11, -1 12 C -6 12, -8 6, -7 0 C -7 -6, -9 -10, -6 -12 Z" fill="${fresh?'#ffe3a3':'#e9d6b0'}" opacity=".85" style="filter:drop-shadow(0 0 ${fresh?6:0}px rgba(255,214,130,.9))"/></g>`; }
+  document.getElementById('feet').innerHTML=h; }
+function fanSvg(p){ const cx=195, cy=112, r=46, n=9; let h=''; const closed=Math.floor(p*n+0.0001); const spread=Math.max(0.06,1-p); const total=150*spread; const start=-90-total/2;
+  for(let i=0;i<n;i++){ if(i<closed && i<n-1) continue; const a=start+(total)*(i/(n-1)); const rad=a*Math.PI/180; const x=cx+Math.cos(rad)*r, y=cy+Math.sin(rad)*r; const a2=(a+total/(n-1)*0.9)*Math.PI/180; const x2=cx+Math.cos(a2)*r, y2=cy+Math.sin(a2)*r;
+    h+=`<path d="M${cx} ${cy} L${x} ${y} A${r} ${r} 0 0 1 ${x2} ${y2} Z" fill="rgba(255,244,225,.9)" stroke="#c9a24a" stroke-width=".8"/>`; }
+  h+=`<circle cx="${cx}" cy="${cy}" r="4" fill="#c9a24a"/>`; document.getElementById('fan').innerHTML=h; }
+function taperSvg(p){ const x=300, base=108, H=54*(1-p)+8; const top=base-H; const lean=-4-10*p; const flick=Math.sin(Date.now()/90)*1.5;
+  document.getElementById('taper').innerHTML=`<g><ellipse cx="${x}" cy="${base}" rx="16" ry="4" fill="#5a4a2a"/><rect x="${x-6}" y="${top}" width="12" height="${H}" rx="2" fill="#f4ecdd"/><path d="M${x-6} ${top+4} q 3 8 -2 14 M${x+6} ${top+2} q -2 6 1 12" stroke="#e8dcc4" stroke-width="2" fill="none"/>
+  <path d="M${x+flick*0.4} ${top} q ${lean+flick} -12 ${lean*0.3} -24 q 6 12 ${-lean*0.3-flick*0.4} 24 Z" fill="#ffb347" opacity=".95" style="filter:drop-shadow(0 0 8px rgba(255,190,90,.9))"/><path d="M${x+flick*0.2} ${top} q ${lean*0.6} -8 ${lean*0.2} -14 q 3 8 ${-lean*0.2} 14 Z" fill="#fff3c4"/></g>`; }
+function glassSvg(p){ const cx=195, top=62, bot=112, w=22; const sandTop=(1-p), sandBot=p; const h=bot-top; const tt=top+4+ (h/2-6)*(1-sandTop); const bb=bot-4-(h/2-6)*sandBot;
+  document.getElementById('glass').innerHTML=`<g><rect x="${cx-w-6}" y="${top-4}" width="${2*w+12}" height="5" rx="2" fill="#c9a24a"/><rect x="${cx-w-6}" y="${bot-1}" width="${2*w+12}" height="5" rx="2" fill="#c9a24a"/>
+  <path d="M${cx-w} ${top} L${cx+w} ${top} L${cx+3} ${top+h/2} L${cx+w} ${bot} L${cx-w} ${bot} L${cx-3} ${top+h/2} Z" fill="rgba(255,255,255,.08)" stroke="rgba(255,255,255,.45)" stroke-width="1"/>
+  <clipPath id="ct"><path d="M${cx-w} ${top} L${cx+w} ${top} L${cx+3} ${top+h/2} L${cx-3} ${top+h/2} Z"/></clipPath><clipPath id="cb"><path d="M${cx+3} ${top+h/2} L${cx+w} ${bot} L${cx-w} ${bot} L${cx-3} ${top+h/2} Z"/></clipPath>
+  <rect x="${cx-w}" y="${tt}" width="${2*w}" height="${top+h/2-tt}" fill="#e9c98a" clip-path="url(#ct)"/><rect x="${cx-w}" y="${bb}" width="${2*w}" height="${bot-bb}" fill="#e9c98a" clip-path="url(#cb)"/>
+  ${p<1?`<line x1="${cx}" y1="${top+h/2}" x2="${cx}" y2="${bb}" stroke="#e9c98a" stroke-width="1.2" stroke-dasharray="2 2"/>`:''}</g>`; }
+function apply(){ const p=+s.value; document.querySelectorAll('.ph').forEach(ph=>{ const him=ph.querySelector('.him'); const x=(W-78)-(W-78-84)*p; him.style.left=x+'px'; });
+  rib.setAttribute('stroke-dasharray', (ribLen*p)+' '+ribLen); rib.setAttribute('stroke-dashoffset', -(ribLen*(1-p))); document.getElementById('seal').setAttribute('opacity', .55+.45*p);
+  feetSvg(p); fanSvg(p); taperSvg(p); glassSvg(p); }
+// the ribbon fills from HIS end: draw the path reversed by offsetting the dash
+s.oninput=apply; apply(); setInterval(()=>taperSvg(+s.value),80);
+document.getElementById('play').onclick=()=>{ if(timer){ clearInterval(timer); timer=null; return; } s.value=0; timer=setInterval(()=>{ s.value=Math.min(1,+s.value+0.004); apply(); if(+s.value>=1){ clearInterval(timer); timer=null; } },40); };
+</script></body></html>

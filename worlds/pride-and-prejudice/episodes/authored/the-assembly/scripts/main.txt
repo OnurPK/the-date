@@ -16,37 +16,210 @@
 [bg:scene=as_room.jpg] [amb:ballroom] [random:ballroom] [music:assembly] [ui:narrative]
 Narrative: The Meryton rooms are full to the walls and bright as day.
 Narrative: Mr Bingley was to have come tonight and has not, and every eye in the room has gone instead to the friend who came without him: tall, handsome, worth ten thousand a year, standing by the far wall and pleased with nothing.
-Narrative: Sir William Lucas has seen you come in. He is already on his way.
+Narrative: The set is forming; the fiddles in the gallery are tuning for the next figure, and the punch is going round faster than the introductions.
+Narrative: You are new, unannounced, and for one more minute unobserved. The whole county is in this room, and it has not yet decided what you are.
+Narrative: You have the length of the room before anyone claims you. Use it.
 (Quest: Take the measure of the room — and of the man by the far wall.)
 
-// --- Turn 1 · Sir William on his way ---
-[bg:cutscene=as_sir_william.jpg] [ui:cast-small]
-Narrative: Sir William crosses the floor with the air of a man delivering good news to the world at large.
+// --- The Look · Arabella reads the room while Sir William crosses it ---
+// (Look) opens the wide room; each (Spot) is a tap. Time runs only while the room is
+// in view; Sir William's avatar closes on Arabella's, and when it arrives the Look cuts.
+(Look: image=explore/look_assembly.jpg | approach=sir_william2 | seconds=80 | caption=Sir William Lucas has seen you. He is making his way over.)
+[music:assembly_far] [amb:ballroom_near]
+
+(Spot: fans | x=9 | y=38 | zoom=2.1 | label=The fans)
+[ui:narrative]
+Narrative: Three fans, one conversation. It stops when you are near enough to hear it, then starts again, lower.
+Lady: Ten thousand a year, and he has not asked anyone. Not even Miss Long.
+Lady: Mr Bingley sent his regrets and his friend. I should have preferred the regrets.
+[ui:cast-small]
+Arabella-Mind: So the room has weighed him already. It only wants a scale.
+[ui:multi]
+(Choice:3)
+Narrative: Smile over your own fan, and let them see that you have heard. [trait: Sharpest Wit in the Room]
+Arabella: Perhaps he is waiting to be introduced to someone worth the trouble. [trait: Small Fortune, Large Spirit]
+Narrative: Move on. Fans that flutter for you tonight will flutter against you by supper. [trait: Weakness]
+
+(IfChoice:0)
+  [ui:narrative]
+  Narrative: You raise your own fan, and smile over the edge of it, straight at them.
+  Narrative: The nearest fan drops an inch. You are noticed, and you have not yet been announced.
+(EndIf)
+(IfChoice:1)
+  [ui:narrative]
+  Lady: Then he will wait all night, my dear.
+  Narrative: Two of the three laugh. The third looks at you a beat too long.
+(EndIf)
+(IfChoice:2)
+  [ui:narrative]
+  Narrative: You walk on before the whispering can change its subject.
+  [ui:cast-small]
+  Arabella-Mind: Let them talk. Talk is the cheapest thing in Meryton, and the most spent.
+(EndIf)
+(Discovery: The room has priced Mr Darcy before he has said a word; his silence is doing the bargaining.)
+(EndSpot)
+
+(Spot: darcy | x=72 | y=24 | zoom=2.4 | label=The man by the wall)
+[ui:narrative]
+Narrative: He stands where the candles do not quite reach, arms folded, as if the wall had asked him to.
+Narrative: He has looked at the door twice since you came in. Not at you. At the door.
+[ui:cast-small]
+Arabella-Mind: A man who brings his own weather. I wonder who taught him.
+[ui:multi]
+(Choice:3)
+Narrative: Hold his eye until he looks away first. [trait: Small Fortune, Large Spirit]
+Narrative: Look past him, at the window, as though he were part of the furniture. [trait: Sharpest Wit in the Room]
+Narrative: Look down. Let him keep his wall. [trait: Weakness]
+
+(IfChoice:0)
+  [ui:narrative]
+  Narrative: You meet his eye across the length of the room, and keep it.
+  Narrative: He does not look away. He does not look at you either; he looks through, at something in Derbyshire.
+(EndIf)
+(IfChoice:1)
+  [ui:narrative]
+  Narrative: Your gaze slides past him to the window, as if he were a chair someone had left against the wall.
+  Narrative: The corner of his mouth moves. It might be contempt. It might be the first thing tonight that has interested him.
+  (Relation: mr_darcy | desire | +1)
+(EndIf)
+(IfChoice:2)
+  [ui:narrative]
+  Narrative: You lower your eyes, and give the floor the attention it seems to want.
+  [ui:cast-small]
+  Arabella-Mind: There. Now he is the only person in the room who has not seen you. Good.
+(EndIf)
+(Discovery: Mr Darcy has not danced and does not mean to; he came for Bingley, and Bingley is not here.)
+(EndSpot)
+
+(Spot: officers | x=83 | y=30 | zoom=2.2 | label=The red coats)
+[ui:narrative]
+Narrative: Two red coats by the card-room door, laughing at something the room is not meant to hear.
+Officer: ...and Vane says, "Madam, the regiment does not retreat. It advances in another direction."
+Officer: Quiet. The one by the door is listening.
+[ui:cast-small]
+Arabella-Mind: Officers are like church bells. Loud, regular, and everybody knows what they are for.
+[ui:multi]
+(Choice:3)
+Narrative: Ask which of them is Captain Vane. [trait: Sharpest Wit in the Room]
+Narrative: Give them the smallest curtsey the county allows, and walk on.
+Narrative: Stay a moment longer than is proper, and let the regiment wonder why. [trait: Small Fortune, Large Spirit]
+
+(IfChoice:0)
+  [ui:narrative]
+  Narrative: You step near enough to be answered, and ask which of the two is the famous Captain Vane.
+  Officer: Neither, madam. Vane is at cards, and losing.
+  Narrative: They both laugh. One of them writes your face down somewhere behind his eyes.
+(EndIf)
+(IfChoice:1)
+  [ui:narrative]
+  Narrative: A curtsey no deeper than the law requires, and you are past them.
+  Narrative: The curtsey is returned with a bow deep enough to be mockery and short enough to be denied.
+(EndIf)
+(IfChoice:2)
+  [ui:narrative]
+  Narrative: You stop, a step too near and a breath too long, and let them notice it.
+  Officer: I say.
+  Narrative: The regiment wonders.
+(EndIf)
+(Memory: arabella | The regiment has a Captain Vane who loses at cards and is quoted like scripture.)
+(EndSpot)
+
+(Spot: couple_blue | x=43 | y=40 | zoom=2.0 | label=The girl in blue)
+[ui:narrative]
+Narrative: A girl in blue, dancing as if the floor were paid for by the hour.
+Narrative: Her partner counts the steps with his lips. She counts the gentlemen who are watching.
+[ui:cast-small]
+Arabella-Mind: One of the Miss Longs, I think. Her mother told her to be seen. She is being seen.
+(EndSpot)
+
+(Spot: couple_pink | x=57 | y=38 | zoom=2.0 | label=The pink gown)
+[ui:narrative]
+Narrative: A pink gown and a partner who holds her as if she might be recalled to the shop.
+Narrative: They do not speak. They have been married since Michaelmas and have said everything.
+[ui:cast-small]
+Arabella-Mind: That is what settled looks like from the outside. From the inside it must look like the ceiling.
+(EndSpot)
+
+(Spot: cardroom | x=94 | y=32 | zoom=2.3 | label=The card room)
+[ui:narrative]
+Narrative: Through the door: green baize, a guttering candle, a heap of coins that changes hands without anyone looking glad.
+Narrative: Someone in there has just lost a great deal and is laughing about it. Someone else is not laughing.
+[ui:cast-small]
+Arabella-Mind: Cards are the one place a gentleman tells the truth. He simply tells it to the table.
+[ui:multi]
+(Choice:3)
+Narrative: Step to the door and see whose luck it is. [trait: Small Fortune, Large Spirit]
+Narrative: Stay outside. A lady at a card-room door is a rumour by morning. [trait: Weakness]
+Narrative: Ask the footman, idly, who plays deepest tonight. [trait: Sharpest Wit in the Room]
+
+(IfChoice:0)
+  [ui:narrative]
+  Narrative: You go as far as the doorway, and no farther.
+  Narrative: A scarlet back at the table; a hand of cards laid down slowly, as if they were heavy. Nobody turns round.
+(EndIf)
+(IfChoice:1)
+  [ui:narrative]
+  Narrative: You keep to the ballroom side of the door, where a lady may stand and hear.
+  Narrative: The laughter comes again, and this time it is thinner. The laughter comes again, and this time it is thinner.
+(EndIf)
+(IfChoice:2)
+  [ui:narrative]
+  Narrative: You let a footman pass, and ask him, as if it hardly mattered, who plays deepest tonight.
+  Narrative: "Captain Vane, madam," says the footman, to his tray. "Always Captain Vane."
+(EndIf)
+(Discovery: The regiment's debts are made in the card room and paid for in the ballroom.)
+(EndSpot)
+
+(Spot: gallery | x=36 | y=9 | zoom=2.2 | label=The musicians)
+[ui:narrative]
+Narrative: Above the room, the fiddlers saw through the last figure of the set with the faces of men paid by the hour.
+Narrative: The first violin catches your eye and plays the next bar a shade faster, for you.
+[ui:cast-small]
+Arabella-Mind: The music does not care who is worth ten thousand a year. That is why I like it.
+(EndSpot)
+
+(Spot: painting | x=80 | y=12 | zoom=2.4 | label=The portrait)
+[ui:narrative]
+Narrative: A dark oil of somebody's grandfather, all wig and disapproval, hung where he can see the card-room door.
+[ui:cast-small]
+Arabella-Mind: They put him there to watch the money. He looks as though he has watched a great deal of it leave.
+(EndSpot)
+(EndLook)
+
+// --- Turn 1 · Sir William arrives (the Look cuts here) ---
+[bg:cutscene=as_sir_william.jpg] [amb:ballroom] [music:assembly] [ui:narrative]
+Narrative: Sir William Lucas has crossed the floor, with the air of a man delivering good news to the world at large.
+[ui:cast-small] [pose:sir-william2=beam]
 Sir-William2: Miss Frost, allow me, Sir William Lucas, and I shall introduce you to everyone of consequence!
+[pose:sir-william2=present]
 Sir-William2: Even Mr Darcy, who has danced at St James's itself, shall not escape the floor tonight!
 [ui:multi]
 (Choice:3)
 Arabella: Sir William, does St James's teach a man to refuse a partner? [trait: Sharpest Wit in the Room]
 Arabella: A man who condescends to dance still condescends, Sir William. [trait: Small Fortune, Large Spirit]
-Arabella: Turn your gaze toward the far wall, where Mr Darcy stands, and say nothing. [trait: Weakness]
+Narrative: Turn your gaze toward the far wall, where Mr Darcy stands, and say nothing. [trait: Weakness]
 
 (IfChoice:0)
-  [bg:explore=assembly] [ui:cast-large]
+  [bg:explore=assembly] [pose:sir-william2=confide] [ui:cast-large]
   Narrative: Sir William drops his chin and leans in, one hand raised to shield the confidence.
   Sir-William2: Between ourselves, Miss Frost, I mean to put you before Mr Darcy before supper is served.
 (EndIf)
 (IfChoice:1)
-  [bg:explore=assembly] [ui:cast-large]
+  [bg:explore=assembly] [pose:sir-william2=confide] [ui:cast-large]
   Sir-William2: Condescension, Miss Frost, is the whole point of him. Between ourselves, I mean to put you before him before supper.
 (EndIf)
 (IfChoice:2)
-  [bg:explore=assembly] [ui:cast-large]
+  [bg:explore=assembly] [pose:sir-william2=present] [ui:cast-large]
   Narrative: Sir William follows your look and takes it for eagerness.
   Sir-William2: Ah! Then I mean to put you before him before supper is served.
 (EndIf)
 [ui:narrative]
-Narrative: Across the room, that knot of fan-wielding young ladies watches Mr Darcy as if he were a comet; he looks nowhere.
-(Discovery: Mr Darcy is wanted by the whole room and wants none of it.)
+(IfLooked:fans)
+Narrative: Across the room, the fans have found a new subject. You.
+(EndIf)
+(IfLooked:darcy)
+Narrative: By the far wall, nothing has changed. That is his whole argument.
+(EndIf)
 (Relation: sir_william2 | affection | +1)
 
 // --- Turn 2 · St James's ---
@@ -54,26 +227,26 @@ Narrative: Across the room, that knot of fan-wielding young ladies watches Mr Da
 (Choice:3)
 Arabella: Tell me, Sir William, does St James's improve a man's manners or merely his posture?
 Arabella: I will not be placed before Mr Darcy like a dish at supper. [trait: Small Fortune, Large Spirit]
-Arabella: Turn the fan slowly in your hand, and say nothing. [trait: Weakness]
+Narrative: Turn the fan slowly in your hand, and say nothing. [trait: Weakness]
 
 (IfChoice:0)
-  [ui:cast-large]
+  [pose:sir-william2=beam] [ui:cast-large]
   Narrative: Sir William presses one hand to his breast, closes his eyes, and bows low and slow, as though the fiddlers are trumpets and the assembly room is St James's itself.
   Sir-William2: Both, Miss Frost, both.
 (EndIf)
 (IfChoice:1)
-  [ui:cast-large]
+  [pose:sir-william2=beam] [ui:cast-large]
   Sir-William2: A dish! My dear Miss Frost, a dish does not answer back. That is precisely why I want you at the table.
 (EndIf)
 (IfChoice:2)
-  [ui:cast-large]
+  [pose:sir-william2=confide] [ui:cast-large]
   Narrative: The fan turns once, twice. Sir William fills the silence himself, at length.
   Sir-William2: Both, Miss Frost, both, manners and posture. You shall see.
 (EndIf)
-(Video:as_charlottes_bet.mp4)
-[bg:cutscene=as_still_man.jpg] [ui:narrative]
+(Video: as_charlotte_whisper.mp4 | say=Charlotte finds you before the set is called, takes your arm, and puts her mouth to your ear. | cue=4.4:sfx.whisper_ear:.8)
+[bg:cutscene=as_charlotte_whisper.jpg] [ui:narrative]
 Narrative: Nobody will make Mr Darcy dance tonight. That is Charlotte's wager, and she has taken it.
-[ui:cast-small]
+[bg:cutscene=as_still_man.jpg] [ui:cast-small]
 Arabella2: A bet against the room. Charlotte does love a sure thing.
 
 // --- Turn 3 · lead me to him ---
@@ -101,8 +274,9 @@ Arabella: Set your glass down and cross the floor toward Mr Darcy yourself.
 // SITUATION 2 · BY THE WALL   (7 turns + the cut-in)
 // ═══════════════════════════════════════════════════════════
 (Situation: by_the_wall | By the Wall | A quiet stretch of floor by the wall, the loud room at your backs, the next set not yet called.)
-(Video:as_darcy_by_the_wall.mp4)
-[bg:cutscene=as_measuring.jpg] [ui:narrative]
+[music:darcy_reveal]
+(Intro: mr_darcy | video=as_darcy_reveal.mp4 | say=Sir William's voice falls away behind you. Across the floor, a man turns his head. | breath=7.2)
+[bg:cutscene=as_darcy_reveal.jpg] [ui:narrative]
 Narrative: Mr Darcy has not yet spoken; he simply looks at you, measuring.
 [bg:cutscene=as_his_hands.jpg] [ui:cast-small]
 Narrative: He holds your gaze a moment longer than courtesy strictly requires, then inclines his head a precise degree.
@@ -282,6 +456,7 @@ Arabella: Prove, then, that the Meryton rooms do not frighten you.
 (EndIf)
 
 // --- The cut-in · Captain Carter ---
+[music:assembly]
 (Video:as_vane_cuts_in.mp4)
 [bg:cutscene=as_set_forming.jpg] [ui:cast-small]
 Narrative: A red coat arrives at your elbow, all salt and sunshine, and bows to you and not to Mr Darcy.

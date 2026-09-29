@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Intro — draw the oval</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@500;700;800&display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#0e0d13;color:#e7deff;font:500 13px/1.5 Inter,system-ui,sans-serif;padding:16px 20px}
+h1{font:600 20px "Playfair Display",Georgia,serif;margin:0 0 4px}
+p.sub{color:#8a80a4;margin:0 0 10px;font-size:12px;max-width:1000px}
+.bar{display:flex;gap:8px 14px;flex-wrap:wrap;margin:0 0 12px;align-items:center}
+.bar label{font-size:11px;color:#9a90b4;display:flex;align-items:center;gap:6px}
+.bar label b{color:#fff;min-width:34px;text-align:right}
+.bar input[type=range]{width:110px;accent-color:#8b7bd8}
+.bar button{background:#1b1826;color:#e7deff;border:1px solid #3a3450;border-radius:999px;padding:8px 13px;font:700 10.5px Inter;letter-spacing:.08em;text-transform:uppercase;cursor:pointer}
+.bar button.on{background:#8b7bd8;border-color:#8b7bd8;color:#fff}
+/* the canvas: the phone sits in the middle, the oval may spill outside it */
+#canvas{position:relative;width:1200px;height:960px;background:#141219 radial-gradient(60% 60% at 50% 50%,#1b1824,#141219);border-radius:16px;overflow:hidden;user-select:none}
+.ph{position:absolute;left:405px;top:58px;width:390px;height:844px;border-radius:38px;overflow:hidden;background:#000;box-shadow:0 0 0 6px #17141c,0 30px 80px rgba(0,0,0,.6)}
+.room{position:absolute;inset:0;background:url("../worlds/pride-and-prejudice/_mockups/doors/room_empty_1440.jpg") center/cover;filter:brightness(.86) contrast(.9) saturate(.95)}
+.stage{position:absolute;inset:0;overflow:hidden;z-index:1;perspective:var(--D,900px);perspective-origin:var(--ox,50%) var(--oy,50%)}
+.ring{position:absolute;left:0;top:0;width:0;height:0;transform-style:preserve-3d}
+.spin{position:absolute;left:0;top:0;transform-style:preserve-3d;animation:spin var(--dur,240s) linear infinite}
+.paused .spin{animation-play-state:paused}
+@keyframes spin{from{transform:rotateY(0)}to{transform:rotateY(-360deg)}}
+.door{position:absolute;overflow:hidden;pointer-events:none;animation:fade var(--dur,240s) linear infinite;animation-delay:var(--d,0s)}
+.paused .door{animation-play-state:paused}
+.door .world{position:absolute;left:25.3%;top:12.7%;width:49.1%;height:74.2%;background-size:cover;background-position:center}
+.door .frame{position:absolute;inset:0;background:url("../worlds/pride-and-prejudice/_mockups/doors/tile_door_cut.webp") center/100% 100% no-repeat}
+.girl{position:absolute;inset:0;z-index:2;background:url("../worlds/pride-and-prejudice/_mockups/doors/girl_cut.webp") center/cover;filter:brightness(.86) contrast(.9) saturate(.95);pointer-events:none}
+.grade{position:absolute;inset:0;z-index:3;background:linear-gradient(180deg,rgba(0,0,0,0) 55%,rgba(20,10,20,.55) 78%,rgba(20,10,20,.85) 100%);pointer-events:none}
+.topglow{position:absolute;z-index:3;left:0;right:0;top:-40px;height:190px;background:radial-gradient(60% 100% at 50% 0%,rgba(255,196,120,.55),rgba(255,160,90,0) 70%);mix-blend-mode:screen;pointer-events:none}
+.btns{position:absolute;z-index:4;left:0;right:0;bottom:92px;display:flex;flex-direction:column;align-items:center;gap:14px;pointer-events:none}
+.start{width:240px;padding:17px 0;border-radius:999px;background:#fff;color:#111;text-align:center;font:800 15px Inter;letter-spacing:.32em;box-shadow:0 10px 30px rgba(0,0,0,.5)}
+.line{width:240px;padding:15px 0;border-radius:999px;border:1.5px solid rgba(255,255,255,.75);color:#fff;text-align:center;font:800 14px Inter;letter-spacing:.3em;background:rgba(10,6,14,.22)}
+.tag{position:absolute;z-index:4;left:0;right:0;bottom:238px;text-align:center;font:700 11px Inter;letter-spacing:.34em;color:#fff;text-shadow:0 2px 12px rgba(0,0,0,.8);opacity:.9;pointer-events:none}
+/* the editable oval, drawn over the whole canvas */
+svg#g{position:absolute;inset:0;width:100%;height:100%;z-index:10}
+svg#g ellipse.body{fill:rgba(120,230,255,.06);stroke:#7ef;stroke-width:1.5;stroke-dasharray:6 5;cursor:move;pointer-events:all}
+svg#g circle.h{fill:#fff;stroke:#7ef;stroke-width:2;cursor:pointer;pointer-events:all}
+svg#g circle.h.ew{cursor:ew-resize} svg#g circle.h.ns{cursor:ns-resize}
+svg#g line{stroke:#7ef;stroke-width:1;stroke-dasharray:3 4;pointer-events:none}
+svg#g text{fill:#7ef;font:700 10px Inter;pointer-events:none}
+svg#g.off{display:none}
+.help{color:#9a90b4;font-size:12px;line-height:1.6;max-width:1000px;margin-top:10px}
+.help code{color:#e7deff}
+</style></head><body>
+<h1>Intro — draw the oval, I do the 3D</h1>
+<p class="sub">The phone sits in the middle; the oval is the doors' floor track and may spill outside the phone. Drag the oval body to move it, drag the four handles to resize (width = radius, height = how flat the camera sees it). Doors stand on the track facing the camera, shrinking toward the far end; only the far half is shown.</p>
+<div class="bar">
+<label>door h <b id="v_H">380</b> <input type="range" id="s_H" min="120" max="900" step="10" value="380"></label>
+<label>far scale <b id="v_far">0.62</b> <input type="range" id="s_far" min="0.2" max="1" step="0.02" value="0.62"></label>
+<label>lap <b id="v_dur">240</b>s <input type="range" id="s_dur" min="30" max="400" step="10" value="240"></label>
+<label>arc <b id="v_arc">200</b>° <input type="range" id="s_arc" min="60" max="360" step="10" value="200"></label>
+<label>slots <b id="v_N">12</b> <input type="range" id="s_N" min="4" max="60" step="1" value="12"></label>
+<button id="autoN" title="slots = circumference / door width">auto slots</button>
+<button id="guide" class="on">guide</button><button id="pause">pause</button><button id="girlTog" class="on">girl</button><button id="copy">copy values</button>
+</div>
+<div id="canvas">
+  <div class="ph" id="ph"><div class="room"></div><div class="stage" id="stage"><div class="ring" id="ring"><div class="spin" id="spin"></div></div></div><div class="girl" id="girl"></div><div class="topglow"></div><div class="grade"></div>
+  <div class="tag">NEW FRIENDS, BEST FRIENDS.</div><div class="btns"><div class="start">START GAME</div><div class="line">REGISTER</div></div></div>
+  <svg id="g"><ellipse class="body" id="el"/><line id="ln"/><text id="tx">door h</text>
+    <circle class="h ew" id="hL" r="7"/><circle class="h ew" id="hR" r="7"/><circle class="h ns" id="hT" r="7"/><circle class="h ns" id="hB" r="7"/></svg>
+</div>
+<div class="help"><b>How the 3D is derived</b> — the oval is a circle of radius <code>rx</code> lying on the floor, tilted so it projects to what you drew (<code>sin tilt = ry / rx</code>), centred at (cx, cy). It is one real 3D scene: the doors are the faces of a regular polygon inscribed in that circle (side = <code>2·rx·tan(π/N)</code>), so they meet edge to edge and bend around the curve with no seams. <code>far scale</code> sets the camera distance (how much the far side shrinks); <code>slots</code> = number of faces (<b>auto slots</b> picks the count that makes each face one door wide); <code>arc</code> = the visible part of the far side. Values are in phone pixels (390×844, origin top-left of the phone), so the JSON from <b>copy values</b> ports straight into the real intro.</div>
+<script>
+const B='../worlds/pride-and-prejudice/_mockups/doors/';
+const IMGS=['city','country','space','jazz','beach','castle','pirate','office'];
+const PX=405, PY=58;                                   // phone offset inside the canvas
+const P={cx:187,cy:557,rx:691,ry:183,H:380,far:.68,dur:280,arc:180,N:34};   // cx/cy/rx/ry in PHONE pixels
+const ASPECT=1.3545; const stage=document.getElementById('stage'), ring=document.getElementById('ring'), spin=document.getElementById('spin'); let paused=false;
+const fadeStyle=document.createElement('style'); document.head.appendChild(fadeStyle);
+function circumference(){ const a=P.rx,b=P.ry; const h=Math.pow(a-b,2)/Math.pow(a+b,2); return Math.PI*(a+b)*(1+3*h/(10+Math.sqrt(4-3*h))); }
+/* The oval → one consistent 3D scene: a circle of radius rx on the floor, tilted so it projects to the drawn ellipse (sin tilt = ry/rx),
+   centred at (cx,cy) on the picture plane. Perspective distance D comes from 'far scale' (a door at the far side, depth ≈ rx behind the plane,
+   is scaled D/(D+rx)). Doors are tangent panels of a regular polygon (side = 2·rx·tan(π/N)): they meet edge to edge with no seams. */
+function build(){ spin.innerHTML=''; const tilt=Math.asin(Math.min(1,P.ry/P.rx))*180/Math.PI; const D=Math.max(200, P.rx*P.far/(1-P.far+1e-6));
+  stage.style.setProperty('--D',D+'px'); stage.style.setProperty('--ox',P.cx+'px'); stage.style.setProperty('--oy',(P.cy-P.ry)+'px');
+  ring.style.left=P.cx+'px'; ring.style.top=P.cy+'px'; ring.style.transform='rotateX('+(-tilt)+'deg)'; spin.style.setProperty('--dur',P.dur+'s');
+  const w=2*P.rx*Math.tan(Math.PI/P.N)+1, h=P.H;   // P.H = door height in the ring's own units (edge to edge width follows the polygon)
+  const half=P.arc/720, soft=.06; const a0=Math.max(0,.5-half-soft), a1=.5-half, b1=.5+half, b0=Math.min(1,.5+half+soft);
+  fadeStyle.textContent='@keyframes fade{0%,'+(a0*100).toFixed(1)+'%{opacity:0}'+(a1*100).toFixed(1)+'%{opacity:1}'+(b1*100).toFixed(1)+'%{opacity:1}'+(b0*100).toFixed(1)+'%,100%{opacity:0}}';
+  for(let i=0;i<P.N;i++){ const d=document.createElement('div'); d.className='door'; d.innerHTML='<div class="world" style="background-image:url(&quot;'+B+'world_'+IMGS[i%IMGS.length]+'.jpg&quot;)"></div><div class="frame"></div>';
+    d.style.width=w+'px'; d.style.height=h+'px'; d.style.left=(-w/2)+'px'; d.style.top=(-h)+'px'; const a=i*360/P.N;
+    d.style.transform='rotateY('+a+'deg) translateZ('+P.rx+'px) rotateY(180deg) scaleX(-1) rotateX('+tilt+'deg)';   /* stand upright again after the ring tilt */
+    d.style.setProperty('--d', (-((1-a/360)%1)*P.dur)+'s'); spin.appendChild(d); } }
+build();
+// ---- the oval editor (canvas coordinates = phone coordinates + offset) ----
+const $=id=>document.getElementById(id);
+function guide(){ const cx=P.cx+PX, cy=P.cy+PY; const el=$('el'); el.setAttribute('cx',cx); el.setAttribute('cy',cy); el.setAttribute('rx',P.rx); el.setAttribute('ry',P.ry);
+  $('hL').setAttribute('cx',cx-P.rx); $('hL').setAttribute('cy',cy); $('hR').setAttribute('cx',cx+P.rx); $('hR').setAttribute('cy',cy); $('hT').setAttribute('cx',cx); $('hT').setAttribute('cy',cy-P.ry); $('hB').setAttribute('cx',cx); $('hB').setAttribute('cy',cy+P.ry);
+  const ln=$('ln'); ln.setAttribute('x1',cx); ln.setAttribute('x2',cx); ln.setAttribute('y1',cy+P.ry); ln.setAttribute('y2',cy+P.ry-P.H); $('tx').setAttribute('x',cx+8); $('tx').setAttribute('y',cy+P.ry-P.H+12); }
+function syncUI(){ ['H','far','dur','arc','N'].forEach(k=>{ $('s_'+k).value=P[k]; $('v_'+k).textContent=P[k]; }); guide(); }
+['H','far','dur','arc','N'].forEach(k=>{ $('s_'+k).oninput=()=>{ P[k]=+$('s_'+k).value; $('v_'+k).textContent=$('s_'+k).value; build(); guide(); }; });
+const cv=$('canvas'); let drag=null;
+const pt=e=>{ const r=cv.getBoundingClientRect(); return {x:e.clientX-r.left, y:e.clientY-r.top}; };
+function startDrag(kind){ return e=>{ e.preventDefault(); const p=pt(e); drag={kind, sx:p.x, sy:p.y, cx:P.cx, cy:P.cy, rx:P.rx, ry:P.ry}; cv.setPointerCapture(e.pointerId); }; }
+$('el').addEventListener('pointerdown',startDrag('move')); $('hL').addEventListener('pointerdown',startDrag('L')); $('hR').addEventListener('pointerdown',startDrag('R')); $('hT').addEventListener('pointerdown',startDrag('T')); $('hB').addEventListener('pointerdown',startDrag('B'));
+cv.addEventListener('pointermove',e=>{ if(!drag) return; const p=pt(e); const dx=p.x-drag.sx, dy=p.y-drag.sy;
+  if(drag.kind==='move'){ P.cx=Math.round(drag.cx+dx); P.cy=Math.round(drag.cy+dy); }
+  else if(drag.kind==='R'){ P.rx=Math.max(20,Math.round(drag.rx+dx)); } else if(drag.kind==='L'){ P.rx=Math.max(20,Math.round(drag.rx-dx)); }
+  else if(drag.kind==='B'){ P.ry=Math.max(6,Math.round(drag.ry+dy)); } else if(drag.kind==='T'){ P.ry=Math.max(6,Math.round(drag.ry-dy)); }
+  guide(); build(); });
+cv.addEventListener('pointerup',()=>{ drag=null; }); cv.addEventListener('pointercancel',()=>{ drag=null; });
+$('autoN').onclick=()=>{ P.N=Math.max(4,Math.min(60,Math.round(2*Math.PI*P.rx/(P.H/ASPECT)))); build(); syncUI(); };
+$('guide').onclick=e=>{ $('g').classList.toggle('off'); e.target.classList.toggle('on'); };
+$('pause').onclick=e=>{ stage.classList.toggle('paused'); e.target.classList.toggle('on'); };
+$('girlTog').onclick=e=>{ const g=$('girl'); g.style.display=g.style.display==='none'?'':'none'; e.target.classList.toggle('on'); };
+$('copy').onclick=()=>{ const t=JSON.stringify(P); navigator.clipboard&&navigator.clipboard.writeText(t); alert(t); };
+syncUI();
+</script></body></html>

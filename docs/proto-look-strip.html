@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>The Look — approach strip alternatives</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@500;700;800&family=Playfair+Display:ital,wght@0,500;1,500&display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#0e0d13;color:#e7deff;font:500 13px/1.5 Inter,system-ui,sans-serif;padding:20px}
+h1{font:600 20px "Playfair Display",Georgia,serif;margin:0 0 4px}
+p.sub{color:#8a80a4;margin:0 0 12px;font-size:12px;max-width:900px}
+.bar{display:flex;gap:14px;align-items:center;margin:0 0 16px;flex-wrap:wrap}
+.bar label{font-size:11px;color:#9a90b4;display:flex;align-items:center;gap:8px}
+.bar input[type=range]{width:260px;accent-color:#8b7bd8}
+.bar button{background:#1b1826;color:#e7deff;border:1px solid #3a3450;border-radius:999px;padding:8px 13px;font:700 10.5px Inter;letter-spacing:.08em;text-transform:uppercase;cursor:pointer}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,390px);gap:26px}
+.card h3{font:700 11px Inter;letter-spacing:.18em;text-transform:uppercase;color:#b9aee0;margin:0 0 8px}
+.card p{color:#8a80a4;font-size:11.5px;margin:8px 0 0;max-width:390px}
+/* a phone's bottom 300px: the room, and the strip over it */
+.ph{position:relative;width:390px;height:300px;overflow:hidden;background:#000;border-radius:0 0 38px 38px;border:6px solid #17141c;border-top:0}
+.room{position:absolute;inset:0;background:url("../worlds/pride-and-prejudice/episodes/authored/the-assembly/explore/look_assembly.jpg") 42% 100%/auto 250% no-repeat;filter:brightness(.9)}
+.av{position:absolute;bottom:0;width:64px;height:80px;background-size:auto 440%;background-position:50% 1%;background-repeat:no-repeat;filter:drop-shadow(0 4px 10px rgba(0,0,0,.7))}
+.her{background-image:url("../worlds/pride-and-prejudice/characters/arabella_frost/appearances/pride.png")}
+.him{background-image:url("../worlds/pride-and-prejudice/characters/sir_william2/appearances/pride.png")}
+.cap{position:absolute;left:0;right:0;text-align:center;color:#fff;text-shadow:0 2px 10px rgba(0,0,0,.95),0 0 18px rgba(0,0,0,.7);font:700 13px/1.3 Inter;letter-spacing:.03em;pointer-events:none}
+
+/* ---- A · gilded hairline: a single thin gold line that lights up from her side as he comes ---- */
+.A .strip{position:absolute;left:14px;right:14px;bottom:14px;height:84px}
+.A .line{position:absolute;left:0;right:0;bottom:0;height:1px;background:linear-gradient(90deg,rgba(232,196,110,.95) 0,rgba(232,196,110,.95) var(--p,0%),rgba(255,255,255,.14) var(--p,0%),rgba(255,255,255,.14) 100%);box-shadow:0 0 12px rgba(232,196,110,calc(.35 * var(--k,0)))}
+.A .line::after{content:"";position:absolute;left:var(--p,0%);top:-2px;width:5px;height:5px;margin-left:-2px;border-radius:50%;background:#ffe3a3;box-shadow:0 0 10px rgba(255,220,150,.9);opacity:var(--k,0)}
+.A .her{left:0;bottom:2px}.A .him{bottom:2px;left:calc(100% - 64px);transition:left .9s cubic-bezier(.3,.7,.3,1)}
+.A .cap{bottom:24px;left:72px;right:72px}
+
+/* ---- B · no line at all: the floor is the meter — he grows from far to near, with a soft shadow pool and a scrim ---- */
+.B .scrim{position:absolute;left:0;right:0;bottom:0;height:150px;background:linear-gradient(180deg,rgba(6,4,10,0),rgba(6,4,10,.75));pointer-events:none}
+.B .her{left:14px;bottom:16px}
+.B .him{bottom:16px;left:calc(100% - 78px);transform-origin:50% 100%;transition:left .9s cubic-bezier(.3,.7,.3,1),transform .9s cubic-bezier(.3,.7,.3,1),filter .9s}
+.B .pool{position:absolute;bottom:8px;width:90px;height:16px;border-radius:50%;background:radial-gradient(50% 50% at 50% 50%,rgba(0,0,0,.55),rgba(0,0,0,0) 70%);left:calc(100% - 91px);transition:left .9s cubic-bezier(.3,.7,.3,1),transform .9s;transform-origin:50% 50%}
+.B .cap{bottom:44px;left:84px;right:84px}
+
+/* ---- C · the card: her and him on a dark glass ledge; between them a thin gold gauge that fills, no dashes ---- */
+.C .ledge{position:absolute;left:12px;right:12px;bottom:12px;height:78px;border-radius:18px;background:rgba(12,8,16,.42);border:1px solid rgba(255,255,255,.12);-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);box-shadow:0 10px 30px rgba(0,0,0,.45)}
+.C .her{left:20px;bottom:12px;width:56px;height:70px}.C .him{bottom:12px;width:56px;height:70px;left:calc(100% - 76px);transition:left .9s cubic-bezier(.3,.7,.3,1)}
+.C .gauge{position:absolute;left:92px;right:92px;bottom:26px;height:2px;border-radius:2px;background:rgba(255,255,255,.14);overflow:hidden}
+.C .gauge i{position:absolute;right:0;top:0;bottom:0;width:var(--p,0%);background:linear-gradient(90deg,rgba(232,196,110,.3),#e8c46e);box-shadow:0 0 8px rgba(232,196,110,.8)}
+.C .cap{bottom:38px;left:92px;right:92px;font-size:11.5px}
+
+/* ---- D · candle marks: the distance is a row of five tiny candle flames between them; each goes out as he passes it ---- */
+.D .strip{position:absolute;left:14px;right:14px;bottom:14px;height:84px}
+.D .her{left:0;bottom:2px}.D .him{bottom:2px;left:calc(100% - 64px);transition:left .9s cubic-bezier(.3,.7,.3,1)}
+.D .flames{position:absolute;left:78px;right:78px;bottom:6px;height:14px;display:flex;justify-content:space-between;align-items:flex-end}
+.D .flames b{width:6px;height:9px;border-radius:50% 50% 45% 45%;background:radial-gradient(50% 60% at 50% 70%,#fff3c4,#ffb347 55%,rgba(255,120,40,0) 100%);box-shadow:0 0 8px rgba(255,190,90,.9);transition:opacity .6s,transform .6s;animation:flick 1.6s ease-in-out infinite}
+.D .flames b:nth-child(2n){animation-delay:-.7s}
+.D .flames b.out{opacity:0;transform:scaleY(.2)}
+@keyframes flick{0%,100%{transform:scaleY(1) translateY(0)}50%{transform:scaleY(.85) translateY(1px)}}
+.D .cap{bottom:28px;left:72px;right:72px}
+</style></head><body>
+<h1>The Look — approach strip, four alternatives</h1>
+<p class="sub">Same busts and room; only the "he is coming" meter changes. Drag the slider (0 = far end, 1 = at your elbow). The dashed line is gone in all four.</p>
+<div class="bar"><label>approach <input type="range" id="p" min="0" max="1" step="0.01" value="0.2"></label><button id="play">play</button><label><input type="checkbox" id="capOn" checked> caption</label></div>
+<div class="grid">
+<div class="card"><h3>A · gilded hairline</h3><div class="ph A"><div class="room"></div><div class="strip"><div class="line"></div><div class="av her"></div><div class="av him"></div><div class="cap">Sir William Lucas has seen you. He is making his way over.</div></div></div><p>One 1-px line, dim white; it turns gold from her side as he closes, with a small warm bead at the front. Quiet, reads as a floor edge.</p></div>
+<div class="card"><h3>B · no line — depth</h3><div class="ph B"><div class="room"></div><div class="scrim"></div><div class="pool"></div><div class="av her"></div><div class="av him"></div><div class="cap">Sir William Lucas has seen you. He is making his way over.</div></div><p>Nothing drawn. He starts small, dim and far; he grows and brightens as he comes, with a shadow pool on the floor. The scrim carries the caption.</p></div>
+<div class="card"><h3>C · glass ledge + gauge</h3><div class="ph C"><div class="room"></div><div class="ledge"></div><div class="av her"></div><div class="av him"></div><div class="gauge"><i></i></div><div class="cap">Sir William Lucas has seen you. He is making his way over.</div></div><p>A frosted ledge like the whisper cards; between the busts a thin gold gauge fills toward her. Most "UI", cleanest to read.</p></div>
+<div class="card"><h3>D · candle marks</h3><div class="ph D"><div class="room"></div><div class="strip"><div class="av her"></div><div class="av him"></div><div class="flames"><b></b><b></b><b></b><b></b><b></b></div><div class="cap">Sir William Lucas has seen you. He is making his way over.</div></div></div><p>Five tiny flickering candle flames mark the distance; each one goes out as he passes it. Period, playful, still no line.</p></div>
+</div>
+<script>
+const s=document.getElementById('p'); let timer=null;
+function apply(){ const p=+s.value; document.querySelectorAll('.ph').forEach(ph=>{
+  const w=ph.clientWidth; const him=ph.querySelector('.him');
+  if(ph.classList.contains('A')||ph.classList.contains('D')){ const tw=w-28; const x=Math.max(58,(tw-64)*(1-p)); him.style.left=x+'px'; ph.querySelector('.strip, .ph').style.setProperty('--p',((x+32)/tw*100).toFixed(1)+'%'); ph.querySelector('.line')&&ph.querySelector('.line').style.setProperty('--p',(100-(x+32)/tw*100)+'%'); }
+  if(ph.classList.contains('A')){ const line=ph.querySelector('.line'); const pos=100-((Math.max(58,(w-28-64)*(1-p))+32)/(w-28))*100; line.style.setProperty('--p',pos.toFixed(1)+'%'); line.style.setProperty('--k',p.toFixed(2)); }
+  if(ph.classList.contains('B')){ const x=(w-78)-(w-78-84)*p; him.style.left=x+'px'; const k=.55+.45*p; him.style.transform='scale('+k.toFixed(3)+')'; him.style.filter='brightness('+(.55+.45*p).toFixed(2)+') drop-shadow(0 4px 10px rgba(0,0,0,.7))'; const pool=ph.querySelector('.pool'); pool.style.left=(x-13)+'px'; pool.style.transform='scale('+k+')'; }
+  if(ph.classList.contains('C')){ const x=(w-76)-(w-76-84)*p; him.style.left=x+'px'; ph.querySelector('.gauge i').style.width=(p*100)+'%'; }
+  if(ph.classList.contains('D')){ const tw=w-28; const x=Math.max(58,(tw-64)*(1-p)); him.style.left=x+'px'; const fl=[...ph.querySelectorAll('.flames b')]; const L=78, R=tw-78; fl.forEach((b,i)=>{ const fx=L+(R-L)*i/(fl.length-1); b.classList.toggle('out', fx>x-6); }); }
+}); }
+s.oninput=apply; apply();
+document.getElementById('play').onclick=()=>{ if(timer){ clearInterval(timer); timer=null; return; } s.value=0; timer=setInterval(()=>{ s.value=Math.min(1,+s.value+0.004); apply(); if(+s.value>=1){ clearInterval(timer); timer=null; } },40); };
+document.getElementById('capOn').onchange=e=>document.querySelectorAll('.cap').forEach(c=>c.style.display=e.target.checked?'':'none');
+</script></body></html>

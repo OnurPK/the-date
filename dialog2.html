@@ -12909,6 +12909,7 @@
      layer a SUCCESS card on top for a couple of seconds. -->
 <div id="videoOverlay" hidden>
   <video id="videoPlayer" playsinline muted preload="auto"></video>
+  <div class="vo-say" id="voSay"></div>
   <div id="videoFallback">
     <div class="vo-coin" aria-hidden="true">
       <div class="vo-coin-face">?</div>
@@ -14250,6 +14251,7 @@ const PRIDE_ACTORS = {
   arabella2:     'arabella2',
   'sir-william2':'sir_william2',
   carter:        'capt_carter',
+  'arabella-mind': 'arabella2',   // Arabella's private thoughts (the Look): her bust, the inner-voice ElevenLabs take
 };
 const PRIDE_LABELS = {
   arabella: 'Arabella',    bingley: 'Mr Bingley',   darcy: 'Mr Darcy',
@@ -14257,6 +14259,7 @@ const PRIDE_LABELS = {
   charlotte: 'Charlotte',  lydia: 'Lydia',          jane: 'Jane',
   elizabeth: 'Elizabeth',  'sir-william': 'Sir William',
   'sir-henry': 'Sir Henry', 'mrs-frost': 'Mrs Frost', 'mr-frost': 'Mr Frost', maid: 'The Maid',
+  'arabella-mind': 'Arabella, thinking…', lady: 'A lady, behind her fan', officer: 'An officer',
   pryce: 'Ensign Pryce', vane: 'Captain Vane', ravenscar: 'Lord Ravenscar', collins: 'Mr Collins',
   devereux: 'Mr Devereux', fenwick: 'Mr Fenwick', hale: 'Mr Hale', quill: 'Mr Quill',
   arabella2: 'Arabella', 'sir-william2': 'Sir William', carter: 'Captain Carter',
@@ -14270,7 +14273,7 @@ window.PRIDE_ACTORS = PRIDE_ACTORS;   // expose so the cast stage can map speake
 // idle_* clips loop, and a character with idles but no held pose gets a random idle.
 (function(){
   const N = 16, FPS = 8;
-  const POSE_FRAMES = { 'arabella2/fan_flutter': 40 };   // clips that need more than 16 frames (real-time motion that 16 would chop)
+  const POSE_FRAMES = { 'arabella2/fan_flutter': 40, 'sir_william2/present': 24, 'sir_william2/confide': 24 };   // clips that need more than 16 frames (real-time motion that 16 would chop)
   const cnt = (folder, pose) => POSE_FRAMES[folder + '/' + pose] || N;
   // idles: base idles (no expression held). idleFor: idle clips that continue a held expression
   // (added as they are generated; until then a held expression breathes on its last frames).
@@ -14281,7 +14284,9 @@ window.PRIDE_ACTORS = PRIDE_ACTORS;   // expose so the cast stage can map speake
                                    all: ['idle_breath', 'idle_glance', 'arms_shift', 'think_tilt', 'think_lip', 'think_settle', 'fan_flutter'] },
                       // whisper busts (map): base idles only
                       arabella_frost: { idles: ['idle_breath', 'idle_glove', 'idle_brow'], idleFor: {}, all: ['idle_breath', 'idle_glove', 'idle_brow'] },
-                      mrs_frost: { idles: ['idle_breath', 'idle_fuss', 'idle_glance'], idleFor: {}, all: ['idle_breath', 'idle_fuss', 'idle_glance'] } };
+                      mrs_frost: { idles: ['idle_breath', 'idle_fuss', 'idle_glance'], idleFor: {}, all: ['idle_breath', 'idle_fuss', 'idle_glance'] },
+                      // Sir William (Assembly): three base idles; beam / present / confide hold their last frame
+                      sir_william2: { idles: ['idle_breath', 'idle_glance', 'idle_smile'], idleFor: {}, oneShot: ['present', 'confide'], all: ['idle_breath', 'idle_glance', 'idle_smile', 'beam', 'present', 'confide'] } };
   window.__pridePoseFamily = window.__pridePoseFamily || {};   // folder → idleFor family to draw idles from (e.g. arabella2 → 'think' while choosing)
   const avail = {};   // folder/pose → true|false once probed (does f00.webp exist?)
   function probe(folder, pose, cb){ const key = folder + '/' + pose; if (key in avail) { cb(avail[key]); return; } const im = new Image(); im.onload = () => { avail[key] = true; cb(true); }; im.onerror = () => { avail[key] = false; cb(false); }; im.src = PRIDE_WORLD_BASE + '/characters/' + folder + '/poses/' + pose + '/f00.webp'; }
@@ -14316,6 +14321,10 @@ window.PRIDE_ACTORS = PRIDE_ACTORS;   // expose so the cast stage can map speake
           const held = window.__pridePoseHeld[folder]; const set = POSE_SETS[folder];
           const pool = (held && set.idleFor && set.idleFor[held]) ? set.idleFor[held] : idlePool(folder);
           timer = setTimeout(() => { timer = null; if (!targets(folder).length) { stop(); return; } run(folder, pickIdle(folder, pose, pool)); }, PAUSE());
+        } else if ((POSE_SETS[folder] && POSE_SETS[folder].oneShot || []).indexOf(pose) > -1) {
+          // a gesture that returns to rest on its own (present, confide): play once, then release to the idles — never hold it in the air
+          window.__pridePosePlayed[folder + '/' + pose] = true; delete window.__pridePoseHeld[folder];
+          timer = setTimeout(() => { timer = null; if (!targets(folder).length) { stop(); return; } run(folder, pickIdle(folder, pose, idlePool(folder))); }, PAUSE());
         } else { window.__pridePosePlayed[folder + '/' + pose] = true; hold(folder, pose); }
       }
     };
@@ -14388,6 +14397,8 @@ Object.keys(PRIDE_ACTORS).forEach(function (k) {
   VALID.add(k);
   if (!(k in LABELS)) LABELS[k] = PRIDE_LABELS[k] || k;
 });
+// voice-only speakers (no sprite): overheard lines in the Look — the box shows the label, no figure
+['lady', 'officer'].forEach(function (k) { VALID.add(k); if (!(k in LABELS)) LABELS[k] = PRIDE_LABELS[k] || k; });
 // Authored scripts emit fuller speaker tags ("Mr-Darcy:", "Miss-Bingley:") and
 // sometimes the character FOLDER name ("mr_darcy"). Map those to the engine's
 // canonical speaker keys so they render as proper bubbles (not raw narrative).
@@ -14726,6 +14737,7 @@ const el = {
 
 let lines = [];
 let idx = 0;
+const PRIDE_LOOKS = {}; let PRIDE_LOOK_SEQ = 0;   // (Look) blocks registered by parseScript's pre-pass
 let typeTimer = null;
 let exploreTimer = null;
 let exploreRemaining = 0;    // current countdown value
@@ -15687,6 +15699,16 @@ function parseScript(text) {
       text = _cl.cleaned;
     }
   } catch (e) { console.warn('[cast] layout parse failed', e); }
+  // Pre-pass: (Look: …) … (EndLook) blocks (Pride "read the room" explore). Each (Spot: …) … (EndSpot) inside is
+  // parsed on its own with parseScript (so it may carry [ui:], (Choice), (IfChoice), mechanics …) and registered in
+  // PRIDE_LOOKS; the block collapses to one `(Look:<n>)` line in the main stream. See pridePlayLook().
+  try { if (/^\(\s*Look\s*:/im.test(text)) text = text.replace(/^\(\s*Look\s*:\s*([^\n]*?)\)\s*$([\s\S]*?)^\(\s*EndLook\s*\)\s*$/gim, (m, head, body) => {
+      const opts = {}; head.split('|').forEach(kv => { const i = kv.indexOf('='); if (i > 0) opts[kv.slice(0, i).trim().toLowerCase()] = kv.slice(i + 1).trim(); });
+      const spots = []; const rest = body.replace(/^\(\s*Spot\s*:\s*([^\n]*?)\)\s*$([\s\S]*?)^\(\s*EndSpot\s*\)\s*$/gim, (m2, sh, sb) => {
+        const so = {}; sh.split('|').forEach(kv => { const i = kv.indexOf('='); if (i > 0) so[kv.slice(0, i).trim().toLowerCase()] = kv.slice(i + 1).trim(); else if (!so.id) so.id = kv.trim().toLowerCase(); });
+        spots.push({ id: so.id, x: +so.x || 50, y: +so.y || 50, zoom: +so.zoom || 2, label: so.label || so.id, lines: parseScript(sb).main }); return ''; });
+      const id = 'look' + (++PRIDE_LOOK_SEQ); PRIDE_LOOKS[id] = { id, image: opts.image || '', approach: opts.approach || '', seconds: +opts.seconds || 80, caption: opts.caption || '', spots, pre: parseScript(rest).main };
+      return '(Look:' + id + ')\n'; }); } catch (e) { console.warn('[look] parse failed', e); }
   const allLines = text.split('\n');
   const raws = [];
   const rawOriginLines = [];
@@ -15771,6 +15793,11 @@ function parseScript(text) {
       continue;
     }
 
+    // (Look:<id>) — the collapsed room-reading explore (see pre-pass); (IfLooked:<spot>) … (EndIf) — branch on what was looked at
+    const lookMatch = s.match(/^\(\s*Look\s*:\s*(look\d+)\s*\)$/i);
+    if (lookMatch) { const ev = { type: 'look', id: lookMatch[1] }; if (currentAction) currentAction.lines.push(ev); else currentArr.push(ev); continue; }
+    const lookedMatch = s.match(/^\(\s*IfLooked\s*:\s*([a-z0-9_]+)\s*\)$/i);
+    if (lookedMatch) { const ev = { type: 'ifchoice', looked: lookedMatch[1].toLowerCase() }; if (currentAction) currentAction.lines.push(ev); else currentArr.push(ev); continue; }
     // Special: (Explore:N)
     const exploreMatch = s.match(/^\(\s*Explore\s*:\s*(\d+)\s*\)$/i);
     if (exploreMatch) {
@@ -15840,7 +15867,10 @@ function parseScript(text) {
     // end or on tap.
     const videoMatch = s.match(/^\(\s*Video\s*:\s*(.+?)\s*\)$/i);
     if (videoMatch) {
-      const ev = { type: 'video', src: videoMatch[1].trim() };
+      // (Video: file | say=narration spoken by the narrator while the clip plays | end=sfx hook, then the UI opens by itself on the last frame)
+      const vparts = videoMatch[1].split('|').map(x => x.trim());
+      const ev = { type: 'video', src: vparts[0] };
+      vparts.slice(1).forEach(kv => { const m = kv.match(/^(say|end|cue)\s*=\s*(.+)$/i); if (m) ev[m[1].toLowerCase()] = m[2].trim(); });   // cue=<seconds>:<sfx slot>[:<level>] — a one-shot on the clip's own clock
       if (currentAction) currentAction.lines.push(ev);
       else currentArr.push(ev);
       continue;
@@ -16341,6 +16371,9 @@ function renderLine() {
     return;
   }
 
+  // Pride "Look" (read the room): hand over to the look player; it advances idx itself when the approach completes
+  if (line.type === 'look') { if (window.pridePlayLook) { window.pridePlayLook(line.id); return; } idx++; renderLine(); return; }
+  if (line.type === 'look-return') { if (window.prideLookReturn) { window.prideLookReturn(); return; } idx++; renderLine(); return; }
   // Explore event
   if (line.type === 'explore') {
     console.log('[explore] starting, duration', line.duration,
@@ -16368,7 +16401,10 @@ function renderLine() {
       const cid = ((line.parts && line.parts[0]) || '').trim();
       try { if (cid && typeof window.prideDiscover === 'function') window.prideDiscover(cid); } catch (e) {}   // the intro IS the discovery (home pin + walker appear)
       if (cid && typeof window.pridePlayCharUnlock === 'function' && (!window.prideHasCharUnlock || window.prideHasCharUnlock(cid))) {
-        window.pridePlayCharUnlock(cid, function(){ idx++; renderLine(); });
+        // (Intro: id | video=<episode clip> | say=<narration over the clip> | breath=<seconds: her breath, synced to the clip>)
+        const io = {}; (line.parts || []).slice(1).forEach(kv => { const m = String(kv).match(/^(video|say|breath)\s*=\s*(.+)$/i); if (m) io[m[1].toLowerCase()] = m[2].trim(); });
+        if (io.video) io.video = resolveWorldAsset(io.video, 'videos');
+        window.pridePlayCharUnlock(cid, function(){ idx++; renderLine(); }, io);
         return;   // resumes the script when Continue is pressed
       }
       idx++; renderLine(); return;   // no video registered → skip cleanly
@@ -16486,7 +16522,7 @@ function renderLine() {
 
   // Video directive (fullscreen skill-check etc.)
   if (line.type === 'video') {
-    startVideo(line.src);
+    startVideo(line.src, line);
     return;
   }
 
@@ -16619,7 +16655,7 @@ function renderLine() {
   // match, fast-forward to the matching (EndIf) so only the chosen
   // path's lines render.
   if (line.type === 'ifchoice') {
-    const matched = (lastChosenIdx === line.value);
+    const matched = line.looked ? !!(window.__prideLooked && window.__prideLooked.has(line.looked)) : (lastChosenIdx === line.value);
     console.log('[ifchoice] needs=' + line.value,
                 'lastPicked=' + lastChosenIdx,
                 matched ? '→ ENTER' : '→ skip');
@@ -16801,6 +16837,9 @@ function pridePaintDiscovery(text) {
   if (!text) { idx++; renderLine(); return; }
   try { window.prideAudio && window.prideAudio.hook('discovery'); } catch (e) {}
   if (typeTimer) { clearInterval(typeTimer); typeTimer = null; }
+  // A discovery is a narrative beat: if the previous line was a cast-small / multi card, drop that
+  // layout first — otherwise the box we type into is the hidden one and the beat cannot be tapped past.
+  try { if (el.body.classList.contains('ui-cast-small') || el.body.classList.contains('ui-multi') || el.body.classList.contains('ui-inner-small')) { applyUiState('narrative'); el.objectDialog.className = ''; el.focusCharacter.classList.remove('show'); el.body.classList.remove('cutscene-bubble'); } } catch (e) {}
   el.dialogBox.className = 'narrative pride-discovery';
   if (el.body) el.body.classList.add('narrative-active');
   const chip = el.speakerName && el.speakerName.querySelector('.chip');
@@ -18122,7 +18161,8 @@ document.addEventListener('DOMContentLoaded', () => {
 // ============================================================
 // VIDEO OVERLAY (skill-check cutscenes)
 // ============================================================
-function startVideo(src) {
+function startVideo(src, opts) {
+  opts = opts || {};
   const overlay = document.getElementById('videoOverlay');
   const video   = document.getElementById('videoPlayer');
   if (!overlay || !video) { idx++; renderLine(); return; }
@@ -18141,13 +18181,16 @@ function startVideo(src) {
     // otherwise the pre-video line flashes for the length of the fade.
     idx++;
     renderLine();
-    overlay.classList.remove('show');
+    const hold = activePack === 'pride' ? 700 : 0;   // P&P: the still under the clip fades in over ~.6 s — keep the last frame up until it has, so nothing flickers
     setTimeout(() => {
-      overlay.hidden = true;
-      overlay.classList.remove('fallback', 'success', 'tapwait');
-      video.removeAttribute('src');
-      video.load();
-    }, 350);
+      overlay.classList.remove('show');
+      setTimeout(() => {
+        overlay.hidden = true;
+        overlay.classList.remove('fallback', 'success', 'tapwait');
+        video.removeAttribute('src');
+        video.load();
+      }, 350);
+    }, hold);
   };
 
   // Show SUCCESS + subtitle on top of whatever frame is currently
@@ -18162,6 +18205,10 @@ function startVideo(src) {
     if (activePack === 'pride') {   // P&P: hold the last frame, wait for a tap (no London SUCCESS layer)
       if (overlay.classList.contains('tapwait')) return;
       overlay.classList.add('tapwait');
+      if (opts.end) {   // (Video: … | end=hook): a breath on the last frame, then the UI opens on its own
+        try { window.prideAudio && window.prideAudio.hook(opts.end); } catch (e) {}
+        successTimer = setTimeout(advance, 2200);
+      }
       return;
     }
     overlay.classList.add('success');
@@ -18175,7 +18222,12 @@ function startVideo(src) {
 
   // Try to play the video. If the source is missing or errors, fall back to
   // the animated-coin placeholder which still advances on tap.
+  let triedMuted = false;
   const useFallback = () => {
+    // Safari (and any strict autoplay policy) rejects an unmuted play() that is not tied closely enough to a gesture:
+    // retry muted once — our clips carry no dialogue, the narration and cues come from the audio engine anyway.
+    if (!triedMuted) { triedMuted = true; try { video.muted = true; video.setAttribute('muted', ''); const p2 = video.play(); if (p2 && p2.then) { p2.then(() => {}).catch(() => useFallback()); return; } return; } catch (e) {} }
+    if (activePack === 'pride') { advance(); return; }   // P&P has no coin placeholder: just move on to the still + line
     overlay.classList.add('fallback');
     // In fallback mode the "video end" is when the user taps, but also
     // auto-advance via success-layer after 3.5s so the flow continues
@@ -18186,7 +18238,12 @@ function startVideo(src) {
   };
   video.onended = showSuccessThenAdvance;
   video.onerror = useFallback;
+  video.ontimeupdate = null;
+  if (opts.cue && activePack === 'pride') { const cm = String(opts.cue).match(/^([\d.]+)\s*:\s*([a-z0-9_.-]+)(?::([\d.]+))?$/i); if (cm) { let fired = false; video.ontimeupdate = () => { if (!fired && video.currentTime >= +cm[1]) { fired = true; try { window.prideAudio && window.prideAudio.play(cm[2], cm[3] ? +cm[3] : 1); } catch (e) {} } }; } }
 
+  // (Video: … | say=…): the narrator speaks over the clip, and the line is shown on it like a narrative beat
+  const say = document.getElementById('voSay'); if (say) { say.classList.remove('show'); say.textContent = ''; }
+  if (opts.say && activePack === 'pride') { try { window.prideAudio && window.prideAudio.voiceLine({ type: 'line', speaker: 'narrative', text: opts.say }); } catch (e) {} if (say) { say.textContent = opts.say; setTimeout(() => say.classList.add('show'), 400); } }
   try {
     video.src = resolveWorldAsset(src, 'videos');
     video.currentTime = 0;
@@ -18787,7 +18844,10 @@ function endChoice(chosenIdx, chosenOpt) {
   // P&P: Arabella says the pick out loud — a synthetic cast-small line spliced right after the (Choice) so it
   // renders (and voices) like any other line, then the branch's own [ui:] takes over. Typed input is not echoed.
   try {
-    if (activePack === 'pride' && chosenOpt && !chosenOpt.typed && chosenOpt.text && /^arabella/i.test(String(chosenOpt.speaker || '')) && !chosenOpt.giftPickAction && !chosenOpt.fakeGiftChoice) {
+    const optSp = String(chosenOpt && chosenOpt.speaker || '');
+    if (activePack === 'pride' && chosenOpt && !chosenOpt.typed && chosenOpt.text && /^arabella/i.test(optSp) && !chosenOpt.giftPickAction && !chosenOpt.fakeGiftChoice) {
+      // a spoken option ("Arabella: …") is said by Arabella (cast-small). An ACTION option ("Narrative: …") is not echoed:
+      // its branch opens with the narrator telling the act in other words.
       const prevUi = (currentDialogState && currentDialogState.ui) || 'narrative';
       while (lines[idx + 1] && lines[idx + 1].synthetic) lines.splice(idx + 1, 1);
       lines.splice(idx + 1, 0,
@@ -19231,6 +19291,7 @@ function inObject() {
 }
 
 function next() {
+  try { if (document.body.classList.contains('pride-look') && (!document.body.classList.contains('pride-look-spot') || (window.__prideLookOpening && Date.now() - window.__prideLookOpening < 900))) return; } catch (e) {}   // the Look: taps go to the spots, not the script; the tap that opens a spot is not an advance
   // Pride combat owns the dialog box while it runs — don't let taps walk the script.
   if (document.body.classList.contains('pe-combat')) return;
   try { if (activePack === 'pride' && window.prideAudio && !el.body.classList.contains('choosing')) window.prideAudio.hook('advance'); } catch (e) {}
@@ -19326,6 +19387,7 @@ document.getElementById('btnNext').addEventListener('click', (e)=>{ e.stopPropag
 document.getElementById('btnPrev').addEventListener('click', (e)=>{ e.stopPropagation(); prev(); });
 document.getElementById('btnRestart').addEventListener('click', () => {
   if (exploreTimer) { clearInterval(exploreTimer); exploreTimer = null; }
+  try { window.prideLookAbort && window.prideLookAbort(); } catch (e) {}
   el.body.classList.remove('exploring','inner','choosing','inObjectImage','inObjectChar');
   el.choicePanel.classList.remove('open');
   closePOI();
@@ -20035,7 +20097,7 @@ function venueCountForPack(packId) {
           title: l.title || l.id,
           kind: reqId ? 'Episode · Locked' : 'Episode',
           cover: `worlds/pride-and-prejudice/${epPath}/cover.jpg`,
-          desc: '',
+          desc: (function(){ try { const m = (window.__mapLocs || []).find(x => x.id === l.id); return (m && m.desc && !/^testbed/i.test(m.desc)) ? m.desc : ''; } catch (e) { return ''; } })(),   // the map's own blurb, when it has one
           startable: !reqId,
           requirement: reqId ? ('Önce “' + reqTitle + '” bölümünü bitir') : undefined,
           pack: 'pride',
@@ -20686,9 +20748,9 @@ function openPOI(id) {
   if (!v) return;
   currentVenue = id;
   flowEl.poiCover.style.backgroundImage = v.cover ? `url("${v.cover}")` : '';
-  flowEl.poiKind.textContent  = (v.kind || 'Date idea').toUpperCase();
+  flowEl.poiKind.textContent  = (activePack === 'pride') ? (v.startable ? 'You are invited' : ((v.kind || 'Episode') + ' · not yet')) : (v.kind || 'Date idea').toUpperCase();
   flowEl.poiTitle.textContent = v.title;
-  flowEl.poiDesc.textContent  = v.desc || '';
+  flowEl.poiDesc.textContent  = v.desc || (function(){ try { if (activePack !== 'pride') return ''; const m = (window.__mapLocs || []).find(x => x.id === id); return (m && m.desc && !/^testbed/i.test(m.desc)) ? m.desc : ''; } catch (e) { return ''; } })();
 
   // Requirement row, only visible on locked venues that declare one
   // (and don't have a coin-unlock CTA, since that pill carries its
@@ -20713,7 +20775,7 @@ function openPOI(id) {
     btn.classList.add('start');
     btn.disabled = false;
     // unlocked + already the active/in-progress episode → "Continue"; otherwise "Go to Here"
-    btn.textContent = (id === window.prideActiveEp) ? 'Continue' : 'Go to Here';
+    btn.textContent = (id === window.prideActiveEp) ? 'Continue' : (activePack === 'pride' ? 'Attend' : 'Go to Here');
   } else if (showsUnlock) {
     btn.classList.add('unlock');
     btn.disabled = false;
@@ -23910,6 +23972,7 @@ function setFlow(name) {
   // these two classList calls.
   const cl = el.body.classList;
   try { if (name !== 'game' && window.prideLiveClear) window.prideLiveClear(); } catch (e) {}   // a normal exit from the episode is not a crash
+  try { if (name !== 'game' && window.prideLookAbort) window.prideLookAbort(); } catch (e) {}
   try { if (name !== 'map' && cl.contains('flow-map') && window.prideAudio) window.prideAudio.stopAll(); } catch (e) {}
   // back to the menus from anywhere (map or an episode): drop every scene layer (ambience, random sets, focus) and let the menu music come back
   try { const MENU = ['flow-intro','flow-form','flow-worlds','flow-loading','flow-survey','flow-addself','flow-gallery']; const wasMenu = MENU.some(c => cl.contains(c)) || !Array.from(cl).some(c => /^flow-/.test(c));
@@ -34646,6 +34709,112 @@ body.pride-cards-open #feLaunch, body.poi-open #feLaunch{ display:none }
 })();
 </script>
 <!-- ===== /PRIDE FREE EXPLORE ===== -->
+<!-- ===== PRIDE LOOK — "read the room" explore: a wide painted room, tap-to-look spots, and someone crossing the floor toward you ===== -->
+<style id="pride-look-css">
+#prideLook{ position:fixed; inset:0; z-index:8; display:none; background:#0a0710; overflow:hidden; }
+body.pride-look #prideLook{ display:block }
+#prideLook .lk-scroll{ position:absolute; inset:0; overflow-x:auto; overflow-y:hidden; -webkit-overflow-scrolling:touch; scrollbar-width:none; touch-action:pan-x; }
+#prideLook .lk-scroll::-webkit-scrollbar{ display:none }
+#prideLook.zoomed .lk-scroll{ overflow:hidden; touch-action:none }
+#prideLook .lk-room{ position:relative; height:100%; width:calc(100vh * 1.5); min-width:100%; background-size:cover; background-position:center; transform-origin:50% 50%; transition:transform 1.1s cubic-bezier(.3,.8,.3,1); will-change:transform }
+html.wide #prideLook .lk-room{ width:100%; }
+#prideLook .lk-spot{ position:absolute; width:44px; height:44px; margin:-22px 0 0 -22px; display:grid; place-items:center; cursor:pointer; -webkit-tap-highlight-color:transparent; z-index:3 }
+#prideLook .lk-spot i{ width:14px; height:14px; border-radius:50%; background:#fff; box-shadow:0 0 0 3px rgba(255,255,255,.18), 0 0 0 7px rgba(255,255,255,.08), 0 2px 10px rgba(0,0,0,.6); position:relative; z-index:2 }
+#prideLook .lk-spot b{ position:absolute; width:14px; height:14px; border-radius:50%; background:rgba(255,255,255,.6); animation:lkPulse 2.2s ease-out infinite }
+@keyframes lkPulse{ 0%{ transform:scale(1); opacity:.8 } 100%{ transform:scale(3.6); opacity:0 } }
+#prideLook .lk-spot em{ position:absolute; top:100%; left:50%; transform:translate(-50%,6px); white-space:nowrap; font:800 10px/1 Inter,system-ui,sans-serif; letter-spacing:.14em; text-transform:uppercase; color:#fff; text-shadow:0 2px 8px rgba(0,0,0,.9); background:rgba(12,8,16,.5); padding:6px 9px; border-radius:999px; -webkit-backdrop-filter:blur(8px); backdrop-filter:blur(8px); opacity:0; transition:opacity .25s }
+#prideLook .lk-spot:hover em, #prideLook .lk-spot.focus em{ opacity:1 }
+#prideLook .lk-spot.seen{ pointer-events:none } #prideLook .lk-spot.seen i{ background:rgba(255,201,217,.55); box-shadow:0 0 0 2px rgba(255,255,255,.12), 0 2px 8px rgba(0,0,0,.5) } #prideLook .lk-spot.seen i::after{ content:""; position:absolute; left:4px; top:2px; width:3px; height:6px; border:solid #3a1626; border-width:0 2px 2px 0; transform:rotate(42deg) } #prideLook .lk-spot.seen b{ animation:none; opacity:0 } #prideLook .lk-spot.seen em{ display:none }
+#prideLook.zoomed .lk-spot{ opacity:0; pointer-events:none; transition:opacity .3s }
+#prideLook .lk-vig{ position:absolute; inset:0; pointer-events:none; background:radial-gradient(90% 80% at 50% 45%, transparent 55%, rgba(6,4,10,.55) 100%); opacity:0; transition:opacity 1s }
+#prideLook.zoomed .lk-vig{ opacity:1 }
+/* the approach: a dashed line along the bottom — her bust on the left, his sliding in from the right, both cut off at the line */
+#prideLook .lk-top{ position:absolute; left:14px; right:14px; bottom:calc(env(safe-area-inset-bottom,0px) + 14px); z-index:5; pointer-events:none; display:flex; flex-direction:column-reverse }
+#prideLook .lk-track{ position:relative; height:84px }
+/* the gilded rail (ui/look_rail.png): a gold moulding along the bottom with a scroll bracket at each end, behind the busts; he walks along it */
+#prideLook .lk-rail{ position:absolute; left:-6px; right:-6px; bottom:0; height:auto; width:calc(100% + 12px); display:block; pointer-events:none; filter:drop-shadow(0 3px 6px rgba(0,0,0,.6)); z-index:2 }
+#prideLook .lk-av{ position:absolute; bottom:2px; width:64px; height:80px; z-index:1; background-size:auto 440%; background-position:50% 1%; background-repeat:no-repeat; filter:drop-shadow(0 4px 10px rgba(0,0,0,.7)) }
+#prideLook .lk-av.her{ left:0 }
+#prideLook .lk-av.him{ left:calc(100% - 64px); transition:left .9s cubic-bezier(.3,.7,.3,1) }
+#prideLook .lk-fill{ display:none }
+#prideLook .lk-cap{ position:absolute; left:68px; right:68px; bottom:18px; z-index:2; text-align:center; font:700 13px/1.3 Inter,system-ui,sans-serif; letter-spacing:.03em; color:#fff; text-shadow:0 2px 10px rgba(0,0,0,.95), 0 0 18px rgba(0,0,0,.7); opacity:0; transition:opacity .6s; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden }
+#prideLook .lk-cap.show{ opacity:1 }
+#prideLook .lk-hint{ display:none; position:absolute; left:0; right:0; bottom:calc(env(safe-area-inset-bottom,0px) + 22px); text-align:center; font:700 10px/1 Inter,system-ui,sans-serif; letter-spacing:.28em; text-transform:uppercase; color:rgba(255,255,255,.55); text-shadow:0 2px 8px rgba(0,0,0,.9); pointer-events:none; z-index:5 }
+#prideLook.zoomed .lk-hint, #prideLook.zoomed .lk-top{ opacity:0; transition:opacity .3s }
+/* skip: straight to the cut */
+#prideLook .lk-skip{ position:absolute; left:14px; top:calc(env(safe-area-inset-top,0px) + 14px); z-index:7; border:1px solid rgba(255,255,255,.35); background:rgba(10,6,14,.45); color:#fff; font:800 10px/1 Inter,system-ui,sans-serif; letter-spacing:.22em; text-transform:uppercase; padding:9px 12px 9px 14px; border-radius:999px; -webkit-backdrop-filter:blur(10px); backdrop-filter:blur(10px); cursor:pointer; -webkit-tap-highlight-color:transparent; opacity:0; transition:opacity .4s; display:flex; align-items:center; gap:6px }
+#prideLook .lk-skip svg{ width:10px; height:10px }
+#prideLook.live .lk-skip{ opacity:.85 }
+#prideLook.zoomed .lk-skip{ opacity:0; pointer-events:none }
+html.wide #prideLook .lk-skip{ left:24px; top:20px; font-size:11px }
+/* entering: the room fades up from black as the music sinks into the far end */
+#prideLook .lk-in{ position:absolute; inset:0; background:#0a0710; z-index:6; pointer-events:none; opacity:1; transition:opacity 1.4s ease }
+#prideLook.live .lk-in{ opacity:0 }
+body.pride-look #prideEpChrome{ display:none !important }
+body.pride-look:not(.pride-look-spot) #dialogBox, body.pride-look:not(.pride-look-spot) #objectDialog, body.pride-look:not(.pride-look-spot) #choicePanel{ opacity:0 !important; pointer-events:none !important }
+body.pride-look #backdrop, body.pride-look #cutsceneLayer, body.pride-look #narrativeSceneLayer{ opacity:0 !important }
+html.wide #prideLook .lk-top{ left:44px; right:44px; bottom:28px } html.wide #prideLook .lk-cap{ font-size:16px; left:90px; right:90px } html.wide #prideLook .lk-spot em{ font-size:12px }
+</style>
+<div id="prideLook" aria-hidden="true">
+  <div class="lk-scroll"><div class="lk-room" id="lkRoom"></div></div>
+  <div class="lk-vig"></div>
+  <div class="lk-top"><div class="lk-track"><img class="lk-rail" src="worlds/pride-and-prejudice/ui/look_rail.png" alt=""><div class="lk-fill" id="lkFill"></div><div class="lk-av her" id="lkHer"></div><div class="lk-av him" id="lkHim"></div><div class="lk-cap" id="lkCap"></div></div></div>
+  <div class="lk-hint">Tap what you would look at</div>
+  <button class="lk-skip" id="lkSkip" type="button" aria-label="Skip">Skip<svg viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M1.5 1.5 5.5 5 1.5 8.5M5.5 1.5 9.5 5 5.5 8.5"/></svg></button>
+  <div class="lk-in"></div>
+</div>
+<script>
+(function prideLookPlayer(){
+  const $=id=>document.getElementById(id); const root=$('prideLook'); if(!root) return;
+  const BASE='worlds/pride-and-prejudice/';
+  let cur=null;   // { look, idx0, t0, elapsed, timer, spliced, seen, bonus }
+  window.__prideLooked = window.__prideLooked || new Set();
+  const avatarOf=(folder)=>BASE+'characters/'+folder+'/appearances/pride.png';
+  function progress(){ if(!cur) return 0; const t=(cur.elapsed + (cur.timer? (performance.now()-cur.t0)/1000 : 0)) + cur.bonus; return Math.min(1, t/cur.look.seconds); }
+  function paint(){ const p=progress(); const track=$('lkHim').parentElement; const w=track.clientWidth; const x=(w-64)*(1-p); $('lkHim').style.left=Math.max(58,x)+'px';
+    const c=cur.look.caption||''; const stage = p<.35 ? 0 : (p<.7 ? 1 : 2); const txt = stage===0 ? c : (stage===1 ? 'He has seen you see him. He is smiling already.' : 'He is almost upon you.');
+    if(cur.capStage!==stage){ cur.capStage=stage; const cap=$('lkCap'); cap.textContent=txt; cap.classList.add('show'); clearTimeout(cur.capT); cur.capT=setTimeout(()=>cap.classList.remove('show'), 4000); } }
+  function startTimer(){ if(!cur||cur.timer) return; cur.t0=performance.now(); cur.timer=setInterval(()=>{ paint(); if(progress()>=1) finish(); }, 250); }
+  function stopTimer(){ if(!cur||!cur.timer) return; cur.elapsed += (performance.now()-cur.t0)/1000; clearInterval(cur.timer); cur.timer=null; }
+  function build(look){ const room=$('lkRoom'); room.style.backgroundImage='url("'+ (typeof currentEpisodeBase==='function'? currentEpisodeBase() : '') +'/'+look.image+'")'; room.style.transform=''; room.innerHTML='';
+    look.spots.forEach(sp=>{ const d=document.createElement('div'); d.className='lk-spot'+(window.__prideLooked.has(sp.id)?' seen':''); d.style.left=sp.x+'%'; d.style.top=sp.y+'%'; d.innerHTML='<b></b><i></i><em>'+sp.label+'</em>'; d.addEventListener('click',(e)=>{ e.stopPropagation(); openSpot(sp,d); }); room.appendChild(d); });
+    const pc=(window.__pridePC&&window.__pridePC.portrait)||'arabella_frost'; $('lkHer').style.backgroundImage='url("'+avatarOf(pc)+'")'; $('lkHim').style.backgroundImage='url("'+avatarOf(look.approach||'sir_william2')+'")'; }
+  function openSpot(sp,node){ if(!cur||cur.spliced) return; if(cur.cooling && Date.now()<cur.cooling) return; if(node.classList.contains('seen')) return; stopTimer(); node.classList.add('seen'); window.__prideLooked.add(sp.id); cur.seen.add(sp.id);
+    try{ window.prideAudio&&window.prideAudio.hook('look'); }catch(e){}
+    const room=$('lkRoom'); const sc=root.querySelector('.lk-scroll'); const scr=sc.getBoundingClientRect(); const z=sp.zoom||2; const rw=room.offsetWidth, rh=room.offsetHeight;
+    const rl=scr.left + room.offsetLeft - sc.scrollLeft, rt=scr.top + room.offsetTop - sc.scrollTop;   /* the room's layout box: independent of any transform still easing back */
+    const px=rl + sp.x/100*rw, py=rt + sp.y/100*rh; const vw=sc.clientWidth, vh=sc.clientHeight; const wide=document.documentElement.classList.contains('wide');
+    let dx=vw*(wide?.5:.38) - px, dy=vh*0.42 - py;   /* scale about the spot, then slide it left of centre (her bust sits on the right) and a little above (the card sits below) */
+    const L0=px + (rl-px)*z, T0=py + (rt-py)*z;   /* the scaled room's edges before the slide: keep them outside the viewport, so no black shows */
+    dx=Math.max(Math.min(dx, scr.left-L0), scr.left+vw-L0-rw*z); dy=Math.max(Math.min(dy, scr.top-T0), scr.top+vh-T0-rh*z);
+    room.style.transformOrigin=sp.x+'% '+sp.y+'%'; room.style.transform='translate('+dx.toFixed(0)+'px,'+dy.toFixed(0)+'px) scale('+z+')'; root.classList.add('zoomed'); cur.sl=sc.scrollLeft; cur.st=0; cur.opening=Date.now(); window.__prideLookOpening=cur.opening;
+    // hand the spot's lines to the main player: splice them in right after the (Look) event, then a return marker
+    const seg=sp.lines.slice().concat([{type:'look-return'}]); lines.splice(cur.idx0+1, 0, ...seg); cur.spliced=seg.length; idx=cur.idx0+1;
+    try{ if(el&&el.dialogText) el.dialogText.textContent=''; if(el&&el.odText) el.odText.innerHTML=''; if(el&&el.objectDialog) el.objectDialog.className=''; if(el&&el.focusCharacter) el.focusCharacter.classList.remove('show'); }catch(e){}   /* nothing of the last card may flash */
+    setTimeout(()=>{ if(!cur) return; document.body.classList.add('pride-look-spot'); renderLine(); }, 500); }
+  window.prideLookReturn=function(){ if(!cur) return; lines.splice(cur.idx0+1, cur.spliced); cur.spliced=0; idx=cur.idx0; cur.cooling=Date.now()+1150; cur.bonus += cur.look.seconds/6;   // each look costs a slice of the crossing
+    const room=$('lkRoom'); room.style.transform=''; root.classList.remove('zoomed'); document.body.classList.remove('pride-look-spot'); setTimeout(()=>window.__lkFocus&&window.__lkFocus(),400); try{ if(typeof applyUiState==='function') applyUiState(null); if(el&&el.objectDialog){ el.objectDialog.className=''; } if(el&&el.dialogBox){ el.dialogBox.className=''; } }catch(e){}
+    try{ window.prideAudio&&window.prideAudio.hook('look_back'); }catch(e){}
+    paint(); if(progress()>=1) setTimeout(finish,900); else startTimer(); };
+  function finish(){ if(!cur) return; stopTimer(); const i0=cur.idx0; cur=null; root.classList.remove('live','zoomed'); try{ window.prideAudio&&window.prideAudio.hook('look_cut'); }catch(e){}
+    setTimeout(()=>{ document.body.classList.remove('pride-look','pride-look-spot'); root.setAttribute('aria-hidden','true'); idx=i0+1; renderLine(); }, 700); }
+  window.pridePlayLook=function(id){ const look=PRIDE_LOOKS[id]; if(!look){ idx++; renderLine(); return; }
+    if(cur && cur.look===look){ return; }   // resumed via idx=idx0 after a spot
+    // apply the look's own [music:]/[amb:] state lines
+    try{ (look.pre||[]).forEach(ev=>{ if(ev.type==='state-update' && typeof applyDialogState==='function') applyDialogState(ev.updates); }); }catch(e){}
+    try{ if(typeof applyUiState==='function') applyUiState(null); if(typeof clearCutscene==='function') clearCutscene(); if(typeof clearNarrativeScene==='function') clearNarrativeScene(); if(el&&el.dialogBox) el.dialogBox.className=''; }catch(e){}
+    cur={ look, idx0: idx, t0:0, elapsed:0, timer:null, spliced:0, seen:new Set(), bonus:0, capStage:-1 }; build(look);
+    document.body.classList.add('pride-look'); root.setAttribute('aria-hidden','false'); paint();
+    try{ window.prideAudio&&window.prideAudio.hook('look_enter'); }catch(e){}
+    setTimeout(()=>{ root.classList.add('live'); const sc=root.querySelector('.lk-scroll'); setTimeout(()=>{ sc.scrollTo({ left: sc.scrollWidth*0.08, behavior:'smooth' }); setTimeout(()=>window.__lkFocus&&window.__lkFocus(),700); }, 900); setTimeout(startTimer, 1400); }, 60); };
+  (function(){ const sc=root.querySelector('.lk-scroll'); let t=0; const upd=()=>{ if(!cur) return; const cx=sc.clientWidth/2, band=sc.clientWidth*0.36; let best=null, bd=1e9; root.querySelectorAll('.lk-spot').forEach(d=>{ const r=d.getBoundingClientRect(); const dx=Math.abs((r.left+r.width/2)-cx); d.classList.toggle('focus', dx<band); if(dx<bd){ bd=dx; best=d; } }); if(best) best.classList.add('focus'); };
+    sc.addEventListener('scroll',()=>{ if(cur && root.classList.contains('zoomed')){ if(sc.scrollLeft!==cur.sl || sc.scrollTop!==0){ sc.scrollLeft=cur.sl; sc.scrollTop=0; } return; }   /* zoomed: nothing (focus, anchoring, a stray gesture) may move the room */ if(sc.scrollTop!==0) sc.scrollTop=0; clearTimeout(t); t=setTimeout(upd,60); },{passive:true}); window.addEventListener('resize',upd); window.__lkFocus=upd; })();
+  $('lkSkip').addEventListener('click',(e)=>{ e.stopPropagation(); if(!cur||cur.spliced||root.classList.contains('zoomed')) return; try{ window.prideAudio&&window.prideAudio.hook('tap'); }catch(x){} finish(); });
+  window.prideLookAbort=function(){ if(!cur) return; stopTimer(); cur=null; root.classList.remove('live','zoomed'); document.body.classList.remove('pride-look','pride-look-spot'); };
+})();
+</script>
+<!-- ===== /PRIDE LOOK ===== -->
+
 <!-- ===== PRIDE EPISODE CHROME — injected ===== -->
 <style id="prideepchrome-css">
 /* ---- dialogue box restyle (pride only): square corners, no left rule, new name font ---- */
@@ -35776,19 +35945,30 @@ body.pe-combat.pe-beat #dialogBox{ opacity:1 !important; transform:none !importa
     const ms = on ? FOCUS.inMs : FOCUS.outMs; focusK = on ? FOCUS.gain : 1; applyVol(ms);
     CH.forEach(ch => { if (ch.lp) rampExp(ch.lp.frequency, on ? FOCUS.cutoff : 20000, ms); if (ch.src) ramp(ch.src.playbackRate, on ? FOCUS.rate : 1, ms); }); }
   // iOS: audio can only start after a user gesture. First pointerdown creates/unlocks; later gestures re-resume after interruptions (calls, lock screen).
-  function unlock(){ const c = ac(); if (c && c.state !== 'running') c.resume().catch(() => {}); if (unlocked) return; unlocked = true; CH.forEach(ch => { if (ch.name && !ch.src) startLoop(ch, ch.name, true); }); }
-  document.addEventListener('pointerdown', unlock, { capture: true, passive: true });
-  document.addEventListener('touchend', unlock, { capture: true, passive: true });
+  function unlock(){ const c = ac(); if (!c) return; const kick = () => { if (unlocked) return; unlocked = true; CH.forEach(ch => { if (ch.name && !ch.src) startLoop(ch, ch.name, true); }); };
+    if (c.state !== 'running') { c.resume().then(kick).catch(() => {}); } kick(); }
+  // Safari only counts some events as a user activation for audio (mousedown / touchend / click / keydown; not pointerdown on every version), so listen to all of them.
+  ['pointerdown', 'mousedown', 'touchend', 'click', 'keydown'].forEach(ev => document.addEventListener(ev, unlock, { capture: true, passive: true }));
+  ['pointerdown', 'touchend', 'click', 'keydown'].forEach(ev => document.addEventListener(ev, () => { window.__lastGestureAt = Date.now(); }, { capture: true, passive: true }));   // media may only be unmuted close to a gesture (Safari pauses otherwise)
   // No gesture yet but the browser may already allow audio (same-origin reload after "New game", desktop tab with engagement): try once, and watch the context state.
   let autoTried = false;
   function tryAutoUnlock(){ if (unlocked || autoTried) return; autoTried = true; const c = ac(); if (!c) return;
+    // Only look: never call resume() here. Safari leaves a context that was resumed outside a gesture stuck in 'suspended' for good
+    // (the later, in-gesture resume() never resolves), which is exactly what killed all sound in Safari. Chrome that already allows
+    // audio (same-origin reload, engaged tab) creates the context in 'running' state, so the check below is enough.
     const go = () => { if (!unlocked && c.state === 'running') unlock(); };
-    c.addEventListener('statechange', go); if (c.state === 'running') go(); else c.resume().then(go).catch(() => {}); }
+    c.addEventListener('statechange', go); if (c.state === 'running') { go(); return; }
+    // Safari creates the context 'suspended' even when the site is allowed to auto-play, and only an explicit resume() starts it — but a
+    // resume() that is NOT allowed poisons the context for good. So probe first: a silent <audio> play() resolves only where autoplay is
+    // allowed (Safari site setting, Chrome engagement); only then is resume() safe to call without a gesture.
+    try { const probe = new Audio('data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQAAAAA='); probe.volume = 0; const p = probe.play();
+      if (p && p.then) p.then(() => { if (!unlocked && c.state !== 'running') c.resume().then(go).catch(() => {}); }).catch(() => {}); } catch (e) {} }
   // one-shots: buffer → gain → master (never filtered / slowed)
   function playSfx(slot, mul){ if (typeof activePack !== 'undefined' && activePack !== 'pride') return; load().then(() => { const f = fileOf(slot); if (!f || !unlocked) return; const S = M.slots[slot]; const vid = Object.keys(S.variants).find(k => BASE + S.variants[k].file === f); const lv = (vid && S.variants[vid].level != null) ? S.variants[vid].level : 1;
     getBuf(f).then(buf => { const c = ctx; if (!buf || !c) return; const src = c.createBufferSource(); src.buffer = buf; const g = c.createGain(); g.gain.value = Math.min(1, gain(slot) * lv * (mul == null ? 1 : mul)); src.connect(g); g.connect(master); src.onended = () => { try { src.disconnect(); g.disconnect(); } catch (e) {} }; src.start(); }); }); }
   function playFile(url, g0){ if (!unlocked) return; getBuf(url).then(buf => { const c = ctx; if (!buf || !c) return; const src = c.createBufferSource(); src.buffer = buf; const g = c.createGain(); g.gain.value = g0; src.connect(g); g.connect(master); src.onended = () => { try { src.disconnect(); g.disconnect(); } catch (e) {} }; src.start(); }); }
   function startLoop(ch, name, instant){ load().then(() => { const slot = ch.kind + '.' + name; const f = fileOf(slot); if (!f) { stopLoop(ch); return; }
+    if (ch !== amb2) { try { const S = M.slots[slot]; const vid = Object.keys(S.variants).find(k => BASE + S.variants[k].file === f); const lv = (vid && S.variants[vid].level != null) ? S.variants[vid].level : (S.level != null ? S.level : 1); ch.mix = lv; } catch (e) { ch.mix = 1; } }   // per-slot / per-variant level for loops (amb2 keeps the map blend)
     if (ch.slot === slot && ch.src) { ramp(ch.g.gain, vol(ch), 200); return; }
     ch.name = name; ch.slot = slot; tell();
     if (!unlocked) { tryAutoUnlock(); return; }   // will start on first gesture (or right away if the browser already allows it)
@@ -35813,6 +35993,7 @@ body.pe-combat.pe-beat #dialogBox{ opacity:1 !important; transform:none !importa
   function voiceUrl(url){ stopVoice(); if (!url) return; const a = new Audio(url); a.volume = gain('voice.x'); voEl = a; a.onplaying = () => { if (voEl === a) duckTo(DUCK, 220); }; a.onended = a.onerror = () => { if (voEl === a) { voEl = null; duckTo(1, 700); } }; a.play().catch(() => {}); }
   function voiceLine(line){ stopVoice(); if (!line || line.type !== 'line' || !line.speaker) return; if (muted) return;
     const sp = String(line.speaker).toLowerCase(); let folder = sp === 'narrative' ? 'narrator' : ((typeof PRIDE_ACTORS !== 'undefined' && PRIDE_ACTORS[sp]) || sp); if (folder === 'arabella_frost') folder = 'arabella2';   // the PC's voice lives in arabella2
+    if (sp === 'arabella-mind') folder = 'arabella_mind';   // inner voice: same voice, v3 whispered take
     try { window.parent !== window && window.parent.postMessage({ type: 'voiceLine', folder, speaker: sp, text: voiceClean(line.text) }, '*'); } catch (e) {}
     loadVoices().then(() => { const c = VO.characters && VO.characters[folder]; if (!c || !c.active) return;
       const text = voiceClean(line.text); if (!text) return; const hash = fnv1a(sp + '|' + text);
@@ -37094,6 +37275,27 @@ body.pride-sketch .scene-bubble, body.pride-sketch #choicePanel, body.pride-sket
 </script>
 <!-- ===== /PRIDE SKETCH ===== -->
 
+
+<!-- ===== P&P map: the location card as an invitation (cream paper, gold rule, ink CTA) — docs/proto-poi-card.html · A ===== -->
+<style id="pride-poi-invite">
+body[data-pack="pride"] #poiModal:not(.pride-carousel):not(.pc-create){ background:#f4ecdd; color:#2a2020; border-radius:28px 28px 0 0; box-shadow:0 -20px 60px rgba(0,0,0,.5); }
+body[data-pack="pride"] #poiModal:not(.pride-carousel):not(.pc-create) .poi-cover{ height:34vh; min-height:210px; background-color:#e9dfcc; }
+body[data-pack="pride"] #poiModal:not(.pride-carousel):not(.pc-create) .poi-cover::after{ top:50%; background:linear-gradient(180deg, rgba(244,236,221,0) 0%, rgba(244,236,221,.45) 45%, rgba(244,236,221,.92) 85%, #f4ecdd 100%); }
+body[data-pack="pride"] #poiModal:not(.pride-carousel):not(.pc-create) .poi-grip{ background:rgba(0,0,0,.28); }
+body[data-pack="pride"] #poiModal:not(.pride-carousel):not(.pc-create) .poi-close{ background:rgba(255,255,255,.62); color:#1e1614; border:1px solid rgba(0,0,0,.1); width:40px; height:40px; }
+body[data-pack="pride"] #poiModal:not(.pride-carousel):not(.pc-create) .poi-content{ padding:6px 28px 26px; gap:0; align-items:center; text-align:center; }
+body[data-pack="pride"] #poiModal:not(.pride-carousel):not(.pc-create) .poi-kind{ font:600 11px/1 "Cormorant Garamond","Playfair Display",Georgia,serif; letter-spacing:.34em; color:#9a6f2a; }
+body[data-pack="pride"] #poiModal:not(.pride-carousel):not(.pc-create) .poi-kind::after{ content:""; display:block; width:54px; height:1px; background:#c9a24a; margin:10px auto 12px; position:relative; }
+body[data-pack="pride"] #poiModal:not(.pride-carousel):not(.pc-create) .poi-title{ font:700 32px/1.06 "Playfair Display",Georgia,serif; letter-spacing:0; color:#1e1614; }
+body[data-pack="pride"] #poiModal:not(.pride-carousel):not(.pc-create) .poi-desc{ margin-top:12px; font:italic 500 17px/1.4 "Cormorant Garamond","Playfair Display",Georgia,serif; color:#5a4a44; max-width:320px; }
+body[data-pack="pride"] #poiModal:not(.pride-carousel):not(.pc-create) .poi-requirement{ margin-top:14px; background:rgba(0,0,0,.04); border-color:rgba(0,0,0,.08); color:#5a4a44; }
+body[data-pack="pride"] #poiModal:not(.pride-carousel):not(.pc-create) .poi-actions{ width:100%; padding-top:18px; }
+body[data-pack="pride"] #poiModal:not(.pride-carousel):not(.pc-create) .poi-btn.start{ width:100%; background:#1e1614; color:#fff; box-shadow:0 12px 26px rgba(0,0,0,.22); border-radius:14px; font:600 15px/1 var(--f-ui); letter-spacing:.06em; }
+body[data-pack="pride"] #poiModal:not(.pride-carousel):not(.pc-create) .poi-btn:disabled{ background:#d9cfbd; color:#7a6a64; opacity:1; box-shadow:none; }
+body[data-pack="pride"] #poiModal:not(.pride-carousel):not(.pc-create) .poi-btn.unlock{ background:#1e1614; color:#fff; box-shadow:0 12px 26px rgba(0,0,0,.22); border-radius:14px; }
+html.wide body[data-pack="pride"] #poiModal:not(.pride-carousel):not(.pc-create){ left:50%; right:auto; width:440px; transform:translate(-50%,100%); border-radius:28px; bottom:24px; }
+html.wide body[data-pack="pride"] #poiModal.open:not(.pride-carousel):not(.pc-create){ transform:translate(-50%,0); }
+</style>
 <!-- ===== UNLOCK CINEMATIC: a location's reveal video before returning to the map ===== -->
 <style id="pride-unlock-cine-css">
   #prideUnlockCine{ position:fixed; inset:0; z-index:12000; background:#000; display:none; }
@@ -37162,7 +37364,7 @@ body.pride-sketch .scene-bubble, body.pride-sketch #choicePanel, body.pride-sket
 </script>
 <!-- ===== CHARACTER UNLOCK: a suitor's reveal video + name / origin / traits ===== -->
 <style id="pride-char-unlock-css">
-  #prideCharUnlock{ position:fixed; inset:0; z-index:12050; background:#000; display:none; }
+  #prideCharUnlock{ position:fixed; inset:0; z-index:12050; background:#000; display:none; transition:opacity .45s ease; }
   #prideCharUnlock.on{ display:block; }
   #prideCharUnlock #pcuVid{ position:absolute; inset:0; width:100%; height:100%; object-fit:cover; background:#000; }
   #prideCharUnlock #pcuGrad{ position:absolute; inset:0; pointer-events:none;
@@ -37180,9 +37382,14 @@ body.pride-sketch .scene-bubble, body.pride-sketch #choicePanel, body.pride-sket
   #prideCharUnlock #pcuCont{ padding:13px 46px; border:none; border-radius:999px; background:linear-gradient(120deg,#e0668a,#8b7bd8);
     color:#fff; font:800 15px Inter,system-ui,sans-serif; cursor:pointer; box-shadow:0 8px 26px rgba(0,0,0,.55); }
   #prideCharUnlock #pcuCont:active{ transform:scale(.97); }
+  /* narration over a clip (Video say= / Intro say=): the narrative box look, on the clip */
+  .vo-say{ position:absolute; left:0; right:0; bottom:0; z-index:3; padding:90px 26px max(30px, calc(env(safe-area-inset-bottom) + 22px)); background:linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,.5) 45%, rgba(0,0,0,.9) 100%); color:#fff; font:italic 500 22px/1.45 "Cormorant Garamond","Playfair Display",Georgia,serif; letter-spacing:.008em; text-shadow:0 2px 14px rgba(0,0,0,.65); pointer-events:none; opacity:0; transition:opacity .6s ease; }
+  .vo-say.show{ opacity:1; }
+  html.wide .vo-say{ padding-left:12%; padding-right:12%; font-size:26px; }
 </style>
 <div id="prideCharUnlock" aria-hidden="true">
   <video id="pcuVid" playsinline preload="auto"></video>
+  <div class="vo-say" id="pcuSay"></div>
   <div id="pcuGrad"></div>
   <div id="pcuText">
     <div class="pcu-line pcu-kicker" id="pcuKicker">Acquaintance made</div>
@@ -37204,8 +37411,8 @@ body.pride-sketch .scene-bubble, body.pride-sketch #choicePanel, body.pride-sket
   };
   window.prideCharUnlockData=CHARS;   // exposed so it can be extended/edited elsewhere
   window.prideHasCharUnlock=id=>!!CHARS[id];
-  window.pridePlayCharUnlock=function(charId, onContinue){
-    const c=CHARS[charId]; const ov=document.getElementById('prideCharUnlock');
+  window.pridePlayCharUnlock=function(charId, onContinue, opts){
+    opts=opts||{}; const c=CHARS[charId]; const ov=document.getElementById('prideCharUnlock');
     if(!c || !ov){ if(typeof onContinue==='function') onContinue(); return; }
     const vid=ov.querySelector('#pcuVid');
     ov.querySelector('#pcuName').textContent=c.name||'';
@@ -37219,22 +37426,27 @@ body.pride-sketch .scene-bubble, body.pride-sketch #choicePanel, body.pride-sket
     vid.loop=false; vid.muted=true; vid.setAttribute('muted',''); vid.setAttribute('autoplay',''); vid.setAttribute('playsinline','');
     ov.classList.add('on'); ov.setAttribute('aria-hidden','false');
     let shown=false;
-    const reveal=()=>{ if(shown) return; shown=true; lines.forEach((l,i)=>setTimeout(()=>l.classList.add('show'), i*160)); };   // staggered fade-up
+    const reveal=()=>{ if(shown) return; shown=true; try{ const sy=ov.querySelector('#pcuSay'); sy&&sy.classList.remove('show'); }catch(e){} lines.forEach((l,i)=>setTimeout(()=>l.classList.add('show'), i*160)); };   // staggered fade-up; the narration line gives way to the card
     // Text appears in the LAST second; freeze on the final frame by PAUSING just before
     // the end (no seek — seeking on end resets/loops the clip).
+    let breathed=false; const breathAt=opts.breath!=null ? +opts.breath : null;
     vid.ontimeupdate=()=>{ const d=vid.duration||0; if(!d) return;
+      if(breathAt!=null && !breathed && vid.currentTime>=breathAt){ breathed=true; try{ window.prideAudio&&window.prideAudio.play('sfx.reveal_breath', .5); }catch(e){} }   // her breath, on the clip's own clock, low and close
       if(vid.currentTime>=d-1) reveal();
       if(vid.currentTime>=d-0.08){ try{ vid.pause(); }catch(e){} } };
     vid.onended=()=>{ reveal(); try{ vid.pause(); }catch(e){} };
     vid.onerror=()=>{ reveal(); };   // never leave the player stuck if the file fails
-    const done=()=>{ ov.classList.remove('on'); ov.setAttribute('aria-hidden','true'); try{ vid.pause(); vid.removeAttribute('src'); vid.load(); }catch(e){} if(typeof onContinue==='function') onContinue(); };
+    const done=()=>{ if(typeof onContinue==='function') onContinue();   // the next beat renders under the card first, then the card fades: no flicker
+      setTimeout(()=>{ ov.style.opacity='0'; setTimeout(()=>{ ov.classList.remove('on'); ov.style.opacity=''; ov.setAttribute('aria-hidden','true'); try{ vid.pause(); vid.removeAttribute('src'); vid.load(); }catch(e){} }, 480); }, 650); };
     ov.querySelector('#pcuCont').onclick=done;
     // IMPORTANT: don't call load() then play() synchronously — load() aborts the play()
     // (AbortError) and the clip sits black. Set src, then play once it can actually play.
     const start=()=>{ vid.oncanplay=null;   // play ONCE — later seeks (freeze-frame) must not re-trigger play → loop
-      const g=vid.play(); if(g&&g.then) g.then(()=>{ try{ vid.muted=false; }catch(e){} }).catch(()=>{}); };
+      const g=vid.play(); if(g&&g.then) g.then(()=>{ try{ if(Date.now()-(window.__lastGestureAt||0)<1500) vid.muted=false; }catch(e){} }).catch(()=>{ try{ vid.muted=true; vid.play().catch(()=>{}); }catch(e){} }); };
     vid.oncanplay=start;
-    vid.src=c.video;
+    const say=ov.querySelector('#pcuSay'); if(say){ say.classList.remove('show'); say.textContent=''; }
+    if(opts.say){ try{ window.prideAudio&&window.prideAudio.voiceLine({type:'line', speaker:'narrative', text:opts.say}); }catch(e){} if(say){ say.textContent=opts.say; setTimeout(()=>say.classList.add('show'),400); } }   // the narrator over the clip, shown as a narrative beat
+    vid.src=opts.video||c.video;
     if(vid.readyState>=2) start();
     setTimeout(reveal, 11000);   // safety reveal if the clip stalls
   };

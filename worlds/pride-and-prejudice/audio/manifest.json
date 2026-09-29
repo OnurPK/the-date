@@ -927,6 +927,175 @@
           "note": "main-menu theme: cinematic piano and cello duet, tender and nostalgic with a rising hopeful chorus, warm, loopable, inst"
         }
       }
+    },
+    "music.assembly_far": {
+      "active": "e",
+      "variants": {
+        "a": {
+          "file": "music/assembly_far__a.mp3",
+          "src": "elevenlabs",
+          "note": "country dance from the far end of the room, low-passed, 60 s loop"
+        },
+        "b": {
+          "file": "music/assembly_far__b.mp3",
+          "src": "elevenlabs",
+          "note": "slow minuet, strings + harp, across the ballroom, 60 s loop"
+        },
+        "c": {
+          "file": "music/assembly_far__c.mp3",
+          "src": "elevenlabs",
+          "note": "string orchestra country dance from the gallery, violins/viola/cello + pianoforte"
+        },
+        "d": {
+          "file": "music/assembly_far__d.mp3",
+          "src": "elevenlabs",
+          "note": "stately minuet, violins + cello + pianoforte, 3/4"
+        },
+        "e": {
+          "file": "music/assembly_far__e.mp3",
+          "src": "elevenlabs",
+          "note": "An English country dance reel for violins and cello with pianoforte, brisk but refined, the sound of a real Regency asse"
+        }
+      },
+      "level": 0.55
+    },
+    "amb.ballroom_near": {
+      "active": "a",
+      "variants": {
+        "a": {
+          "file": "amb/ballroom_near__a.mp3",
+          "src": "elevenlabs",
+          "note": "close crowd murmur, fans, silk, glasses, dance steps, no music, 22 s loop"
+        }
+      },
+      "level": 0.8
+    },
+    "sfx.look_enter": {
+      "active": "a",
+      "variants": {
+        "a": {
+          "file": "sfx/look_enter__a.mp3",
+          "src": "elevenlabs",
+          "note": "double doors open, murmur swells, three steps",
+          "level": 0.8
+        },
+        "b": {
+          "file": "sfx/look_enter__b.mp3",
+          "src": "elevenlabs",
+          "note": "door opens onto a ball, murmur + strings swell, one step",
+          "level": 0.8
+        }
+      }
+    },
+    "sfx.look": {
+      "active": "random",
+      "variants": {
+        "a": {
+          "file": "sfx/look__a.mp3",
+          "src": "elevenlabs",
+          "note": "fan snaps open",
+          "level": 0.7
+        },
+        "b": {
+          "file": "sfx/look__b.mp3",
+          "src": "elevenlabs",
+          "note": "air swell + glassy chime",
+          "level": 0.7
+        },
+        "c": {
+          "file": "sfx/look__c.mp3",
+          "src": "elevenlabs",
+          "note": "silk rustle + intake of breath",
+          "level": 0.7
+        }
+      }
+    },
+    "sfx.look_back": {
+      "active": "random",
+      "variants": {
+        "a": {
+          "file": "sfx/look_back__a.mp3",
+          "src": "elevenlabs",
+          "note": "fan folds shut",
+          "level": 0.6
+        },
+        "b": {
+          "file": "sfx/look_back__b.mp3",
+          "src": "elevenlabs",
+          "note": "reverse air swell",
+          "level": 0.6
+        }
+      }
+    },
+    "sfx.look_cut": {
+      "active": "a",
+      "variants": {
+        "a": {
+          "file": "sfx/look_cut__a.mp3",
+          "src": "elevenlabs",
+          "note": "pianoforte flourish + chord",
+          "level": 0.8
+        },
+        "b": {
+          "file": "sfx/look_cut__b.mp3",
+          "src": "elevenlabs",
+          "note": "band cadence + polite applause",
+          "level": 0.8
+        }
+      }
+    },
+    "sfx.reveal_breath": {
+      "active": "c",
+      "variants": {
+        "b": {
+          "file": "sfx/reveal_breath__b.mp3",
+          "src": "elevenlabs",
+          "note": "her caught breath"
+        },
+        "a": {
+          "file": "sfx/reveal_breath__a.mp3",
+          "src": "elevenlabs",
+          "note": "her deep breath on the last frame"
+        },
+        "c": {
+          "file": "sfx/reveal_breath__c.mp3",
+          "src": "ffmpeg",
+          "note": "a, pitched down 16%, low-passed: deeper, from inside",
+          "level": 0.7
+        }
+      }
+    },
+    "music.darcy_reveal": {
+      "active": "a",
+      "variants": {
+        "a": {
+          "file": "music/darcy_reveal__a.mp3",
+          "src": "elevenlabs",
+          "note": "darcy reveal cue A"
+        },
+        "b": {
+          "file": "music/darcy_reveal__b.mp3",
+          "src": "elevenlabs",
+          "note": "darcy reveal cue B"
+        }
+      },
+      "level": 0.5
+    },
+    "sfx.whisper_ear": {
+      "active": "a",
+      "variants": {
+        "b": {
+          "file": "sfx/whisper_ear__b.mp3",
+          "src": "elevenlabs",
+          "note": "whisper, amused"
+        },
+        "a": {
+          "file": "sfx/whisper_ear__a.mp3",
+          "src": "elevenlabs",
+          "note": "Charlotte at her ear"
+        }
+      },
+      "level": 0.8
     }
   },
   "hooks": {
@@ -937,7 +1106,12 @@
     "remember": "sfx.remember",
     "desire": "sfx.heart_up",
     "trust": "sfx.trust",
-    "affection": "sfx.affection"
+    "affection": "sfx.affection",
+    "look_enter": "sfx.look_enter",
+    "look": "sfx.look",
+    "look_back": "sfx.look_back",
+    "look_cut": "sfx.look_cut",
+    "reveal_breath": "sfx.reveal_breath"
   },
   "levels": {
     "amb": 0.55,

@@ -445,15 +445,16 @@ function voiceLinesOf(epRel) {
   txt.split('\n').forEach(raw => { const l = raw.trim();
     if (/^\(\s*Choice\s*:\s*\d+\s*\)$/i.test(l)) { inChoice = true; return; }
     if (inChoice && l === '') { inChoice = false; return; }
-    if (inChoice) { const om = l.match(/^Arabella\s*:\s*(.+)$/i); if (om) { const t = voiceClean(om[1]); if (t) out.push({ speaker: 'arabella2', text: t, hash: fnv1a('arabella2|' + t), choice: true }); } return; }   // the pick is echoed by Arabella (arabella2) after choosing
+    if (inChoice) { const om = l.match(/^(Arabella|Narrative)\s*:\s*(.+)$/i); if (om) { const t = voiceClean(om[2]); const sp = /^narrative/i.test(om[1]) ? 'narrative' : 'arabella2'; if (t) out.push({ speaker: sp, text: t, hash: fnv1a(sp + '|' + t), choice: true }); } else if (/^\(/.test(l) || /^\[/.test(l)) inChoice = false; else return; if (inChoice) return; }   // the pick is echoed: a spoken option by Arabella (arabella2), an action option by the narrator
     if (l.startsWith('//') || l.startsWith('#')) return;
+    const vm = l.match(/^\(\s*(?:Video|Intro)\s*:.*?\|\s*say\s*=\s*([^|)]+?)\s*(\||\))/i); if (vm) { const t = voiceClean(vm[1]); if (t) out.push({ speaker: 'narrative', text: t, hash: fnv1a('narrative|' + t) }); return; }   // narration spoken over a clip
     const m = l.match(/^([A-Za-z][A-Za-z0-9-]*):\s*(.+)$/); if (!m) return;
     const sp = m[1].toLowerCase(); if (sp === 'mechanics') return;
     const text = voiceClean(m[2]); if (!text) return;
     out.push({ speaker: sp, text, hash: fnv1a(sp + '|' + text) }); });
   return out;
 }
-const SPEAKER_FOLDER = { arabella: 'arabella_frost', bingley: 'mr_bingley', darcy: 'mr_darcy', wickham: 'mr_wickham', caroline: 'miss_bingley', 'mrs-bennet': 'mrs_bennet', charlotte: 'charlotte_lucas', lydia: 'lydia_bennet', jane: 'jane_bennet', elizabeth: 'elizabeth_bennet', 'sir-william': 'sir_william', 'sir-henry': 'sir_ashbourne', 'mrs-frost': 'mrs_frost', 'mr-frost': 'mr_frost', maid: 'the_maid', pryce: 'ens_pryce', vane: 'capt_vane', ravenscar: 'lord_ravenscar', collins: 'mr_collins', devereux: 'mr_devereux', fenwick: 'mr_fenwick', hale: 'mr_hale', quill: 'mr_quill', arabella2: 'arabella2', 'sir-william2': 'sir_william2', carter: 'capt_carter', 'mr-darcy': 'mr_darcy', 'ensign-pryce': 'ens_pryce', 'miss-bingley': 'miss_bingley', 'elderly-gentleman': 'elderly_gentleman' };
+const SPEAKER_FOLDER = { arabella: 'arabella_frost', bingley: 'mr_bingley', darcy: 'mr_darcy', wickham: 'mr_wickham', caroline: 'miss_bingley', 'mrs-bennet': 'mrs_bennet', charlotte: 'charlotte_lucas', lydia: 'lydia_bennet', jane: 'jane_bennet', elizabeth: 'elizabeth_bennet', 'sir-william': 'sir_william', 'sir-henry': 'sir_ashbourne', 'mrs-frost': 'mrs_frost', 'mr-frost': 'mr_frost', maid: 'the_maid', pryce: 'ens_pryce', vane: 'capt_vane', ravenscar: 'lord_ravenscar', collins: 'mr_collins', devereux: 'mr_devereux', fenwick: 'mr_fenwick', hale: 'mr_hale', quill: 'mr_quill', arabella2: 'arabella2', 'sir-william2': 'sir_william2', carter: 'capt_carter', 'mr-darcy': 'mr_darcy', 'ensign-pryce': 'ens_pryce', 'miss-bingley': 'miss_bingley', 'elderly-gentleman': 'elderly_gentleman', 'arabella-mind': 'arabella_mind', lady: 'lady', officer: 'officer' };
 const speakerFolder = sp => { const f = sp === 'narrative' ? 'narrator' : (SPEAKER_FOLDER[sp] || sp.replace(/-/g, '_')); return VOICE_ALIAS[f] || f; };
 // GET /api/author/voice-lines?episode=authored/the-assembly → { lines:[{speaker,folder,text,hash,have:{voiceKey:true}}], voices }
 function handleVoiceLines(req, res, parsed) {
@@ -507,9 +508,10 @@ async function handleVoiceBuild(req, res) {
   voiceJobs[job.id] = job;
   (async () => { const st = Object.assign({}, V.settings || {}, c.settings || {}); for (const l of todo) { try {
         const vs = { stability: st.stability != null ? st.stability : 0.45, similarity_boost: st.similarity != null ? st.similarity : 0.8, style: st.style != null ? st.style : 0.2 }; if (st.speed != null) vs.speed = Math.max(0.7, Math.min(1.2, Number(st.speed)));
-        const payload = { text: l.text, model_id: st.model || V.model || 'eleven_multilingual_v2', voice_settings: vs };
+        const model = st.model || V.model || 'eleven_multilingual_v2'; if (/^eleven_v3/.test(model)) { delete vs.style; delete vs.speed; vs.stability = [0, 0.5, 1].reduce((a, b) => Math.abs(b - vs.stability) < Math.abs(a - vs.stability) ? b : a); }   // v3: stability must be 0 / 0.5 / 1, no style/speed
+        const payload = { text: (st.prefix || '') + l.text, model_id: model, voice_settings: vs };   // prefix = v3 audio tags such as [whispers]
         const buf = await elevenReq('POST', '/v1/text-to-speech/' + encodeURIComponent(voice.id) + '?output_format=mp3_44100_128', payload, false);
-        const out = path.join(epDir, l.hash + '.mp3'); fs.writeFileSync(out, buf); job.chars += l.text.length; job.normalized = await normalizeMp3(out, 'voice', { tempo: st.tempo, trim: st.trim, lufs: st.lufs });
+        const out = path.join(epDir, l.hash + '.mp3'); fs.writeFileSync(out, buf); job.chars += l.text.length; job.normalized = await normalizeMp3(out, 'voice', { tempo: st.tempo, trim: st.trim, lufs: st.lufs, lowpass: st.lowpass, echo: st.echo });
       } catch (e) { job.errors.push(l.hash + ': ' + String(e.message || e)); } job.done++; }
     job.running = false; })();
   return sendJson(res, 200, { ok: true, job: job.id, total: job.total, skipped: job.skipped });
@@ -535,7 +537,7 @@ async function handleVoicePost(req, res) {
   const epDir = path.join(epVoiceRoot(ep), 'voice', folder, key);
   let files = []; try { files = fs.readdirSync(epDir).filter(f => /\.mp3$/i.test(f)); } catch (e) { return sendJson(res, 404, { error: 'no files' }); }
   const V = readVoices(); const c = V.characters[folder] || {}; const st = Object.assign({}, V.settings || {}, c.settings || {}, b);
-  let ok = 0; for (const f of files) { if (await normalizeMp3(path.join(epDir, f), 'voice', { tempo: st.tempo, trim: st.trim, lufs: st.lufs })) ok++; }
+  let ok = 0; for (const f of files) { if (await normalizeMp3(path.join(epDir, f), 'voice', { tempo: st.tempo, trim: st.trim, lufs: st.lufs, lowpass: st.lowpass, echo: st.echo })) ok++; }
   return sendJson(res, 200, { ok: true, processed: ok, total: files.length, tempo: st.tempo || 1 });
 }
 function handleVoiceJob(req, res, parsed) { const j = voiceJobs[String(parsed.query.job || '')]; if (!j) return sendJson(res, 404, { error: 'no job' }); return sendJson(res, 200, j); }
@@ -581,6 +583,8 @@ function normalizeMp3(absPath, kind, post) {
     const af = [];
     if (post.trim !== false && kind === 'voice') af.push('silenceremove=start_periods=1:start_threshold=-45dB:start_silence=0.08', 'areverse', 'silenceremove=start_periods=1:start_threshold=-45dB:start_silence=0.15', 'areverse');   // trim leading/trailing silence (keep 80/150 ms)
     const t = Number(post.tempo); if (t && t !== 1 && t >= 0.5 && t <= 2) af.push('atempo=' + t.toFixed(3));   // pitch-preserving speed
+    const lp = Number(post.lowpass); if (lp && lp >= 800 && lp <= 12000) af.push('lowpass=f=' + Math.round(lp));   // muffled / "in her head" takes
+    const ec = Number(post.echo); if (ec && ec > 0 && ec <= 1) af.push('aecho=0.8:0.5:38|62:' + (ec * 0.5).toFixed(2) + '|' + (ec * 0.25).toFixed(2));   // a small close room around the voice
     af.push(`loudnorm=I=${I}:TP=-1.5:LRA=11`);
     execFile('ffmpeg', ['-v', 'error', '-y', '-i', absPath, '-af', af.join(','), '-ar', '44100', '-b:a', '128k', tmp], { timeout: 60000 }, (err) => {
       if (err) { try { fs.unlinkSync(tmp); } catch (e) {} return resolve(false); }
@@ -1438,7 +1442,8 @@ function streamFile(filePath, res, req, stat) {
   const ext = path.extname(filePath).toLowerCase();
   const mime = MIME[ext] || 'application/octet-stream';
   // no-store + no validators = browser can NEVER serve a stale copy (dev only)
-  const headers = { 'content-type': mime, 'cache-control': 'no-store, no-cache, must-revalidate, max-age=0', 'pragma': 'no-cache', 'expires': '0', 'access-control-allow-origin': '*', 'accept-ranges': 'bytes' };   // CORS: lets tools (e.g. a Miro tab) fetch local assets
+  const headers = { 'content-type': mime, 'cache-control': 'no-store, no-cache, must-revalidate, max-age=0', 'pragma': 'no-cache', 'expires': '0', 'access-control-allow-origin': '*', 'accept-ranges': 'bytes' };
+  if (/^(video|audio)\//.test(mime)) { headers['cache-control'] = 'no-cache'; delete headers['pragma']; delete headers['expires']; }   // Safari's media loader will not play a <video> served with no-store (range loads stall → black frame)   // CORS: lets tools (e.g. a Miro tab) fetch local assets
   const size = stat ? stat.size : (fs.statSync(filePath).size);
   // HTTP Range support: Safari refuses to play <video> from a server that answers 200 to a byte-range request
   const range = req && req.headers && req.headers.range;
