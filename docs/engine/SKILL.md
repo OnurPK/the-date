@@ -131,6 +131,10 @@ Script: `docs/engine/pose_frames.py`.
 
 UI v2 (P&P): Playfair Display titles, Inter UI, Cormorant italic narrative; buttons BTN-1..5 in `#ui-v2`; icons one SVG set; safe-area top/bottom on every fixed control; back arrows top-left; skip top-left in the Look; location card = invitation (cream, gold rule, ink CTA "Attend"). Cast-small bust on the right → centre zoomed subjects at 38 % width on phone. Captions between busts on the approach strip, fade after 4 s.
 
+## 9b. iOS memory (the app reloading mid-episode)
+
+The Capacitor shell is a WKWebView; iOS kills the web content process near ~1 GB and Capacitor reloads the page, which looks like a random restart. First stop: Settings → Diagnostics in the game lists "Unexpected reloads" with the episode and the beat index (`rai.crashlog`, written by `prideLiveMark` in `renderLine`); the beat number tells you which screen is the culprit. Rules learned the hard way: no `will-change: transform` on big scaled layers (the Look room was a 3800×2550 px GPU layer, re-rasterised at ×2.1 on zoom); no `backdrop-filter` on elements inside a transformed/scaled layer (each one forces an offscreen copy — use a more opaque solid background instead); pose frames are ~2.9 MB decoded each, so the pose engine keeps only the clip on screen + the next one per character (`trim`/`next` in the pose IIFE) and prefetches during the idle pause; decoded audio loops are pruned to the ones playing (`pruneBufs`); `<video>` elements get `removeAttribute('src'); load()` when done. Budget a screen at < 300 MB of decoded images.
+
 ## 10. Prototyping method
 
 Design questions → a `docs/proto-*.html` page with 3–5 alternatives side by side (sliders/play to animate), or 3–4 gpt-image concept boards from the real screenshot; the user picks; then implement in the engine. Keep prototypes; they are the design record.

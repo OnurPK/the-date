@@ -14900,9 +14900,11 @@ function applyBgState(bgValue) {
     // authored DSL may pass the filename WITH extension (explore=foo.png); the
     // built-in form is bare (explore=ballroom). Strip any extension so we don't
     // request foo.png.png.
-    let nm = (bgValue.split('=')[1] || 'ballroom').trim().replace(/\.(png|jpe?g|webp)$/i, '');
+    // A name with an explicit .jpg/.webp keeps it (painted backdrops are jpg, ~300 KB vs ~4 MB png); bare names are .png.
+    const raw = (bgValue.split('=')[1] || 'ballroom').trim(); const em = raw.match(/\.(jpe?g|webp)$/i);
+    let nm = raw.replace(/\.(png|jpe?g|webp)$/i, '');
     const bd = document.getElementById('backdrop');
-    if (bd) { const u = `${currentLocationBase()}/explore/${nm}.png`; bd.style.backgroundImage = `url("${u}")`; bd.style.opacity = '1'; prideWideSwap(bd, u); }
+    if (bd) { const u = `${currentLocationBase()}/explore/${nm}${em ? em[0] : '.png'}`; bd.style.backgroundImage = `url("${u}")`; bd.style.opacity = '1'; prideWideSwap(bd, u); }
     return;
   }
   if (bgValue === 'explore') {
