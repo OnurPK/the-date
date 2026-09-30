@@ -34765,7 +34765,15 @@ html.wide #prideLook .lk-skip{ left:24px; top:20px; font-size:11px }
 #prideLook.live .lk-in{ opacity:0 }
 body.pride-look #prideEpChrome{ display:none !important }
 body.pride-look:not(.pride-look-spot) #dialogBox, body.pride-look:not(.pride-look-spot) #objectDialog, body.pride-look:not(.pride-look-spot) #choicePanel{ opacity:0 !important; pointer-events:none !important }
-body.pride-look #backdrop, body.pride-look #cutsceneLayer, body.pride-look #narrativeSceneLayer{ opacity:0 !important }
+/* iOS memory: while the Look covers the screen the game layers underneath must not just be transparent (opacity:0 still keeps
+   their GPU backing + blur filters alive) — hide them outright and drop their filters/transforms. */
+body.pride-look #backdrop, body.pride-look #cutsceneLayer, body.pride-look #narrativeSceneLayer, body.pride-look .voice-aura, body.pride-look .vignette{ opacity:0 !important; visibility:hidden !important; filter:none !important; transform:none !important; transition:none !important }
+body.pride-look #stage .char:not(.pride-actor), body.pride-look #stage .voice{ visibility:hidden !important; will-change:auto !important }
+/* The London / 1984 stage figures (19 elements, 130vh tall, each with a background image and will-change) are never shown in
+   P&P but still cost a pinned GPU layer each while inactive — release them. Active ones keep their transitions. */
+body[data-pack="pride"] #stage .char:not(.active):not(.pride-actor), body[data-pack="pride"] #stage .voice:not(.active){ visibility:hidden; will-change:auto }
+/* A cutscene covers the room; blurring a 15 %-opacity backdrop underneath is a full-screen filter pass for nothing. */
+body[data-pack="pride"].cutscene-active #backdrop{ filter:brightness(0.3) }
 html.wide #prideLook .lk-top{ left:44px; right:44px; bottom:28px } html.wide #prideLook .lk-cap{ font-size:16px; left:90px; right:90px } html.wide #prideLook .lk-spot em{ font-size:12px }
 </style>
 <div id="prideLook" aria-hidden="true">
