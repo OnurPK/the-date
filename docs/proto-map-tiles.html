@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Map tiles — locked sketch → unlock build</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@500;700;800&family=Playfair+Display:wght@600&display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#0e0d13;color:#e7deff;font:500 13px/1.5 Inter,system-ui,sans-serif;padding:20px}
+h1{font:600 20px "Playfair Display",Georgia,serif;margin:0 0 4px}
+p.sub{color:#8a80a4;margin:0 0 12px;font-size:12px;max-width:960px}
+.bar{display:flex;gap:10px;align-items:center;margin:0 0 14px;flex-wrap:wrap}
+.bar button,.bar label{background:#1b1826;color:#e7deff;border:1px solid #3a3450;border-radius:999px;padding:8px 13px;font:700 10.5px Inter;letter-spacing:.08em;text-transform:uppercase;cursor:pointer}
+.bar button.on{background:#8b7bd8;border-color:#8b7bd8;color:#fff}
+/* the map: 3072×2048 shown at 1200 wide; the tile lives at (2300,560) 560×400 */
+.map{position:relative;width:1200px;height:800px;background:url("../worlds/pride-and-prejudice/map.jpg") 0 0/100% 100%;border-radius:14px;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.5)}
+.tile{position:absolute;left:calc(2300/3072*100%);top:calc(560/2048*100%);width:calc(560/3072*100%);height:calc(400/2048*100%)}
+.tile img,.tile video,.tile canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
+.tile video{-webkit-mask:url("../worlds/pride-and-prejudice/_mockups/map_tiles/netherfield/mask_tight.png") 0 0/100% 100%;mask:url("../worlds/pride-and-prejudice/_mockups/map_tiles/netherfield/mask.png") 0 0/100% 100%;transition:opacity .35s}
+.tile .sketch{transition:opacity .6s}
+.tile .paint{opacity:0}
+.tile .fx{pointer-events:none}
+/* locked pin */
+.pin{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:38px;height:38px;border-radius:50%;background:rgba(14,10,20,.7);border:1px solid rgba(255,255,255,.35);display:grid;place-items:center;color:#f0d47c;cursor:pointer;-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);box-shadow:0 6px 18px rgba(0,0,0,.5);transition:opacity .4s}
+.pin svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.tile.unlocked .pin{opacity:0;pointer-events:none}
+.parch{position:absolute;inset:0;pointer-events:none;mix-blend-mode:multiply;opacity:.0}
+.note{color:#8a80a4;font-size:11.5px;margin-top:10px;max-width:1200px}
+</style></head><body>
+<h1>Map tiles — a locked place is a sketch; unlocking builds it</h1>
+<p class="sub">The real map (3072×2048). Netherfield's grounds are cut out on an organic mask: locked = an empty plot (meadow, a pegged-out ground plan, no building — what gets built is the surprise); unlock = a construction time-lapse ends on the painted tile. Unlock plays the Seedance time-lapse (pegs → foundations → walls → timber roof → scaffolding → the finished house), keyed to alpha and masked to the tile shape; it ends on the painted tile. Untick the box to see the earlier canvas fake instead. Toggle the sketch variants; click the lock pin to unlock; Reset to lock again.</p>
+<div class="bar"><span style="color:#8a80a4;font-size:11px">sketch</span><button data-sk="empty" class="on">E · empty plot (surprise)</button><button data-sk="proc">P · traced sketch</button><button data-sk="c">C · gpt sketch</button><button id="reset">reset</button><label><input type="checkbox" id="useClip" checked> Seedance clip (else canvas fake)</label><label><input type="checkbox" id="showEdge"> show tile edge</label></div>
+<div class="map"><div class="tile" id="tile">
+  <img class="sketch" id="sketch" src="../worlds/pride-and-prejudice/_mockups/map_tiles/netherfield/empty_alpha.png" alt="">
+  <img class="paint" id="paint" src="../worlds/pride-and-prejudice/_mockups/map_tiles/netherfield/painted_alpha.png" alt="">
+  <video class="clip" id="clip" src="../worlds/pride-and-prejudice/_mockups/map_tiles/netherfield/build.webm" muted playsinline preload="auto" style="opacity:0"></video>
+  <canvas class="fx" id="fx" width="560" height="400"></canvas>
+  <div class="pin" id="pin" title="Unlock"><svg viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg></div>
+</div></div>
+<div class="note">Files: <code>_mockups/map_tiles/netherfield/</code> — tile_rect.jpg (the cut), mask.png (organic edge), painted_green.png / sketch_*_green.png (the two Seedance frames: same rectangle, green outside the mask), painted_alpha.png / sketch_*_alpha.png (web). The video, when generated first→last frame on green, gets keyed and plays in the same rectangle.</div>
+<script>
+const tile=document.getElementById('tile'), sketch=document.getElementById('sketch'), paint=document.getElementById('paint'), fx=document.getElementById('fx'), ctx=fx.getContext('2d');
+let sk='empty';
+document.querySelectorAll('[data-sk]').forEach(b=>b.onclick=()=>{ document.querySelectorAll('[data-sk]').forEach(x=>x.classList.toggle('on',x===b)); sk=b.dataset.sk; sketch.src='../worlds/pride-and-prejudice/_mockups/map_tiles/netherfield/'+(sk==='empty'?'empty':'sketch_'+sk)+'_alpha.png'; });
+document.getElementById('showEdge').onchange=e=>tile.style.outline=e.target.checked?'1px dashed #f0d47c':'';
+const maskImg=new Image(); maskImg.src='../worlds/pride-and-prejudice/_mockups/map_tiles/netherfield/mask.png';
+const paintImg=new Image(); paintImg.src='../worlds/pride-and-prejudice/_mockups/map_tiles/netherfield/painted_alpha.png';
+const skelImg=new Image(); skelImg.src='../worlds/pride-and-prejudice/_mockups/map_tiles/netherfield/sketch_proc_alpha.png';
+let anim=null;
+const clip=document.getElementById('clip');
+function unlockClip(){ tile.classList.add('unlocked'); clip.currentTime=0; clip.style.opacity=1; const p=clip.play(); if(p&&p.catch) p.catch(()=>{ clip.style.opacity=0; unlockFake(); }); clip.onended=()=>{ paint.style.opacity=1; setTimeout(()=>{ clip.style.opacity=0; sketch.style.opacity=0; },400); }; }
+function unlock(){ if(document.getElementById('useClip').checked) return unlockClip(); unlockFake(); }
+function unlockFake(){ if(anim) return; tile.classList.add('unlocked'); const t0=performance.now(), D=4200; const W=560,H=400;
+  // an offscreen canvas holds the painted tile; we reveal it bottom→top in ragged "courses" with a soft dust front
+  const off=document.createElement('canvas'); off.width=W; off.height=H; const oc=off.getContext('2d'); oc.drawImage(paintImg,0,0,W,H);
+  const dust=Array.from({length:140},()=>({x:Math.random()*W,y:H,vx:(Math.random()-.5)*.8,vy:-(.6+Math.random()*1.4),r:1+Math.random()*2.5,a:.6+Math.random()*.4}));
+  const step=()=>{ const p=Math.min(1,(performance.now()-t0)/D); const e=p<.5?2*p*p:-1+(4-2*p)*p;   // ease in-out
+    ctx.clearRect(0,0,W,H);
+    // phase 1: the skeleton — the traced ink lines draw themselves over the empty plot (top→bottom wipe), then fade as the walls fill
+    const s1=Math.min(1,p/0.4); const skA = p<0.4 ? 0.85*s1 : Math.max(0,0.85*(1-(p-0.4)/0.35)); if(skA>0){ ctx.save(); ctx.globalAlpha=skA; ctx.globalCompositeOperation='multiply'; ctx.beginPath(); ctx.rect(0,0,W,H*s1); ctx.clip(); ctx.drawImage(skelImg,0,0,W,H); ctx.restore(); }
+    // reveal: rows from the bottom up, each column staggered by a noise offset so the front is ragged like scaffolding courses
+    const p2=Math.max(0,(p-0.3)/0.7); const e2=p2<.5?2*p2*p2:-1+(4-2*p2)*p2; const front=H*(1-e2); ctx.save(); ctx.beginPath(); for(let x=0;x<=W;x+=8){ const y=front+Math.sin(x*.07)*14+Math.sin(x*.023+1)*10; if(x===0) ctx.moveTo(0,y); else ctx.lineTo(x,y); } ctx.lineTo(W,H); ctx.lineTo(0,H); ctx.closePath(); ctx.clip(); ctx.drawImage(off,0,0); ctx.restore();
+    // a warm line at the front: the "course being laid"
+    ctx.save(); ctx.globalCompositeOperation='lighter'; ctx.strokeStyle='rgba(255,215,140,'+(0.8*(1-p))+')'; ctx.lineWidth=3; ctx.beginPath(); for(let x=0;x<=W;x+=8){ const y=front+Math.sin(x*.07)*14+Math.sin(x*.023+1)*10; if(x===0) ctx.moveTo(0,y); else ctx.lineTo(x,y); } ctx.stroke(); ctx.restore();
+    // dust rising along the front
+    dust.forEach(d=>{ d.x+=d.vx; d.y+=d.vy; if(d.y<front-30){ d.y=front+10+Math.random()*20; d.x=Math.random()*W; } ctx.fillStyle='rgba(240,220,190,'+(d.a*(1-p)*.9)+')'; ctx.beginPath(); ctx.arc(d.x,d.y,d.r,0,6.3); ctx.fill(); });
+    // mask the fx to the organic tile shape
+    ctx.save(); ctx.globalCompositeOperation='destination-in'; ctx.drawImage(maskImg,0,0,W,H); ctx.restore();
+    sketch.style.opacity='1';
+    if(p<1) anim=requestAnimationFrame(step); else { anim=null; paint.style.opacity=1; ctx.clearRect(0,0,W,H); sketch.style.opacity=0; } };
+  anim=requestAnimationFrame(step); }
+document.getElementById('pin').onclick=unlock;
+document.getElementById('reset').onclick=()=>{ try{ clip.pause(); clip.currentTime=0; }catch(e){} clip.style.opacity=0; if(anim){ cancelAnimationFrame(anim); anim=null; } tile.classList.remove('unlocked'); paint.style.opacity=0; sketch.style.opacity=1; ctx.clearRect(0,0,560,400); };
+</script></body></html>

@@ -1,0 +1,186 @@
+[
+ {
+  "key": "ROL-1335",
+  "text": "*Onur's answer:* Start Game is in fact the sign-in entry: it opens the sign-in page. Once the player is signed in, the same button reads \"Continue\". No separate Register button on the title screen."
+ },
+ {
+  "key": "ROL-1336",
+  "text": "*Onur's answer:* Date of birth: yes, asked at registration. Time and place of birth: no. Native Game Center / Play Games sign-in is fine. A consent/terms step is fine as part of registration."
+ },
+ {
+  "key": "ROL-1337",
+  "text": "*Onur's answer:* No. \"Let's add you to the game\" (body type & height) is not required for alpha; remove it from the flow."
+ },
+ {
+  "key": "ROL-1338",
+  "text": "*Onur's answer:* Keep the Main Menu (world hub) as a separate screen for now. No hard reason, an instinct: we want the world to feel like a place you enter, and it keeps room for more worlds. We can revisit after alpha."
+ },
+ {
+  "key": "ROL-1339",
+  "text": "*Onur's answer:* Fonts, buttons, colours and the base UI guideline should come from Tugce. The prototype's UI is the backup plan: fine to use where there is a good reason (speed, or a screen Tugce has not covered), not as the default spec."
+ },
+ {
+  "key": "ROL-1340",
+  "text": "*Onur's answer:* One image + one video for alpha. No media playlist."
+ },
+ {
+  "key": "ROL-1341",
+  "text": "*Onur's answer:* Both out of alpha. If we had to pick one later, Short Stories would come first."
+ },
+ {
+  "key": "ROL-1342",
+  "text": "*Onur's answer:* It only matters if the editor can produce enough outfit variants per template to make saved versions look different; if it cannot, template and saved character will look the same and there is nothing to distinguish. For alpha: a minimum of 2 template characters, and saved characters shown with the player's chosen name."
+ },
+ {
+  "key": "ROL-1343",
+  "text": "*Onur's answer:* I did not quite get the question — let's talk it through in the next sync."
+ },
+ {
+  "key": "ROL-1344",
+  "text": "*Onur's answer:* No, trait-card visuals are out of alpha. Plain text cards are fine."
+ },
+ {
+  "key": "ROL-1345",
+  "text": "*Onur's answer:* If the player taps \"Continue without\", skip the next step entirely: no Retake, no waiting message. The portrait step only shows its result screen when a photo was actually taken."
+ },
+ {
+  "key": "ROL-1346",
+  "text": "*Onur's answer:* Agreed: static before/after images for alpha (no per-player video); full-body generation in the selected outfit; after the reveal a single button that starts the game."
+ },
+ {
+  "key": "ROL-1347",
+  "text": "*Onur's answer:* Keep Trust the Stars in alpha."
+ },
+ {
+  "key": "ROL-1348",
+  "text": "*Onur's answer:* All three creation flows (template, custom, Trust the Stars) should end on the same bio page, and \"Make her own\" continues identically from there for all three. Body type is not needed."
+ },
+ {
+  "key": "ROL-1349",
+  "text": "*Onur's answer:* After alpha. For alpha the background text is read-only and there is no free-text edit."
+ },
+ {
+  "key": "ROL-1350",
+  "text": "*Onur's answer:* UI is needed: leaving the world back to the Main Menu lives under the Settings icon (Settings sheet → Leave world)."
+ },
+ {
+  "key": "ROL-1416",
+  "text": "*Onur's answer:* Follow the prototype: when a location unlocks, an \"unlocked\" overlay notification appears at the bottom of the screen; the map pans to that episode, then to the next unlocked one with its own overlay. The map ends focused on the last unlocked episode."
+ },
+ {
+  "key": "ROL-1417",
+  "text": "*Onur's answer:* Mrs Frost tutorials are pre-written dialogue sequences that replace overlay onboarding popups. For now they trigger on returning to the map and on day/night change (not a quest system)."
+ },
+ {
+  "key": "ROL-1418",
+  "text": "*Onur's answer:* No new assets for the map poses: everything comes from the episode poses and motion. Ideally the outfit is the one from the current episode; for alpha a default outfit is fine. No face swap."
+ },
+ {
+  "key": "ROL-1419",
+  "text": "*Onur's answer:* No locked state needed for alpha; only available episodes are shown. First episode: The Assembly Rooms or Netherfield, or whatever Aaron and Sadok produce first; we will start with a single one."
+ },
+ {
+  "key": "ROL-1420",
+  "text": "*Onur's answer:* Not for alpha (non-functional visual is fine)."
+ },
+ {
+  "key": "ROL-1421",
+  "text": "*Onur's answer:* Yes, there will be music on the map; a sound/music story per screen epic is right."
+ },
+ {
+  "key": "ROL-1423",
+  "text": "*Onur's answer:* The World Overview (kingdom map) is out of scope. Alpha ends after X episodes, probably mid-way through Season 1; region progress is not needed for alpha."
+ },
+ {
+  "key": "ROL-1546",
+  "text": "*Onur's answer:* Finished episodes disappear the next day (not at the next time change). Missed events: some have a specific deadline (e.g. 23 May, \"tonight\", \"in 4 days\"); some are paired (choose-one), and a pair disappears together when one is played or the deadline passes."
+ },
+ {
+  "key": "ROL-1424",
+  "text": "*Onur's answer:* A suitor is an NPC with a special tag; in P&P they are men. Assets are the same as any NPC plus two extras: a reveal video and a silhouette (a post-process of the standing pose). Unlock/reveal can be triggered by consequences — please confirm the trigger model with Sadok."
+ },
+ {
+  "key": "ROL-1425",
+  "text": "*Onur's answer:* Please add Suitors to the UI plan; they are part of alpha."
+ },
+ {
+  "key": "ROL-1426",
+  "text": "*Onur's answer:* Suitor stats for alpha: relationships (meters), traits and discoveries (we should have discoveries about characters; if the engine lacks them, add). No bonding level and no XP for now."
+ },
+ {
+  "key": "ROL-1536",
+  "text": "*Onur's answer:* Keep the interaction as in the prototype (turntable + facets) unless Tugce proposes a better presentation. All assets are pre-produced (turntable frames), no 3D. Data: relationships, traits, discoveries."
+ },
+ {
+  "key": "ROL-1535",
+  "text": "*Onur's answer:* The yellow ring on the player portrait is extra; drop it. Alpha has discovery and memory notifications only (the underlined narration + memory toast). Suitor level is out of scope. Let's see Tugce's and Meltem's notification designs before adding anything else."
+ },
+ {
+  "key": "ROL-1538",
+  "text": "*Onur's answer:* For alpha, yes: the reveal is only for suitors."
+ },
+ {
+  "key": "ROL-1537",
+  "text": "*Onur's answer:* Player profile: similar scope to the suitor detail but a different UI; size it like Suitors. Post-alpha for the full page."
+ },
+ {
+  "key": "ROL-1422",
+  "text": "*Onur's answer:* The player portrait expands the HUD as in the episode prototype (radial menu). The profile icon will be a separate control."
+ },
+ {
+  "key": "ROL-1428",
+  "text": "*Onur's answer:* For alpha: one location = one episode. Short stories are separate points on the map if we do them at all. Interactive places (chat, activities) are a different feature and out of scope."
+ },
+ {
+  "key": "ROL-1541",
+  "text": "*Onur's answer:* For alpha, places are inactive points that show NPC movement on the map (where people are) — they simulate a living map, no interaction."
+ },
+ {
+  "key": "ROL-1429",
+  "text": "*Onur's answer:* Paired episodes are in alpha and consequences are part of the experience. Basic flow: two episodes you cannot experience both; the missed one comes with a consequence dialogue and meter changes (relationship, \"X will remember this\"). Config level is up to the team; a pass-the-time trigger is enough."
+ },
+ {
+  "key": "ROL-1531",
+  "text": "*Onur's answer:* Same UI on the map and in episodes, but different quest levels: map-level quests matter more than episode-level. If the system is not ready, hard-code the alpha quests."
+ },
+ {
+  "key": "ROL-1532",
+  "text": "*Onur's answer:* Long-press yes (opens the trait card), rewrite no."
+ },
+ {
+  "key": "ROL-1533",
+  "text": "*Onur's answer:* Confirmed: speech bubbles are out of alpha."
+ },
+ {
+  "key": "ROL-1534",
+  "text": "*Onur's answer:* Animated portraits: yes for pre-produced assets, no face swap. Player's own portrait behind the choices: yes, unless Tugce decides otherwise. Real relative heights: no."
+ },
+ {
+  "key": "ROL-1539",
+  "text": "*Onur's answer:* Out of scope for alpha."
+ },
+ {
+  "key": "ROL-1540",
+  "text": "*Onur's answer:* Pre-scripted encounters are fine for alpha."
+ },
+ {
+  "key": "ROL-1542",
+  "text": "*Onur's answer:* Street view: hard-coded if possible. Short-story scope is TBD — let's talk."
+ },
+ {
+  "key": "ROL-1543",
+  "text": "*Onur's answer:* Real time can be out of scope, but an episode needs at least a due date / turn number so exclusives can expire in game time."
+ },
+ {
+  "key": "ROL-1544",
+  "text": "*Onur's answer:* Exploration mode is out of alpha."
+ },
+ {
+  "key": "ROL-1545",
+  "text": "*Onur's answer:* Default is the bottom-sheet unlock UI; the reveal video is nice to have for key locations."
+ },
+ {
+  "key": "ROL-1427",
+  "text": "*Onur's answer:* Agreed that \"Stay\" is wrong; better UI needed — leaving the wording/pattern to Tugce."
+ }
+]

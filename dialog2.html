@@ -14296,6 +14296,12 @@ window.PRIDE_ACTORS = PRIDE_ACTORS;   // expose so the cast stage can map speake
   window.__pridePosePlayed = window.__pridePosePlayed || {};  // folder/pose → true once the expression clip ran
   const cache = {};
   function frames(folder, pose){ const key = folder + '/' + pose; if (!cache[key]) { cache[key] = []; for (let i = 0; i < cnt(folder, pose); i++) { const im = new Image(); im.src = PRIDE_WORLD_BASE + '/characters/' + folder + '/poses/' + pose + '/f' + String(i).padStart(2, '0') + '.webp'; cache[key].push(im); } } return cache[key]; }
+  // Memory: a decoded 640×1136 frame is ~2.9 MB, so a character's full set (100–140 frames) is 300–400 MB and two characters on
+  // stage (Arabella + Sir William) push the iOS web view past its ~1 GB limit → WebKit is killed and the app reloads mid-episode.
+  // Keep only the clip on screen and the one about to play; everything else of that folder is released (the files stay in the
+  // HTTP cache, so a clip that is needed again reloads in a few ms — and we always prefetch the next clip during the idle pause).
+  function trim(folder, keep){ Object.keys(cache).forEach(k => { if (k.indexOf(folder + '/') === 0 && keep.indexOf(k.slice(folder.length + 1)) < 0) { cache[k].forEach(im => { try { im.src = ''; } catch (e) {} }); delete cache[k]; } }); }
+  function next(folder, pose, nxt){ if (nxt) frames(folder, nxt); trim(folder, [pose, nxt]); return nxt; }
   function targets(folder){
     const out = [];
     const st = document.getElementById('prideActor'); if (st && st.classList.contains('active') && st.dataset.poseFolder === folder) out.push(st);
@@ -14320,11 +14326,13 @@ window.PRIDE_ACTORS = PRIDE_ACTORS;   // expose so the cast stage can map speake
           // pause on the last frame, then the next idle of the same family (random)
           const held = window.__pridePoseHeld[folder]; const set = POSE_SETS[folder];
           const pool = (held && set.idleFor && set.idleFor[held]) ? set.idleFor[held] : idlePool(folder);
-          timer = setTimeout(() => { timer = null; if (!targets(folder).length) { stop(); return; } run(folder, pickIdle(folder, pose, pool)); }, PAUSE());
+          const nx = next(folder, pose, pickIdle(folder, pose, pool));
+          timer = setTimeout(() => { timer = null; if (!targets(folder).length) { stop(); return; } run(folder, nx); }, PAUSE());
         } else if ((POSE_SETS[folder] && POSE_SETS[folder].oneShot || []).indexOf(pose) > -1) {
           // a gesture that returns to rest on its own (present, confide): play once, then release to the idles — never hold it in the air
           window.__pridePosePlayed[folder + '/' + pose] = true; delete window.__pridePoseHeld[folder];
-          timer = setTimeout(() => { timer = null; if (!targets(folder).length) { stop(); return; } run(folder, pickIdle(folder, pose, idlePool(folder))); }, PAUSE());
+          const nx = next(folder, pose, pickIdle(folder, pose, idlePool(folder)));
+          timer = setTimeout(() => { timer = null; if (!targets(folder).length) { stop(); return; } run(folder, nx); }, PAUSE());
         } else { window.__pridePosePlayed[folder + '/' + pose] = true; hold(folder, pose); }
       }
     };
@@ -14338,8 +14346,8 @@ window.PRIDE_ACTORS = PRIDE_ACTORS;   // expose so the cast stage can map speake
     // Prefer the expression's own idle clip (guarded_idle …) if it exists; otherwise breathe on the last frames.
     const set = POSE_SETS[folder]; const own = (set && set.idleFor && set.idleFor[pose]) || [];
     const first = own[0];
-    if (first) { probe(folder, first, ok => { if (!ok) { microIdle(folder, pose); return; } if (cur && cur.folder === folder && cur.pose === pose && cur.hold) timer = setTimeout(() => { timer = null; if (targets(folder).length) run(folder, pickIdle(folder, null, own)); }, PAUSE()); }); }
-    else microIdle(folder, pose);
+    if (first) { probe(folder, first, ok => { if (!ok) { trim(folder, [pose]); microIdle(folder, pose); return; } const nx = next(folder, pose, pickIdle(folder, null, own)); if (cur && cur.folder === folder && cur.pose === pose && cur.hold) timer = setTimeout(() => { timer = null; if (targets(folder).length) run(folder, nx); }, PAUSE()); }); }
+    else { trim(folder, [pose]); microIdle(folder, pose); }
   }
   function microIdle(folder, pose){
     stop(); const fr = frames(folder, pose); const n = fr.length; cur = { folder, pose, k: n - 1, loop: false, hold: true }; let dir = -1;
@@ -14359,7 +14367,7 @@ window.PRIDE_ACTORS = PRIDE_ACTORS;   // expose so the cast stage can map speake
     if (el) el.dataset.poseFolder = folder;
     if (set) evictOld(folder);
     if (!set) { if (cur && cur.folder !== folder && !targets(cur.folder).length) stop(); return false; }
-    if (!set._preloaded) { set._preloaded = true; set.idles.forEach(p => frames(folder, p)); }   // base idles only; expression sets load when scripted
+    if (!set._preloaded) { set._preloaded = true; frames(folder, set.idles[0]); }   // first base idle only (the rest are prefetched clip by clip); expression sets load when scripted
     // paint the frame we are on right now (if this folder is already running) so no base-sprite flash
     if (cur && cur.folder === folder && el) { const fr = frames(folder, cur.pose); const k = Math.min(Math.max(cur.k - 1, 0), fr.length - 1); el.style.backgroundImage = 'url("' + fr[k].src + '")'; }
     const held = window.__pridePoseHeld[folder];
@@ -14376,11 +14384,11 @@ window.PRIDE_ACTORS = PRIDE_ACTORS;   // expose so the cast stage can map speake
     const folder = PRIDE_ACTORS[speaker] || speaker;
     if (pose === 'none' || pose === 'off') { delete window.__pridePoseHeld[folder]; if (cur && cur.folder === folder) stop(); if (targets(folder).length) window.pridePoseAttach(speaker); return; }
     window.__pridePoseHeld[folder] = pose; delete window.__pridePosePlayed[folder + '/' + pose];
-    try { const set = POSE_SETS[folder]; ((set && set.idleFor && set.idleFor[pose]) || []).forEach(p => frames(folder, p)); } catch (e) {}   // warm this expression's idle
+    try { const set = POSE_SETS[folder]; const own = (set && set.idleFor && set.idleFor[pose]) || []; if (own[0]) frames(folder, own[0]); } catch (e) {}   // warm this expression's first idle (the rest come clip by clip)
     if (targets(folder).length) run(folder, pose);             // character on screen now → play immediately
   };
   // Switch which idle family a character draws from (null = base idles); restarts the loop if on screen.
-  window.pridePoseFamily = function(speaker, fam){ const folder = PRIDE_ACTORS[speaker] || speaker; const set = POSE_SETS[folder]; if (!set) return; if (fam && set.idleFor && set.idleFor[fam]) { window.__pridePoseFamily[folder] = fam; set.idleFor[fam].forEach(p => frames(folder, p)); } else delete window.__pridePoseFamily[folder];
+  window.pridePoseFamily = function(speaker, fam){ const folder = PRIDE_ACTORS[speaker] || speaker; const set = POSE_SETS[folder]; if (!set) return; if (fam && set.idleFor && set.idleFor[fam]) { window.__pridePoseFamily[folder] = fam; } else delete window.__pridePoseFamily[folder];
     if (targets(folder).length && !window.__pridePoseHeld[folder]) run(folder, pickIdle(folder, cur && cur.pose, idlePool(folder))); };
   window.pridePoseStop = stop;
   window.pridePosePreload = function(speaker){ const folder = PRIDE_ACTORS[speaker] || speaker; const set = POSE_SETS[folder]; if (set) set.all.forEach(p => frames(folder, p)); };
