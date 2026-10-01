@@ -22907,6 +22907,7 @@ function stopLondonAmbient() {
   function prideClearEp3Avatars(){ if(_simRaf){ cancelAnimationFrame(_simRaf); _simRaf=0; } if(_simTimer){ clearInterval(_simTimer); _simTimer=0; } if(_sim){ _sim.forEach(c=>{ try{c.el.remove();}catch(_){}; }); } _sim=null; clearEdges(); }
   function prideSpawnEp3Avatars(){
     prideClearEp3Avatars();
+    try{ if(localStorage.getItem('rai.dev.nowalk')==='1') return; }catch(e){}   // Settings → Dev → Perf: no walkers
     ensureSimCss(); loadGraph();
     const world=document.querySelector('#mapScreen .map-world'); if(!world) return;
     const now=performance.now(); _sim=[];
@@ -32791,6 +32792,10 @@ body.pride-hud-on #pridePcHud{ display:none !important; }
     <div class="pst-k">Dev</div>
     <div class="pst-mute"><span class="nm" style="font-size:14px;font-weight:600">Use mock data<small style="display:block;font-size:10.5px;font-weight:500;color:rgba(255,255,255,.5);margin-top:2px">Journal shows sample traits / suitors / county</small></span><div class="pst-tog" id="psMock" role="switch"></div></div>
     <div class="pst-mute"><span class="nm" style="font-size:14px;font-weight:600">Map interactions<small style="display:block;font-size:10.5px;font-weight:500;color:rgba(255,255,255,.5);margin-top:2px">Map as after turn 4: people walking, places open</small></span><div class="pst-tog" id="psMapLife" role="switch"></div></div>
+    <div class="pst-mute"><span class="nm" style="font-size:14px;font-weight:600">Perf: no fog<small style="display:block;font-size:10.5px;font-weight:500;color:rgba(255,255,255,.5);margin-top:2px">Hides the map fog (SVG cloud filter)</small></span><div class="pst-tog" id="psDev_nofog" role="switch"></div></div>
+    <div class="pst-mute"><span class="nm" style="font-size:14px;font-weight:600">Perf: no night veil<small style="display:block;font-size:10.5px;font-weight:500;color:rgba(255,255,255,.5);margin-top:2px">Hides the multiply night layer</small></span><div class="pst-tog" id="psDev_noveil" role="switch"></div></div>
+    <div class="pst-mute"><span class="nm" style="font-size:14px;font-weight:600">Perf: no pin animations<small style="display:block;font-size:10.5px;font-weight:500;color:rgba(255,255,255,.5);margin-top:2px">Freezes every CSS animation on the map</small></span><div class="pst-tog" id="psDev_noanim" role="switch"></div></div>
+    <div class="pst-mute"><span class="nm" style="font-size:14px;font-weight:600">Perf: no walkers<small style="display:block;font-size:10.5px;font-weight:500;color:rgba(255,255,255,.5);margin-top:2px">Removes the walking characters</small></span><div class="pst-tog" id="psDev_nowalk" role="switch"></div></div>
     <div class="pst-k">Diagnostics</div>
     <div id="psDiag" style="font:500 11.5px/1.5 Inter,system-ui,sans-serif;color:rgba(255,255,255,.6);white-space:pre-wrap"></div>
   </div>
@@ -32810,7 +32815,11 @@ body.pride-hud-on #pridePcHud{ display:none !important; }
   const DEV=k=>{ try{ return localStorage.getItem('rai.dev.'+k)==='1'; }catch(e){ return false; } };
   const devSet=(k,v)=>{ try{ localStorage.setItem('rai.dev.'+k, v?'1':'0'); }catch(e){} };
   window.prideDev=DEV;
-  function syncDev(){ $('psMock').classList.toggle('on', DEV('mock')); $('psMapLife').classList.toggle('on', DEV('maplife')); }
+  const PERF=['nofog','noveil','noanim','nowalk'];
+  function applyPerf(){ PERF.forEach(k=>document.body.classList.toggle('dev-'+k, DEV(k))); try{ if(DEV('nowalk')) window.prideClearWalkers&&window.prideClearWalkers(); }catch(e){} }
+  function syncDev(){ $('psMock').classList.toggle('on', DEV('mock')); $('psMapLife').classList.toggle('on', DEV('maplife')); PERF.forEach(k=>{ const b=$('psDev_'+k); if(b) b.classList.toggle('on', DEV(k)); }); applyPerf(); }
+  PERF.forEach(k=>{ const b=$('psDev_'+k); if(b) b.addEventListener('click',()=>{ devSet(k,!DEV(k)); syncDev(); }); });
+  window.prideDevPerf=applyPerf; applyPerf();   // flags take effect at boot, not only after Settings opens
   $('psMock').addEventListener('click',()=>{ const on=!DEV('mock'); devSet('mock',on); syncDev(); });
   $('psMapLife').addEventListener('click',()=>{ const on=!DEV('maplife'); devSet('maplife',on); syncDev(); try{ if(on) window.prideDevMapLife&&window.prideDevMapLife(); else window.prideDevMapLifeOff&&window.prideDevMapLifeOff(); }catch(e){} });
   function sync(){ syncDev(); const st=PA()&&PA().state(); if(!st) return; const L=st.levels||{}; [['psVoice','voice'],['psMusic','music'],['psAmb','amb']].forEach(([id,k])=>{ const v=Math.round((L[k]!=null?L[k]:1)*100); $(id).value=v; $(id+'V').textContent=v; }); $('psMute').classList.toggle('on',!st.muted); }
@@ -37301,6 +37310,11 @@ body.pride-sketch .scene-bubble, body.pride-sketch #choicePanel, body.pride-sket
   #prideAir .share{ position:absolute; left:50%; transform:translateX(-50%); bottom:calc(env(safe-area-inset-bottom,0px) + 30px); z-index:5; display:inline-flex; align-items:center; gap:9px; padding:13px 26px; border-radius:999px; border:1px solid rgba(240,212,124,.7); background:rgba(0,0,0,.42); color:#f0d47c; font:700 11.5px/1 Inter; letter-spacing:.3em; text-transform:uppercase; cursor:pointer; }
   #prideAir .share svg{ width:14px; height:14px; stroke:#f0d47c; fill:none; stroke-width:1.8; }
   #prideAir .share.done{ color:#fff; border-color:rgba(255,255,255,.5); }
+  /* Settings → Dev → Perf test flags (find what makes the map stutter on a device) */
+  body.dev-nofog #prideFog{ display:none !important; }
+  body.dev-noveil #prideNightVeil{ display:none !important; }
+  body.dev-noanim #mapScreen *, body.dev-noanim #prideMeters *, body.dev-noanim #pridePcHud *{ animation:none !important; transition:none !important; }
+  body.dev-nowalk #mapScreen .pride-ep3-av{ display:none !important; }
   #prideAir .end{ position:absolute; inset:0; background:#07050a; opacity:0; transition:opacity 1.2s ease; pointer-events:none; } #prideAir .end.on{ opacity:1; }
 </style>
 
