@@ -22921,7 +22921,7 @@ function stopLondonAmbient() {
     // iframe, background tab). simTick reads performance.now() so it is framerate-
     // independent and safe to call from both — extra calls in the same frame are no-ops.
     simTick();
-    const loop=()=>{ _lastRaf=performance.now(); simTick(); _simRaf=requestAnimationFrame(loop); };
+    let _lastTick=0; const loop=()=>{ _lastRaf=performance.now(); if(_lastRaf-_lastTick>=30){ _lastTick=_lastRaf; simTick(); } _simRaf=requestAnimationFrame(loop); };   // 30 fps is plenty for walkers; halves the main-thread cost
     _simRaf=requestAnimationFrame(loop);
     // Watchdog (NOT a second driver): only ticks when rAF has stalled (embedded/
     // background iframe throttles rAF). In normal foreground play rAF runs at 60fps
