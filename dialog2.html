@@ -23162,14 +23162,23 @@ function stopLondonAmbient() {
     try{ ['mr_darcy','mr_bingley','capt_vane'].forEach(id=>{ if(window.prideDiscover) window.prideDiscover(id); }); }catch(e){}
     try{ const cur=metCast(); ['charlotte_lucas','elizabeth_bennet','jane_bennet','lydia_bennet','miss_bingley','mrs_bennet'].forEach(id=>{ if(cur.indexOf(id)<0) cur.push(id); }); localStorage.setItem(MET_KEY, JSON.stringify(cur)); }catch(e){}
     // every interactive place (library, tea room, …) opens as if a line had unlocked it; suitor homes follow their owner's discovery
-    try{ const ids=(window.__mapLocs||[]).filter(L=>L && L.type==='interactive' && !L.archived && !L.home && L.x!=null).map(L=>L.id);
+    try{ const already=new Set(window.prideForceOpen?window.prideForceOpen():[]); const ids=(window.__mapLocs||[]).filter(L=>L && L.type==='interactive' && !L.archived && !L.home && L.x!=null).map(L=>L.id);
+      const mine=ids.filter(id=>!already.has(id)); try{ const prev=JSON.parse(localStorage.getItem('rai.dev.maplife.opened')||'[]'); localStorage.setItem('rai.dev.maplife.opened', JSON.stringify([...new Set(prev.concat(mine))])); }catch(e){}
       if(ids.length && window.prideApplyUnlocks) window.prideApplyUnlocks(ids.map(id=>({id}))); ids.forEach(id=>{ try{ window.prideUnholdFog&&window.prideUnholdFog(id); }catch(e){} }); }catch(e){}
     try{ window.prideRefreshMapLocks&&window.prideRefreshMapLocks(); }catch(e){}
     try{ window.prideClock&&window.prideClock.renderHud&&window.prideClock.renderHud(); }catch(e){}
     // walkers need the pins' layout boxes → only (re)spawn while the map is actually on screen; the map-return hook calls this again
-    try{ const ms=document.getElementById('mapScreen'); if(ms && getComputedStyle(ms).display!=='none' && document.body.classList.contains('flow-map')){ prideSpawnEp3Avatars(); window.prideStartMapLife&&window.prideStartMapLife(); } }catch(e){}
+    try{ const ms=document.getElementById('mapScreen'); if(ms && getComputedStyle(ms).display!=='none' && document.body.classList.contains('flow-map')){ if(!(_sim&&_sim.length)) prideSpawnEp3Avatars(); window.prideStartMapLife&&window.prideStartMapLife(); } }catch(e){}
   };
 
+  window.prideDevMapLifeOff=function(){
+    try{ let mine=JSON.parse(localStorage.getItem('rai.dev.maplife.opened')||'[]');
+      if(!mine.length) mine=(window.__mapLocs||[]).filter(L=>L && L.type==='interactive' && !L.archived && !L.home).map(L=>L.id);   // no record (older build) → close every interactive place; a dev switch, so acceptable
+      if(mine.length && window.prideUnforceOpen) window.prideUnforceOpen(mine); localStorage.removeItem('rai.dev.maplife.opened'); }catch(e){}
+    try{ prideClearEp3Avatars(); }catch(e){}
+    try{ window.prideStopMapLife&&window.prideStopMapLife(); }catch(e){}
+    try{ window.prideRefreshMapLocks&&window.prideRefreshMapLocks(); }catch(e){}
+  };
   // First gameplay state: Lucas Lodge only, styled as the active (playable) pin.
   window.prideEnterEp1=function(){
     // Legacy Lucas-Lodge hardcode kaldırıldı — artık harita TAMAMEN tur-gating'e göre (sadece Tur 1 açık).
@@ -32639,6 +32648,7 @@ body.pride-hud-on #pridePcHud{ display:none !important; }
 
   // ---- Faz 4 — dynamic unlocks + exclusive pair groups ----
   window.prideForceOpen  = function(){ meta.forceOpen  = meta.forceOpen  || []; return meta.forceOpen; };
+  window.prideUnforceOpen= function(ids){ ids=Array.isArray(ids)?ids:[ids]; meta.forceOpen=(meta.forceOpen||[]).filter(id=>ids.indexOf(id)<0); save(); };   // dev: undo a forced open
   window.prideDeclinedEps= function(){ meta.declinedEps= meta.declinedEps|| []; return meta.declinedEps; };
   window.pridePairs      = function(){ meta.pairs      = meta.pairs      || {}; return meta.pairs; };
   // Parse (Unlock: id [| group=NAME] [| kind=side] [| title=..] [| desc=..] [| cover=..]) — bare tokens: image→cover, else title then desc
@@ -32799,7 +32809,7 @@ body.pride-hud-on #pridePcHud{ display:none !important; }
   window.prideDev=DEV;
   function syncDev(){ $('psMock').classList.toggle('on', DEV('mock')); $('psMapLife').classList.toggle('on', DEV('maplife')); }
   $('psMock').addEventListener('click',()=>{ const on=!DEV('mock'); devSet('mock',on); syncDev(); });
-  $('psMapLife').addEventListener('click',()=>{ const on=!DEV('maplife'); devSet('maplife',on); syncDev(); if(on){ try{ window.prideDevMapLife&&window.prideDevMapLife(); }catch(e){} } });
+  $('psMapLife').addEventListener('click',()=>{ const on=!DEV('maplife'); devSet('maplife',on); syncDev(); try{ if(on) window.prideDevMapLife&&window.prideDevMapLife(); else window.prideDevMapLifeOff&&window.prideDevMapLifeOff(); }catch(e){} });
   function sync(){ syncDev(); const st=PA()&&PA().state(); if(!st) return; const L=st.levels||{}; [['psVoice','voice'],['psMusic','music'],['psAmb','amb']].forEach(([id,k])=>{ const v=Math.round((L[k]!=null?L[k]:1)*100); $(id).value=v; $(id+'V').textContent=v; }); $('psMute').classList.toggle('on',!st.muted); }
   function diag(){ let log=[]; try{ log=JSON.parse(localStorage.getItem('rai.crashlog')||'[]'); }catch(e){}
     const lines=log.slice().reverse().map(j=>(j.reloadedAt||'').replace('T',' ').slice(5,19)+'  '+String(j.ep||'').split('/').pop()+' #'+j.idx+(j.mem?'  '+Math.round(j.mem/1048576)+'MB':'')+(j.hidden?'  (bg)':''));
@@ -36721,6 +36731,7 @@ body.pride-sketch .scene-bubble, body.pride-sketch #choicePanel, body.pride-sket
   };
   // poll on a light interval while the map is up
   window.prideStartMapLife=function(){ if(_encTimer) return; _encTimer=setInterval(scanEncounters, 2500); };
+  window.prideStopMapLife=function(){ if(_encTimer){ clearInterval(_encTimer); _encTimer=0; } };
   window.prideStopMapLife=function(){ if(_encTimer){ clearInterval(_encTimer); _encTimer=0; } clearEnc(); };
   document.addEventListener('DOMContentLoaded', ()=>{ try{ window.prideStartMapLife(); }catch(e){} });
   try{ window.prideStartMapLife(); }catch(e){}
@@ -37485,7 +37496,7 @@ body.pride-sketch .scene-bubble, body.pride-sketch #choicePanel, body.pride-sket
         if(i!==li){ renderKar(i); const l=lines[i]; if(l&&l.clip){ setClip(l.clip, !!l.loop, /^mus_piano/.test(l.clip)?'fade':'memory'); if(cutT) clearTimeout(cutT); if(l.cut>0) cutT=setTimeout(()=>{ if(curClip===l.clip) setClip(L.intro||'mus_piano_a', true, 'fade'); }, l.cut*1000); } }
         if(i>=0&&lines[i].ws){ kar.querySelectorAll('.ln:not(.out) .w[data-t]').forEach(w=>{ if(t>=parseFloat(w.dataset.t)) w.classList.add('on'); }); }
         };
-      const stop=()=>{ clearInterval(raf); clearTimeout(cutT); clearFx(); try{ au.pause(); }catch(e){} try{ vid.pause(); vid.removeAttribute('src'); vid.load(); }catch(e){} };
+      const stop=()=>{ clearInterval(raf); clearTimeout(cutT); clearFx(); try{ au.pause(); au.removeAttribute('src'); au.load(); }catch(e){} try{ vid.pause(); vid.removeAttribute('src'); vid.load(); }catch(e){} };
       const leave=(fast)=>{ endV.classList.add('on'); setTimeout(()=>{ stop(); hideEnd(); finish(); setTimeout(()=>{ ov.classList.remove('on'); setTimeout(()=>{ try{ ov.remove(); }catch(e){} }, 950); }, 300); }, fast?500:1300); };
       ov.querySelector('.skip').addEventListener('click', ()=>leave(true));
       ov.querySelector('.share').addEventListener('click', async (e)=>{ const b=e.currentTarget; const txt=(L.shareText||('"'+(lines.find(l=>l.text)||{}).text+'" — '+(L.title||'An air')+', roles.ai'));
@@ -37495,7 +37506,7 @@ body.pride-sketch .scene-bubble, body.pride-sketch #choicePanel, body.pride-sket
       const hideEnd=()=>{ try{ ['epEndContinue','epEndLabel'].forEach(id=>{ const e=document.getElementById(id); if(e) e.style.display='none'; }); document.body.classList.remove('pride-ending'); }catch(e){} }; hideEnd();   // END chrome never peeks out under / after the Air
       setClip(L.intro||lines[0].clip||'mus_piano_a', true, 'fade');
       ov.classList.add('show'); setTimeout(()=>{ ov.classList.add('on'); }, 40);
-      const go=()=>{ const p=au.play(); if(p&&p.catch) p.catch(()=>{ const once=()=>{ au.play().catch(()=>{}); document.removeEventListener('pointerdown', once); }; document.addEventListener('pointerdown', once); }); raf=setInterval(tick, 50); };   // timer, not rAF: keeps the karaoke honest when rAF is throttled (embedded / background)
+      const go=()=>{ if(fired) return; const p=au.play(); if(p&&p.catch) p.catch(()=>{ const once=()=>{ au.play().catch(()=>{}); document.removeEventListener('pointerdown', once); }; document.addEventListener('pointerdown', once); }); raf=setInterval(tick, 50); };   // timer, not rAF: keeps the karaoke honest when rAF is throttled (embedded / background)
       setTimeout(go, 900);
     });
   };
