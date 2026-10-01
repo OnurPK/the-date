@@ -37199,21 +37199,22 @@ body.pride-sketch .scene-bubble, body.pride-sketch #choicePanel, body.pride-sket
   #prideJournal.out .jstage, #prideJournal.out .jbg{ transition:opacity .5s ease; opacity:0; }
   #prideJournal.out{ background:#000; }
   /* the desk: candle top-left, inkwell top-right, the diary lies in the pool of light */
-  #prideJournal .jbg{ position:absolute; inset:0; background:url("worlds/pride-and-prejudice/ui/journal/desk.jpg") center/cover no-repeat #1a0f1b; }
-  #prideJournal .jbg::after{ content:''; position:absolute; inset:0; background:linear-gradient(180deg, rgba(0,0,0,.05) 60%, rgba(0,0,0,.55) 100%); }
+  #prideJournal .jbg{ position:absolute; inset:-6%; background:url("worlds/pride-and-prejudice/ui/journal/desk.jpg") 50% 100% / 128% auto no-repeat #1a0f1b; transform:rotate(180deg); }   /* rotated: the candle, inkwell and ribbon sit in the band under the diary instead of hiding behind it */
+  #prideJournal .jbg::after{ content:''; position:absolute; inset:0; background:radial-gradient(90% 70% at 50% 45%, rgba(0,0,0,0) 40%, rgba(0,0,0,.45) 100%); }
   #prideJournal .jstage{ position:absolute; left:50%; top:50%; width:390px; height:844px; margin:-422px 0 0 -195px; transform:scale(var(--k,1)); transform-origin:50% 50%; }
   #prideJournal .jtap{ position:absolute; top:16px; left:0; right:0; text-align:center; font:700 9.5px/1 Inter; letter-spacing:.3em; text-transform:uppercase; color:rgba(255,255,255,.45); z-index:20; }
   #prideJournal .jmarks{ position:absolute; right:30px; top:22px; z-index:20; display:flex; gap:5px; } #prideJournal .jmarks i{ width:20px; height:3px; border-radius:2px; background:rgba(255,255,255,.22); } #prideJournal .jmarks i.on{ background:var(--gold2); }
   /* the open book */
   #prideJournal .jstack{ position:absolute; inset:0; perspective:1400px; }
-  #prideJournal .jpage{ position:absolute; left:-14px; top:52px; width:418px; height:584px; color:var(--ink); transform:translate(var(--dx,0),0); transform-origin:0 50%; transition:transform .6s cubic-bezier(.3,.7,.2,1), opacity .4s; filter:drop-shadow(0 26px 34px rgba(0,0,0,.6)); }
+  #prideJournal .jpage{ position:absolute; left:-14px; top:68px; width:418px; height:584px; color:var(--ink); transform:translate(var(--dx,0),0); transform-origin:0 50%; transition:transform .6s cubic-bezier(.3,.7,.2,1), opacity .4s; filter:drop-shadow(0 26px 34px rgba(0,0,0,.6)); }
   #prideJournal .jpage .sheet{ position:absolute; inset:0; background-image:url("worlds/pride-and-prejudice/ui/journal/diary.jpg"); background-size:cover; background-position:center; border-radius:3px 8px 8px 3px; }
   #prideJournal .jpage .in{ position:absolute; left:21%; right:9%; top:34px; bottom:30px; transition:opacity .25s; }
   #prideJournal .jpage .in > *{ position:relative; } #prideJournal .jpage .in > .deco, #prideJournal .jpage .in > .clip{ position:absolute; }
   #prideJournal .jpage.enter{ opacity:0; transition:opacity .01s; }
   #prideJournal .jpage.flip{ transform:rotateY(-150deg) !important; z-index:30 !important; }
   #prideJournal .jpage.flip .sheet::after{ content:''; position:absolute; inset:0; background:linear-gradient(90deg, rgba(0,0,0,0), rgba(0,0,0,.35) 60%, rgba(0,0,0,.55)); border-radius:inherit; }
-  #prideJournal .turnvid{ position:absolute; left:-24px; top:-74px; width:438px; height:779px; z-index:28; pointer-events:none; opacity:0; }
+  #prideJournal .turnvid, #prideJournal .turnimg{ position:absolute; left:-24px; top:-58px; width:438px; height:779px; z-index:28; pointer-events:none; opacity:0; }
+  #prideJournal .turnimg.on{ opacity:1; }
   #prideJournal .turnvid.on{ opacity:1; }
   /* type */
   #prideJournal h1{ font:400 34px/1 "Great Vibes",cursive; color:var(--ink); margin:8px 0 0; }
@@ -37290,7 +37291,7 @@ body.pride-sketch .scene-bubble, body.pride-sketch #choicePanel, body.pride-sket
   #prideJournal .dial .delta{ font:italic 400 11px/1 "IM Fell English",serif; }
   #prideJournal .dial.rose .delta{ color:var(--rose); } #prideJournal .dial.gold .delta{ color:var(--gold); }
   /* remark + continue */
-  #prideJournal .remark{ position:absolute; left:30px; right:30px; top:640px; height:106px; display:flex; align-items:center; justify-content:center; z-index:15; text-align:center; font:500 14.5px/1.5 Inter,system-ui,sans-serif; letter-spacing:.01em; color:#f4eee1; text-shadow:0 1px 2px rgba(0,0,0,.9), 0 2px 12px rgba(0,0,0,.7); }
+  #prideJournal .remark{ position:absolute; left:30px; right:30px; top:658px; height:84px; display:flex; align-items:center; justify-content:center; z-index:15; text-align:center; font:500 14.5px/1.5 Inter,system-ui,sans-serif; letter-spacing:.01em; color:#f4eee1; text-shadow:0 1px 2px rgba(0,0,0,.9), 0 2px 12px rgba(0,0,0,.7); }
   #prideJournal .remark b{ font-weight:600; color:#f0d47c; }
   #prideJournal .remark .wr .w{ filter:none; transform:none; } #prideJournal .remark .wr.go .w{ animation:jInkFlat .35s ease forwards; animation-delay:var(--t,0s); }
   @keyframes jInkFlat{ from{ opacity:0 } to{ opacity:1 } }
@@ -37597,7 +37598,7 @@ body.pride-sketch .scene-bubble, body.pride-sketch #choicePanel, body.pride-sket
     ov=document.createElement('div'); ov.id='prideJournal';
     ov.innerHTML='<div class="jbg"></div><div class="jstage"><div class="jstack">'
       +pagesHtml3.map((p,i)=>'<div class="jpage'+(i?' enter':'')+'" data-n="'+(i+1)+'"><div class="sheet"></div>'+p+'</div>').join('')
-      +'</div><video class="turnvid" muted playsinline preload="auto"><source src="'+J+'page_turn.mov" type=\'video/mp4; codecs="hvc1"\'><source src="'+J+'page_turn.webm" type="video/webm"></video>'
+      +'</div><video class="turnvid" muted playsinline preload="auto"><source src="'+J+'page_turn.mov" type=\'video/mp4; codecs="hvc1"\'><source src="'+J+'page_turn.webm" type="video/webm"></video><img class="turnimg" alt="">'
       +'<div class="remark" id="jRemark"></div><div class="cta" id="jCta"><span id="jCtaT">Turn the page</span><span class="seal"></span></div></div>';
     try{ const o=window.__jIris; if(o){ ov.style.setProperty('--ix', o.x+'px'); ov.style.setProperty('--iy', o.y+'px'); } }catch(e){}
     try{ const ph=ov.querySelector('#jPic .ph'); if(ph) ph.style.backgroundImage=(m.slides[0]&&m.slides[0].img)||m.still; }catch(e){}   // set via DOM: the computed url("…") carries quotes that would break an inline style attribute
@@ -37606,6 +37607,12 @@ body.pride-sketch .scene-bubble, body.pride-sketch #choicePanel, body.pride-sket
     const pages=[...ov.querySelectorAll('.jpage')], marks=[], cta=ov.querySelector('#jCta'), ctaT=ov.querySelector('#jCtaT'), vid=ov.querySelector('.turnvid');
     const PA=()=>window.prideAudio; const sfx=(slot,mul)=>{ try{ PA()&&PA().play(slot, mul); }catch(e){} };
     let cur=0, flipping=false, quillT=null, gi=0;
+    // Page-turn fallback for browsers without VP9-alpha / HEVC-alpha video (iOS): the same clip as 32 alpha WebP frames (ui/journal/turn/).
+    const TURN_N=32, turnImg=ov.querySelector('.turnimg'), turnFrames=[]; let turnReady=0;
+    const canVid=(()=>{ try{ const t=document.createElement('video'); return !!(t.canPlayType('video/webm; codecs="vp9"')||t.canPlayType('video/mp4; codecs="hvc1"')); }catch(e){ return false; } })();
+    if(!canVid){ for(let i=1;i<=TURN_N;i++){ const im=new Image(); im.onload=()=>{ turnReady++; }; im.src=J+'turn/f'+String(i).padStart(2,'0')+'.webp'; turnFrames.push(im); } }
+    const playFrames=(ms)=>{ let k=0; turnImg.src=turnFrames[0].src; turnImg.classList.add('on'); const per=ms/TURN_N;
+      const step=()=>{ k++; if(k>=TURN_N){ turnImg.classList.remove('on'); return; } turnImg.src=turnFrames[k].src; setTimeout(step, per); }; setTimeout(step, per); };
     const arcs=()=>ov.querySelectorAll('.jpage:not(.enter) .arc').forEach(a=>requestAnimationFrame(()=>{ a.style.strokeDashoffset=String(176*(1-(+a.dataset.to||0))); }));
     const stopQuill=()=>{ if(quillT){ clearInterval(quillT); quillT=null; } };
     function writeIn(page){ const spans=[...page.querySelectorAll('.wr')]; spans.forEach(w=>{ jPrep(w); w.classList.remove('go'); void w.offsetWidth; }); stopQuill(); if(!spans.length) return;
@@ -37621,11 +37628,14 @@ body.pride-sketch .scene-bubble, body.pride-sketch #choicePanel, body.pride-sket
       [...ov.querySelectorAll('#jDots i')].forEach((d,k)=>d.classList.toggle('on',k===gi)); sfx('sfx.page_turn', .35); }
     function show(n, viaFlip){ cur=n;
       if(viaFlip && n>0){ const old=pages[n-1]; flipping=true; sfx('sfx.page_turn', .7);
-        const useVid = vid && vid.readyState>=2;
+        const useVid = vid && vid.readyState>=2; const useFrames = !useVid && turnReady>=TURN_N-2;
         old.querySelector('.in').style.opacity='0'; pages[n].classList.remove('enter'); pages[n].style.zIndex=String(10+n); pages[n].querySelector('.in').style.opacity='0';
         if(useVid){ vid.currentTime=0; vid.playbackRate=1.45; vid.classList.add('on'); vid.play().catch(()=>{}); old.style.zIndex=String(10+n-1);
           setTimeout(()=>{ pages[n].querySelector('.in').style.opacity='1'; }, 1350);
           setTimeout(()=>{ vid.classList.remove('on'); vid.pause(); flipping=false; old.querySelector('.in').style.opacity=''; }, 1650); }
+        else if(useFrames){ playFrames(1650); old.style.zIndex=String(10+n-1);
+          setTimeout(()=>{ pages[n].querySelector('.in').style.opacity='1'; }, 1350);
+          setTimeout(()=>{ flipping=false; old.querySelector('.in').style.opacity=''; }, 1650); }
         else { old.classList.add('flip'); old.style.zIndex='30'; setTimeout(()=>{ pages[n].querySelector('.in').style.opacity='1'; },350);
           setTimeout(()=>{ old.classList.remove('flip'); old.style.zIndex=String(10+n-1); flipping=false; old.querySelector('.in').style.opacity=''; }, 650); } }
       pages.forEach((p,i)=>{ if(viaFlip && (i===n-1||i===n)) return; p.classList.toggle('enter', i>n); p.style.zIndex=String(i<=n?10+i:0); p.querySelector('.in').style.opacity=''; });
