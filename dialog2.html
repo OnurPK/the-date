@@ -37653,7 +37653,7 @@ body.pride-sketch .scene-bubble, body.pride-sketch #choicePanel, body.pride-sket
   /* fog — soft, translucent, textured haze inside the painted region (map-fog.json).
      Screen-blended so it lightens (mist) instead of greying; you still see the map. */
   #prideFog{ position:absolute; inset:0; z-index:2; pointer-events:none; width:100%; height:100%;
-    transition:opacity 1s ease; opacity:0; filter:blur(2px); }
+    transition:opacity 1s ease; opacity:0; }   /* no CSS filter here: see rasterFog — a filtered map-sized layer re-renders on every pan frame (mobile stutter) */
   body.pc-firststate #prideFog, body.pc-creating #prideFog{ display:none; }
   /* fog is STATIC (no per-frame filter re-raster). On an unlock reveal the ONE
      dissolving layer spreads outward to the edges and fades — others stay put. */
@@ -37699,6 +37699,13 @@ body.pride-sketch .scene-bubble, body.pride-sketch #choicePanel, body.pride-sket
   // masks are UNIONED into one mask, painted by ONE static cloud (feTurbulence). No
   // per-layer filters and NO animation — animating a feTurbulence-filtered layer over
   // a 3072px map re-runs the filter every frame and freezes panning.
+  const FOG_RASTER_W=1024, FOG_RASTER_H=1024; let _fogRaster={ key:'', url:'', busy:'' };
+  function rasterFog(key, svgText){ if(_fogRaster.busy===key || _fogRaster.key===key) return; _fogRaster.busy=key;
+    try{ const im=new Image(); im.onload=()=>{ try{ const c=document.createElement('canvas'); c.width=FOG_RASTER_W; c.height=FOG_RASTER_H; c.getContext('2d').drawImage(im,0,0,FOG_RASTER_W,FOG_RASTER_H);
+          c.toBlob(b=>{ if(!b){ _fogRaster.busy=''; return; } if(_fogRaster.url){ try{ URL.revokeObjectURL(_fogRaster.url); }catch(e){} } _fogRaster={ key, url:URL.createObjectURL(b), busy:'' }; applyFog(); }, 'image/png'); }
+        catch(e){ _fogRaster.busy=''; } };
+      im.onerror=()=>{ _fogRaster.busy=''; };
+      im.src='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(svgText); }catch(e){ _fogRaster.busy=''; } }
   function applyFog(){ const world=document.querySelector('#mapScreen .map-world'); if(!world) return;
     let fog=document.getElementById('prideFog');
     if(fog && fog.tagName && fog.tagName.toLowerCase()!=='svg'){ fog.remove(); fog=null; }   // migrate old DIV fog
@@ -37719,10 +37726,22 @@ body.pride-sketch .scene-bubble, body.pride-sketch #choicePanel, body.pride-sket
     let defs='<defs>'+cloud;
     let body='';
     if(steady.length){
-      defs+='<mask id="prideFogRegion" maskUnits="userSpaceOnUse" x="0" y="0" width="100" height="100"><g filter="url(#prideFogSoft)">'
+      // PERF (mobile): the steady mist is rasterized ONCE to a bitmap and shown as a plain <image>. A live feTurbulence +
+      // blur layer the size of the map is re-filtered on every pan frame in WebKit — that alone made the whole map stutter.
+      const key=(document.body.classList.contains('pride-tod-night')?'n|':'d|')+steady.map(f=>f.locId||'?').sort().join(',');
+      const steadySvg='<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 100 100" width="'+FOG_RASTER_W+'" height="'+FOG_RASTER_H+'" preserveAspectRatio="none"><defs>'+cloud
+        +'<mask id="prideFogRegion" maskUnits="userSpaceOnUse" x="0" y="0" width="100" height="100"><g filter="url(#prideFogSoft)">'
         + steady.map(f=>'<image href="'+f.mask+'" x="0" y="0" width="100" height="100" preserveAspectRatio="none"/>').join('')
-        +'</g></mask>';
-      body+='<g mask="url(#prideFogRegion)"><rect x="-2" y="-2" width="104" height="104" filter="url(#prideCloud)"/></g>';
+        +'</g></mask></defs><g mask="url(#prideFogRegion)"><rect x="-2" y="-2" width="104" height="104" filter="url(#prideCloud)"/></g></svg>';
+      if(_fogRaster.key===key && _fogRaster.url){ body+='<image href="'+_fogRaster.url+'" x="0" y="0" width="100" height="100" preserveAspectRatio="none"/>'; }
+      else {
+        // not rasterized yet → show the live version this once, swap to the bitmap when it is ready (same fog set only)
+        defs+='<mask id="prideFogRegion" maskUnits="userSpaceOnUse" x="0" y="0" width="100" height="100"><g filter="url(#prideFogSoft)">'
+          + steady.map(f=>'<image href="'+f.mask+'" x="0" y="0" width="100" height="100" preserveAspectRatio="none"/>').join('')
+          +'</g></mask>';
+        body+='<g mask="url(#prideFogRegion)"><rect x="-2" y="-2" width="104" height="104" filter="url(#prideCloud)"/></g>';
+        rasterFog(key, steadySvg);
+      }
     }
     dissolving.forEach((f,i)=>{ const mid='prideFogDiss'+i;
       defs+='<mask id="'+mid+'" maskUnits="userSpaceOnUse" x="0" y="0" width="100" height="100"><g filter="url(#prideFogSoft)">'
