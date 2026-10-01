@@ -18888,7 +18888,7 @@ function endChoice(chosenIdx, chosenOpt) {
     return;
   }
 
-  // P&P: Arabella says the pick out loud — a synthetic cast-small line spliced right after the (Choice) so it
+  // P&P: Arabella says the pick out loud — a synthetic cast-large line spliced right after the (Choice) so it
   // renders (and voices) like any other line, then the branch's own [ui:] takes over. Typed input is not echoed.
   try {
     const optSp = String(chosenOpt && chosenOpt.speaker || '');
@@ -18898,7 +18898,7 @@ function endChoice(chosenIdx, chosenOpt) {
       const prevUi = (currentDialogState && currentDialogState.ui) || 'narrative';
       while (lines[idx + 1] && lines[idx + 1].synthetic) lines.splice(idx + 1, 1);
       lines.splice(idx + 1, 0,
-        { type: 'state-update', updates: { ui: 'cast-small' }, synthetic: true },
+        { type: 'state-update', updates: { ui: 'cast-large' }, synthetic: true },   // full-body Arabella for her own line (was cast-small)
         { type: 'line', speaker: 'arabella2', text: chosenOpt.text, synthetic: true, echo: true },
         { type: 'state-update', updates: { ui: prevUi }, synthetic: true });
     }
