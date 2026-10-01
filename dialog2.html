@@ -16312,7 +16312,7 @@ function showEndContinue(){
       if (typeof window.prideEpiDashboard === 'function') {
         let ttl = ''; try { ttl = window.__prideEpisodeTitle || ''; } catch (e) {}
         if (!ttl && typeof currentVenue === 'string') ttl = currentVenue.replace(/[-_]/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
-        window.prideEpiDashboard(ttl, toMap);
+        window.prideEpiDashboard(ttl, () => { if (typeof window.prideAirScene === 'function') window.prideAirScene(toMap); else toMap(); });   // diary → the Air (if the episode has one) → map
       } else { toMap(); }
     });
     document.body.appendChild(b);
@@ -33209,22 +33209,22 @@ body.pride-hud-on #pridePcHud{ display:none !important; }
   }
   document.getElementById('mmCap').addEventListener('click',e=>{ e.stopPropagation(); if(alive) close(); });
 
-  function irisOpen(){
-    const d=document.createElement('div'); d.style.cssText='position:absolute;inset:0;z-index:4;pointer-events:none;background:#07050a'; root.appendChild(d); extra.push(d);
+  function irisOpen(R,V,X){ R=R||root; V=V||vid; X=X||extra;   // (R,V,X) → reusable by other screens (the Air)
+    const d=document.createElement('div'); d.style.cssText='position:absolute;inset:0;z-index:4;pointer-events:none;background:#07050a'; R.appendChild(d); X.push(d);
     const set=(r,soft)=>{ const m='radial-gradient(circle at 50% 50%, transparent '+Math.max(0,r-soft)+'%, #000 '+r+'%)'; d.style.webkitMaskImage=m; d.style.maskImage=m; };
     set(0,0); const t0=performance.now(), D=1500;
-    const step=()=>{ if(!d.isConnected) return; const t=Math.min(1,(performance.now()-t0)/D); let r; if(t<.18) r=6*(t/.18); else if(t<.3) r=6-2*((t-.18)/.12); else { const k=(t-.3)/.7; r=4+(150-4)*(1-Math.pow(1-k,2.2)); } set(r,8+r*.4); if(t<1) setTimeout(()=>requestAnimationFrame(step),16); else { d.remove(); const i=extra.indexOf(d); if(i>=0) extra.splice(i,1); } };
+    const step=()=>{ if(!d.isConnected) return; const t=Math.min(1,(performance.now()-t0)/D); let r; if(t<.18) r=6*(t/.18); else if(t<.3) r=6-2*((t-.18)/.12); else { const k=(t-.3)/.7; r=4+(150-4)*(1-Math.pow(1-k,2.2)); } set(r,8+r*.4); if(t<1) setTimeout(()=>requestAnimationFrame(step),16); else { d.remove(); const i=X.indexOf(d); if(i>=0) X.splice(i,1); } };
     requestAnimationFrame(step);
-    A(vid,[{filter:'blur(14px) saturate(.5)',transform:'scale(1.18)'},{filter:'blur(0px) saturate(1)',transform:'scale(1.06)',offset:.55},{filter:'blur(0px) saturate(1)',transform:'scale(1)'}],{duration:2400,easing:'cubic-bezier(.2,.7,.2,1)'});
+    A(V,[{filter:'blur(14px) saturate(.5)',transform:'scale(1.18)'},{filter:'blur(0px) saturate(1)',transform:'scale(1.06)',offset:.55},{filter:'blur(0px) saturate(1)',transform:'scale(1)'}],{duration:2400,easing:'cubic-bezier(.2,.7,.2,1)'});
   }
-  function dreamEdge(){
-    const v=document.createElement('video'); v.src=vid.currentSrc||vid.src; v.muted=true; v.playsInline=true; v.loop=true; v.className='mm-vid'; v.style.cssText='pointer-events:none;z-index:3;opacity:0;filter:blur(14px) saturate(.85) brightness(.9);transform:scale(1.06)'; root.appendChild(v); extra.push(v); try{ v.currentTime=vid.currentTime; }catch(e){} v.play().catch(()=>{});
+  function dreamEdge(R,V,X){ R=R||root; V=V||vid; X=X||extra;
+    const v=document.createElement('video'); v.src=V.currentSrc||V.src; v.muted=true; v.playsInline=true; v.loop=V.loop; v.className='mm-vid'; v.style.cssText='position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:50% 30%;pointer-events:none;z-index:3;opacity:0;filter:blur(14px) saturate(.85) brightness(.9);transform:scale(1.06)'; R.appendChild(v); X.push(v); try{ v.currentTime=V.currentTime; }catch(e){} v.play().catch(()=>{});
     A(v,[{opacity:0},{opacity:1}],{duration:2200,easing:'ease-out'});
     const t0=performance.now(); const step=()=>{ if(!v.isConnected) return; const t=(performance.now()-t0)/1000; const cx=50+Math.sin(t*.35)*6, cy=47+Math.cos(t*.27)*5; const m='radial-gradient(60% 50% at '+cx.toFixed(1)+'% '+cy.toFixed(1)+'%, transparent 30%, #000 72%)'; v.style.webkitMaskImage=m; v.style.maskImage=m; setTimeout(()=>requestAnimationFrame(step),50); }; step();
-    const sync=()=>{ if(!v.isConnected) return; if(Math.abs(v.currentTime-vid.currentTime)>.15){ try{ v.currentTime=vid.currentTime; }catch(e){} } later(sync,1500); }; later(sync,1500);
+    const sync=()=>{ if(!v.isConnected) return; if(Math.abs(v.currentTime-V.currentTime)>.15){ try{ v.currentTime=V.currentTime; }catch(e){} } later(sync,1500); }; later(sync,1500);
   }
-  function motes(){
-    const c=document.createElement('canvas'); c.width=Math.round(root.clientWidth/2); c.height=Math.round(root.clientHeight/2); c.style.cssText='position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:3;opacity:0;mix-blend-mode:screen'; root.appendChild(c); extra.push(c); A(c,[{opacity:0},{opacity:.85}],{duration:2400,easing:'ease-out'});
+  function motes(R,X){ R=R||root; X=X||extra;
+    const c=document.createElement('canvas'); c.width=Math.round(R.clientWidth/2); c.height=Math.round(R.clientHeight/2); c.style.cssText='position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:3;opacity:0;mix-blend-mode:screen'; R.appendChild(c); X.push(c); A(c,[{opacity:0},{opacity:.85}],{duration:2400,easing:'ease-out'});
     const ctx=c.getContext('2d'); const P=[]; for(let i=0;i<70;i++) P.push({x:Math.random(),y:Math.random(),r:2+Math.random()*7,vy:-.006-Math.random()*.012,vx:(Math.random()-.5)*.004,ph:Math.random()*6,bl:Math.random()<.5});
     const wY=y=>{ const d=Math.abs(y-.5)*2; return Math.pow(Math.max(0,(d-.62)/.38),1.4); };
     const t0=performance.now(); const step=()=>{ if(!c.isConnected) return; const t=(performance.now()-t0)/1000, W=c.width, H=c.height; ctx.clearRect(0,0,W,H);
@@ -33250,6 +33250,7 @@ body.pride-hud-on #pridePcHud{ display:none !important; }
     showLine();
   }
   window.prideOpenMemory=open; window.prideCloseMemory=close;
+  window.prideMemoryFx={ iris:irisOpen, dreamEdge, motes };   // (root, video, extraArr) — the Air's daydream clips borrow these
 })();
 </script>
 
@@ -37265,6 +37266,28 @@ body.pride-sketch .scene-bubble, body.pride-sketch #choicePanel, body.pride-sket
   #prideJournal .cta{ position:absolute; left:34px; right:34px; bottom:34px; height:56px; z-index:20; border:1px solid var(--gold2); border-radius:12px; display:flex; align-items:center; justify-content:center; gap:10px; background:rgba(20,10,20,.72); color:var(--gold2); font:500 14px/1 "Playfair Display",Georgia,serif; letter-spacing:.3em; text-transform:uppercase; cursor:pointer; box-shadow:0 0 0 1px rgba(0,0,0,.4) inset, 0 10px 30px rgba(0,0,0,.5); -webkit-tap-highlight-color:transparent; }
   #prideJournal .cta .seal{ width:40px; height:40px; margin-left:4px; background:url("worlds/pride-and-prejudice/ui/journal/seal.webp") center/contain no-repeat; display:none; }
   #prideJournal .cta.last .seal{ display:block; }
+  /* ================= THE AIR (episode-end song: pianoforte loop + daydream clips + karaoke) ================= */
+  #prideAir{ position:fixed; inset:0; z-index:12050; display:none; background:#07050a; overflow:hidden; font-family:Inter,system-ui,sans-serif; opacity:0; transition:opacity .9s ease; }
+  #prideAir.show{ display:block; } #prideAir.on{ opacity:1; }
+  #prideAir .vid, #prideAir .still{ position:absolute; inset:0; width:100%; height:100%; object-fit:cover; object-position:50% 30%; }
+  #prideAir .still{ background-size:cover; background-position:50% 30%; opacity:0; transition:opacity .45s ease; pointer-events:none; }
+  #prideAir .still.on{ opacity:1; }
+  #prideAir .blot{ position:absolute; inset:0; background:#07050a; opacity:0; pointer-events:none; clip-path:circle(0% at 50% 45%); transition:clip-path .55s cubic-bezier(.3,.7,.3,1), opacity .2s; }
+  #prideAir .blot.on{ opacity:1; clip-path:circle(85% at 50% 45%); }
+  #prideAir .vig{ position:absolute; inset:0; pointer-events:none; background:radial-gradient(120% 90% at 50% 40%, rgba(0,0,0,0) 45%, rgba(0,0,0,.55) 100%), linear-gradient(180deg, rgba(0,0,0,.35) 0, rgba(0,0,0,0) 18%, rgba(0,0,0,0) 58%, rgba(0,0,0,.82) 100%); }
+  #prideAir .skip{ position:absolute; left:16px; top:calc(max(env(safe-area-inset-top,0px), 44px) + 12px); z-index:5; padding:8px 14px; border-radius:999px; border:1px solid rgba(255,255,255,.28); background:rgba(0,0,0,.35); color:rgba(255,255,255,.85); font:700 10.5px/1 Inter; letter-spacing:.24em; text-transform:uppercase; cursor:pointer; }
+  #prideAir .ttl{ position:absolute; right:18px; top:calc(max(env(safe-area-inset-top,0px), 44px) + 14px); z-index:5; text-align:right; pointer-events:none; }
+  #prideAir .ttl b{ display:block; font:800 9.5px/1 Inter; letter-spacing:.3em; text-transform:uppercase; color:#f0d47c; text-shadow:0 2px 10px rgba(0,0,0,.8); }
+  #prideAir .ttl i{ display:block; margin-top:6px; font:600 22px/1 "Great Vibes",cursive; font-style:normal; color:#fff; text-shadow:0 2px 14px rgba(0,0,0,.85); }
+  #prideAir .kar{ position:absolute; left:0; right:0; bottom:calc(env(safe-area-inset-bottom,0px) + 104px); height:150px; z-index:5; text-align:center; pointer-events:none; overflow:hidden; }
+  #prideAir .kar .ln{ position:absolute; left:0; right:0; top:50%; transform:translateY(-50%); padding:0 26px; font:italic 500 30px/1.15 "Playfair Display",Georgia,serif; color:#fff; text-shadow:0 2px 16px rgba(0,0,0,.95),0 0 30px rgba(0,0,0,.6); }
+  #prideAir .kar .ln .w{ display:inline-block; margin-right:.26em; opacity:0; filter:blur(8px); transform:translateY(6px); transition:opacity .7s ease-out, filter .7s ease-out, transform .7s ease-out; transition-delay:var(--d,0s); }
+  #prideAir .kar .ln .w.on{ opacity:1; filter:blur(0); transform:none; }
+  #prideAir .kar .ln.out .w{ opacity:0; filter:blur(10px); transform:none; transition:opacity .9s ease-in, filter .9s ease-in; transition-delay:var(--o,0s); }
+  #prideAir .share{ position:absolute; left:50%; transform:translateX(-50%); bottom:calc(env(safe-area-inset-bottom,0px) + 30px); z-index:5; display:inline-flex; align-items:center; gap:9px; padding:13px 26px; border-radius:999px; border:1px solid rgba(240,212,124,.7); background:rgba(0,0,0,.42); color:#f0d47c; font:700 11.5px/1 Inter; letter-spacing:.3em; text-transform:uppercase; cursor:pointer; }
+  #prideAir .share svg{ width:14px; height:14px; stroke:#f0d47c; fill:none; stroke-width:1.8; }
+  #prideAir .share.done{ color:#fff; border-color:rgba(255,255,255,.5); }
+  #prideAir .end{ position:absolute; inset:0; background:#07050a; opacity:0; transition:opacity 1.2s ease; pointer-events:none; } #prideAir .end.on{ opacity:1; }
 </style>
 
 <script>
@@ -37418,6 +37441,64 @@ body.pride-sketch .scene-bubble, body.pride-sketch #choicePanel, body.pride-sket
       if(cs.display==='none' || cs.visibility==='hidden' || parseFloat(cs.opacity)===0) continue;   // only what the player actually saw last
       return bi; } }catch(e){}
     try{ const L=locOf(window.prideActiveEp||''); if(L&&L.episode) return "url('"+BASE+'episodes/'+String(L.episode).replace(/^episodes\//,'')+"/cover.jpg')"; }catch(e){} return "url('"+BASE+"map_night.jpeg')"; }
+
+  // ================= THE AIR (episode-end song) =================
+  // episodes/<ep>/air/{air.mp3, lyrics.json}: lyrics = [{t, text, clip?}] — t seconds, clip = cutscenes/<name>.mp4 to show from that line on
+  // ('loop' flag loops it). One <video> only (iOS); a still of the next clip covers the swap. Skip → onDone; Share → Web Share / clipboard.
+  window.prideAirScene=function(onDone, opts){
+    opts=opts||{}; let ep=opts.episode||''; try{ if(!ep) ep=(PACK_LOCATION&&PACK_LOCATION.pride&&PACK_LOCATION.pride.episode)||''; }catch(e){}
+    const epRel=String(ep||'').replace(/^episodes\//,''); if(!epRel){ onDone&&onDone(); return; }
+    const root=BASE+'episodes/'+epRel+'/'; let fired=false; const finish=()=>{ if(fired) return; fired=true; onDone&&onDone(); };
+    fetch(root+'air/lyrics.json',{cache:'no-store'}).then(r=>r.ok?r.json():null).catch(()=>null).then(L=>{
+      if(!L||!Array.isArray(L.lines)||!L.lines.length){ finish(); return; }
+      let ov=document.getElementById('prideAir'); if(ov) ov.remove();
+      ov=document.createElement('div'); ov.id='prideAir';
+      ov.innerHTML='<video class="vid" muted playsinline preload="auto"></video><div class="still"></div><div class="blot"></div><div class="vig"></div>'
+        +'<button class="skip" type="button">Skip</button><div class="ttl"><b>'+(L.eyebrow||'An air')+'</b><i>'+(L.title||'')+'</i></div>'
+        +'<div class="kar"></div>'
+        +'<button class="share" type="button"><svg viewBox="0 0 24 24"><path d="M4 12v7a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-7M12 15V3m0 0L8 7m4-4 4 4"/></svg><span>Share</span></button>'
+        +'<div class="end"></div>';
+      document.body.appendChild(ov);
+      const vid=ov.querySelector('.vid'), still=ov.querySelector('.still'), blot=ov.querySelector('.blot'), kar=ov.querySelector('.kar'), endV=ov.querySelector('.end');
+      const au=new Audio(root+'air/air.mp3'); au.preload='auto'; au.volume=(typeof L.volume==='number')?L.volume:0.62; let raf=0, li=-1, curClip='', cutT=0; ov.__au=au;   // volume: the song sits under the room, never shouts · __au: dev seek from the console
+      const lines=L.lines.map(l=>Object.assign({}, l, { ws:(l.words||null) }));
+      const esc=t=>String(t).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+      const clipUrl=n=>root+'cutscenes/'+n+'.mp4', stillUrl=n=>root+'cutscenes/'+n+'_first.jpg';
+      // piano ↔ piano: a plain fade through the shared first frame · into a daydream: the Memory-Recall iris + dream edge + motes · out of one: blur away
+      let fx=[]; const FX=window.prideMemoryFx||null; const clearFx=()=>{ fx.forEach(e=>{ try{ e.remove(); }catch(_){} }); fx=[]; try{ vid.style.filter=''; vid.style.transform=''; }catch(e){} };
+      const setClip=(name, loop, mode)=>{ if(!name||name===curClip) return; const wasMemory=!/^mus_piano/.test(curClip); curClip=name;
+        const swap=()=>{ try{ vid.pause(); vid.loop=!!loop; vid.src=clipUrl(name); vid.load(); const p=vid.play(); if(p&&p.catch) p.catch(()=>{}); }catch(e){} };
+        still.style.backgroundImage="url('"+stillUrl(name)+"')";
+        if(mode==='memory' && FX){ clearFx(); blot.classList.remove('on'); still.classList.add('on'); swap(); FX.iris(ov, vid, fx);
+          const reveal=()=>{ still.classList.remove('on'); vid.removeEventListener('playing', reveal); }; vid.addEventListener('playing', reveal); setTimeout(reveal, 1800);
+          setTimeout(()=>{ if(curClip===name){ FX.dreamEdge(ov, vid, fx); } }, 900); setTimeout(()=>{ if(curClip===name) FX.motes(ov, fx); }, 1200); return; }
+        const outMs = wasMemory ? 520 : 0;
+        if(wasMemory){ try{ vid.animate([{filter:'blur(0px)',opacity:1},{filter:'blur(18px)',opacity:0}],{duration:520,easing:'ease-in',fill:'forwards'}); }catch(e){} fx.forEach(e=>{ try{ e.animate([{opacity:getComputedStyle(e).opacity},{opacity:0}],{duration:500,fill:'forwards'}); }catch(_){} }); }
+        setTimeout(()=>{ clearFx(); try{ vid.getAnimations().forEach(a=>a.cancel()); }catch(e){} still.classList.add('on'); setTimeout(()=>{ swap(); const reveal=()=>{ still.classList.remove('on'); vid.removeEventListener('playing', reveal); }; vid.addEventListener('playing', reveal); setTimeout(reveal, 1800); }, wasMemory?40:420); }, outMs); };
+      vid.addEventListener('ended', ()=>{ if(!vid.loop && !/^mus_piano/.test(curClip)) setClip(L.intro||'mus_piano_a', true, 'fade'); });   // a daydream never freezes on its last frame
+      const renderKar=i=>{ li=i; const cur=lines[i];
+        [...kar.querySelectorAll('.ln')].forEach((o,k)=>{ o.classList.add('out'); [...o.children].forEach((w,n)=>w.style.setProperty('--o',(n*0.05)+'s')); setTimeout(()=>o.remove(), 1600); });
+        if(!cur||!cur.text) return; const el=document.createElement('p'); el.className='ln';
+        (cur.ws||cur.text.split(' ').map(w=>({w}))).forEach((w,n)=>{ const sp=document.createElement('span'); sp.className='w'; sp.textContent=w.w; if(w.t!=null) sp.dataset.t=w.t; else { sp.style.setProperty('--d',(n*0.12)+'s'); setTimeout(()=>sp.classList.add('on'),20); } el.appendChild(sp); });
+        kar.appendChild(el); };
+      const tick=()=>{ const t=au.currentTime; let i=-1; for(let k=0;k<lines.length;k++){ if(t>=lines[k].t) i=k; else break; }
+        if(i!==li){ renderKar(i); const l=lines[i]; if(l&&l.clip){ setClip(l.clip, !!l.loop, /^mus_piano/.test(l.clip)?'fade':'memory'); if(cutT) clearTimeout(cutT); if(l.cut>0) cutT=setTimeout(()=>{ if(curClip===l.clip) setClip(L.intro||'mus_piano_a', true, 'fade'); }, l.cut*1000); } }
+        if(i>=0&&lines[i].ws){ kar.querySelectorAll('.ln:not(.out) .w[data-t]').forEach(w=>{ if(t>=parseFloat(w.dataset.t)) w.classList.add('on'); }); }
+        };
+      const stop=()=>{ clearInterval(raf); clearTimeout(cutT); clearFx(); try{ au.pause(); }catch(e){} try{ vid.pause(); vid.removeAttribute('src'); vid.load(); }catch(e){} };
+      const leave=(fast)=>{ endV.classList.add('on'); setTimeout(()=>{ stop(); hideEnd(); finish(); setTimeout(()=>{ ov.classList.remove('on'); setTimeout(()=>{ try{ ov.remove(); }catch(e){} }, 950); }, 300); }, fast?500:1300); };
+      ov.querySelector('.skip').addEventListener('click', ()=>leave(true));
+      ov.querySelector('.share').addEventListener('click', async (e)=>{ const b=e.currentTarget; const txt=(L.shareText||('"'+(lines.find(l=>l.text)||{}).text+'" — '+(L.title||'An air')+', roles.ai'));
+        try{ if(navigator.share){ await navigator.share({ title:L.title||'An air', text:txt, url:location.origin }); b.classList.add('done'); } else { await navigator.clipboard.writeText(txt+' '+location.origin); b.classList.add('done'); b.querySelector('span').textContent='Copied'; } }catch(err){} });
+      au.addEventListener('ended', ()=>leave(false));
+      try{ window.prideAudio&&window.prideAudio.stopAll(); window.prideAudio&&window.prideAudio.stopVoice(); }catch(e){}
+      const hideEnd=()=>{ try{ ['epEndContinue','epEndLabel'].forEach(id=>{ const e=document.getElementById(id); if(e) e.style.display='none'; }); document.body.classList.remove('pride-ending'); }catch(e){} }; hideEnd();   // END chrome never peeks out under / after the Air
+      setClip(L.intro||lines[0].clip||'mus_piano_a', true, 'fade');
+      ov.classList.add('show'); setTimeout(()=>{ ov.classList.add('on'); }, 40);
+      const go=()=>{ const p=au.play(); if(p&&p.catch) p.catch(()=>{ const once=()=>{ au.play().catch(()=>{}); document.removeEventListener('pointerdown', once); }; document.addEventListener('pointerdown', once); }); raf=setInterval(tick, 50); };   // timer, not rAF: keeps the karaoke honest when rAF is throttled (embedded / background)
+      setTimeout(go, 900);
+    });
+  };
   // ================= HER JOURNAL (episode-end dashboard, v3) =================
   // Three diary pages on a 390×844 stage scaled to the viewport: 1 · traits (keepsake photo + gallery), 2 · relationships,
   // 3 · what they say (two newspaper clippings). The old card dashboard (pagesHtml) stays below as a fallback.

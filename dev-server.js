@@ -261,6 +261,31 @@ function openaiImageEdit(prompt, refAbs, size, model, opts) {
   });
 }
 
+// POST /api/author/transcribe { audioPath }  → OpenAI Whisper word timestamps (lyric sync for the episode-end Air scene)
+function openaiTranscribe(absPath) {
+  return new Promise((resolve, reject) => {
+    const boundary = '----author' + Date.now(); const parts = []; const add = (s) => parts.push(Buffer.from(s));
+    add(`--${boundary}\r\nContent-Disposition: form-data; name="model"\r\n\r\nwhisper-1\r\n`);
+    add(`--${boundary}\r\nContent-Disposition: form-data; name="response_format"\r\n\r\nverbose_json\r\n`);
+    add(`--${boundary}\r\nContent-Disposition: form-data; name="timestamp_granularities[]"\r\n\r\nword\r\n`);
+    add(`--${boundary}\r\nContent-Disposition: form-data; name="language"\r\n\r\nen\r\n`);
+    add(`--${boundary}\r\nContent-Disposition: form-data; name="file"; filename="${path.basename(absPath)}"\r\nContent-Type: audio/mpeg\r\n\r\n`); parts.push(fs.readFileSync(absPath)); add(`\r\n`);
+    add(`--${boundary}--\r\n`); const body = Buffer.concat(parts);
+    const req = https.request({ hostname:'api.openai.com', path:'/v1/audio/transcriptions', method:'POST',
+      headers:{ 'Authorization':'Bearer '+OPENAI_KEY, 'Content-Type':'multipart/form-data; boundary='+boundary, 'Content-Length':body.length } },
+      (r)=>{ let d=''; r.on('data',c=>d+=c); r.on('end',()=>{ try{ const j=JSON.parse(d); if(r.statusCode>=400) return reject(new Error((j.error&&j.error.message)||('HTTP '+r.statusCode))); resolve(j); }catch(e){ reject(e); } }); });
+    req.on('error', reject); req.write(body); req.end();
+  });
+}
+async function handleTranscribe(req, res) {
+  if (!OPENAI_KEY) return sendJson(res, 400, { error: 'Set OPENAI_API_KEY in the dev-server environment' });
+  const b = await readJsonBody(req); const rel = String(b.audioPath || '').trim();
+  if (!/^worlds\/[a-z0-9_/.\- ]+\.(mp3|m4a|wav)$/i.test(rel)) return sendJson(res, 400, { error: 'bad audioPath' });
+  const abs = path.join(ROOT, rel); if (!isInsideRoot(abs) || !fs.existsSync(abs)) return sendJson(res, 404, { error: 'no audio' });
+  try { const j = await openaiTranscribe(abs); return sendJson(res, 200, { ok: true, text: j.text, words: j.words || [], segments: (j.segments||[]).map(s=>({ start:s.start, end:s.end, text:s.text })) }); }
+  catch (e) { return sendJson(res, 502, { error: String(e.message || e) }); }
+}
+
 const DSL_SPEC = `You write scripts for a Regency visual-novel engine (Pride & Prejudice world). Output ONLY the script text, no markdown, no explanation.
 
 FORMAT (one directive/line per line):
@@ -1489,6 +1514,7 @@ const server = http.createServer(async (req, res) => {
     if (req.method === 'GET'  && parsed.pathname === '/api/list-appearances') return handleListAppearances(req, res, parsed);
     if (req.method === 'POST' && parsed.pathname === '/api/author/script') return handleAuthorScript(req, res);
     if (req.method === 'POST' && parsed.pathname === '/api/author/gen-asset') return handleGenAsset(req, res);
+    if (req.method === 'POST' && parsed.pathname === '/api/author/transcribe') return handleTranscribe(req, res);
     if (req.method === 'POST' && parsed.pathname === '/api/author/gen-audio') return handleGenAudio(req, res);
     if (req.method === 'POST' && parsed.pathname === '/api/author/audio-manifest') return handleAudioManifestSave(req, res);
     if (req.method === 'POST' && parsed.pathname === '/api/author/audio-import') return handleAudioImport(req, res);
