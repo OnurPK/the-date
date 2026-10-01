@@ -328,6 +328,13 @@
     color: rgba(255,255,255,0.4); padding: 2px 4px 6px;
   }
   .actions .act-btn { width: 100%; justify-content: flex-start; border-radius: 10px; padding: 11px 14px; font-size: 13px; }
+  .actions .dock-group { border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 4px 6px 6px; background: rgba(255,255,255,0.02); }
+  .actions .dock-group summary { list-style: none; cursor: pointer; user-select: none; display: flex; align-items: center; gap: 8px; padding: 7px 6px; font-size: 10.5px; font-weight: 800; letter-spacing: 0.16em; text-transform: uppercase; color: rgba(255,255,255,0.55); }
+  .actions .dock-group summary::-webkit-details-marker { display: none; }
+  .actions .dock-group summary::before { content: ''; width: 6px; height: 6px; border-right: 1.5px solid currentColor; border-bottom: 1.5px solid currentColor; transform: rotate(-45deg); transition: transform .2s; margin-left: 2px; }
+  .actions .dock-group[open] summary::before { transform: rotate(45deg); }
+  .actions .dock-group[open] summary { color: rgba(255,255,255,0.8); }
+  .actions .dock-group .act-btn { margin-top: 6px; }
   /* toggle handle (top-left) */
   .dock-toggle {
     position: fixed; top: 12px; left: 12px; z-index: 210;
@@ -2455,23 +2462,36 @@
 <button class="dock-toggle" id="dockToggle" type="button" aria-label="Shortcuts">☰</button>
 <div class="actions">
   <div class="dock-title">Shortcuts</div>
-  <a class="act-btn primary" id="btnEditor" href="editor.html" target="_blank" rel="noopener">✎ Open Editor</a>
-  <button class="act-btn primary" id="btnNetherfield" type="button">♛ Netherfield Ball</button>
-  <button class="act-btn" id="btnCombat" type="button">⚔ Darcy Duel (combat)</button>
-  <button class="act-btn" id="btnSuccess" type="button">✓ Success Screen</button>
-  <button class="act-btn" id="btnDashboard" type="button">⊙ London Dashboard</button>
-  <button class="act-btn" id="btnEpisode" type="button">▶︎ Start Her Place</button>
-  <button class="act-btn" id="btnExplore" type="button">⌖ Explore</button>
-  <button class="act-btn" id="btnSupper" type="button">🍽 Supper Free-Explore</button>
-  <button class="act-btn" id="btnRelation" type="button">❤ Relation</button>
-  <button class="act-btn" id="btnMemory" type="button">✎ Memory</button>
-  <button class="act-btn" id="btnObjAdd" type="button">＋ Objective</button>
-  <button class="act-btn" id="btnObjDone" type="button">✓ Complete Obj</button>
-  <button class="act-btn" id="btnCouch" type="button">⊜ Couch</button>
-  <button class="act-btn" id="btnWriteChoice" type="button">✎ Write Choice</button>
-  <button class="act-btn" id="btnEp1" type="button">▶ Episode 1 (v2)</button>
-  <button class="act-btn" id="btnSuitors" type="button">♥ Suitors (v2)</button>
-  <button class="act-btn" id="btnScreenshot" type="button">📷 Screenshot</button>
+  <details class="dock-group" data-g="pp" open>
+    <summary>Pride &amp; Prejudice</summary>
+    <button class="act-btn primary" id="btnAssemblyEnd" type="button">⏭ Assembly · last scene</button>
+    <button class="act-btn primary" id="btnNetherfield" type="button">♛ Netherfield Ball</button>
+    <button class="act-btn" id="btnCombat" type="button">⚔ Darcy Duel (combat)</button>
+    <button class="act-btn" id="btnSuccess" type="button">✓ Success Screen</button>
+    <button class="act-btn" id="btnSupper" type="button">🍽 Supper Free-Explore</button>
+    <button class="act-btn" id="btnSuitors" type="button">♥ Suitors (v2)</button>
+  </details>
+  <details class="dock-group" data-g="engine">
+    <summary>Engine pokes</summary>
+    <button class="act-btn" id="btnExplore" type="button">⌖ Explore</button>
+    <button class="act-btn" id="btnRelation" type="button">❤ Relation</button>
+    <button class="act-btn" id="btnMemory" type="button">✎ Memory</button>
+    <button class="act-btn" id="btnObjAdd" type="button">＋ Objective</button>
+    <button class="act-btn" id="btnObjDone" type="button">✓ Complete Obj</button>
+    <button class="act-btn" id="btnWriteChoice" type="button">✎ Write Choice</button>
+  </details>
+  <details class="dock-group" data-g="london">
+    <summary>London (legacy)</summary>
+    <button class="act-btn" id="btnDashboard" type="button">⊙ London Dashboard</button>
+    <button class="act-btn" id="btnEpisode" type="button">▶︎ Start Her Place</button>
+    <button class="act-btn" id="btnCouch" type="button">⊜ Couch</button>
+    <button class="act-btn" id="btnEp1" type="button">▶ Episode 1 (v2)</button>
+  </details>
+  <details class="dock-group" data-g="tools" open>
+    <summary>Tools</summary>
+    <a class="act-btn primary" id="btnEditor" href="editor.html" target="_blank" rel="noopener">✎ Open Editor</a>
+    <button class="act-btn" id="btnScreenshot" type="button">📷 Screenshot</button>
+  </details>
 </div>
 
 <!-- html2canvas — used by the Screenshot button to rasterize the
@@ -2893,6 +2913,27 @@
   // skipping intro / form / map / casting. Same jump-episode path the
   // London dev shortcut uses; the engine's pride branch loads the
   // episode's main.txt and renders straight into the ballroom.
+  // ⏭ Assembly · last scene — load the Assembly episode and park the engine on
+  // the coda (the last cutscene), so the episode-end → dashboard flow is 3 taps away.
+  const btnAssemblyEnd = document.getElementById('btnAssemblyEnd');
+  if (btnAssemblyEnd) {
+    btnAssemblyEnd.addEventListener('click', async () => {
+      const w = frame.contentWindow;
+      try {
+        const script = await fetch('worlds/pride-and-prejudice/episodes/authored/the-assembly/scripts/main.txt', { cache: 'no-store' }).then(r => r.text());
+        const base = { type: 'loadScript', script, pack: 'pride', venue: 'assembly-rooms-test', episode: 'episodes/authored/the-assembly', title: 'The Assembly' };
+        w.postMessage(base, '*');                         // load the Assembly script
+        await new Promise(r => setTimeout(r, 150));
+        w.postMessage({ type: 'gotoEnd' }, '*');           // park on the END frame (Continue → journal dashboard)
+        try { w.prideActiveEp = 'assembly-rooms-test'; } catch (e) {}
+      } catch (e) { console.warn('[assembly-end]', e); }
+    });
+  }
+  // collapsible dock groups remember their state
+  document.querySelectorAll('.actions .dock-group').forEach(d => {
+    const k = 'rai.dock.' + d.dataset.g; try { const v = localStorage.getItem(k); if (v === '1') d.open = true; else if (v === '0') d.open = false; } catch (e) {}
+    d.addEventListener('toggle', () => { try { localStorage.setItem(k, d.open ? '1' : '0'); } catch (e) {} });
+  });
   const btnNetherfield = document.getElementById('btnNetherfield');
   if (btnNetherfield) {
     btnNetherfield.addEventListener('click', () => {

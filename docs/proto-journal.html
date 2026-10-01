@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Her journal — episode-end prototype</title>
+<link href="https://fonts.googleapis.com/css2?family=Great+Vibes&family=Caveat:wght@500;600;700&family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=IM+Fell+English:ital@0;1&family=Inter:wght@500;700;800&display=swap" rel="stylesheet">
+<style>
+:root{ --ink:#2a1f22; --ink2:#5b4a4e; --gold:#b8892f; --gold2:#d9b35a; --rose:#c0466a; --M:../worlds/pride-and-prejudice/_mockups/dashboard/; }
+*{ box-sizing:border-box } body{ margin:0; background:#0b0810; color:#eee; font-family:Inter,system-ui,sans-serif; display:flex; flex-direction:column; align-items:center; gap:14px; padding:18px; }
+.bar{ display:flex; gap:8px; flex-wrap:wrap; justify-content:center; max-width:720px; align-items:center; }
+.bar button{ background:#1b1826; color:#e7deff; border:1px solid #3a3450; border-radius:999px; padding:8px 13px; font:700 10.5px Inter; letter-spacing:.08em; text-transform:uppercase; cursor:pointer }
+.bar button.on{ background:#8b7bd8; border-color:#8b7bd8; color:#fff }
+.bar label{ color:#8a80a4; font-size:11px }
+.note{ color:#8a80a4; font-size:12px; max-width:720px; text-align:center; line-height:1.5 }
+
+/* ---------- phone ---------- */
+.phone{ position:relative; width:390px; height:844px; border-radius:46px; overflow:hidden; box-shadow:0 30px 80px rgba(0,0,0,.7), 0 0 0 10px #111, 0 0 0 12px #2a2630; background:#1a0f1b; }
+.bg{ position:absolute; inset:0; background:
+  radial-gradient(120% 70% at 50% 0%, rgba(90,40,70,.45), transparent 60%),
+  radial-gradient(80% 50% at 100% 100%, rgba(120,60,50,.35), transparent 60%), #1a0f1b; }
+.bg::before{ content:''; position:absolute; inset:0; opacity:.16; background-image:
+  radial-gradient(circle at 20px 20px, rgba(255,200,120,.35) 0 1.5px, transparent 2px),
+  radial-gradient(circle at 60px 70px, rgba(255,200,120,.25) 0 1px, transparent 1.5px); background-size:84px 84px, 120px 120px; }
+.bg::after{ content:''; position:absolute; inset:0; background:linear-gradient(180deg, rgba(0,0,0,.1), rgba(0,0,0,.55)); }
+.tap{ position:absolute; top:16px; left:0; right:0; text-align:center; font:700 9.5px/1 Inter; letter-spacing:.3em; text-transform:uppercase; color:rgba(255,255,255,.45); z-index:20; }
+.title{ position:absolute; top:40px; left:0; right:0; text-align:center; z-index:20; font:400 30px/1 "Great Vibes",cursive; color:#f0d47c; text-shadow:0 2px 12px rgba(0,0,0,.6); }
+.title small{ display:block; font:800 9.5px/1 Inter; letter-spacing:.3em; text-transform:uppercase; color:var(--gold); margin-top:6px; }
+
+/* ---------- pages (transparent PNG sheets) ---------- */
+.stack{ position:absolute; inset:0; }
+.page{ position:absolute; left:50%; top:118px; width:338px; height:508px; margin-left:-169px; color:var(--ink);
+  transform:translate(var(--dx,0), var(--dy,0)) rotate(var(--rot,0deg)); transform-origin:50% 60%;
+  transition:transform .75s cubic-bezier(.2,.8,.2,1); filter:drop-shadow(0 22px 30px rgba(0,0,0,.55)); }
+.page .sheet{ position:absolute; inset:0; width:100%; height:100%; background-size:100% 100%; background-repeat:no-repeat; }
+.phone[data-paper="old"] .page[data-n="1"] .sheet{ background-image:url("../worlds/pride-and-prejudice/_mockups/dashboard/paper_page.png"); }
+.phone[data-paper="old"] .page[data-n="2"] .sheet{ background-image:url("../worlds/pride-and-prejudice/_mockups/dashboard/paper_page2.png"); }
+.phone[data-paper="old"] .page[data-n="3"] .sheet{ background-image:url("../worlds/pride-and-prejudice/_mockups/dashboard/paper_page.png"); transform:scaleX(-1); }
+.phone[data-paper="a"] .page .sheet{ background-image:url("../worlds/pride-and-prejudice/_mockups/dashboard/paper_fine_a.png"); }
+.phone[data-paper="b"] .page .sheet{ background-image:url("../worlds/pride-and-prejudice/_mockups/dashboard/paper_fine_b.png"); }
+.phone[data-paper="c"] .page .sheet{ background-image:url("../worlds/pride-and-prejudice/_mockups/dashboard/paper_fine_c.png"); }
+.phone[data-paper="d"] .page .sheet{ background-image:url("../worlds/pride-and-prejudice/_mockups/dashboard/paper_fine_d.png"); }
+/* ---- open-diary mode: the photo of the open journal IS the screen; content sits on the right page ---- */
+.phone[data-paper^="diary"] .page{ left:-14px; top:70px; width:418px; height:584px; margin-left:0; --rot:0deg; --dx:0; --dy:0; transform-origin:50% 50%; filter:drop-shadow(0 26px 34px rgba(0,0,0,.6)); }
+.phone[data-paper^="diary"] .page .sheet{ background-size:cover; background-position:center; transform:none; border-radius:3px 8px 8px 3px; }
+.phone[data-paper^="diary"] .page.enter{ --dx:420px !important; --dy:0 !important; --rot:0deg !important; }
+.phone[data-paper^="diary"] .page[data-n="2"]{ --dy:0; --dx:0; } .phone[data-paper^="diary"] .page[data-n="3"]{ --dy:0; --dx:0; }
+.phone[data-paper^="diary"] .page .in{ left:21%; right:9%; top:34px; bottom:30px; }
+.phone[data-paper^="diary"] .clip.a{ left:-4%; } .phone[data-paper^="diary"] .clip.b{ right:-5%; }
+.phone[data-paper="diary_a"] .page .sheet{ background-image:url("../worlds/pride-and-prejudice/_mockups/dashboard/diary_open_a.png"); }
+.phone[data-paper="diary_b"] .page .sheet{ background-image:url("../worlds/pride-and-prejudice/_mockups/dashboard/diary_open_b.png"); }
+.phone[data-paper="diary_b"] .page .in{ left:23%; }
+.phone[data-paper="diary_c"] .page .sheet{ background-image:url("../worlds/pride-and-prejudice/_mockups/dashboard/diary_open_c.png"); }
+.phone[data-paper="diary_c"] .page .in{ left:24%; right:12%; top:40px; bottom:36px; }
+.phone[data-paper="diary_d"] .page .sheet{ background-image:url("../worlds/pride-and-prejudice/_mockups/dashboard/diary_open_d.png"); }
+.phone[data-paper="a"] .page .in{ top:40px; } .phone[data-paper="c"] .page .in{ left:34px; right:34px; top:40px; bottom:34px; } .phone[data-paper="d"] .page .in{ left:32px; right:32px; top:36px; bottom:30px; }
+.page .in{ position:absolute; left:26px; right:26px; top:28px; bottom:26px; }
+.page .in > *{ position:relative; } .page .in > .pg, .page .in > .deco, .page .in > .clip{ position:absolute; }
+.page.enter{ --dy:820px !important; --rot:7deg !important; }
+.page[data-n="1"]{ --rot:-1.8deg; } .page[data-n="2"]{ --rot:1.4deg; --dx:5px; --dy:6px; } .page[data-n="3"]{ --rot:-1deg; --dx:-3px; --dy:12px; }
+.page.under .in{ opacity:0; }
+
+/* ---------- type ---------- */
+.ey{ display:flex; align-items:center; gap:10px; font:800 9.5px/1 Inter; letter-spacing:.32em; text-transform:uppercase; color:var(--gold); }
+.ey::after{ content:''; flex:1; height:1px; background:linear-gradient(90deg, var(--gold2), transparent); max-width:60px; }
+.pg{ position:absolute; right:10px; top:-4px; font:italic 500 14px "Cormorant Garamond",serif; color:var(--ink2); letter-spacing:.06em; }
+.pg b{ color:var(--gold); font-weight:600; margin:0 2px; }
+h1{ font:400 34px/1 "Great Vibes",cursive; color:var(--ink); margin:8px 0 0; }
+.flo{ display:flex; align-items:center; gap:8px; justify-content:center; margin:8px 0 0; color:var(--gold); }
+.flo::before,.flo::after{ content:''; width:60px; height:1px; background:linear-gradient(90deg, transparent, var(--gold2)); } .flo::after{ transform:scaleX(-1); }
+.flo svg{ width:12px; height:12px; fill:none; stroke:var(--gold); stroke-width:1.4; }
+.hand{ font:500 17px/1.3 Caveat,cursive; color:var(--ink); }
+.hand.soft{ color:var(--ink2); }
+.sec{ display:flex; align-items:center; gap:10px; margin:22px 0 6px; font:800 9.5px/1 Inter; letter-spacing:.3em; text-transform:uppercase; color:var(--gold); }
+.sec::after{ content:''; flex:1; height:1px; background:rgba(184,137,47,.5); }
+
+/* ---------- page 1: gallery ---------- */
+.gal{ position:relative; height:232px; margin-top:4px; }
+.gal .txt{ width:47%; } .gal .txt h1{ font-size:24px; line-height:1.1; }
+.gal .txt .hand{ margin-top:8px; font-size:16px; }
+.gal .frame{ position:absolute; right:-44px; top:-30px; width:226px; aspect-ratio:1; transform:rotate(4deg); transition:transform .45s cubic-bezier(.2,.8,.2,1), opacity .35s; }
+.gal .frame.away{ transform:translate(40px,-60px) rotate(12deg) scale(.9); opacity:0; }
+.gal .frame .ph{ position:absolute; left:23%; top:12.1%; width:53.8%; height:69.5%; background-size:cover; background-position:50% 20%; }
+.gal .frame .fr{ position:absolute; inset:0; background:url("../worlds/pride-and-prejudice/_mockups/dashboard/photo_card_frame.png") center/100% 100% no-repeat; filter:drop-shadow(0 8px 12px rgba(0,0,0,.35)); }
+.gal .nav{ position:absolute; left:0; top:176px; display:flex; align-items:center; gap:9px; }
+.gal .nav button{ width:26px; height:26px; border-radius:50%; border:1px solid rgba(184,137,47,.6); background:rgba(255,255,255,.35); color:var(--gold); font-size:13px; cursor:pointer; display:grid; place-items:center; }
+.gal .nav .dots{ display:flex; gap:5px; } .gal .nav .dots i{ width:6px; height:6px; border-radius:50%; background:rgba(120,90,60,.3); } .gal .nav .dots i.on{ background:var(--gold); }
+
+/* ---------- traits ---------- */
+.trow{ display:flex; align-items:center; gap:14px; margin-top:16px; }
+.trow .ic{ width:56px; height:56px; flex:none; background-size:contain; background-position:center; background-repeat:no-repeat; }
+.trow .bd{ flex:1; min-width:0; }
+.trow .nm{ font:600 21px/1.05 Caveat,cursive; color:var(--ink); }
+.trow .rm{ font:500 14px/1.2 Caveat,cursive; color:var(--ink2); margin-top:1px; }
+.meter{ display:flex; gap:12px; margin-top:6px; align-items:center; }
+.meter .g{ display:flex; align-items:center; gap:4px; font:700 9px/1 Inter; letter-spacing:.18em; text-transform:uppercase; }
+.meter .g.p{ color:var(--gold); } .meter .g.s{ color:var(--rose); }
+.meter .g i{ width:8px; height:8px; border-radius:50%; border:1.5px solid currentColor; }
+.meter .g i.f{ background:currentColor; }
+.meter .g i.new{ background:currentColor; box-shadow:0 0 0 3px rgba(184,137,47,.25); animation:pop .6s cubic-bezier(.2,1.4,.3,1) .5s both; }
+.meter .g.s i.new{ box-shadow:0 0 0 3px rgba(192,70,106,.25); }
+@keyframes pop{ from{ transform:scale(.2); opacity:0 } to{ transform:scale(1); opacity:1 } }
+.meter .lbl{ margin-right:2px; } .meter em{ font:700 15px/1 Caveat,cursive; font-style:normal; margin-left:6px; }
+
+/* ---------- page 2: relationships ---------- */
+.deco{ position:absolute; pointer-events:none; background-size:contain; background-repeat:no-repeat; background-position:center; }
+.rrow{ display:flex; gap:12px; align-items:center; padding:8px 0 10px; border-bottom:1px solid rgba(120,90,60,.35); }
+.rrow:last-of-type{ border-bottom:0; }
+.rrow .sk{ width:104px; height:124px; flex:none; background-size:auto 290%; background-position:50% 3%; background-repeat:no-repeat; filter:grayscale(1) contrast(1.35) brightness(1.08) sepia(.5); mix-blend-mode:multiply; opacity:.88; margin-left:-10px; }
+.rrow.flip{ flex-direction:row-reverse; } .rrow.flip .sk{ margin-left:0; margin-right:-10px; } .rrow.flip .bd{ text-align:right; }
+.rrow .top{ display:flex; flex-direction:column; gap:2px; } .rrow.flip .top{ align-items:flex-end; }
+.rrow .dm u{ text-decoration:none; border-bottom:2px solid rgba(192,70,106,.6); color:var(--ink); }
+.rrow .bd{ flex:1; min-width:0; }
+.rrow .nm{ font:600 24px/1 Caveat,cursive; color:var(--ink); }
+.rrow .dm{ font:600 16px/1.3 Caveat,cursive; color:var(--ink2); }
+.rrow .dm b{ color:var(--gold); font-weight:700; }
+.rrow .dm svg{ width:14px; height:14px; }
+.rrow .stg{ display:inline-block; font:500 15px/1.2 Caveat,cursive; color:var(--ink); border-bottom:2px solid rgba(192,70,106,.6); }
+.rrow .rm{ font:500 15px/1.3 Caveat,cursive; color:var(--ink2); margin-top:5px; }
+.closing{ font:500 17px/1.3 Caveat,cursive; color:var(--ink); text-align:center; margin-top:18px; padding-left:70px; }
+
+/* ---------- page 3: clippings (transparent PNG newsprint) ---------- */
+.clip{ position:absolute; color:#2a2320; font-family:"IM Fell English",serif; background-size:100% 100%; background-repeat:no-repeat; filter:drop-shadow(0 1px 1px rgba(60,40,20,.25)); }
+.clip.a{ left:-26px; top:64px; width:160px; aspect-ratio:550/1451; background-image:url("../worlds/pride-and-prejudice/_mockups/dashboard/clip_v1c.png"); transform:rotate(-2deg); }
+.clip.b{ right:-24px; top:98px; width:170px; aspect-ratio:674/1449; background-image:url("../worlds/pride-and-prejudice/_mockups/dashboard/clip_v2c.png"); transform:rotate(1.6deg); }
+.clip .in2{ position:absolute; left:var(--l,10%); right:var(--r,8%); top:var(--t,22%); bottom:var(--b,22%); }
+.clip .in2{ display:flex; flex-direction:column; align-items:stretch; gap:10px; }
+.clip .dial{ float:none; width:auto; margin:14px auto 0; }
+.clip .dial svg{ width:64px; height:64px; }
+.clip .hl{ text-align:center; margin:14px 0 0 !important; }
+.clip p{ text-align:center; margin:2px 0 0 !important; }
+/* tape: translucent beige strip across the top edge */
+.clip::after{ content:''; position:absolute; left:50%; top:-2px; width:88px; height:26px; margin-left:-44px; transform:rotate(var(--tr,-4deg)); background:url("../worlds/pride-and-prejudice/_mockups/dashboard/tape_2c.png") center/100% 100% no-repeat; opacity:.82; mix-blend-mode:multiply; filter:drop-shadow(0 1px 1px rgba(0,0,0,.18)); }
+.clip.b::after{ --tr:5deg; background-image:url("../worlds/pride-and-prejudice/_mockups/dashboard/tape_1c.png"); width:94px; height:28px; margin-left:-47px; top:2px; }
+.clip .hl{ font:400 14.5px/1.15 "IM Fell English",serif; letter-spacing:.02em; margin:6px 0 4px; }
+.clip .mast{ font:400 12.5px/1.15 "IM Fell English",serif; padding:6px 0 5px; letter-spacing:.14em; text-transform:uppercase; text-align:center; border-top:1.5px solid #2a2320; border-bottom:1px solid #2a2320; padding:3px 0 3px; }
+.clip .mast small{ display:block; font:italic 400 9.5px/1.4 "IM Fell English",serif; margin-top:2px; letter-spacing:.03em; text-transform:none; }
+.clip p{ margin:6px 0 0; font:400 11px/1.35 "IM Fell English",serif; hyphens:auto; }
+.dial{ float:left; width:70px; margin:4px 10px 0 0; text-align:center; }
+.dial svg{ width:58px; height:58px; display:block; margin:0 auto; }
+.dial .trk{ fill:none; stroke:#2a2320; stroke-width:1.1; stroke-dasharray:2 2; }
+.dial .ring{ fill:none; stroke:#2a2320; stroke-width:.8; }
+.dial .arc{ fill:none; stroke-width:6; stroke-dasharray:176 400; stroke-dashoffset:176; transition:stroke-dashoffset 1.2s cubic-bezier(.2,.8,.2,1) .4s; }
+.dial .arc.rose{ stroke:var(--rose); } .dial .arc.gold{ stroke:var(--gold); }
+.dial .cap{ font:400 8.5px/1.2 "IM Fell English",serif; letter-spacing:.2em; text-transform:uppercase; margin-top:2px; }
+.dial .delta{ font:italic 400 11px/1 "IM Fell English",serif; }
+.dial.rose .delta{ color:var(--rose); } .dial.gold .delta{ color:var(--gold); }
+
+
+/* ---- page-turn fx (CSS stand-in for the green-screen clip): the old page lifts at its right edge and folds over to the left ---- */
+.phone[data-paper^="diary"] .stack{ perspective:1400px; }
+.phone[data-paper^="diary"] .page{ transition:transform .6s cubic-bezier(.3,.7,.2,1), opacity .4s; }
+.phone[data-paper^="diary"] .page.flip{ transform-origin:0 50%; transform:rotateY(-150deg) !important; z-index:30 !important; }
+.phone[data-paper^="diary"] .page.flip .sheet::after{ content:''; position:absolute; inset:0; background:linear-gradient(90deg, rgba(0,0,0,.0), rgba(0,0,0,.35) 60%, rgba(0,0,0,.55)); border-radius:inherit; }
+.phone[data-paper^="diary"] .page.enter{ --dx:0 !important; opacity:0; transition:opacity .01s; }
+/* ---- pen-writing fx: handwritten lines reveal left→right behind a moving nib ---- */
+/* words appear one after another as the nib would leave them: a touch blurred and pale first, then the ink darkens */
+.wr{ display:inline; }
+.wr .w{ display:inline-block; opacity:0; filter:blur(1.2px); transform:translateY(.6px) rotate(-.4deg); color:inherit; }
+.wr.go .w{ animation:ink .42s cubic-bezier(.2,.7,.3,1) forwards; animation-delay:var(--t,0s); }
+@keyframes ink{ 0%{ opacity:0; filter:blur(1.4px); transform:translateY(.8px) rotate(-.6deg) } 55%{ opacity:.75; filter:blur(.5px) } 100%{ opacity:1; filter:blur(0); transform:none } }
+.turnvid{ position:absolute; left:-24px; top:-56px; width:438px; height:779px; z-index:28; pointer-events:none; opacity:0; }
+.turnvid.on{ opacity:1; }
+/* ---- Arabella's remark between the diary and the button ---- */
+.remark{ position:absolute; left:30px; right:30px; top:656px; height:92px; display:flex; align-items:center; justify-content:center; z-index:15; text-align:center; font:500 14.5px/1.5 Inter,system-ui,sans-serif; letter-spacing:.01em; color:#f4eee1; text-shadow:0 1px 2px rgba(0,0,0,.9), 0 2px 12px rgba(0,0,0,.7); min-height:46px; }
+.remark b{ font-weight:600; color:#f0d47c; }
+.remark .wr .w{ filter:none; transform:none; } .remark .wr.go .w{ animation:inkFlat .35s ease forwards; animation-delay:var(--t,0s); }
+@keyframes inkFlat{ from{ opacity:0 } to{ opacity:1 } }
+.snd{ position:absolute; top:12px; left:14px; z-index:30; width:30px; height:30px; border-radius:50%; border:1px solid rgba(255,255,255,.25); background:rgba(20,10,20,.5); color:#f0d47c; font-size:13px; display:grid; place-items:center; cursor:pointer; }
+.snd.off{ color:rgba(255,255,255,.35); }
+
+/* ---------- continue ---------- */
+.cta{ position:absolute; left:34px; right:34px; bottom:34px; height:56px; z-index:20; border:1px solid var(--gold2); border-radius:12px; display:flex; align-items:center; justify-content:center; gap:10px; background:rgba(20,10,20,.72); color:var(--gold2); font:500 15px/1 "Cormorant Garamond",serif; letter-spacing:.3em; text-transform:uppercase; cursor:pointer; box-shadow:0 0 0 1px rgba(0,0,0,.4) inset, 0 10px 30px rgba(0,0,0,.5); }
+.cta .seal{ width:40px; height:40px; margin-left:4px; background:url("../worlds/pride-and-prejudice/_mockups/dashboard/ink_wax_seal.png") center/contain no-repeat; display:none; }
+.cta.last .seal{ display:block; }
+.marks{ position:absolute; right:30px; top:22px; z-index:20; display:flex; gap:5px; } .marks i{ width:20px; height:3px; border-radius:2px; background:rgba(255,255,255,.22); } .marks i.on{ background:var(--gold2); }
+</style></head><body>
+<div class="bar"><button id="b1" class="on">1 · Traits</button><button id="b2">2 · Relationships</button><button id="b3">3 · The county</button><button id="reset">reset</button><label><input type="checkbox" id="caveat" checked> hand: Caveat (off = Cormorant italic)</label><label><input type="checkbox" id="showTitle"> screen title</label><span style="color:#8a80a4;font-size:11px;margin-left:8px">paper:</span><button data-paper="old">old (stained)</button><button data-paper="a">A crest + gold rule</button><button data-paper="b">B fleur-de-lis</button><button data-paper="c">C laurel + ribbon</button><button data-paper="d">D gilt edges</button><span style="color:#8a80a4;font-size:11px;margin-left:8px">open diary:</span><button data-paper="diary_a">burgundy</button><button data-paper="diary_b">blue silk</button><button data-paper="diary_c">vellum</button><button data-paper="diary_d" class="on">green</button></div>
+<div class="phone" id="phone" data-paper="diary_d">
+  <div class="bg"></div>
+  <div class="tap">Her journal</div><div class="marks" id="marks"><i class="on"></i><i></i><i></i></div>
+  <div class="title" id="scrTitle" style="display:none">The Assembly<small>What the evening left behind</small></div>
+  <div class="stack" id="stack">
+
+    <!-- ===== PAGE 1 · traits ===== -->
+    <div class="page" data-n="1"><div class="sheet"></div><div class="in">
+      <div class="pg">1<b>/</b>3</div>
+      <div class="gal" id="gal">
+        <div class="txt"><h1 id="galH">Tuesday, 14th November</h1><div class="hand" id="galT"><span class="wr">What a curious evening. So many faces, so many judgments — and yet, how much remains unsaid.</span></div>
+          <div class="nav"><button id="gPrev">‹</button><span class="dots" id="gDots"><i class="on"></i><i></i><i></i></span><button id="gNext">›</button></div></div>
+        <div class="frame" id="galPic"><div class="ph" style="background-image:url('../worlds/pride-and-prejudice/episodes/authored/the-assembly/cutscenes/mi_night_hers.jpg')"></div><div class="fr"></div></div>
+      </div>
+      <div class="sec">Traits</div>
+      <div class="trow">
+        <div class="ic" style="background-image:url('../worlds/pride-and-prejudice/_mockups/dashboard/ink_fan.png')"></div>
+        <div class="bd"><div class="nm">Sharpest Wit in the Room</div><div class="rm">My mind left an impression.</div>
+          <div class="meter"><span class="g p"><span class="lbl">Progress</span><i class="f"></i><i class="new"></i><i></i><em>+1</em></span></div></div>
+      </div>
+      <div class="trow">
+        <div class="ic" style="background-image:url('../worlds/pride-and-prejudice/_mockups/dashboard/ink_flower.png')"></div>
+        <div class="bd"><div class="nm">Small Fortune, Large Spirit</div><div class="rm">A moment too long a glance.</div>
+          <div class="meter"><span class="g s"><span class="lbl">Stress</span><i class="f"></i><i class="new"></i><i></i><em>+1</em></span></div></div>
+      </div>
+      <div class="flo"><svg viewBox="0 0 24 24"><path d="M3 12c4-6 6 6 9 0s5 6 9 0"/></svg></div>
+    </div></div>
+
+    <!-- ===== PAGE 2 · relationships ===== -->
+    <div class="page enter" data-n="2"><div class="sheet"></div><div class="in">
+      <div class="pg">2<b>/</b>3</div>
+      <h1 style="text-align:center;margin-top:10px">Who noticed me</h1>
+      <div class="sec" style="margin-top:22px">Relationships</div>
+      <div class="rrow">
+        <div class="sk" style="background-image:url('../worlds/pride-and-prejudice/characters/mr_darcy/appearances/pride.png')"></div>
+        <div class="bd"><div class="top"><span class="nm">Mr Darcy</span><span class="dm">Romance <b>+1</b> · <u>Acquaintance</u></span></div><div class="rm"><span class="wr" style="--delay:.5s">Proud, perhaps — but not unobservant.</span></div></div>
+      </div>
+      <div class="rrow flip">
+        <div class="sk" style="background-image:url('../worlds/pride-and-prejudice/characters/capt_carter/appearances/pride.png')"></div>
+        <div class="bd"><div class="top"><span class="nm">Captain Carter</span><span class="dm">Trust <b>+1</b> · <u>Introduced</u></span></div><div class="rm"><span class="wr" style="--delay:1.1s">Easy in company, and altogether pleasant.</span></div></div>
+      </div>
+      <div class="closing"><span class="wr" style="--d:2.2s;--delay:.6s">I shall not write his name twice.<br>That would be telling.</span></div>
+      <div class="deco" style="left:-118px;bottom:-66px;width:230px;height:230px;background-image:url('../worlds/pride-and-prejudice/_mockups/dashboard/ink_rose_dried.png');transform:rotate(-28deg);filter:drop-shadow(0 6px 10px rgba(0,0,0,.35))"></div>
+    </div></div>
+
+    <!-- ===== PAGE 3 · the county (two clippings) ===== -->
+    <div class="page enter" data-n="3"><div class="sheet"></div><div class="in">
+      <h1 style="text-align:center;margin-top:10px">What they say</h1>
+      <div class="clip a" style="--t:5%"><div class="in2" style="--l:9%;--r:9%;--t:5%;--b:6%">
+        <div class="mast">Fashionable Intelligence<small>Meryton · Saturday</small></div>
+        <div class="dial rose"><svg viewBox="0 0 80 80"><circle cx="40" cy="40" r="34" class="ring"/><circle cx="40" cy="40" r="28" class="trk"/><circle cx="40" cy="40" r="28" class="arc rose" transform="rotate(-90 40 40)" data-to=".12"/><text x="40" y="47" text-anchor="middle" font-family="IM Fell English" font-size="22" fill="#2a2320">12</text></svg><div class="cap">Scandal</div><div class="delta">(+2)</div></div>
+        <div class="hl">A Lady Newly Arrived Is Much Observed</div>
+        <p>Miss F— was seen in conversation with Mr D—; the attention did not escape notice.</p>
+      </div></div>
+      <div class="clip b" style="--t:5%"><div class="in2" style="--l:10%;--r:8%;--t:5%;--b:6%">
+        <div class="mast">The Meryton Intelligencer<small>No. VIII</small></div>
+        <div class="dial gold"><svg viewBox="0 0 80 80"><circle cx="40" cy="40" r="34" class="ring"/><circle cx="40" cy="40" r="28" class="trk"/><circle cx="40" cy="40" r="28" class="arc gold" transform="rotate(-90 40 40)" data-to=".38"/><text x="40" y="47" text-anchor="middle" font-family="IM Fell English" font-size="22" fill="#2a2320">38</text></svg><div class="cap">Allure</div><div class="delta">(+5)</div></div>
+        <div class="hl">Much Admired for the Spirit of Her Dancing</div>
+        <p>Captain C— likewise appeared taken with her good sense.</p>
+      </div></div>
+    </div></div>
+  </div>
+  <div class="remark" id="remark"></div><video class="turnvid" id="turnvid" muted playsinline preload="auto"><source src="../worlds/pride-and-prejudice/_mockups/dashboard/page_turn.mov" type='video/mp4; codecs="hvc1"'><source src="../worlds/pride-and-prejudice/_mockups/dashboard/page_turn.webm" type="video/webm"></video><div class="snd" id="snd" title="sound">♪</div><div class="cta" id="cta"><span id="ctaT">Turn the page</span><span class="seal"></span></div>
+</div>
+<div class="note">Sheets, the photo card and both clippings are transparent PNGs (texture comes from the image, not CSS). Pages land on top of each other; the earlier ones peek out underneath. Page 1: photo + text = gallery (‹ ›). Traits: progress ○○○ gold + stress ○○○ rose. Page 3: two torn clippings with the dials printed in them.</div>
+<script>
+const pages=[...document.querySelectorAll('.page')]; let cur=0;
+const cta=document.getElementById('cta'), ctaT=document.getElementById('ctaT'), marks=[...document.querySelectorAll('#marks i')];
+function arcs(){ document.querySelectorAll('.page:not(.enter) .arc').forEach(a=>{ requestAnimationFrame(()=>{ a.style.strokeDashoffset=String(176*(1-(+a.dataset.to||0))); }); }); }
+const REMARKS=[
+ ['I have read this page twice and still do not believe the first line.', 'Wit, they call it. Mother calls it <b>trouble</b>.', 'If this is who I became tonight, I should like to meet her again.'],
+ ['Two names. One of them I underlined before I noticed I had.', 'Captain Carter is <b>easy</b>. Mr Darcy is not — which is rather the point.', 'I shall be civil to both. I shall think of one.'],
+ ['They have already written me down. Very well — let them spell it correctly.', 'Twelve. A respectable little scandal; I shall try not to spend it all at once.', 'Allure, thirty-eight. It is not vanity to keep <b>accounts</b>.'] ];
+let flipping=false;
+const A={ on:true, el:{} };
+const SND={ music:'../worlds/pride-and-prejudice/audio/music/journal__a.mp3', amb:'../worlds/pride-and-prejudice/audio/amb/boudoir__a.mp3', open:'../worlds/pride-and-prejudice/audio/sfx/book_open__a.mp3', turn:'../worlds/pride-and-prejudice/audio/sfx/page_turn__a.mp3', quill:'../worlds/pride-and-prejudice/audio/sfx/quill__a.mp3', mark:'../worlds/pride-and-prejudice/audio/sfx/ink_mark__a.mp3', seal:'../worlds/pride-and-prejudice/audio/sfx/wax_seal__a.mp3', close:'../worlds/pride-and-prejudice/audio/sfx/book_close__a.mp3', stick:'../worlds/pride-and-prejudice/audio/sfx/paper_stick__a.mp3', pin:'../worlds/pride-and-prejudice/audio/sfx/pin__a.mp3', dial:'../worlds/pride-and-prejudice/audio/sfx/dial_draw__a.mp3' };
+function snd(k, o={}){ if(!A.on) return null; try{ let a=A.el[k]; if(!a||!o.reuse){ a=new Audio(SND[k]); if(o.reuse) A.el[k]=a; } a.volume=o.vol==null?.8:o.vol; a.loop=!!o.loop; a.currentTime=0; a.play().catch(()=>{}); return a; }catch(e){ return null; } }
+function bed(){ if(A.bed) return; A.bed=true; const m=snd('music',{reuse:true,loop:true,vol:.45}); const am=snd('amb',{reuse:true,loop:true,vol:.35}); }
+function stopQuill(){ if(A.q){ try{ A.q.pause(); }catch(e){} A.q=null; } }
+// split a handwritten span into words, give each a start time (cadence: ~6.5 words/s with a little hesitation at commas and line ends)
+function prep(w){ if(w.dataset.prepped) return; w.dataset.prepped='1'; const html=w.innerHTML; const parts=html.split(/(<br\s*\/?>|\s+)/); let t=parseFloat(w.style.getPropertyValue('--delay'))||0; let out='';
+  parts.forEach(pt=>{ if(!pt) return; if(/^<br/.test(pt)){ out+=pt; t+=.22; return; } if(/^\s+$/.test(pt)){ out+=' '; return; }
+    const clean=pt.replace(/<[^>]+>/g,''); out+='<span class="w" style="--t:'+t.toFixed(2)+'s">'+pt+'</span>'; t+=.09+Math.min(.12,clean.length*.011)+(/[,;—.!?]$/.test(clean)?.14:0)+(Math.random()*.035); });
+  w.innerHTML=out; w.dataset.total=t.toFixed(2); }
+function writeIn(page){ // reveal handwritten spans one by one, nib follows the first
+  const spans=[...page.querySelectorAll('.wr')]; spans.forEach(w=>{ prep(w); w.classList.remove('go'); void w.offsetWidth; });
+  stopQuill();
+  if(!spans.length) return;
+  A.q=snd('quill',{loop:true,vol:.12});
+  spans.forEach(w=>w.classList.add('go'));
+  const total=Math.max(...spans.map(w=>parseFloat(w.dataset.total)||1))*1000;
+  setTimeout(stopQuill, total+200);
+  page.querySelectorAll('.meter i.new').forEach((i,k)=>setTimeout(()=>snd('mark',{vol:.6}), 500+k*180));
+  if(page.dataset.n==='3'){ setTimeout(()=>snd('stick',{vol:.6}), 150); setTimeout(()=>snd('stick',{vol:.5}), 700); setTimeout(()=>snd('dial',{vol:.5}), 600); }
+}
+function remark(n){ const el=document.getElementById('remark'); const i=(n===0?gi:0)%3; const txt=REMARKS[n][i]; el.innerHTML='<span class="wr" style="--delay:.8s">'+txt+'</span>'; const w=el.querySelector('.wr'); prep(w); requestAnimationFrame(()=>w.classList.add('go'));
+  if(A.vo){ try{ A.vo.pause(); }catch(e){} } if(A.on){ try{ A.vo=new Audio('../worlds/pride-and-prejudice/audio/voice/journal/remark_'+n+'_'+i+'.mp3'); A.vo.volume=.95; setTimeout(()=>A.vo.play().catch(()=>{}), 700); }catch(e){} } }
+function show(n, viaFlip){ cur=n;
+  if(viaFlip && document.getElementById('phone').dataset.paper.startsWith('diary') && n>0){ // the keyed page-turn clip plays over the book; the old page's ink fades, the new page is underneath
+    const old=pages[n-1], vid=document.getElementById('turnvid'); flipping=true; snd('turn',{vol:.7});
+    const useVid = vid && vid.readyState>=2 && document.getElementById('phone').dataset.paper==='diary_d';
+    old.querySelector('.in').style.transition='opacity .25s'; old.querySelector('.in').style.opacity='0';
+    pages[n].classList.remove('enter'); pages[n].style.zIndex=String(10+n); pages[n].querySelector('.in').style.opacity='0';
+    if(useVid){ vid.currentTime=0; vid.playbackRate=1.45; vid.classList.add('on'); vid.play().catch(()=>{}); old.style.zIndex=String(10+n-1); old.classList.add('under');
+      setTimeout(()=>{ pages[n].querySelector('.in').style.transition='opacity .25s'; pages[n].querySelector('.in').style.opacity='1'; }, 1350);
+      setTimeout(()=>{ vid.classList.remove('on'); vid.pause(); flipping=false; old.querySelector('.in').style.opacity=''; }, 1650); }
+    else { old.classList.add('flip'); old.style.zIndex='30'; setTimeout(()=>{ pages[n].querySelector('.in').style.opacity='1'; },350);
+      setTimeout(()=>{ old.classList.remove('flip'); old.classList.add('under'); old.style.zIndex=String(10+n-1); flipping=false; old.querySelector('.in').style.opacity=''; }, 650); } }
+  pages.forEach((p,i)=>{ if(viaFlip && (i===n-1||i===n)) return; p.classList.toggle('enter', i>n); p.classList.toggle('under', i<n); p.style.zIndex=String(i<=n?10+i:0); p.querySelector('.in').style.opacity=''; });
+  setTimeout(()=>writeIn(pages[n]), viaFlip?1400:120); setTimeout(()=>remark(n), viaFlip?1300:300);
+  if(n===0){ const f=document.getElementById('galPic'); f.classList.add('away'); setTimeout(()=>{ f.classList.remove('away'); snd('pin',{vol:.5}); }, viaFlip?1500:700); }
+  document.querySelectorAll('.bar button[id^=b]').forEach(b=>b.classList.toggle('on', b.id==='b'+(n+1))); marks.forEach((m,i)=>m.classList.toggle('on',i<=n));
+  ctaT.textContent = n<2 ? 'Turn the page' : 'Continue'; cta.classList.toggle('last', n===2); setTimeout(arcs,50); }
+cta.onclick=()=>{ bed(); if(flipping) return; if(cur<2) show(cur+1, true); else { snd('seal',{vol:.8}); setTimeout(()=>snd('close',{vol:.7}),500); setTimeout(()=>show(0),900); } };
+document.getElementById('snd').onclick=e=>{ A.on=!A.on; e.target.classList.toggle('off',!A.on); if(!A.on){ Object.values(A.el).forEach(a=>{ try{a.pause();}catch(_){} }); A.bed=false; stopQuill(); } else bed(); };
+document.getElementById('phone').addEventListener('pointerdown', ()=>{ if(!A.bed){ bed(); snd('open',{vol:.6}); } }, {once:true});
+['b1','b2','b3'].forEach((id,i)=>document.getElementById(id).onclick=()=>show(i));
+document.getElementById('reset').onclick=()=>{ pages.forEach(p=>p.querySelectorAll('.arc').forEach(a=>a.style.strokeDashoffset='176')); show(0); };
+const slides=[
+ { h:'Tuesday, 14th November', t:'What a curious evening. So many faces, so many judgments — and yet, how much remains unsaid.', img:'../worlds/pride-and-prejudice/episodes/authored/the-assembly/cutscenes/mi_night_hers.jpg' },
+ { h:'The Look', t:'Sir William crossed the whole floor to reach me. I made him earn every step.', img:'../worlds/pride-and-prejudice/episodes/authored/the-assembly/cutscenes/mi_sir_william.jpg' },
+ { h:'By the wall', t:'He had not danced. He did not mean to. And yet he looked.', img:'../worlds/pride-and-prejudice/episodes/authored/the-assembly/cutscenes/mi_sparred.jpg' } ];
+let gi=0; const gH=document.getElementById('galH'), gT=document.getElementById('galT'), gP=document.getElementById('galPic'), gD=document.getElementById('gDots');
+function gal(n){ gi=(n+slides.length)%slides.length; const s=slides[gi]; gH.innerHTML=s.h; gT.innerHTML='<span class="wr">'+s.t+'</span>'; const ww=gT.querySelector('.wr'); prep(ww); requestAnimationFrame(()=>ww.classList.add('go')); gP.querySelector('.ph').style.backgroundImage="url('"+s.img+"')"; gP.style.transform='rotate('+(gi%2?-3:4)+'deg)'; [...gD.children].forEach((d,i)=>d.classList.toggle('on',i===gi)); }
+document.getElementById('gPrev').onclick=()=>{ gal(gi-1); snd('turn',{vol:.35}); remark(0); }; document.getElementById('gNext').onclick=()=>{ gal(gi+1); snd('turn',{vol:.35}); remark(0); };
+document.getElementById('caveat').onchange=e=>{ document.querySelectorAll('.hand,.trow .nm,.trow .rm,.rrow .nm,.rrow .dm,.rrow .stg,.rrow .rm,.closing').forEach(el=>{ el.style.fontFamily=e.target.checked?'':'"Cormorant Garamond",serif'; el.style.fontStyle=e.target.checked?'':'italic'; }); };
+document.querySelectorAll('[data-paper]').forEach(b=>b.onclick=()=>{ document.querySelectorAll('[data-paper]').forEach(x=>x.classList.toggle('on',x===b)); document.getElementById('phone').dataset.paper=b.dataset.paper; });
+document.getElementById('showTitle').onchange=e=>{ document.getElementById('scrTitle').style.display=e.target.checked?'':'none'; };
+show(0);
+</script></body></html>

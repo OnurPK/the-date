@@ -1396,6 +1396,126 @@
         }
       },
       "level": 0.8
+    },
+    "sfx.page_turn": {
+      "active": "b",
+      "variants": {
+        "b": {
+          "file": "sfx/page_turn__b.mp3",
+          "src": "elevenlabs",
+          "note": "single page of thick paper turned in a book, slightly quicker, close, one page"
+        },
+        "a": {
+          "file": "sfx/page_turn__a.mp3",
+          "src": "elevenlabs",
+          "note": "single page of thick paper turned in a leather-bound journal, soft and close, one page, no background"
+        }
+      }
+    },
+    "sfx.quill": {
+      "active": "a",
+      "variants": {
+        "a": {
+          "file": "sfx/quill__a.mp3",
+          "src": "elevenlabs",
+          "note": "quill pen writing on paper, scratchy nib, continuous, close-miked, no background"
+        }
+      }
+    },
+    "sfx.ink_mark": {
+      "active": "a",
+      "variants": {
+        "a": {
+          "file": "sfx/ink_mark__a.mp3",
+          "src": "elevenlabs",
+          "note": "a single short quill pen tick mark on paper, one quick stroke, close"
+        }
+      }
+    },
+    "sfx.book_open": {
+      "active": "a",
+      "variants": {
+        "a": {
+          "file": "sfx/book_open__a.mp3",
+          "src": "elevenlabs",
+          "note": "leather-bound book opened on a wooden table, cover laid down, pages settle, soft"
+        }
+      }
+    },
+    "sfx.book_close": {
+      "active": "a",
+      "variants": {
+        "a": {
+          "file": "sfx/book_close__a.mp3",
+          "src": "elevenlabs",
+          "note": "leather-bound book closed gently with a soft thump, then silence"
+        }
+      }
+    },
+    "sfx.wax_seal": {
+      "active": "a",
+      "variants": {
+        "a": {
+          "file": "sfx/wax_seal__a.mp3",
+          "src": "elevenlabs",
+          "note": "wax seal pressed onto paper: a small squelch and press, then a soft tap"
+        }
+      }
+    },
+    "sfx.paper_stick": {
+      "active": "a",
+      "variants": {
+        "a": {
+          "file": "sfx/paper_stick__a.mp3",
+          "src": "elevenlabs",
+          "note": "small piece of paper pressed and smoothed onto a page with a fingertip, paper rustle, tiny tape peel"
+        }
+      }
+    },
+    "amb.boudoir": {
+      "active": "a",
+      "variants": {
+        "a": {
+          "file": "amb/boudoir__a.mp3",
+          "src": "elevenlabs",
+          "note": "quiet bedroom at night, 1813: a mantel clock ticking softly, fire crackling low in the grate, occasional faint creak of "
+        }
+      }
+    },
+    "sfx.pin": {
+      "active": "a",
+      "variants": {
+        "a": {
+          "file": "sfx/pin__a.mp3",
+          "src": "elevenlabs",
+          "note": "a small brass pin pushed into paper and a card settling, tiny click"
+        }
+      }
+    },
+    "sfx.dial_draw": {
+      "active": "a",
+      "variants": {
+        "a": {
+          "file": "sfx/dial_draw__a.mp3",
+          "src": "elevenlabs",
+          "note": "a thin drawn line in ink around a circle, pen scratch, one second, then a soft tick"
+        }
+      }
+    },
+    "music.journal": {
+      "active": "a",
+      "variants": {
+        "a": {
+          "file": "music/journal__a.mp3",
+          "src": "elevenlabs",
+          "note": "journal dashboard — pianoforte nocturne"
+        },
+        "b": {
+          "file": "music/journal__b.mp3",
+          "src": "elevenlabs",
+          "note": "journal dashboard — harp + viola"
+        }
+      }
     }
   },
   "hooks": {

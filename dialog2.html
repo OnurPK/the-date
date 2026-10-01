@@ -46,7 +46,7 @@
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:ital,wght@0,300;0,400;0,500;1,400&family=Courier+Prime:ital,wght@0,400;0,700;1,400;1,700&family=Caveat:wght@500;600;700&family=Playfair+Display:ital,wght@0,500;0,600;0,700;0,800;1,500;1,600&family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:ital,wght@0,300;0,400;0,500;1,400&family=Courier+Prime:ital,wght@0,400;0,700;1,400;1,700&family=Caveat:wght@500;600;700&family=Great+Vibes&family=IM+Fell+English:ital@0;1&family=Playfair+Display:ital,wght@0,500;0,600;0,700;0,800;1,500;1,600&family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="worlds/pride-and-prejudice/theme.css">
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
@@ -16254,14 +16254,29 @@ function escapeHtml(s) {
 // RENDER
 // ============================================================
 // End-of-episode "Continue" button → mark complete + back to the map.
-function hideEndContinue(){ const b = document.getElementById('epEndContinue'); if (b) b.style.display = 'none'; }
+function hideEndContinue(){ const b = document.getElementById('epEndContinue'); if (b) b.style.display = 'none';
+  try { const L = document.getElementById('epEndLabel'); if (L) L.style.display = 'none'; document.body.classList.remove('pride-ending'); } catch (e) {} }   // END frame chrome never survives a restart / another episode
+// Jump to the episode's END frame the way a player reaches it: pre-roll every state-update (bg / ui / music) from the
+// current line to the end so the coda still is on screen, then render END (→ the Continue pill → journal).
+window.devGotoEnd = function(){
+  try {
+    if (!Array.isArray(lines) || !lines.length) return;
+    // Land on the episode's last spoken line (state pre-rolled so backdrop / ui / music match); one tap → the END frame (Open diary).
+    let k = -1; for (let i = lines.length - 1; i >= 0; i--) { if (lines[i] && lines[i].type === 'line') { k = i; break; } }
+    const stop = k >= 0 ? k : lines.length;
+    for (let i = Math.max(0, idx); i < stop; i++) { const ev = lines[i]; if (ev && ev.type === 'state-update' && ev.updates && typeof applyDialogState === 'function') applyDialogState(ev.updates); }
+    idx = stop; renderLine();
+  } catch (e) {}
+};
 function showEndContinue(){
   let b = document.getElementById('epEndContinue');
   if (!b) {
     b = document.createElement('button');
     b.id = 'epEndContinue'; b.type = 'button'; b.className = 'ep-end-continue'; b.textContent = 'Continue';
     b.addEventListener('click', () => {
+      try { const r = b.getBoundingClientRect(); window.__jIris = { x: r.left + r.width / 2, y: r.top + r.height / 2 }; } catch (e) {}
       hideEndContinue();
+      try { document.body.classList.remove('pride-ending'); const L = document.getElementById('epEndLabel'); if (L) L.style.display = 'none'; } catch (e) {}
       // Encounter mode: no completion / no dashboard — just apply the script's
       // (Unlock:) consequences and return to the map.
       if (window.__prideEncounterMode) {
@@ -16285,6 +16300,10 @@ function showEndContinue(){
         try { if (el && el.body) el.body.classList.remove('narrativeScene','scene-inner','cutscene-active','cutscene-bubble','ui-narrative','narrative-active','choosing','exploring','inner'); } catch (e) {}
         try { if (el && el.choicePanel) el.choicePanel.classList.remove('open'); } catch (e) {}
         if (typeof showMap === 'function') showMap();
+        try { document.body.classList.remove('pride-ending'); } catch (e) {}
+        // Land on the active (Continue) episode — not the map's left edge
+        setTimeout(() => { try { if (typeof window.prideFocusActiveEpisode === 'function') window.prideFocusActiveEpisode(); } catch (e) {} }, 60);
+        try { if (window.prideDev && window.prideDev('maplife') && window.prideDevMapLife) setTimeout(window.prideDevMapLife, 350); } catch (e) {}   // Settings → Dev → Map interactions
         // Same-turn Map Events (horizontal lines / "Unlock olanlar"): camera → pin → polaroid card.
         // Targets whose tur hasn't come stay queued and play after the clock turns (prideTurnSequence).
         setTimeout(() => { try { if (typeof window.prideAfterEpisode === 'function') window.prideAfterEpisode(_venue); } catch (e) {} }, 700);
@@ -16299,6 +16318,15 @@ function showEndContinue(){
     document.body.appendChild(b);
   }
   b.style.display = 'block';
+  if (typeof activePack !== 'undefined' && activePack === 'pride') {
+    b.innerHTML = 'Open diary';
+    let L = document.getElementById('epEndLabel');
+    if (!L) { L = document.createElement('div'); L.id = 'epEndLabel'; document.body.appendChild(L); }
+    let ttl = ''; try { ttl = window.__prideEpisodeTitle || ''; } catch (e) {}
+    if (!ttl && typeof currentVenue === 'string' && currentVenue) ttl = currentVenue.replace(/[-_]/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+    L.innerHTML = '<b>End of episode</b>' + (ttl ? '<i>' + ttl.replace(/[&<>]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[c])) + '</i>' : '');
+    L.style.display = '';
+  }
 }
 
 // WIDE mode: the bust inside a talk card is cut exactly at the card's bottom edge, whatever the card's height (text length)
@@ -16356,8 +16384,9 @@ function renderLine() {
       return;
     }
     if (activePack === 'pride') {
-      // Pride episodes end with a Continue → map button (marks complete + unlocks).
+      // Pride episodes end on the last frame: the dialog box goes, a small "End of episode" label and the Open diary button appear.
       el.dialogText.textContent = 'End of episode.';
+      try { document.body.classList.add('pride-ending'); } catch (e) {}
       showEndContinue();
     } else {
       el.dialogText.textContent = 'The scene is over. Tap ↺ to replay.';
@@ -23127,12 +23156,26 @@ function stopLondonAmbient() {
   window.prideSpawnWalkers=function(){ try{ prideSpawnEp3Avatars(); }catch(e){} };
   window.prideWalkersLive=function(){ return !!(_sim&&_sim.length); };
   window.prideClearWalkers=function(){ try{ prideClearEp3Avatars(); }catch(e){} };
+  // Dev: make the map live as it is after turn 4 — clock at tur 5, the first suitors discovered, a few NPCs met,
+  // every place with tier ≤ 4 open, walkers out. One-way (it edits the saved state), used from Settings → Map interactions.
+  window.prideDevMapLife=function(){
+    try{ ['mr_darcy','mr_bingley','capt_vane'].forEach(id=>{ if(window.prideDiscover) window.prideDiscover(id); }); }catch(e){}
+    try{ const cur=metCast(); ['charlotte_lucas','elizabeth_bennet','jane_bennet','lydia_bennet','miss_bingley','mrs_bennet'].forEach(id=>{ if(cur.indexOf(id)<0) cur.push(id); }); localStorage.setItem(MET_KEY, JSON.stringify(cur)); }catch(e){}
+    // every interactive place (library, tea room, …) opens as if a line had unlocked it; suitor homes follow their owner's discovery
+    try{ const ids=(window.__mapLocs||[]).filter(L=>L && L.type==='interactive' && !L.archived && !L.home && L.x!=null).map(L=>L.id);
+      if(ids.length && window.prideApplyUnlocks) window.prideApplyUnlocks(ids.map(id=>({id}))); ids.forEach(id=>{ try{ window.prideUnholdFog&&window.prideUnholdFog(id); }catch(e){} }); }catch(e){}
+    try{ window.prideRefreshMapLocks&&window.prideRefreshMapLocks(); }catch(e){}
+    try{ window.prideClock&&window.prideClock.renderHud&&window.prideClock.renderHud(); }catch(e){}
+    // walkers need the pins' layout boxes → only (re)spawn while the map is actually on screen; the map-return hook calls this again
+    try{ const ms=document.getElementById('mapScreen'); if(ms && getComputedStyle(ms).display!=='none' && document.body.classList.contains('flow-map')){ prideSpawnEp3Avatars(); window.prideStartMapLife&&window.prideStartMapLife(); } }catch(e){}
+  };
 
   // First gameplay state: Lucas Lodge only, styled as the active (playable) pin.
   window.prideEnterEp1=function(){
     // Legacy Lucas-Lodge hardcode kaldırıldı — artık harita TAMAMEN tur-gating'e göre (sadece Tur 1 açık).
     document.body.classList.remove('pride-ep1','pride-ep2','pride-ep3');
     try{ prideSpawnEp3Avatars(); }catch(e){}   // ambient walkers (NPC + suitor) on the map
+    try{ if(window.prideDev && window.prideDev('maplife')) setTimeout(window.prideDevMapLife, 400); }catch(e){}   // Dev: Map interactions
     try{ if(window.prideRefreshMapLocks) window.prideRefreshMapLocks(); }catch(e){}
     try{ if(window.prideFocusActiveEpisode && window.prideFocusActiveEpisode()){} else { const sh=document.querySelector('#mapScreen .map-hotspot.starthere'); if(sh && sh.dataset.poi){ window.prideActiveEp=sh.dataset.poi; if(window.prideCenterPoi) prideCenterPoi(sh.dataset.poi); } } }catch(e){}
   };
@@ -28870,9 +28913,7 @@ window.addEventListener('message', (e) => {
   } else if (data.type === 'gotoEnd') {
     // Dev shortcut from the editor chrome: skip to the END screen of the
     // current episode (which shows the Continue → chapter dashboard button).
-    try {
-      if (Array.isArray(lines) && lines.length) { idx = lines.length; renderLine(); }
-    } catch (e) {}
+    try { window.devGotoEnd && window.devGotoEnd(); } catch (e) {}
   } else if (data.type === 'jump-episode') {
     // Dev shortcut from the index.html chrome: jump straight into a
     // location's script, bypassing intro / form / map / casting.
@@ -29201,6 +29242,7 @@ window.prideResumeToMap = function () {
       if (typeof showMap === 'function') showMap();
       try { if (window.prideRefreshMapLocks) window.prideRefreshMapLocks(); } catch (e) {}
       try { if (window.prideSpawnWalkers) window.prideSpawnWalkers(); } catch (e) {}   // ambient walkers on resume
+      try { if (window.prideDev && window.prideDev('maplife') && window.prideDevMapLife) setTimeout(window.prideDevMapLife, 400); } catch (e) {}   // Dev: Map interactions
       try { if (typeof window.pcMapHudShow === 'function') window.pcMapHudShow(); } catch (e) {}   // HUD if PC restored, else roster-over-map
       // Continue → focus the active (continuable) episode; nearest-to-centre if several.
       try { if(window.prideFocusActiveEpisode) window.prideFocusActiveEpisode();
@@ -32717,7 +32759,8 @@ body.pride-hud-on #pridePcHud{ display:none !important; }
   #peSettingsScreen .pst-foot{ padding:14px 20px calc(env(safe-area-inset-bottom,0px) + 22px); display:flex; flex-direction:column; gap:10px; background:linear-gradient(180deg,rgba(12,8,18,0),rgba(12,8,18,.9) 30%) }
   #peSettingsScreen .pst-btn{ width:100%; padding:16px; border-radius:16px; font:700 14px Inter,system-ui,sans-serif; letter-spacing:.02em; cursor:pointer; border:1px solid rgba(255,255,255,.22); background:rgba(255,255,255,.08); color:#fff }
   #peSettingsScreen .pst-btn.danger{ border-color:rgba(255,120,150,.5); color:#ffb3c8 }
-  #peSettingsScreen.menu #psEnd, #peSettingsScreen.menu #psRestart{ display:none }
+  #peSettingsScreen.menu #psEnd, #peSettingsScreen.menu #psDash{ display:none }
+  #peSettingsScreen:not(.menu) #psStartMap{ display:none }
   #peSettingsScreen .pst-btn.primary{ background:linear-gradient(135deg,#ff7eb9,#8b7bd8); border:none }
   #peSettingsScreen .pst-confirm{ position:absolute; inset:0; display:none; align-items:flex-end; background:rgba(5,3,8,.6); z-index:2 }
   #peSettingsScreen .pst-confirm.on{ display:flex }
@@ -32732,10 +32775,15 @@ body.pride-hud-on #pridePcHud{ display:none !important; }
     <div class="pst-row"><span class="nm">Voice over<small>characters &amp; narrator</small></span><input type="range" id="psVoice" min="0" max="100" value="100"><span class="v" id="psVoiceV">100</span></div>
     <div class="pst-row"><span class="nm">Music<small>background</small></span><input type="range" id="psMusic" min="0" max="100" value="60"><span class="v" id="psMusicV">60</span></div>
     <div class="pst-row"><span class="nm">Ambience<small>room &amp; effects</small></span><input type="range" id="psAmb" min="0" max="100" value="55"><span class="v" id="psAmbV">55</span></div>
+    <div class="pst-k">Dev</div>
+    <div class="pst-mute"><span class="nm" style="font-size:14px;font-weight:600">Use mock data<small style="display:block;font-size:10.5px;font-weight:500;color:rgba(255,255,255,.5);margin-top:2px">Journal shows sample traits / suitors / county</small></span><div class="pst-tog" id="psMock" role="switch"></div></div>
+    <div class="pst-mute"><span class="nm" style="font-size:14px;font-weight:600">Map interactions<small style="display:block;font-size:10.5px;font-weight:500;color:rgba(255,255,255,.5);margin-top:2px">Map as after turn 4: people walking, places open</small></span><div class="pst-tog" id="psMapLife" role="switch"></div></div>
     <div class="pst-k">Diagnostics</div>
     <div id="psDiag" style="font:500 11.5px/1.5 Inter,system-ui,sans-serif;color:rgba(255,255,255,.6);white-space:pre-wrap"></div>
   </div>
   <div class="pst-foot">
+    <button class="pst-btn" id="psDash" type="button">Go to dashboard</button>
+    <button class="pst-btn" id="psStartMap" type="button">Start from map</button>
     <button class="pst-btn danger" id="psEnd" type="button">End the episode</button>
     <button class="pst-btn danger" id="psRestart" type="button">Restart game</button>
     <button class="pst-btn primary" id="psDone" type="button">Done</button>
@@ -32746,7 +32794,13 @@ body.pride-hud-on #pridePcHud{ display:none !important; }
 (function(){
   const $=id=>document.getElementById(id); const sc=$('peSettingsScreen'); if(!sc) return;
   const PA=()=>window.prideAudio;
-  function sync(){ const st=PA()&&PA().state(); if(!st) return; const L=st.levels||{}; [['psVoice','voice'],['psMusic','music'],['psAmb','amb']].forEach(([id,k])=>{ const v=Math.round((L[k]!=null?L[k]:1)*100); $(id).value=v; $(id+'V').textContent=v; }); $('psMute').classList.toggle('on',!st.muted); }
+  const DEV=k=>{ try{ return localStorage.getItem('rai.dev.'+k)==='1'; }catch(e){ return false; } };
+  const devSet=(k,v)=>{ try{ localStorage.setItem('rai.dev.'+k, v?'1':'0'); }catch(e){} };
+  window.prideDev=DEV;
+  function syncDev(){ $('psMock').classList.toggle('on', DEV('mock')); $('psMapLife').classList.toggle('on', DEV('maplife')); }
+  $('psMock').addEventListener('click',()=>{ const on=!DEV('mock'); devSet('mock',on); syncDev(); });
+  $('psMapLife').addEventListener('click',()=>{ const on=!DEV('maplife'); devSet('maplife',on); syncDev(); if(on){ try{ window.prideDevMapLife&&window.prideDevMapLife(); }catch(e){} } });
+  function sync(){ syncDev(); const st=PA()&&PA().state(); if(!st) return; const L=st.levels||{}; [['psVoice','voice'],['psMusic','music'],['psAmb','amb']].forEach(([id,k])=>{ const v=Math.round((L[k]!=null?L[k]:1)*100); $(id).value=v; $(id+'V').textContent=v; }); $('psMute').classList.toggle('on',!st.muted); }
   function diag(){ let log=[]; try{ log=JSON.parse(localStorage.getItem('rai.crashlog')||'[]'); }catch(e){}
     const lines=log.slice().reverse().map(j=>(j.reloadedAt||'').replace('T',' ').slice(5,19)+'  '+String(j.ep||'').split('/').pop()+' #'+j.idx+(j.mem?'  '+Math.round(j.mem/1048576)+'MB':'')+(j.hidden?'  (bg)':''));
     $('psDiag').textContent=(lines.length?('Unexpected reloads:\n'+lines.join('\n')):'No unexpected reloads.')+'\n'+(navigator.userAgent.match(/OS \d+_\d+/)||[''])[0]; }
@@ -32768,6 +32822,13 @@ body.pride-hud-on #pridePcHud{ display:none !important; }
     try{ window.prideChoiceFocus&&window.prideChoiceFocus.close(); window.prideRail&&window.prideRail.close(); }catch(e){}
     if(typeof showMap==='function') showMap(); }));
   $('psRestart').addEventListener('click',()=>confirm('Restart the game?','Progress in this world will be reset and you will start again from the beginning.',()=>{ const b=document.getElementById('btnRestart'); if(b) b.click(); }));
+  // Start from map — new game, skip character creation, straight to the map (same as the editor shortcut)
+  $('psStartMap').addEventListener('click',()=>confirm('Start from the map?','A fresh game with a default heroine, straight to the map. Current progress in this world is cleared.',()=>{
+    ['rai.completedEps','cowork.room.prideMeta.v1','rai_pride_pcs','rai.activePC','cowork.room.currentScenario'].forEach(k=>{ try{ localStorage.removeItem(k); }catch(e){} });
+    try{ sessionStorage.removeItem('rai.live'); }catch(e){}
+    const u=new URL(location.href); u.searchParams.set('newgame','1'); u.searchParams.set('start','map'); u.searchParams.set('cb',Date.now()); location.replace(u.toString()); }));
+  // Go to dashboard — jump the running episode to its end (END screen → Continue → journal)
+  $('psDash').addEventListener('click',()=>{ close(); setTimeout(()=>{ try{ window.devGotoEnd&&window.devGotoEnd(); }catch(e){} }, 400); });   // lands on the END frame (Continue → journal)
 })();
 </script>
 <!-- ===== PRIDE SUITORS (card list) + SUITOR DETAIL ===== -->
@@ -36024,7 +36085,7 @@ body.pe-combat.pe-beat #dialogBox{ opacity:1 !important; transform:none !importa
       a.onplaying = () => { if (voEl === a) duckTo(DUCK, 220); }; a.onended = () => { if (voEl === a) { voEl = null; duckTo(1, 700); } };
       if (unlocked) a.play().catch(() => {}); }); }
   window.prideAudio = {
-    voiceLine, stopVoice, reloadVoices(){ Object.keys(voMissing).forEach(k => delete voMissing[k]); return loadVoices(true); },
+    voiceLine, voiceUrl, stopVoice, reloadVoices(){ Object.keys(voMissing).forEach(k => delete voMissing[k]); return loadVoices(true); },
     voices(){ return VO; },
     amb(name){ amb.mix = 1; if (amb2.src || amb2.name) stopLoop(amb2); if (randName === 'map' || randName === 'map_night') randomSet(null); if (!name || name === 'none' || name === 'off') stopAmb(); else { amb.name = name; startAmb(name); } tell(); },
     random(name){ randomSet(!name || name === 'none' || name === 'off' ? null : name); },
@@ -37018,10 +37079,194 @@ body.pride-sketch .scene-bubble, body.pride-sketch #choicePanel, body.pride-sket
   #prideEpiDash .gcard .num{ font:700 40px/1 'Playfair Display',Georgia,serif; margin-top:-8px; }
   #prideEpiDash .gcard .num small{ font:800 13px Inter,system-ui,sans-serif; margin-left:4px; vertical-align:middle; color:#e0668a; } #prideEpiDash .gcard .num small.g{ color:#e7b24c; } #prideEpiDash .gcard .num small.z{ color:rgba(255,255,255,.35); }
   #prideEpiDash .gcard .st{ font-weight:800; font-size:10.5px; letter-spacing:.22em; text-transform:uppercase; color:#9a90b4; margin-top:8px; }
+  /* ---- Journal dashboard (P&P): three pages of Arabella's diary — traits · relationships · what Meryton will say ---- */
+  #prideEpiDash.journal{ background:#140c16; }
+  #prideEpiDash.journal .ed-bg{ opacity:.55; filter:brightness(.45) saturate(.8); }
+  #prideEpiDash.journal .ed-bg::after{ background:linear-gradient(180deg, rgba(14,8,18,.35) 0%, rgba(14,8,18,.7) 55%, rgba(14,8,18,.96) 100%); }
+  #prideEpiDash.journal .ed-lbl .t{ color:rgba(255,255,255,.55); }
+  #prideEpiDash.journal .ed-page{ top:calc(env(safe-area-inset-top,0px) + 54px); bottom:0; padding:0 16px max(26px, calc(env(safe-area-inset-bottom,0px) + 18px)); display:none; flex-direction:column; }
+  #prideEpiDash.journal .ed-page.on{ display:flex; }
+  #prideEpiDash.journal .jp{ position:relative; flex:0 1 auto; min-height:74%; margin:6px 4px 14px; padding:22px 22px 20px; color:#2b2130; overflow:hidden;
+    background:
+      repeating-linear-gradient(0deg, rgba(120,90,60,.045) 0 1px, transparent 1px 7px),
+      radial-gradient(120% 90% at 18% 0%, #fbf5e8 0%, #f2e8d3 55%, #e6d8bd 100%);
+    box-shadow:0 26px 60px rgba(0,0,0,.6), inset 0 0 0 1px rgba(120,90,60,.18), inset 0 0 60px rgba(120,80,40,.10);
+    transform:rotate(-1.1deg); transform-origin:50% 100%; }
+  #prideEpiDash.journal .ed-page:nth-child(odd) .jp{ transform:rotate(.8deg); }
+  #prideEpiDash.journal .jp::before{ content:''; position:absolute; inset:0; pointer-events:none; background:radial-gradient(60% 40% at 90% 100%, rgba(120,80,40,.10), transparent 70%); }
+  #prideEpiDash.journal .jp .ey{ font:800 9.5px/1 Inter,system-ui,sans-serif; letter-spacing:.3em; text-transform:uppercase; color:#b8892f; }
+  #prideEpiDash.journal .jp h2{ font:600 27px/1.05 Caveat,cursive; color:#2b2130; margin:8px 0 0; letter-spacing:.01em; }
+  #prideEpiDash.journal .jp .ln{ font:500 17px/1.35 Caveat,cursive; color:#3e3242; margin-top:8px; }
+  #prideEpiDash.journal .jp .ln i{ font-style:normal; font-size:16px; color:#6e5f72; }
+  #prideEpiDash.journal .jp .sec{ margin-top:16px; padding-top:10px; border-top:1px solid rgba(120,90,60,.35); font:800 9.5px/1 Inter,system-ui,sans-serif; letter-spacing:.28em; text-transform:uppercase; color:#7a6a58; }
+  #prideEpiDash.journal .jp .sec::after{ content:''; display:inline-block; width:38px; height:1px; background:rgba(120,90,60,.35); margin-left:10px; vertical-align:middle; }
+  /* keepsake: the last still, pinned in the corner */
+  #prideEpiDash.journal .keep{ position:absolute; right:-6px; top:-8px; width:38%; aspect-ratio:.8; background-size:cover; background-position:50% 20%; border:5px solid #fff; box-shadow:0 10px 24px rgba(0,0,0,.35); transform:rotate(5deg); }
+  #prideEpiDash.journal .keep::after{ content:''; position:absolute; left:50%; top:-9px; width:12px; height:12px; margin-left:-6px; border-radius:50%; background:radial-gradient(circle at 35% 35%, #f6d98a, #b8892f 60%, #7a5a1c); box-shadow:0 2px 4px rgba(0,0,0,.4); }
+  #prideEpiDash.journal .jp.p1 h2, #prideEpiDash.journal .jp.p1 .ln.first{ width:58%; }
+  /* trait lines */
+  #prideEpiDash.journal .trow{ display:flex; align-items:center; gap:12px; margin-top:12px; }
+  #prideEpiDash.journal .trow .ic{ width:40px; height:40px; flex:none; border-radius:50%; background-size:cover; background-position:center; filter:grayscale(1) contrast(1.15) brightness(1.35) sepia(.6); mix-blend-mode:multiply; opacity:.75; }
+  #prideEpiDash.journal .trow .nm{ flex:1; font:600 20px/1.1 Caveat,cursive; color:#2b2130; }
+  #prideEpiDash.journal .trow .nm small{ display:block; font:500 14px/1.2 Caveat,cursive; color:#7a6a58; margin-top:1px; }
+  #prideEpiDash.journal .mk{ font:700 26px/1 Caveat,cursive; min-width:44px; text-align:right; }
+  #prideEpiDash.journal .mk.up{ color:#b8892f; } #prideEpiDash.journal .mk.dn{ color:#c0466a; } #prideEpiDash.journal .mk.flat{ color:#a99a86; }
+  #prideEpiDash.journal .mk.up, #prideEpiDash.journal .mk.dn{ animation:jkInk .6s ease .45s both; }
+  @keyframes jkInk{ from{ opacity:0; transform:translateY(4px) rotate(-6deg) } to{ opacity:1; transform:none } }
+  /* relationship entries: ink-sketch portrait + hand notes */
+  #prideEpiDash.journal .rrow{ display:flex; gap:14px; margin-top:16px; align-items:flex-start; }
+  #prideEpiDash.journal .rrow .sk{ width:64px; height:80px; flex:none; background-size:auto 300%; background-position:50% 4%; background-repeat:no-repeat; filter:grayscale(1) contrast(1.35) brightness(1.05) sepia(.5); mix-blend-mode:multiply; opacity:.82; -webkit-mask:linear-gradient(180deg,#000 62%,transparent 100%); mask:linear-gradient(180deg,#000 62%,transparent 100%); }
+  #prideEpiDash.journal .rrow .bd{ flex:1; min-width:0; }
+  #prideEpiDash.journal .rrow .nm{ font:600 22px/1 Caveat,cursive; color:#2b2130; }
+  #prideEpiDash.journal .rrow .dm{ font:600 17px/1.3 Caveat,cursive; margin-top:4px; }
+  #prideEpiDash.journal .rrow .dm .d{ margin-left:6px; }
+  #prideEpiDash.journal .rrow.a .dm, #prideEpiDash.journal .rrow.a .d{ color:#8a5fd6; } #prideEpiDash.journal .rrow.r .dm, #prideEpiDash.journal .rrow.r .d{ color:#c0466a; } #prideEpiDash.journal .rrow.t .dm, #prideEpiDash.journal .rrow.t .d{ color:#1f8f80; }
+  #prideEpiDash.journal .rrow .stg{ display:inline-block; font:500 16px/1.2 Caveat,cursive; color:#3e3242; margin-top:2px; border-bottom:2px solid rgba(192,70,106,.55); padding-bottom:0; }
+  #prideEpiDash.journal .rrow .rm{ font:500 15px/1.3 Caveat,cursive; color:#6e5f72; margin-top:4px; }
+  #prideEpiDash.journal .rrow .ht{ display:inline-block; width:14px; height:14px; margin-left:6px; vertical-align:-2px; }
+  /* what Meryton will say: two hand-drawn dials */
+  #prideEpiDash.journal .dials{ display:flex; gap:10px; margin-top:14px; }
+  #prideEpiDash.journal .dial{ flex:1; display:flex; align-items:center; gap:10px; }
+  #prideEpiDash.journal .dial svg{ width:74px; height:74px; flex:none; }
+  #prideEpiDash.journal .dial .trk{ fill:none; stroke:rgba(60,40,30,.28); stroke-width:3; stroke-dasharray:3 3; }
+  #prideEpiDash.journal .dial .arc{ fill:none; stroke-width:4.5; stroke-linecap:round; stroke-dasharray:201 400; stroke-dashoffset:201; transition:stroke-dashoffset 1.2s cubic-bezier(.2,.8,.2,1) .4s; }
+  #prideEpiDash.journal .dial .arc.rose{ stroke:#c0466a; } #prideEpiDash.journal .dial .arc.gold{ stroke:#b8892f; }
+  #prideEpiDash.journal .dial .num{ font:700 26px/1 Caveat,cursive; color:#2b2130; }
+  #prideEpiDash.journal .dial .num small{ font:600 15px Caveat,cursive; margin-left:5px; }
+  #prideEpiDash.journal .dial.rose .num small{ color:#c0466a; } #prideEpiDash.journal .dial.gold .num small{ color:#b8892f; } #prideEpiDash.journal .dial .num small.z{ color:#a99a86; }
+  #prideEpiDash.journal .dial .lb{ font:600 18px/1 Caveat,cursive; color:#3e3242; margin-bottom:4px; }
+  #prideEpiDash.journal .jp .quote{ font:500 16px/1.35 Caveat,cursive; color:#6e5f72; margin-top:16px; font-style:italic; }
+  #prideEpiDash.journal .jp .sig{ font:600 20px/1 Caveat,cursive; color:#3e3242; text-align:right; margin-top:14px; }
+  #prideEpiDash.journal .jp .empty{ font:500 17px/1.35 Caveat,cursive; color:#7a6a58; margin-top:12px; }
+  /* continue: gold hairline, outside the page */
+  #prideEpiDash.journal .jc{ flex:none; margin:0 4px; height:50px; border:1px solid rgba(231,178,76,.6); border-radius:14px; display:flex; align-items:center; justify-content:center; gap:10px; font:800 11px/1 Inter,system-ui,sans-serif; letter-spacing:.32em; text-transform:uppercase; color:#f0d47c; background:rgba(20,12,22,.55); }
+  #prideEpiDash.journal .jc::before, #prideEpiDash.journal .jc::after{ content:''; width:26px; height:1px; background:rgba(231,178,76,.55); }
+  #prideEpiDash.journal .jc.next{ animation:edTap 1.6s ease-in-out infinite; }
+  #prideEpiDash.journal .ed-page .jp{ opacity:0; transform:translateY(14px) rotate(-1.1deg); transition:opacity .5s ease, transform .55s cubic-bezier(.2,.8,.2,1); }
+  #prideEpiDash.journal .ed-page.on .jp{ opacity:1; transform:rotate(-1.1deg); }
+  #prideEpiDash.journal .ed-page:nth-child(odd).on .jp{ transform:rotate(.8deg); }
+  html.wide #prideEpiDash.journal .ed-page{ left:50%; right:auto; width:440px; transform:translateX(-50%); }
   /* map pin ceremony: pin pops in */
   #mapScreen .map-hotspot.pk-appear{ animation:pkAppear .7s cubic-bezier(.2,1.4,.3,1) both; }
   @keyframes pkAppear{ 0%{ transform:translate(-50%,-50%) scale(0); opacity:0 } 100%{ transform:translate(-50%,-50%) scale(1); opacity:1 } }
 </style>
+<style id="pride-journal-css">
+  /* ===== Her journal — P&P episode-end dashboard (3 diary pages). A 390×844 stage scaled to the viewport. ===== */
+  #prideJournal{ position:fixed; inset:0; z-index:12060; display:none; background:#120a14; overflow:hidden; font-family:Inter,system-ui,sans-serif; --ink:#2a1f22; --ink2:#5b4a4e; --gold:#b8892f; --gold2:#d9b35a; --rose:#c0466a; }
+  /* entry: an iris opens from the Open-diary button over the last frame */
+  #prideJournal.show{ display:block; clip-path:circle(0px at var(--ix,50%) var(--iy,88%)); transition:clip-path 1.05s cubic-bezier(.3,.6,.2,1); }
+  #prideJournal.show.on{ clip-path:circle(160% at var(--ix,50%) var(--iy,88%)); }
+  #prideJournal .jstage{ transition:transform 1.05s cubic-bezier(.2,.8,.2,1); }
+  #prideJournal.show:not(.on) .jstage{ transform:scale(calc(var(--k,1) * .94)); }
+  /* the episode's last frame: box hidden, label + Open diary */
+  body[data-pack="pride"].pride-ending #dialogBox, body[data-pack="pride"].pride-ending #objectDialog, body[data-pack="pride"].pride-ending #prideEpChrome{ opacity:0 !important; pointer-events:none !important; transition:opacity .4s; }
+  #epEndLabel{ position:fixed; left:0; right:0; bottom:calc(env(safe-area-inset-bottom,0px) + 104px); z-index:200; text-align:center; pointer-events:none; }
+  #epEndLabel b{ display:block; font:800 10.5px/1 Inter,system-ui,sans-serif; letter-spacing:.32em; text-transform:uppercase; color:#f0d47c; text-shadow:0 2px 10px rgba(0,0,0,.8); }
+  #epEndLabel i{ display:block; margin-top:8px; font:600 26px/1.1 "Great Vibes",cursive; font-style:normal; color:#fff; text-shadow:0 2px 14px rgba(0,0,0,.85); }
+  /* leaving: the journal dims to black while the map is prepared underneath, then the veil lifts */
+  #prideJournal.out .jstage, #prideJournal.out .jbg{ transition:opacity .5s ease; opacity:0; }
+  #prideJournal.out{ background:#000; }
+  /* the desk: candle top-left, inkwell top-right, the diary lies in the pool of light */
+  #prideJournal .jbg{ position:absolute; inset:0; background:url("worlds/pride-and-prejudice/ui/journal/desk.jpg") center/cover no-repeat #1a0f1b; }
+  #prideJournal .jbg::after{ content:''; position:absolute; inset:0; background:linear-gradient(180deg, rgba(0,0,0,.05) 60%, rgba(0,0,0,.55) 100%); }
+  #prideJournal .jstage{ position:absolute; left:50%; top:50%; width:390px; height:844px; margin:-422px 0 0 -195px; transform:scale(var(--k,1)); transform-origin:50% 50%; }
+  #prideJournal .jtap{ position:absolute; top:16px; left:0; right:0; text-align:center; font:700 9.5px/1 Inter; letter-spacing:.3em; text-transform:uppercase; color:rgba(255,255,255,.45); z-index:20; }
+  #prideJournal .jmarks{ position:absolute; right:30px; top:22px; z-index:20; display:flex; gap:5px; } #prideJournal .jmarks i{ width:20px; height:3px; border-radius:2px; background:rgba(255,255,255,.22); } #prideJournal .jmarks i.on{ background:var(--gold2); }
+  /* the open book */
+  #prideJournal .jstack{ position:absolute; inset:0; perspective:1400px; }
+  #prideJournal .jpage{ position:absolute; left:-14px; top:52px; width:418px; height:584px; color:var(--ink); transform:translate(var(--dx,0),0); transform-origin:0 50%; transition:transform .6s cubic-bezier(.3,.7,.2,1), opacity .4s; filter:drop-shadow(0 26px 34px rgba(0,0,0,.6)); }
+  #prideJournal .jpage .sheet{ position:absolute; inset:0; background-image:url("worlds/pride-and-prejudice/ui/journal/diary.jpg"); background-size:cover; background-position:center; border-radius:3px 8px 8px 3px; }
+  #prideJournal .jpage .in{ position:absolute; left:21%; right:9%; top:34px; bottom:30px; transition:opacity .25s; }
+  #prideJournal .jpage .in > *{ position:relative; } #prideJournal .jpage .in > .deco, #prideJournal .jpage .in > .clip{ position:absolute; }
+  #prideJournal .jpage.enter{ opacity:0; transition:opacity .01s; }
+  #prideJournal .jpage.flip{ transform:rotateY(-150deg) !important; z-index:30 !important; }
+  #prideJournal .jpage.flip .sheet::after{ content:''; position:absolute; inset:0; background:linear-gradient(90deg, rgba(0,0,0,0), rgba(0,0,0,.35) 60%, rgba(0,0,0,.55)); border-radius:inherit; }
+  #prideJournal .turnvid{ position:absolute; left:-24px; top:-74px; width:438px; height:779px; z-index:28; pointer-events:none; opacity:0; }
+  #prideJournal .turnvid.on{ opacity:1; }
+  /* type */
+  #prideJournal h1{ font:400 34px/1 "Great Vibes",cursive; color:var(--ink); margin:8px 0 0; }
+  #prideJournal .hand{ font:500 17px/1.3 Caveat,cursive; color:var(--ink); }
+  #prideJournal .sec{ display:flex; align-items:center; gap:10px; margin:22px 0 6px; font:800 9.5px/1 Inter; letter-spacing:.3em; text-transform:uppercase; color:var(--gold); }
+  #prideJournal .sec::after{ content:''; flex:1; height:1px; background:rgba(184,137,47,.5); }
+  #prideJournal .flo{ display:flex; align-items:center; gap:8px; justify-content:center; margin:8px 0 0; color:var(--gold); }
+  #prideJournal .flo::before, #prideJournal .flo::after{ content:''; width:60px; height:1px; background:linear-gradient(90deg, transparent, var(--gold2)); } #prideJournal .flo::after{ transform:scaleX(-1); }
+  #prideJournal .flo svg{ width:12px; height:12px; fill:none; stroke:var(--gold); stroke-width:1.4; }
+  /* ink: words appear one after another */
+  #prideJournal .wr{ display:inline; }
+  #prideJournal .wr .w{ display:inline-block; opacity:0; filter:blur(1.2px); transform:translateY(.6px) rotate(-.4deg); }
+  #prideJournal .wr.go .w{ animation:jInk .42s cubic-bezier(.2,.7,.3,1) forwards; animation-delay:var(--t,0s); }
+  @keyframes jInk{ 0%{ opacity:0; filter:blur(1.4px); transform:translateY(.8px) rotate(-.6deg) } 55%{ opacity:.75; filter:blur(.5px) } 100%{ opacity:1; filter:blur(0); transform:none } }
+  /* page 1: gallery + traits */
+  #prideJournal .gal{ position:relative; height:232px; margin-top:4px; }
+  #prideJournal .gal .txt{ width:47%; } #prideJournal .gal .txt h1{ font-size:24px; line-height:1.1; }
+  #prideJournal .gal .txt .hand{ margin-top:8px; font-size:16px; }
+  #prideJournal .gal .frame{ position:absolute; right:-44px; top:-30px; width:226px; aspect-ratio:1; transform:rotate(4deg); transition:transform .45s cubic-bezier(.2,.8,.2,1), opacity .35s; }
+  #prideJournal .gal .frame.away{ transform:translate(40px,-60px) rotate(12deg) scale(.9); opacity:0; }
+  #prideJournal .gal .frame .ph{ position:absolute; left:23%; top:12.1%; width:53.8%; height:69.5%; background-size:cover; background-position:50% 20%; }
+  #prideJournal .gal .frame .fr{ position:absolute; inset:0; background:url("worlds/pride-and-prejudice/ui/journal/photo_frame.webp") center/100% 100% no-repeat; filter:drop-shadow(0 8px 12px rgba(0,0,0,.35)); }
+  #prideJournal .gal .nav{ position:absolute; left:0; top:176px; display:flex; align-items:center; gap:9px; }
+  #prideJournal .gal .nav button{ width:26px; height:26px; border-radius:50%; border:1px solid rgba(184,137,47,.6); background:rgba(255,255,255,.35); color:var(--gold); font-size:13px; cursor:pointer; display:grid; place-items:center; padding:0; }
+  #prideJournal .gal .nav .dots{ display:flex; gap:5px; } #prideJournal .gal .nav .dots i{ width:6px; height:6px; border-radius:50%; background:rgba(120,90,60,.3); } #prideJournal .gal .nav .dots i.on{ background:var(--gold); }
+  #prideJournal .trow{ display:flex; align-items:center; gap:14px; margin-top:16px; }
+  #prideJournal .trow .ic{ width:56px; height:56px; flex:none; background-size:contain; background-position:center; background-repeat:no-repeat; }
+  #prideJournal .trow .ic.img{ border-radius:50%; background-size:cover; filter:grayscale(1) contrast(1.15) brightness(1.35) sepia(.6); mix-blend-mode:multiply; opacity:.75; }
+  #prideJournal .trow .bd{ flex:1; min-width:0; }
+  #prideJournal .trow .nm{ font:600 21px/1.05 Caveat,cursive; color:var(--ink); }
+  #prideJournal .trow .rm{ font:500 14px/1.2 Caveat,cursive; color:var(--ink2); margin-top:1px; }
+  #prideJournal .meter{ display:flex; gap:12px; margin-top:6px; align-items:center; }
+  #prideJournal .meter .g{ display:flex; align-items:center; gap:4px; font:700 9px/1 Inter; letter-spacing:.18em; text-transform:uppercase; }
+  #prideJournal .meter .g.p{ color:var(--gold); } #prideJournal .meter .g.s{ color:var(--rose); } #prideJournal .meter .g.z{ color:#a99a86; }
+  #prideJournal .meter .g i{ width:8px; height:8px; border-radius:50%; border:1.5px solid currentColor; }
+  #prideJournal .meter .g i.f{ background:currentColor; }
+  #prideJournal .meter .g i.new{ background:currentColor; box-shadow:0 0 0 3px rgba(184,137,47,.25); animation:jPop .6s cubic-bezier(.2,1.4,.3,1) .5s both; }
+  #prideJournal .meter .g.s i.new{ box-shadow:0 0 0 3px rgba(192,70,106,.25); }
+  @keyframes jPop{ from{ transform:scale(.2); opacity:0 } to{ transform:scale(1); opacity:1 } }
+  #prideJournal .meter .lbl{ margin-right:2px; } #prideJournal .meter em{ font:700 15px/1 Caveat,cursive; font-style:normal; margin-left:6px; }
+  #prideJournal .empty{ font:500 17px/1.35 Caveat,cursive; color:var(--ink2); margin-top:14px; }
+  /* page 2: relationships */
+  #prideJournal .deco{ position:absolute; pointer-events:none; background-size:contain; background-repeat:no-repeat; background-position:center; }
+  #prideJournal .rrow{ display:flex; gap:12px; align-items:center; padding:8px 0 10px; border-bottom:1px solid rgba(120,90,60,.35); }
+  #prideJournal .rrow:last-of-type{ border-bottom:0; }
+  #prideJournal .rrow .sk{ width:104px; height:124px; flex:none; background-size:auto 290%; background-position:50% 3%; background-repeat:no-repeat; filter:grayscale(1) contrast(1.35) brightness(1.08) sepia(.5); mix-blend-mode:multiply; opacity:.88; margin-left:-10px; }
+  #prideJournal .rrow.flip{ flex-direction:row-reverse; } #prideJournal .rrow.flip .sk{ margin-left:0; margin-right:-10px; } #prideJournal .rrow.flip .bd{ text-align:right; }
+  #prideJournal .rrow .top{ display:flex; flex-direction:column; gap:2px; } #prideJournal .rrow.flip .top{ align-items:flex-end; }
+  #prideJournal .rrow .bd{ flex:1; min-width:0; }
+  #prideJournal .rrow .nm{ font:600 24px/1 Caveat,cursive; color:var(--ink); }
+  #prideJournal .rrow .dm{ font:600 16px/1.3 Caveat,cursive; color:var(--ink2); }
+  #prideJournal .rrow .dm b{ color:var(--gold); font-weight:700; }
+  #prideJournal .rrow .dm u{ text-decoration:none; border-bottom:2px solid rgba(192,70,106,.6); color:var(--ink); }
+  #prideJournal .rrow .rm{ font:500 15px/1.3 Caveat,cursive; color:var(--ink2); margin-top:5px; }
+  #prideJournal .closing{ font:500 17px/1.3 Caveat,cursive; color:var(--ink); text-align:center; margin-top:18px; padding-left:70px; }
+  /* page 3: clippings */
+  #prideJournal .clip{ position:absolute; color:#2a2320; font-family:"IM Fell English",serif; background-size:100% 100%; background-repeat:no-repeat; filter:drop-shadow(0 1px 1px rgba(60,40,20,.25)); }
+  #prideJournal .clip.a{ left:-30px; top:64px; width:160px; aspect-ratio:550/1451; background-image:url("worlds/pride-and-prejudice/ui/journal/clip_1.webp"); transform:rotate(-2deg); }
+  #prideJournal .clip.b{ right:-29px; top:98px; width:170px; aspect-ratio:674/1449; background-image:url("worlds/pride-and-prejudice/ui/journal/clip_2.webp"); transform:rotate(1.6deg); }
+  #prideJournal .clip .in2{ position:absolute; left:9%; right:9%; top:5%; bottom:6%; display:flex; flex-direction:column; gap:10px; }
+  #prideJournal .clip::after{ content:''; position:absolute; left:50%; top:-2px; width:88px; height:26px; margin-left:-44px; transform:rotate(-4deg); background:url("worlds/pride-and-prejudice/ui/journal/tape_2.webp") center/100% 100% no-repeat; opacity:.82; mix-blend-mode:multiply; filter:drop-shadow(0 1px 1px rgba(0,0,0,.18)); }
+  #prideJournal .clip.b::after{ transform:rotate(5deg); background-image:url("worlds/pride-and-prejudice/ui/journal/tape_1.webp"); width:94px; height:28px; margin-left:-47px; top:2px; }
+  #prideJournal .clip .mast{ font:400 12.5px/1.15 "IM Fell English",serif; letter-spacing:.14em; text-transform:uppercase; text-align:center; border-top:1.5px solid #2a2320; border-bottom:1px solid #2a2320; padding:6px 0 5px; }
+  #prideJournal .clip .mast small{ display:block; font:italic 400 9.5px/1.4 "IM Fell English",serif; margin-top:2px; letter-spacing:.03em; text-transform:none; }
+  #prideJournal .clip .hl{ font:400 14.5px/1.15 "IM Fell English",serif; letter-spacing:.02em; text-align:center; margin:14px 0 0; }
+  #prideJournal .clip p{ font:400 11px/1.35 "IM Fell English",serif; text-align:center; margin:2px 0 0; hyphens:auto; }
+  #prideJournal .dial{ text-align:center; margin:14px auto 0; }
+  #prideJournal .dial svg{ width:64px; height:64px; display:block; margin:0 auto; }
+  #prideJournal .dial .trk{ fill:none; stroke:#2a2320; stroke-width:1.1; stroke-dasharray:2 2; }
+  #prideJournal .dial .ring{ fill:none; stroke:#2a2320; stroke-width:.8; }
+  #prideJournal .dial .arc{ fill:none; stroke-width:6; stroke-dasharray:176 400; stroke-dashoffset:176; transition:stroke-dashoffset 1.2s cubic-bezier(.2,.8,.2,1) .4s; }
+  #prideJournal .dial .arc.rose{ stroke:var(--rose); } #prideJournal .dial .arc.gold{ stroke:var(--gold); }
+  #prideJournal .dial .cap{ font:400 8.5px/1.2 "IM Fell English",serif; letter-spacing:.2em; text-transform:uppercase; margin-top:2px; }
+  #prideJournal .dial .delta{ font:italic 400 11px/1 "IM Fell English",serif; }
+  #prideJournal .dial.rose .delta{ color:var(--rose); } #prideJournal .dial.gold .delta{ color:var(--gold); }
+  /* remark + continue */
+  #prideJournal .remark{ position:absolute; left:30px; right:30px; top:640px; height:106px; display:flex; align-items:center; justify-content:center; z-index:15; text-align:center; font:500 14.5px/1.5 Inter,system-ui,sans-serif; letter-spacing:.01em; color:#f4eee1; text-shadow:0 1px 2px rgba(0,0,0,.9), 0 2px 12px rgba(0,0,0,.7); }
+  #prideJournal .remark b{ font-weight:600; color:#f0d47c; }
+  #prideJournal .remark .wr .w{ filter:none; transform:none; } #prideJournal .remark .wr.go .w{ animation:jInkFlat .35s ease forwards; animation-delay:var(--t,0s); }
+  @keyframes jInkFlat{ from{ opacity:0 } to{ opacity:1 } }
+  #prideJournal .cta{ position:absolute; left:34px; right:34px; bottom:34px; height:56px; z-index:20; border:1px solid var(--gold2); border-radius:12px; display:flex; align-items:center; justify-content:center; gap:10px; background:rgba(20,10,20,.72); color:var(--gold2); font:500 14px/1 "Playfair Display",Georgia,serif; letter-spacing:.3em; text-transform:uppercase; cursor:pointer; box-shadow:0 0 0 1px rgba(0,0,0,.4) inset, 0 10px 30px rgba(0,0,0,.5); -webkit-tap-highlight-color:transparent; }
+  #prideJournal .cta .seal{ width:40px; height:40px; margin-left:4px; background:url("worlds/pride-and-prejudice/ui/journal/seal.webp") center/contain no-repeat; display:none; }
+  #prideJournal .cta.last .seal{ display:block; }
+</style>
+
 <script>
 (function prideEndFlow(){
   const BASE='worlds/pride-and-prejudice/';
@@ -37142,6 +37387,30 @@ body.pride-sketch .scene-bubble, body.pride-sketch #choicePanel, body.pride-sket
     const p2='<div class="ed-h rv"><div class="ed-eyebrow">Relationships</div><h2>Who noticed you</h2></div><div class="g2 rv">'+(R.length?R.map(rcard).join(''):'<div class="ed-empty">No one’s feelings shifted — yet.</div>')+'</div><div class="ed-tap rv">Tap to continue</div>';
     const p3='<div class="ed-h rv"><div class="ed-eyebrow">Meryton</div><h2>What the county says</h2></div><div class="g2 rv">'+gauge('rose', s.scandal, s.scandalDelta, 'Scandal')+gauge('gold', s.allure, s.allureDelta, 'Allure')+'</div><div class="ed-tap rv">Tap to continue</div>';
     return [p1,p2,p3]; }
+  // ---- Journal version (P&P): the same three pages as entries in Arabella's diary ----
+  const TRAIT_LABEL={ wit:'Sharpest Wit in the Room', pride:'Pride of Place', cunning:'Reads the Room', candor:'Plain Speaking', warmth:'A Warm Heart', reserve:'Composure', ambition:'Nerve', charm:'Grace', devotion:'Constancy' };
+  const TRAIT_NOTE={ progress:['My mind left an impression.','I was equal to the room.','Someone noticed.'], stress:['A moment too long a glance.','Not my finest hour.','I let it show.'], flat:['Unchanged this chapter.','Neither tested nor proved.'] };
+  const REL_NOTE={ affection:['Warmer than I expected.','Kind, and not only in manners.'], desire:['Proud, perhaps — but not unobservant.','He looked, and did not look away.'], trust:['Easy in company, and altogether pleasant.','A cordial start.'] };
+  const pick=(a,i)=>a[Math.abs(i)%a.length];
+  function whenLabel(){ try{ const lb=window.prideClock&&window.prideClock.label(); if(lb) return lb.dow+' '+lb.slot.toLowerCase(); }catch(e){} return 'this evening'; }
+  function journalPages(title, still){
+    const T=traitOutcome(), R=relOutcome(), s=window.prideEpiSummary();
+    const head=(h, first)=>'<div class="ey">'+esc(title||'')+'</div><h2>'+h+'</h2>'+(first?'':'');
+    const trow=(t,i)=>{ const cls=t.which==='progress'?'up':t.which==='stress'?'dn':'flat'; const mk=t.which==='progress'?'+1':t.which==='stress'?'−1':'—';
+      return '<div class="trow"><div class="ic" style="background-image:url(\''+BASE+'pc-select/trait_'+esc(t.key)+'.webp\')"></div><div class="nm">'+esc(TRAIT_LABEL[t.key]||t.key)+'<small>'+esc(pick(TRAIT_NOTE[t.which||'flat'], i))+'</small></div><div class="mk '+cls+'">'+mk+'</div></div>'; };
+    const heart='<svg class="ht" viewBox="0 0 24 24"><path d="M12 21s-7-4.6-9.3-8.6C.6 8.7 2.4 4.5 6.3 4.5c2 0 3.4 1.1 4.2 2.4.8-1.3 2.2-2.4 4.2-2.4 3.9 0 5.7 4.2 3.6 7.9C19 16.4 12 21 12 21z" fill="#c0466a"/></svg>';
+    const rrow=(r,i)=>{ const cls=r.dim==='affection'?'a':r.dim==='desire'?'r':'t'; const d=Math.round((r.after-r.before)/(window.PRIDE_REL_STEP||10)); const dimWord=r.dim==='desire'?'Romance':r.dim==='trust'?'Trust':'Affection';
+      return '<div class="rrow '+cls+'"><div class="sk" style="background-image:url(\''+BASE+'characters/'+esc(r.id)+'/appearances/pride.png\')"></div><div class="bd"><div class="nm">'+esc(suitorName(r.id))+'</div>'
+        +'<div class="dm">'+dimWord+'<span class="d">'+(d>0?'+':'')+d+'</span>'+(r.dim==='desire'&&d>0?heart:'')+'</div><div class="stg">'+esc(stageOf(r.dim, r.after))+'</div><div class="rm">'+esc(pick(REL_NOTE[r.dim]||REL_NOTE.trust, i))+'</div></div></div>'; };
+    const dial=(cls,val,delta,label)=>'<div class="dial '+cls+'"><svg viewBox="0 0 80 80"><circle cx="40" cy="40" r="32" class="trk"/><circle cx="40" cy="40" r="32" class="arc '+cls+'" transform="rotate(-90 40 40)" data-to="'+(Math.max(0,Math.min(100,val))/100)+'"/></svg>'
+      +'<div><div class="lb">'+label+'</div><div class="num">'+val+'<small class="'+(delta?'':'z')+'">'+(delta>0?'+':'')+(delta||'—')+'</small></div></div></div>';
+    const p1='<div class="jp p1">'+(still?'<div class="keep" style="background-image:'+still+'"></div>':'')+head('Meryton, '+esc(whenLabel()))
+      +'<div class="ln first">What a curious evening. So many faces, so many judgments — and yet, how much remains unsaid.</div>'
+      +'<div class="sec">Traits</div>'+(T.length?T.map(trow).join(''):'<div class="empty">Nothing in me moved tonight. Perhaps that is its own answer.</div>')+'<div class="quote">More tomorrow, if the county permits.</div></div><div class="jc next">Turn the page</div>';
+    const p2='<div class="jp">'+head('Who noticed me')+'<div class="sec">Relationships</div>'+(R.length?R.map(rrow).join(''):'<div class="empty">No one’s regard shifted — yet. The season is young.</div>')+'<div class="quote">'+(R.length?'I shall not write his name twice. That would be telling.':'I write no names tonight.')+'</div></div><div class="jc next">Turn the page</div>';
+    const sc=s.scandalDelta>0?'A single evening, and already the town has its tales.':s.allureDelta>0?'They looked. I let them.':'Meryton will find something to say; it always does.';
+    const p3='<div class="jp">'+head('What Meryton will say of me')+'<div class="dials">'+dial('rose', s.scandal, s.scandalDelta, 'Scandal')+dial('gold', s.allure, s.allureDelta, 'Allure')+'</div><div class="quote">“'+esc(sc)+'”</div><div class="sig">— A.</div></div><div class="jc">Continue</div>';
+    return [p1,p2,p3]; }
   // the outro still = whatever the episode last painted (cutscene / backdrop), else the episode cover
   function outroBg(){ try{ for(const id of ['cutsceneLayer','narrativeSceneLayer','backdrop']){ const e=document.getElementById(id); if(!e) continue;
       const cs=getComputedStyle(e); const bi=cs.backgroundImage;
@@ -37149,21 +37418,111 @@ body.pride-sketch .scene-bubble, body.pride-sketch #choicePanel, body.pride-sket
       if(cs.display==='none' || cs.visibility==='hidden' || parseFloat(cs.opacity)===0) continue;   // only what the player actually saw last
       return bi; } }catch(e){}
     try{ const L=locOf(window.prideActiveEp||''); if(L&&L.episode) return "url('"+BASE+'episodes/'+String(L.episode).replace(/^episodes\//,'')+"/cover.jpg')"; }catch(e){} return "url('"+BASE+"map_night.jpeg')"; }
+  // ================= HER JOURNAL (episode-end dashboard, v3) =================
+  // Three diary pages on a 390×844 stage scaled to the viewport: 1 · traits (keepsake photo + gallery), 2 · relationships,
+  // 3 · what they say (two newspaper clippings). The old card dashboard (pagesHtml) stays below as a fallback.
+  const J='worlds/pride-and-prejudice/ui/journal/';
+  const TRAIT_ICON={ wit:'ink_fan', charm:'ink_fan', pride:'ink_candle', ambition:'ink_candle', candor:'ink_candle', warmth:'ink_flower', devotion:'ink_flower', reserve:'ink_flower', cunning:'ink_candle' };
+  const REMARKS=[
+    ['I have read this page twice and still do not believe the first line.', 'Wit, they call it. Mother calls it <b>trouble</b>.', 'If this is who I became tonight, I should like to meet her again.'],
+    ['Two names. One of them I underlined before I noticed I had.', 'Captain Carter is <b>easy</b>. Mr Darcy is not — which is rather the point.', 'I shall be civil to both. I shall think of one.'],
+    ['They have already written me down. Very well — let them spell it correctly.', 'Twelve. A respectable little scandal; I shall try not to spend it all at once.', 'Allure, thirty-eight. It is not vanity to keep <b>accounts</b>.'] ];
+  const MONTHS={ Jan:'January', Feb:'February', Mar:'March', Apr:'April', May:'May', Jun:'June', Jul:'July', Aug:'August', Sep:'September', Oct:'October', Nov:'November', Dec:'December' };
+  function journalDate(){ try{ const lb=window.prideClock&&window.prideClock.label(); if(lb&&lb.date){ const m=String(lb.date).match(/(\d+)\s+(\w+)/); if(m){ const d=+m[1]; const sfx=(d%10===1&&d!==11)?'st':(d%10===2&&d!==12)?'nd':(d%10===3&&d!==13)?'rd':'th'; return lb.dow+', '+d+sfx+' '+(MONTHS[m[2]]||m[2]); } } }catch(e){} return 'This evening'; }
+  // split a handwritten span into words with a writing cadence (hesitation at commas / line ends)
+  function jPrep(w){ if(w.dataset.prepped) return; w.dataset.prepped='1'; const parts=w.innerHTML.split(/(<br\s*\/?>|\s+)/); let t=parseFloat(w.style.getPropertyValue('--delay'))||0; let out='';
+    parts.forEach(pt=>{ if(!pt) return; if(/^<br/.test(pt)){ out+=pt; t+=.22; return; } if(/^\s+$/.test(pt)){ out+=' '; return; }
+      const clean=pt.replace(/<[^>]+>/g,''); out+='<span class="w" style="--t:'+t.toFixed(2)+'s">'+pt+'</span>'; t+=.09+Math.min(.12,clean.length*.011)+(/[,;—.!?]$/.test(clean)?.14:0)+(Math.random()*.035); });
+    w.innerHTML=out; w.dataset.total=t.toFixed(2); }
+  function journalModel(title){
+    let T=traitOutcome(), R=relOutcome(), s=window.prideEpiSummary(); const still=outroBg();
+    if(window.prideDev && window.prideDev('mock')){   // Settings → Dev → Use mock data
+      T=[{ key:'wit', before:{progress:1,stress:0}, after:{progress:2,stress:0}, which:'progress' }, { key:'pride', before:{progress:1,stress:1}, after:{progress:1,stress:2}, which:'stress' }];
+      R=[{ id:'mr_darcy', dim:'desire', before:10, after:20 }, { id:'mr_bingley', dim:'trust', before:0, after:10 }];
+      s=Object.assign({}, s, { scandal:12, scandalDelta:2, allure:38, allureDelta:5, discoveries:['Mr Darcy has not danced and does not mean to; he came for Bingley, and Bingley is not here.', 'Sir William keeps a list of every gentleman in the county, and his daughters know it by heart.'] });
+      var mockImgs=['mi_opening','mi_crossing','mi_night_hers'].map(n=>"url('"+BASE+"episodes/authored/the-assembly/cutscenes/"+n+".jpg')"); }
+    const slides=[{ h:journalDate(), t:'What a curious evening. So many faces, so many judgments — and yet, how much remains unsaid.' }];
+    (s.discoveries||[]).slice(0,3).forEach(d=>slides.push({ h:'Discovery', t:String(d) }));
+    if(typeof mockImgs!=='undefined') slides.forEach((sl,i)=>{ sl.img=mockImgs[i%mockImgs.length]; });   // mock: a different photo pinned on each page
+    const traits=T.map((t,i)=>{ const which=t.which; const n = which==='stress' ? t.after.stress : t.after.progress, b = which==='stress' ? t.before.stress : t.before.progress;
+      return { key:t.key, name:TRAIT_LABEL[t.key]||t.key, note:pick(TRAIT_NOTE[which||'flat'], i), which, before:b, after:n }; });
+    const rels=R.map((r,i)=>{ const d=Math.round((r.after-r.before)/(window.PRIDE_REL_STEP||10)); const dim=r.dim==='desire'?'Romance':r.dim==='trust'?'Trust':'Affection';
+      return { id:r.id, name:suitorName(r.id), dim, delta:d, stage:stageOf(r.dim, r.after), note:pick(REL_NOTE[r.dim]||REL_NOTE.trust, i) }; });
+    const ri=[ traits.some(t=>t.which==='progress')?0:traits.some(t=>t.which==='stress')?1:2, Math.min(2, Math.max(0, rels.length-1)), s.scandalDelta>0?1:s.allureDelta>0?2:0 ];
+    return { title, still, slides, traits, rels, scandal:s.scandal||0, scandalDelta:s.scandalDelta||0, allure:s.allure||0, allureDelta:s.allureDelta||0, ri };
+  }
+  function journalHtml(m){
+    const dots=(b,a,cls)=>{ let h=''; for(let i=0;i<3;i++){ h+='<i class="'+(i<Math.min(b,a)?'f':(i<a?'new':''))+'"></i>'; } return h; };
+    const trow=t=>{ const ic=TRAIT_ICON[t.key]; const icon = ic ? '<div class="ic" style="background-image:url(\''+J+ic+'.webp\')"></div>' : '<div class="ic img" style="background-image:url(\''+BASE+'pc-select/trait_'+esc(t.key)+'.webp\')"></div>';
+      const g = t.which==='stress' ? '<span class="g s"><span class="lbl">Stress</span>'+dots(t.before,t.after)+'<em>+'+Math.max(1,t.after-t.before)+'</em></span>'
+              : t.which==='progress' ? '<span class="g p"><span class="lbl">Progress</span>'+dots(t.before,t.after)+'<em>+'+Math.max(1,t.after-t.before)+'</em></span>'
+              : '<span class="g z"><span class="lbl">Progress</span>'+dots(t.after,t.after)+'<em>—</em></span>';
+      return '<div class="trow">'+icon+'<div class="bd"><div class="nm">'+esc(t.name)+'</div><div class="rm">'+esc(t.note)+'</div><div class="meter">'+g+'</div></div></div>'; };
+    const p1='<div class="in"><div class="gal"><div class="txt"><h1 id="jGalH">'+esc(m.slides[0].h)+'</h1><div class="hand" id="jGalT"><span class="wr">'+esc(m.slides[0].t)+'</span></div>'
+      +(m.slides.length>1?'<div class="nav"><button type="button" id="jPrev">‹</button><span class="dots" id="jDots">'+m.slides.map((x,i)=>'<i'+(i?'':' class="on"')+'></i>').join('')+'</span><button type="button" id="jNext">›</button></div>':'')+'</div>'
+      +'<div class="frame away" id="jPic"><div class="ph"></div><div class="fr"></div></div></div>'
+      +'<div class="sec">Traits</div>'+(m.traits.length?m.traits.map(trow).join(''):'<div class="empty"><span class="wr">Nothing in me moved tonight. Perhaps that is its own answer.</span></div>')
+      +'<div class="flo"><svg viewBox="0 0 24 24"><path d="M3 12c4-6 6 6 9 0s5 6 9 0"/></svg></div></div>';
+    const rrow=(r,i)=>'<div class="rrow'+(i%2?' flip':'')+'"><div class="sk" style="background-image:url(\''+BASE+'characters/'+esc(r.id)+'/appearances/pride.png\')"></div><div class="bd"><div class="top"><span class="nm">'+esc(r.name)+'</span><span class="dm">'+r.dim+' <b>'+(r.delta>0?'+':'')+r.delta+'</b> · <u>'+esc(r.stage)+'</u></span></div><div class="rm"><span class="wr" style="--delay:'+(.5+i*.6)+'s">'+esc(r.note)+'</span></div></div></div>';
+    const p2='<div class="in"><h1 style="text-align:center;margin-top:10px">Who noticed me</h1><div class="sec" style="margin-top:22px">Relationships</div>'
+      +(m.rels.length?m.rels.map(rrow).join(''):'<div class="empty"><span class="wr">No one’s regard shifted — yet. The season is young.</span></div>')
+      +'<div class="closing"><span class="wr" style="--delay:1.4s">'+(m.rels.length?'I shall not write his name twice.<br>That would be telling.':'I write no names tonight.')+'</span></div>'
+      +'<div class="deco" style="left:-118px;bottom:-66px;width:230px;height:230px;background-image:url(\''+J+'rose.webp\');transform:rotate(-28deg);filter:drop-shadow(0 6px 10px rgba(0,0,0,.35))"></div></div>';
+    const dial=(cls,val,delta,label)=>'<div class="dial '+cls+'"><svg viewBox="0 0 80 80"><circle cx="40" cy="40" r="34" class="ring"/><circle cx="40" cy="40" r="28" class="trk"/><circle cx="40" cy="40" r="28" class="arc '+cls+'" transform="rotate(-90 40 40)" data-to="'+(Math.max(0,Math.min(100,val))/100)+'"/><text x="40" y="47" text-anchor="middle" font-family="IM Fell English" font-size="22" fill="#2a2320">'+val+'</text></svg><div class="cap">'+label+'</div><div class="delta">'+(delta?('('+(delta>0?'+':'')+delta+')'):'')+'</div></div>';
+    const p3='<div class="in"><h1 style="text-align:center;margin-top:10px">What they say</h1>'
+      +'<div class="clip a"><div class="in2"><div class="mast">Fashionable Intelligence<small>Meryton · Saturday</small></div>'+dial('rose', m.scandal, m.scandalDelta, 'Scandal')+'<div class="hl">A Lady Newly Arrived Is Much Observed</div><p>Miss F— was seen in conversation; the attention did not escape notice.</p></div></div>'
+      +'<div class="clip b"><div class="in2"><div class="mast">The Meryton Intelligencer<small>No. VIII</small></div>'+dial('gold', m.allure, m.allureDelta, 'Allure')+'<div class="hl">Much Admired for the Spirit of Her Dancing</div><p>The county is, as ever, an observant place.</p></div></div></div>';
+    return [p1,p2,p3];
+  }
   window.prideEpiDashboard=function(title, onContinue){
-    let ov=document.getElementById('prideEpiDash'); if(ov) ov.remove();
-    ov=document.createElement('div'); ov.id='prideEpiDash';
-    const pages=pagesHtml(title);
-    ov.innerHTML='<div class="ed-bg"></div>'
-      +'<div class="ed-lbl"><span class="t">Dashboard</span><span class="dots"><i class="on"></i><i></i><i></i></span></div>'
-      +pages.map((p,i)=>'<div class="ed-page'+(i===0?' on':'')+'" data-i="'+i+'">'+p+'</div>').join('');
-    try{ ov.querySelector('.ed-bg').style.backgroundImage=outroBg(); }catch(e){}   // (computed url("…") — set via style, not the attribute)
+    let ov=document.getElementById('prideJournal'); if(ov) ov.remove();
+    const m=journalModel(title); const pagesHtml3=journalHtml(m);
+    ov=document.createElement('div'); ov.id='prideJournal';
+    ov.innerHTML='<div class="jbg"></div><div class="jstage"><div class="jstack">'
+      +pagesHtml3.map((p,i)=>'<div class="jpage'+(i?' enter':'')+'" data-n="'+(i+1)+'"><div class="sheet"></div>'+p+'</div>').join('')
+      +'</div><video class="turnvid" muted playsinline preload="auto"><source src="'+J+'page_turn.mov" type=\'video/mp4; codecs="hvc1"\'><source src="'+J+'page_turn.webm" type="video/webm"></video>'
+      +'<div class="remark" id="jRemark"></div><div class="cta" id="jCta"><span id="jCtaT">Turn the page</span><span class="seal"></span></div></div>';
+    try{ const o=window.__jIris; if(o){ ov.style.setProperty('--ix', o.x+'px'); ov.style.setProperty('--iy', o.y+'px'); } }catch(e){}
+    try{ const ph=ov.querySelector('#jPic .ph'); if(ph) ph.style.backgroundImage=(m.slides[0]&&m.slides[0].img)||m.still; }catch(e){}   // set via DOM: the computed url("…") carries quotes that would break an inline style attribute
     document.body.appendChild(ov);
-    let i=0; const dots=ov.querySelectorAll('.ed-lbl .dots i');
-    const arcs=()=>{ ov.querySelectorAll('.ed-page.on .arc').forEach(a=>{ a.style.strokeDashoffset='160'; requestAnimationFrame(()=>requestAnimationFrame(()=>{ a.style.strokeDashoffset=String(157*(1-(+a.dataset.to||0))); })); }); };
-    const go=n=>{ i=n; ov.querySelectorAll('.ed-page').forEach((p,k)=>p.classList.toggle('on',k===i)); dots.forEach((d,k)=>d.classList.toggle('on',k<=i)); arcs(); };
+    const fit=()=>{ const k=Math.min(window.innerWidth/390, window.innerHeight/844); ov.querySelector('.jstage').style.setProperty('--k', k.toFixed(4)); }; fit(); window.addEventListener('resize', fit);
+    const pages=[...ov.querySelectorAll('.jpage')], marks=[], cta=ov.querySelector('#jCta'), ctaT=ov.querySelector('#jCtaT'), vid=ov.querySelector('.turnvid');
+    const PA=()=>window.prideAudio; const sfx=(slot,mul)=>{ try{ PA()&&PA().play(slot, mul); }catch(e){} };
+    let cur=0, flipping=false, quillT=null, gi=0;
+    const arcs=()=>ov.querySelectorAll('.jpage:not(.enter) .arc').forEach(a=>requestAnimationFrame(()=>{ a.style.strokeDashoffset=String(176*(1-(+a.dataset.to||0))); }));
+    const stopQuill=()=>{ if(quillT){ clearInterval(quillT); quillT=null; } };
+    function writeIn(page){ const spans=[...page.querySelectorAll('.wr')]; spans.forEach(w=>{ jPrep(w); w.classList.remove('go'); void w.offsetWidth; }); stopQuill(); if(!spans.length) return;
+      spans.forEach(w=>w.classList.add('go')); const total=Math.max(...spans.map(w=>parseFloat(w.dataset.total)||1))*1000;
+      sfx('sfx.quill', .12); quillT=setInterval(()=>sfx('sfx.quill', .12), 5600); setTimeout(stopQuill, total+200);
+      page.querySelectorAll('.meter i.new').forEach((i,k)=>setTimeout(()=>sfx('sfx.ink_mark', .6), 500+k*180));
+      if(page.dataset.n==='3'){ setTimeout(()=>sfx('sfx.paper_stick', .6), 150); setTimeout(()=>sfx('sfx.paper_stick', .5), 700); setTimeout(()=>sfx('sfx.dial_draw', .5), 600); } }
+    function remark(n){ const el=ov.querySelector('#jRemark'); const i=m.ri[n]; el.innerHTML='<span class="wr" style="--delay:.8s">'+REMARKS[n][i]+'</span>'; const w=el.querySelector('.wr'); jPrep(w); requestAnimationFrame(()=>w.classList.add('go'));
+      try{ if(PA()&&PA().voiceUrl) setTimeout(()=>PA().voiceUrl(BASE+'audio/voice/journal/remark_'+n+'_'+i+'.mp3'), 700); }catch(e){} }
+    function gal(n){ const sl=m.slides; if(sl.length<2) return; gi=(n+sl.length)%sl.length; const s=sl[gi]; ov.querySelector('#jGalH').textContent=s.h; const gT=ov.querySelector('#jGalT'); gT.innerHTML='<span class="wr">'+esc(s.t)+'</span>'; const w=gT.querySelector('.wr'); jPrep(w); requestAnimationFrame(()=>w.classList.add('go'));
+      const pic=ov.querySelector('#jPic'); pic.style.transform='rotate('+(gi%2?-3:4)+'deg)';
+      const want=s.img||m.still; const ph=pic.querySelector('.ph'); if(ph && ph.style.backgroundImage!==want){ pic.classList.add('away'); setTimeout(()=>{ ph.style.backgroundImage=want; pic.classList.remove('away'); sfx('sfx.pin', .4); }, 380); }   // a new photo is pinned on
+      [...ov.querySelectorAll('#jDots i')].forEach((d,k)=>d.classList.toggle('on',k===gi)); sfx('sfx.page_turn', .35); }
+    function show(n, viaFlip){ cur=n;
+      if(viaFlip && n>0){ const old=pages[n-1]; flipping=true; sfx('sfx.page_turn', .7);
+        const useVid = vid && vid.readyState>=2;
+        old.querySelector('.in').style.opacity='0'; pages[n].classList.remove('enter'); pages[n].style.zIndex=String(10+n); pages[n].querySelector('.in').style.opacity='0';
+        if(useVid){ vid.currentTime=0; vid.playbackRate=1.45; vid.classList.add('on'); vid.play().catch(()=>{}); old.style.zIndex=String(10+n-1);
+          setTimeout(()=>{ pages[n].querySelector('.in').style.opacity='1'; }, 1350);
+          setTimeout(()=>{ vid.classList.remove('on'); vid.pause(); flipping=false; old.querySelector('.in').style.opacity=''; }, 1650); }
+        else { old.classList.add('flip'); old.style.zIndex='30'; setTimeout(()=>{ pages[n].querySelector('.in').style.opacity='1'; },350);
+          setTimeout(()=>{ old.classList.remove('flip'); old.style.zIndex=String(10+n-1); flipping=false; old.querySelector('.in').style.opacity=''; }, 650); } }
+      pages.forEach((p,i)=>{ if(viaFlip && (i===n-1||i===n)) return; p.classList.toggle('enter', i>n); p.style.zIndex=String(i<=n?10+i:0); p.querySelector('.in').style.opacity=''; });
+      marks.forEach((x,i)=>x.classList.toggle('on',i<=n)); ctaT.textContent = n<2 ? 'Turn the page' : 'Continue'; cta.classList.toggle('last', n===2);
+      setTimeout(()=>writeIn(pages[n]), viaFlip?1400:120); setTimeout(()=>remark(n), viaFlip?1300:300); setTimeout(arcs, viaFlip?1500:200);
+      if(n===0){ const f=ov.querySelector('#jPic'); setTimeout(()=>{ f.classList.remove('away'); sfx('sfx.pin', .5); }, 700); } }
+    const prev=ov.querySelector('#jPrev'), next=ov.querySelector('#jNext'); if(prev) prev.addEventListener('click', e=>{ e.stopPropagation(); gal(gi-1); }); if(next) next.addEventListener('click', e=>{ e.stopPropagation(); gal(gi+1); });
     let busy=false;
-    ov.addEventListener('click',()=>{ if(busy) return; if(i<2){ go(i+1); return; } busy=true; ov.classList.remove('on'); setTimeout(()=>{ try{ ov.remove(); }catch(e){} if(typeof onContinue==='function') onContinue(); }, 260); });
-    requestAnimationFrame(()=>{ ov.classList.add('on'); arcs(); });
+    cta.addEventListener('click', ()=>{ if(busy||flipping) return; if(cur<2){ show(cur+1, true); return; } busy=true; sfx('sfx.wax_seal', .8); setTimeout(()=>sfx('sfx.book_close', .7), 500); stopQuill(); try{ PA()&&PA().stopVoice(); }catch(e){}
+      setTimeout(()=>{ ov.classList.add('out'); }, 500);
+      setTimeout(()=>{ if(typeof onContinue==='function') onContinue(); }, 1000);          // map is set up under the black veil
+      setTimeout(()=>{ ov.classList.remove('on'); window.removeEventListener('resize', fit); setTimeout(()=>{ try{ ov.remove(); }catch(e){} }, 950); }, 1700); });
+    try{ PA()&&PA().random(null); PA()&&PA().music('journal'); PA()&&PA().amb('boudoir'); }catch(e){}   // random(null): no ballroom coughs / whispers bleeding into the diary
+    ov.classList.add('show'); requestAnimationFrame(()=>requestAnimationFrame(()=>{ ov.classList.add('on'); sfx('sfx.book_open', .6); show(0); }));
   };
 })();
 </script>

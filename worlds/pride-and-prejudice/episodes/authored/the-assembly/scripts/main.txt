@@ -14,11 +14,9 @@
 // ═══════════════════════════════════════════════════════════
 (Situation: assembly_room | The Assembly Room | The Meryton rooms at the height of the evening — Sir William has seen you come in, and he has a plan for you.)
 [bg:cutscene=mi_opening.jpg] [amb:ballroom] [random:ballroom] [music:assembly] [ui:narrative]
-Narrative: The Meryton rooms are full to the walls and bright as day.
-Narrative: Mr Bingley was to have come tonight and has not, and every eye in the room has gone instead to the friend who came without him: tall, handsome, worth ten thousand a year, standing by the far wall and pleased with nothing.
-Narrative: The set is forming; the fiddles in the gallery are tuning for the next figure, and the punch is going round faster than the introductions.
-Narrative: You are new, unannounced, and for one more minute unobserved. The whole county is in this room, and it has not yet decided what you are.
-Narrative: You have the length of the room before anyone claims you. Use it.
+Narrative: Meryton's rooms are full to the walls. Mr Bingley has not come, and every eye has gone to the friend who came without him: ten thousand a year, and pleased with nothing.
+Narrative: The set is forming, the fiddles are tuning, and the punch goes round faster than the introductions.
+Narrative: You are new, unannounced, and for one more minute unobserved. You have the length of the floor before anyone claims you. Use it.
 (Quest: Take the measure of the room — and of the man by the far wall.)
 
 // --- The Look · Arabella reads the room while Sir William crosses it ---
@@ -487,7 +485,7 @@ Arabella: Look at Mr Darcy, and say nothing.
 (Memory: carter | She had a hand out to him at Meryton, and Darcy took it first.)
 
 // --- The set ---
-(Video:as_darcy_dances.mp4)
+(Video: as_darcy_dances.mp4 | end=none)
 [bg:cutscene=mi_a_draw.jpg] [ui:narrative]
 Narrative: He leads you down the whole length of the set without a word, every figure correct, and the room turns to watch Mr Darcy dance.
 Narrative: The last figure ends. He bows, and does not let go of your hand quite at once.
@@ -502,10 +500,4 @@ Narrative: Charlotte will have to pay. You are not sure yet what it cost him.
 Arabella2: He claimed the set. I never said yes — and I never once said no.
 (Memory: arabella2 | The night Mr Darcy claimed a set he had not asked for, and she let him.)
 
-(EndScene bg=as_ending.jpg)
-0.3 Narrative: He did not ask. He told Captain Carter you were engaged to him, and led you out.
-4.4 Narrative: Charlotte will have to pay. You are not sure yet what it cost him.
-8.6 Narrative: He bowed, and did not let go of your hand quite at once.
-12.6 Narrative: End of Episode — The Assembly.
-(/EndScene)
-(Music)
+// (EndScene) coda reel and (Music) removed — the episode ends on Arabella's last line; the END frame shows "End of episode" + Open diary (journal).
