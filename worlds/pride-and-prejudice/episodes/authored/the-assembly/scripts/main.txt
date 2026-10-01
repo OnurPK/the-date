@@ -14,9 +14,7 @@
 // ═══════════════════════════════════════════════════════════
 (Situation: assembly_room | The Assembly Room | The Meryton rooms at the height of the evening — Sir William has seen you come in, and he has a plan for you.)
 [bg:cutscene=mi_opening.jpg] [amb:ballroom] [random:ballroom] [music:assembly] [ui:narrative]
-Narrative: Meryton's rooms are full to the walls. Mr Bingley has not come, and every eye has gone to the friend who came without him: ten thousand a year, and pleased with nothing.
-Narrative: The set is forming, the fiddles are tuning, and the punch goes round faster than the introductions.
-Narrative: You are new, unannounced, and for one more minute unobserved. You have the length of the floor before anyone claims you. Use it.
+Narrative: Meryton's rooms are full to the walls, and every eye has gone to the friend who came without Mr Bingley: ten thousand a year, and pleased with nothing. You are new, unannounced, and for one more minute unobserved. Use it.
 (Quest: Take the measure of the room — and of the man by the far wall.)
 
 // --- The Look · Arabella reads the room while Sir William crosses it ---
