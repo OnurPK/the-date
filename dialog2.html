@@ -16302,7 +16302,15 @@ function showEndContinue(){
         if (typeof showMap === 'function') showMap();
         try { document.body.classList.remove('pride-ending'); } catch (e) {}
         // Land on the active (Continue) episode — not the map's left edge
-        setTimeout(() => { try { if (typeof window.prideFocusActiveEpisode === 'function') window.prideFocusActiveEpisode(); } catch (e) {} }, 60);
+        // (the Continue pin may not be painted yet — prideRefreshMapLocks can still be loading — so retry until it is;
+        //  stop once a map event / whisper has taken the camera)
+        [60, 400, 1000, 2000, 3500].forEach(ms => setTimeout(() => { try { if (window.__prideFocusDone || window.__prideEncounterMode) return;
+          if (typeof window.prideFocusActiveEpisode === 'function' && window.prideFocusActiveEpisode()) window.__prideFocusDone = true; } catch (e) {} }, ms));
+        window.__prideFocusDone = false;
+        setTimeout(() => { try { if (window.__prideFocusDone || window.__prideEncounterMode) return;   // still nothing to focus → last known episode pin, else the map's middle (never the empty left edge)
+          const sc = flowEl && flowEl.mapScroll; if (!sc) return;
+          if (window.prideActiveEp && typeof window.prideCenterOn === 'function' && document.querySelector('#mapScreen .map-hotspot[data-poi="' + window.prideActiveEp + '"]')) window.prideCenterOn(window.prideActiveEp);
+          else sc.scrollTo({ left: Math.max(0, (sc.scrollWidth - sc.clientWidth) / 2), behavior: 'auto' }); } catch (e) {} }, 3700);
         try { if (window.prideDev && window.prideDev('maplife') && window.prideDevMapLife) setTimeout(window.prideDevMapLife, 350); } catch (e) {}   // Settings → Dev → Map interactions
         // Same-turn Map Events (horizontal lines / "Unlock olanlar"): camera → pin → polaroid card.
         // Targets whose tur hasn't come stay queued and play after the clock turns (prideTurnSequence).
