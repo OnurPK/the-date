@@ -22996,8 +22996,8 @@ function stopLondonAmbient() {
   }
   // outside EVERY location's invisible safe circle?
   function outsideSafe(pos){
-    for(const loc of simStops()){ const c0=window.prideDotCenter(loc); if(c0 && pdist(pos,c0)<SAFE_R) return false; }
-    for(const a of SIM_ANCHORS){ const c0=window.prideDotCenter(a.loc); if(c0 && pdist(pos,c0)<SAFE_R) return false; }
+    for(const loc of simStops()){ const c0=dotC(loc); if(c0 && pdist(pos,c0)<SAFE_R) return false; }
+    for(const a of SIM_ANCHORS){ const c0=dotC(a.loc); if(c0 && pdist(pos,c0)<SAFE_R) return false; }
     return true;
   }
 
@@ -23050,6 +23050,9 @@ function stopLondonAmbient() {
     if(iconKind) showIcon(c, iconKind);
   }
 
+  let _dotCache={}, _dotStamp=0;
+  function dotC(loc){ const now=performance.now(); if(now-_dotStamp>1500){ _dotCache={}; _dotStamp=now; } if(!(loc in _dotCache)) _dotCache[loc]=window.prideDotCenter(loc); return _dotCache[loc]; }
+  window.prideDotCacheClear=function(){ _dotCache={}; _dotStamp=0; };
   function simTick(){
     if(!_sim) return;
     // Freeze the ambient world while an encounter/chat is playing over the map.
@@ -23093,7 +23096,7 @@ function stopLondonAmbient() {
     });
     // dock "at"/anchor characters onto their location pin (nested with the pin icon)
     const byLoc={}; _sim.forEach(c=>{ if(c.status==='at'||c.anchor){ (byLoc[c.loc]=byLoc[c.loc]||[]).push(c); } });
-    Object.keys(byLoc).forEach(loc=>{ const c0=window.prideDotCenter(loc); if(!c0) return;
+    Object.keys(byLoc).forEach(loc=>{ const c0=dotC(loc); if(!c0) return;
       byLoc[loc].forEach((c,i)=>{
         // at HOME the medallion pin already shows the owner's portrait → hide the walker (no double portrait; tap the medallion instead)
         if(homeOf(c.id)===loc){ place(c.el, c0, 0, 0); c.el.style.pointerEvents='none'; return; }
