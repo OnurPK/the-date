@@ -39,7 +39,10 @@
     /* mount(ov, au, chart, opts) → controller { stop(), result() }
        ov: the Air overlay element (position:fixed) · au: the song <audio> · chart: {offset, notes} · opts: { onScore(score,combo), onEnd(result), lyrics } */
     mount(ov, au, chart, opts){
-      opts = opts||{}; const layoutName = opts.layout || chart.layout || 'diatonic'; LANES = layoutName==='chromatic' ? LANES_CHROMATIC : LANES_DIATONIC; KEY_MAP = layoutName==='chromatic' ? KEYS_CHROMATIC : KEYS_DIATONIC;
+      opts = opts||{}; let layoutName = opts.layout || chart.layout || 'piano'; try{ layoutName = localStorage.getItem('rai.piano.layout') || layoutName; }catch(e){}
+      // 'piano' = the 7 scale degrees drawn as a real-looking keyboard: 4 white + 3 black at the joins (lanes 1,3,5 are the blacks). Looks like a
+      // pianoforte; the keys are still degrees (no key sound, the recording plays), so the mapping is visual only. 'diatonic' = 7 white keys.
+      LANES = layoutName==='diatonic' ? LANES_DIATONIC : LANES_CHROMATIC; KEY_MAP = layoutName==='diatonic' ? KEYS_DIATONIC : KEYS_CHROMATIC;
       const NW = LANES.filter(l=>!l.b).length; const labels = chart.labels || LANES.map(l=>l.n);
       const notes = (chart.notes||[]).slice().sort((a,b)=>a.t-b.t).map(n=>Object.assign({}, n, { state:0, hitAt:0 }));   // state 0 pending · 1 hit (holding) · 2 done · 3 missed
       const offset = +chart.offset||0; let cal = 0; try{ cal = parseFloat(localStorage.getItem(CAL_KEY)||'0')||0; }catch(e){}
@@ -49,7 +52,7 @@
       const laneX = new Array(7), laneW = new Array(7);
       function layout(){ dpr = Math.min(2, window.devicePixelRatio||1); W = ov.clientWidth; H = ov.clientHeight; cv.width = Math.round(W*dpr); cv.height = Math.round(H*dpr); cv.style.width = W+'px'; cv.style.height = H+'px'; g.setTransform(dpr,0,0,dpr,0,0);
         keyH = Math.round(H*0.24); keyTop = H - keyH; hitY = keyTop - 6; laneTop = Math.round(H*0.36);
-        whiteW = W/NW; blackW = whiteW*0.58; blackH = keyH*0.6;
+        whiteW = W/NW; blackW = whiteW*0.64; blackH = keyH*0.62;
         LANES.forEach((l,i)=>{ if(!l.b){ laneX[i] = l.w*whiteW; laneW[i] = whiteW; } else { laneX[i] = (l.w+1)*whiteW - blackW/2; laneW[i] = blackW; } }); }
       layout(); window.addEventListener('resize', layout);
 
@@ -101,7 +104,7 @@
         for(let i=Math.max(0,next-4);i<notes.length;i++){ const n=notes[i]; const dt=n.t-now; if(dt>LEAD+1.2) break; if(n.state===2 || (n.state===3 && dt<-0.3)) continue;
           const yEnd = hitY - dt*pxPerSec; const len = Math.max(TAP, n.d*pxPerSec); const yTop = yEnd - len; if(yTop > keyTop) continue;
           const x = laneX[n.k]+ (LANES[n.k].b?3:5), w = laneW[n.k]-(LANES[n.k].b?6:10);
-          const held = n.state===1; const col = n.state===3 ? 'rgba(120,100,80,.55)' : held ? '#fff1c2' : '#f2c75c';
+          const held = n.state===1; const blk = LANES[n.k].b; const col = n.state===3 ? 'rgba(120,100,80,.55)' : blk ? (held ? '#ffc8d8' : '#d9607f') : (held ? '#fff1c2' : '#f2c75c');
           const y0 = held ? Math.min(hitY-6, yTop) : yTop, y1 = held ? hitY : yEnd;
           g.fillStyle = col; rr(x, y0, w, Math.max(TAP*0.6, y1-y0), Math.min(9,w/2)); g.fill();
           if(n.state!==3){ g.fillStyle='rgba(255,255,255,.38)'; rr(x+3, y0+3, w-6, 5, 2.5); g.fill(); }
@@ -117,8 +120,9 @@
           g.fillStyle='rgba(60,40,20,.35)'; g.fillRect(x+whiteW-2,keyTop,2,keyH); if(p){ g.drawImage(glow, x+whiteW/2-48, keyTop-48, 96, 96); }
           if(labels[i]){ g.fillStyle='rgba(90,70,40,.55)'; g.font='600 12px Inter,system-ui,sans-serif'; g.textAlign='center'; g.fillText(labels[i], x+whiteW/2, H-14); } }
         for(let i=0;i<7;i++){ if(!LANES[i].b) continue; const x=laneX[i]; const p=pressed[i];
-          const kg=g.createLinearGradient(0,keyTop,0,keyTop+blackH); kg.addColorStop(0,p?'#6b5a2e':'#2a221e'); kg.addColorStop(1,p?'#4a3c1e':'#0f0c0a'); g.fillStyle=kg; rr(x,keyTop,blackW,blackH,4); g.fill();
-          g.fillStyle='rgba(255,255,255,.08)'; g.fillRect(x+3,keyTop+2,blackW-6,3); if(p){ g.drawImage(glow, x+blackW/2-40, keyTop+blackH-60, 80, 80); } }
+          const kg=g.createLinearGradient(0,keyTop,0,keyTop+blackH); kg.addColorStop(0,p?'#7a3a50':'#2a221e'); kg.addColorStop(1,p?'#5a2838':'#0f0c0a'); g.fillStyle=kg; rr(x,keyTop,blackW,blackH,4); g.fill();
+          g.fillStyle='rgba(255,255,255,.08)'; g.fillRect(x+3,keyTop+2,blackW-6,3); if(p){ g.drawImage(glow, x+blackW/2-40, keyTop+blackH-60, 80, 80); }
+          if(labels[i]){ g.fillStyle='rgba(255,220,230,.55)'; g.font='600 11px Inter,system-ui,sans-serif'; g.textAlign='center'; g.fillText(labels[i], x+blackW/2, keyTop+blackH-10); } }
         // judge pops
         const pn=performance.now(); for(let i=pops.length-1;i>=0;i--){ const p=pops[i]; const a=(pn-p.t0)/700; if(a>=1){ pops.splice(i,1); continue; } g.globalAlpha=1-a; g.fillStyle=p.col; g.font='italic 600 15px "Playfair Display",Georgia,serif'; g.textAlign='center'; g.fillText(p.txt, p.x, p.y-a*22); g.globalAlpha=1; }
         if(!ended && au.ended){ finish(); }
