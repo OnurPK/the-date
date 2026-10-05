@@ -40,6 +40,7 @@
      If it's missing the script just 404s silently and AI portrait
      generation is disabled. -->
 <script src="_config/api.js" onerror="void 0"></script>
+<script src="pride-piano.js" defer></script>   <!-- "Play the air": pianoforte rhythm mini-game (episode-end) -->
 <!-- exifr, EXIF metadata reader for Q10 photo memories
      (auto-fills date + GPS coordinates → reverse-geocoded place). -->
 <script src="https://cdn.jsdelivr.net/npm/exifr/dist/full.umd.min.js" defer></script>
@@ -32800,6 +32801,7 @@ body.pride-hud-on #pridePcHud{ display:none !important; }
     <div class="pst-k">Dev</div>
     <div class="pst-mute"><span class="nm" style="font-size:14px;font-weight:600">Use mock data<small style="display:block;font-size:10.5px;font-weight:500;color:rgba(255,255,255,.5);margin-top:2px">Journal shows sample traits / suitors / county</small></span><div class="pst-tog" id="psMock" role="switch"></div></div>
     <div class="pst-mute"><span class="nm" style="font-size:14px;font-weight:600">Map interactions<small style="display:block;font-size:10.5px;font-weight:500;color:rgba(255,255,255,.5);margin-top:2px">Map as after turn 4: people walking, places open</small></span><div class="pst-tog" id="psMapLife" role="switch"></div></div>
+    <div class="pst-mute"><span class="nm" style="font-size:14px;font-weight:600">Piano mock chart<small style="display:block;font-size:10.5px;font-weight:500;color:rgba(255,255,255,.5);margin-top:2px">Play the air on a chart made from the lyric timings</small></span><div class="pst-tog" id="psDev_piano" role="switch"></div></div>
     <div class="pst-mute"><span class="nm" style="font-size:14px;font-weight:600">Perf: no fog<small style="display:block;font-size:10.5px;font-weight:500;color:rgba(255,255,255,.5);margin-top:2px">Hides the map fog (SVG cloud filter)</small></span><div class="pst-tog" id="psDev_nofog" role="switch"></div></div>
     <div class="pst-mute"><span class="nm" style="font-size:14px;font-weight:600">Perf: no night veil<small style="display:block;font-size:10.5px;font-weight:500;color:rgba(255,255,255,.5);margin-top:2px">Hides the multiply night layer</small></span><div class="pst-tog" id="psDev_noveil" role="switch"></div></div>
     <div class="pst-mute"><span class="nm" style="font-size:14px;font-weight:600">Perf: no pin animations<small style="display:block;font-size:10.5px;font-weight:500;color:rgba(255,255,255,.5);margin-top:2px">Freezes every CSS animation on the map</small></span><div class="pst-tog" id="psDev_noanim" role="switch"></div></div>
@@ -32809,6 +32811,7 @@ body.pride-hud-on #pridePcHud{ display:none !important; }
   </div>
   <div class="pst-foot">
     <button class="pst-btn" id="psDash" type="button">Go to dashboard</button>
+    <button class="pst-btn" id="psAir" type="button">Play the air (song + piano)</button>
     <button class="pst-btn" id="psStartMap" type="button">Start from map</button>
     <button class="pst-btn danger" id="psEnd" type="button">End the episode</button>
     <button class="pst-btn danger" id="psRestart" type="button">Restart game</button>
@@ -32823,7 +32826,7 @@ body.pride-hud-on #pridePcHud{ display:none !important; }
   const DEV=k=>{ try{ return localStorage.getItem('rai.dev.'+k)==='1'; }catch(e){ return false; } };
   const devSet=(k,v)=>{ try{ localStorage.setItem('rai.dev.'+k, v?'1':'0'); }catch(e){} };
   window.prideDev=DEV;
-  const PERF=['nofog','noveil','noanim','nowalk'];
+  const PERF=['nofog','noveil','noanim','nowalk','piano'];
   function applyPerf(){ PERF.forEach(k=>document.body.classList.toggle('dev-'+k, DEV(k))); try{ if(DEV('nowalk')) window.prideClearWalkers&&window.prideClearWalkers(); }catch(e){} }
   function syncDev(){ $('psMock').classList.toggle('on', DEV('mock')); $('psMapLife').classList.toggle('on', DEV('maplife')); PERF.forEach(k=>{ const b=$('psDev_'+k); if(b) b.classList.toggle('on', DEV(k)); }); applyPerf(); }
   PERF.forEach(k=>{ const b=$('psDev_'+k); if(b) b.addEventListener('click',()=>{ devSet(k,!DEV(k)); syncDev(); }); });
@@ -32858,7 +32861,8 @@ body.pride-hud-on #pridePcHud{ display:none !important; }
     try{ sessionStorage.removeItem('rai.live'); }catch(e){}
     const u=new URL(location.href); u.searchParams.set('newgame','1'); u.searchParams.set('start','map'); u.searchParams.set('cb',Date.now()); location.replace(u.toString()); }));
   // Go to dashboard — jump the running episode to its end (END screen → Continue → journal)
-  $('psDash').addEventListener('click',()=>{ close(); setTimeout(()=>{ try{ window.devGotoEnd&&window.devGotoEnd(); }catch(e){} }, 400); });   // lands on the END frame (Continue → journal)
+  $('psDash').addEventListener('click',()=>{ close(); setTimeout(()=>{ try{ window.devGotoEnd&&window.devGotoEnd(); }catch(e){} }, 400); });
+  $('psAir').addEventListener('click',()=>{ close(); setTimeout(()=>{ try{ window.prideAirScene&&window.prideAirScene(()=>{}, { episode:'episodes/authored/the-assembly' }); }catch(e){} }, 400); });   // dev: straight to the episode-end song / piano game   // lands on the END frame (Continue → journal)
 })();
 </script>
 <!-- ===== PRIDE SUITORS (card list) + SUITOR DETAIL ===== -->
@@ -37324,6 +37328,18 @@ body.pride-sketch .scene-bubble, body.pride-sketch #choicePanel, body.pride-sket
   body.dev-noveil #prideNightVeil{ display:none !important; }
   body.dev-noanim #mapScreen *, body.dev-noanim #prideMeters *, body.dev-noanim #pridePcHud *{ animation:none !important; transition:none !important; }
   body.dev-nowalk #mapScreen .pride-ep3-av{ display:none !important; }
+  #prideAir canvas.piano{ position:absolute; inset:0; z-index:6; touch-action:none; }
+  #prideAir.game .kar{ bottom:auto; top:24%; height:110px; }
+  #prideAir.game .share{ display:none; }
+  #prideAir.game .ttl i{ font:600 26px/1 "Playfair Display",Georgia,serif; letter-spacing:.02em; }
+  #prideAir .res{ position:absolute; left:50%; top:50%; transform:translate(-50%,-50%) scale(.96); width:min(320px, 84vw); z-index:9; padding:26px 24px 22px; border:1px solid rgba(240,212,124,.55); border-radius:16px; background:rgba(12,8,14,.86); color:#f4eee1; text-align:center; opacity:0; transition:opacity .6s ease, transform .6s ease; pointer-events:none; }
+  #prideAir .res.on{ opacity:1; transform:translate(-50%,-50%) scale(1); pointer-events:auto; }
+  #prideAir .res b{ display:block; font:800 10px/1 Inter; letter-spacing:.32em; text-transform:uppercase; color:#f0d47c; }
+  #prideAir .res i{ display:block; margin:10px 0 4px; font:600 44px/1 "Playfair Display",Georgia,serif; font-style:normal; }
+  #prideAir .res small{ display:block; font:500 12px/1.6 Inter; color:rgba(255,255,255,.7); }
+  #prideAir .res em{ display:block; margin-top:12px; font:italic 500 16px/1.3 "Playfair Display",Georgia,serif; color:#ffe9a8; }
+  #prideAir .res .row{ display:flex; gap:10px; justify-content:center; margin-top:18px; }
+  #prideAir .res button{ padding:11px 18px; border-radius:999px; border:1px solid rgba(240,212,124,.7); background:transparent; color:#f0d47c; font:700 11px/1 Inter; letter-spacing:.26em; text-transform:uppercase; cursor:pointer; }
   #prideAir .end{ position:absolute; inset:0; background:#07050a; opacity:0; transition:opacity 1.2s ease; pointer-events:none; } #prideAir .end.on{ opacity:1; }
 </style>
 
@@ -37522,12 +37538,23 @@ body.pride-sketch .scene-bubble, body.pride-sketch #choicePanel, body.pride-sket
         if(i!==li){ renderKar(i); const l=lines[i]; if(l&&l.clip){ setClip(l.clip, !!l.loop, /^mus_piano/.test(l.clip)?'fade':'memory'); if(cutT) clearTimeout(cutT); if(l.cut>0) cutT=setTimeout(()=>{ if(curClip===l.clip) setClip(L.intro||'mus_piano_a', true, 'fade'); }, l.cut*1000); } }
         if(i>=0&&lines[i].ws){ kar.querySelectorAll('.ln:not(.out) .w[data-t]').forEach(w=>{ if(t>=parseFloat(w.dataset.t)) w.classList.add('on'); }); }
         };
-      const stop=()=>{ clearInterval(raf); clearTimeout(cutT); clearFx(); try{ au.pause(); au.removeAttribute('src'); au.load(); }catch(e){} try{ vid.pause(); vid.removeAttribute('src'); vid.load(); }catch(e){} };
+      const stop=()=>{ clearInterval(raf); clearTimeout(cutT); clearFx(); try{ game&&game.stop(); }catch(e){} try{ au.pause(); au.removeAttribute('src'); au.load(); }catch(e){} try{ vid.pause(); vid.removeAttribute('src'); vid.load(); }catch(e){} };
       const leave=(fast)=>{ endV.classList.add('on'); setTimeout(()=>{ stop(); hideEnd(); finish(); setTimeout(()=>{ ov.classList.remove('on'); setTimeout(()=>{ try{ ov.remove(); }catch(e){} }, 950); }, 300); }, fast?500:1300); };
       ov.querySelector('.skip').addEventListener('click', ()=>leave(true));
       ov.querySelector('.share').addEventListener('click', async (e)=>{ const b=e.currentTarget; const txt=(L.shareText||('"'+(lines.find(l=>l.text)||{}).text+'" — '+(L.title||'An air')+', roles.ai'));
         try{ if(navigator.share){ await navigator.share({ title:L.title||'An air', text:txt, url:location.origin }); b.classList.add('done'); } else { await navigator.clipboard.writeText(txt+' '+location.origin); b.classList.add('done'); b.querySelector('span').textContent='Copied'; } }catch(err){} });
-      au.addEventListener('ended', ()=>leave(false));
+      // ---- "Play the air": the pianoforte mini-game rides on top when the episode ships air/notes.json (or Dev → Piano mock chart) ----
+      let game=null;
+      const mockOn = (()=>{ try{ return localStorage.getItem('rai.dev.piano')==='1'; }catch(e){ return false; } })();
+      const startGame=(chart)=>{ if(!window.pridePiano||game) return; ov.classList.add('game'); const sc=ov.querySelector('.ttl i'); sc.textContent='0';
+        game=window.pridePiano.mount(ov, au, chart, { duck:true, onScore:(s)=>{ sc.textContent=String(s); }, onEnd:(r)=>{ showResult(r); } }); };
+      const showResult=(r)=>{ const acc = r.total ? (r.perfect+r.good)/r.total : 0; const verdict = acc>=0.9 ? 'The room has stopped talking to listen.' : acc>=0.6 ? 'A creditable performance, Miss Frost.' : 'Mrs Frost will say you want practice.';
+        const el=document.createElement('div'); el.className='res'; el.innerHTML='<b>The air, played</b><i>'+r.score+'</i><small>Perfect '+r.perfect+' · Good '+r.good+' · Missed '+r.miss+' · Best run '+r.best+'</small><em>'+verdict+'</em>'+(acc>=0.6?'<small style="margin-top:8px;color:#f0d47c">Accomplished +1</small>':'')+'<div class="row"><button type="button" class="r-share">Share</button><button type="button" class="r-go">Continue</button></div>';
+        ov.appendChild(el); requestAnimationFrame(()=>el.classList.add('on'));
+        el.querySelector('.r-go').addEventListener('click', ()=>leave(true)); el.querySelector('.r-share').addEventListener('click', ()=>{ ov.querySelector('.share').click(); });
+        try{ if(acc>=0.6 && window.prideEpiRecord) window.prideEpiRecord('trait',['Accomplished']); }catch(e){} };
+      fetch(root+'air/notes.json',{cache:'no-store'}).then(r=>r.ok?r.json():null).catch(()=>null).then(ch=>{ if(ch&&ch.notes&&ch.notes.length) startGame(ch); else if(mockOn) startGame(window.pridePiano.mockChart(lines)); });
+      au.addEventListener('ended', ()=>{ if(game){ game.finish(); } else leave(false); });
       try{ window.prideAudio&&window.prideAudio.stopAll(); window.prideAudio&&window.prideAudio.stopVoice(); }catch(e){}
       const hideEnd=()=>{ try{ ['epEndContinue','epEndLabel'].forEach(id=>{ const e=document.getElementById(id); if(e) e.style.display='none'; }); document.body.classList.remove('pride-ending'); }catch(e){} }; hideEnd();   // END chrome never peeks out under / after the Air
       setClip(L.intro||lines[0].clip||'mus_piano_a', true, 'fade');

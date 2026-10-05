@@ -2,525 +2,425 @@
  "title": "Air at the Pianoforte",
  "eyebrow": "An air · The Assembly",
  "intro": "mus_piano_a",
+ "volume": 0.7,
  "shareText": "\"So play the air, and play it slow, for what I feel I will not show.\" — Arabella, after the Meryton assembly · roles.ai",
  "lines": [
   {
-   "t": 12.74,
+   "t": 13.6,
    "text": "The rain is at the window and a rider at the gate;",
    "words": [
     {
      "w": "The",
-     "t": 12.74
+     "t": 13.6
     },
     {
      "w": "rain",
-     "t": 13.66
+     "t": 14.17
     },
     {
      "w": "is",
-     "t": 14.48
+     "t": 14.87
     },
     {
      "w": "at",
-     "t": 14.76
+     "t": 15.57
     },
     {
      "w": "the",
-     "t": 15.1
+     "t": 16.4
     },
     {
      "w": "window",
-     "t": 16.4
+     "t": 16.96
     },
     {
      "w": "and",
-     "t": 16.4
+     "t": 17.45
     },
     {
      "w": "a",
-     "t": 16.88
+     "t": 17.8
     },
     {
      "w": "rider",
-     "t": 17.24
+     "t": 18.2
     },
     {
      "w": "at",
-     "t": 17.84
+     "t": 18.86
     },
     {
      "w": "the",
-     "t": 18.3
+     "t": 19.3
     },
     {
      "w": "gate;",
-     "t": 19.16
+     "t": 20.48
     }
    ],
    "clip": "mus_m1_rain"
   },
   {
-   "t": 20.42,
+   "t": 21.4,
    "text": "I did not ask his name tonight, and now it is too late.",
    "words": [
     {
      "w": "I",
-     "t": 20.42
+     "t": 21.4
     },
     {
      "w": "did",
-     "t": 20.88
+     "t": 22.1
     },
     {
      "w": "not",
-     "t": 21.24
+     "t": 22.54
     },
     {
      "w": "ask",
-     "t": 21.48
+     "t": 23.38
     },
     {
      "w": "his",
-     "t": 21.86
+     "t": 24.32
     },
     {
      "w": "name",
-     "t": 22.26
+     "t": 24.96
     },
     {
      "w": "tonight,",
-     "t": 22.68
+     "t": 25.66
     },
     {
      "w": "and",
-     "t": 23.74
+     "t": 27.2
     },
     {
      "w": "now",
-     "t": 24.18
+     "t": 27.8
     },
     {
      "w": "it",
-     "t": 24.7
+     "t": 28.78
     },
     {
      "w": "is",
-     "t": 25.04
+     "t": 29.14
     },
     {
      "w": "too",
-     "t": 25.38
+     "t": 29.86
     },
     {
      "w": "late.",
-     "t": 26.1
+     "t": 30.28
     }
    ]
   },
   {
-   "t": 27.68,
+   "t": 32.44,
    "text": "The candles are put out, the chairs are to the wall;",
    "words": [
     {
      "w": "The",
-     "t": 27.68
+     "t": 32.44
     },
     {
      "w": "candles",
-     "t": 28.32
+     "t": 33.84
     },
     {
      "w": "are",
-     "t": 28.94
+     "t": 34.08
     },
     {
      "w": "put",
-     "t": 29.6
+     "t": 35.34
     },
     {
      "w": "out,",
-     "t": 29.86
+     "t": 35.7
     },
     {
      "w": "the",
-     "t": 30.92
+     "t": 38.48
     },
     {
      "w": "chairs",
-     "t": 31.66
+     "t": 38.74
     },
     {
      "w": "are",
-     "t": 32.3
+     "t": 39.32
     },
     {
      "w": "to",
-     "t": 32.68
+     "t": 39.82
     },
     {
      "w": "the",
-     "t": 32.96
+     "t": 40.46
     },
     {
      "w": "wall;",
-     "t": 33.66
+     "t": 42.54
     }
    ],
    "clip": "mus_m2_ballroom",
    "cut": 7.5
   },
   {
-   "t": 34.26,
+   "t": 43.54,
    "text": "I dance the reel alone, with no one there at all.",
    "words": [
     {
      "w": "I",
-     "t": 34.26
+     "t": 43.54
     },
     {
      "w": "dance",
-     "t": 35.3
+     "t": 44.28
     },
     {
      "w": "the",
-     "t": 35.9
+     "t": 44.98
     },
     {
      "w": "reel",
-     "t": 36.76
+     "t": 46.3
     },
     {
      "w": "alone,",
-     "t": 36.76
+     "t": 46.42
     },
     {
      "w": "with",
-     "t": 38.16
+     "t": 48.5
     },
     {
      "w": "no",
-     "t": 38.52
+     "t": 49.84
     },
     {
      "w": "one",
-     "t": 39.08
+     "t": 50.52
     },
     {
      "w": "there",
-     "t": 39.42
+     "t": 51.26
     },
     {
      "w": "at",
-     "t": 40.28
+     "t": 52.0
     },
     {
      "w": "all.",
-     "t": 40.7
+     "t": 52.6
     }
    ]
   },
   {
-   "t": 42.36,
-   "text": "A letter with a seal unbroke, the fire so near and warm;",
+   "t": 55.24,
+   "text": "So play the air, and play it slow,",
    "words": [
     {
-     "w": "A",
-     "t": 42.36
+     "w": "So",
+     "t": 55.24
     },
     {
-     "w": "letter",
-     "t": 43.36
-    },
-    {
-     "w": "with",
-     "t": 43.36
-    },
-    {
-     "w": "a",
-     "t": 43.9
-    },
-    {
-     "w": "seal",
-     "t": 44.36
-    },
-    {
-     "w": "unbroke,",
-     "t": 44.46
+     "w": "play",
+     "t": 56.64
     },
     {
      "w": "the",
-     "t": 45.94
+     "t": 57.26
     },
     {
-     "w": "fire",
-     "t": 46.22
-    },
-    {
-     "w": "so",
-     "t": 46.72
-    },
-    {
-     "w": "near",
-     "t": 47.24
+     "w": "air,",
+     "t": 57.86
     },
     {
      "w": "and",
-     "t": 47.54
+     "t": 58.84
     },
     {
-     "w": "warm;",
-     "t": 47.94
+     "w": "play",
+     "t": 59.44
+    },
+    {
+     "w": "it",
+     "t": 60.0
+    },
+    {
+     "w": "slow,",
+     "t": 60.62
     }
    ],
    "clip": "mus_piano_b"
   },
   {
-   "t": 48.78,
-   "text": "I lay it in my lap again and will not read the form.",
+   "t": 63.28,
+   "text": "For what I feel I will not show.",
    "words": [
     {
+     "w": "For",
+     "t": 63.28
+    },
+    {
+     "w": "what",
+     "t": 63.66
+    },
+    {
      "w": "I",
-     "t": 48.78
+     "t": 63.94
     },
     {
-     "w": "lay",
-     "t": 49.72
+     "w": "feel",
+     "t": 65.54
     },
     {
-     "w": "it",
-     "t": 50.1
-    },
-    {
-     "w": "in",
-     "t": 50.6
-    },
-    {
-     "w": "my",
-     "t": 50.66
-    },
-    {
-     "w": "lap",
-     "t": 51.34
-    },
-    {
-     "w": "again",
-     "t": 51.38
-    },
-    {
-     "w": "and",
-     "t": 52.36
+     "w": "I",
+     "t": 65.66
     },
     {
      "w": "will",
-     "t": 52.74
+     "t": 67.48
     },
     {
      "w": "not",
-     "t": 53.02
+     "t": 67.98
     },
     {
-     "w": "read",
-     "t": 53.46
-    },
-    {
-     "w": "the",
-     "t": 53.92
-    },
-    {
-     "w": "form.",
-     "t": 54.3
-    }
-   ]
-  },
-  {
-   "t": 55.62,
-   "text": "So play the air, and play it slow,",
-   "words": [
-    {
-     "w": "So",
-     "t": 55.62
-    },
-    {
-     "w": "play",
-     "t": 56.06
-    },
-    {
-     "w": "the",
-     "t": 56.74
-    },
-    {
-     "w": "air,",
-     "t": 57.16
-    },
-    {
-     "w": "and",
-     "t": 57.86
-    },
-    {
-     "w": "play",
-     "t": 58.16
-    },
-    {
-     "w": "it",
-     "t": 58.58
-    },
-    {
-     "w": "slow,",
-     "t": 59.08
+     "w": "show.",
+     "t": 68.84
     }
    ],
    "clip": "mus_piano_a",
    "loop": true
   },
   {
-   "t": 59.48,
-   "text": "For what I feel I will not show.",
+   "t": 73.5,
+   "text": "A letter with a seal unbroke, the fire so near and warm;",
    "words": [
     {
-     "w": "For",
-     "t": 59.48
+     "w": "A",
+     "t": 73.5
     },
     {
-     "w": "what",
-     "t": 60.2
+     "w": "letter",
+     "t": 74.88
     },
     {
-     "w": "I",
-     "t": 60.44
-    },
-    {
-     "w": "feel",
-     "t": 60.92
-    },
-    {
-     "w": "I",
-     "t": 61.54
-    },
-    {
-     "w": "will",
-     "t": 61.86
-    },
-    {
-     "w": "not",
-     "t": 62.14
-    },
-    {
-     "w": "show.",
-     "t": 62.58
-    }
-   ]
-  },
-  {
-   "t": 64.76,
-   "text": "The sea is at the shingle, the scarlet coats go on;",
-   "words": [
-    {
-     "w": "The",
-     "t": 64.76
-    },
-    {
-     "w": "sea",
-     "t": 65.2
-    },
-    {
-     "w": "is",
-     "t": 65.8
-    },
-    {
-     "w": "at",
-     "t": 66.32
-    },
-    {
-     "w": "the",
-     "t": 66.46
-    },
-    {
-     "w": "shingle,",
-     "t": 67.4
-    },
-    {
-     "w": "the",
-     "t": 68.44
-    },
-    {
-     "w": "scarlet",
-     "t": 68.64
-    },
-    {
-     "w": "coats",
-     "t": 69.04
-    },
-    {
-     "w": "go",
-     "t": 69.44
-    },
-    {
-     "w": "on;",
-     "t": 69.86
-    }
-   ],
-   "clip": "mus_m4_shore"
-  },
-  {
-   "t": 71.3,
-   "text": "The county has not judged me yet, and half the night is gone.",
-   "words": [
-    {
-     "w": "The",
-     "t": 71.3
-    },
-    {
-     "w": "county",
-     "t": 71.74
-    },
-    {
-     "w": "has",
-     "t": 72.16
-    },
-    {
-     "w": "not",
-     "t": 72.6
-    },
-    {
-     "w": "judged",
-     "t": 73.04
-    },
-    {
-     "w": "me",
-     "t": 73.34
-    },
-    {
-     "w": "yet,",
-     "t": 73.76
-    },
-    {
-     "w": "and",
-     "t": 74.12
-    },
-    {
-     "w": "half",
+     "w": "with",
      "t": 75.02
     },
     {
+     "w": "a",
+     "t": 75.56
+    },
+    {
+     "w": "seal",
+     "t": 76.68
+    },
+    {
+     "w": "unbroke,",
+     "t": 76.78
+    },
+    {
      "w": "the",
-     "t": 75.84
+     "t": 79.86
     },
     {
-     "w": "night",
-     "t": 76.12
+     "w": "fire",
+     "t": 80.08
     },
     {
-     "w": "is",
-     "t": 76.46
+     "w": "so",
+     "t": 80.6
     },
     {
-     "w": "gone.",
-     "t": 76.94
+     "w": "near",
+     "t": 81.26
+    },
+    {
+     "w": "and",
+     "t": 82.2
+    },
+    {
+     "w": "warm;",
+     "t": 82.66
     }
-   ]
+   ],
+   "clip": "mus_piano_b"
   },
   {
-   "t": 78.0,
+   "t": 84.34,
+   "text": "I lay it in my lap again and will not read the form.",
+   "words": [
+    {
+     "w": "I",
+     "t": 84.34
+    },
+    {
+     "w": "lay",
+     "t": 85.72
+    },
+    {
+     "w": "it",
+     "t": 86.08
+    },
+    {
+     "w": "in",
+     "t": 86.92
+    },
+    {
+     "w": "my",
+     "t": 87.44
+    },
+    {
+     "w": "lap",
+     "t": 88.5
+    },
+    {
+     "w": "again",
+     "t": 89.16
+    },
+    {
+     "w": "and",
+     "t": 90.86
+    },
+    {
+     "w": "will",
+     "t": 91.24
+    },
+    {
+     "w": "not",
+     "t": 91.6
+    },
+    {
+     "w": "read",
+     "t": 92.64
+    },
+    {
+     "w": "the",
+     "t": 93.0
+    },
+    {
+     "w": "form.",
+     "t": 93.36
+    }
+   ],
+   "clip": "mus_piano_a",
+   "loop": true
+  },
+  {
+   "t": 100.5,
+   "text": "",
+   "clip": "mus_m4_shore"
+  },
+  {
+   "t": 107.5,
    "text": "",
    "clip": "mus_piano_a",
    "loop": true

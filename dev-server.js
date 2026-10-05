@@ -74,7 +74,7 @@ function isInsideRoot(absPath) {
 function readJsonBody(req) {
   return new Promise((resolve, reject) => {
     let buf = '';
-    req.on('data', (chunk) => { buf += chunk; if (buf.length > 5e6) reject(new Error('payload too large')); });
+    req.on('data', (chunk) => { buf += chunk; if (buf.length > 40e6) reject(new Error('payload too large')); });
     req.on('end', () => {
       try { resolve(buf ? JSON.parse(buf) : {}); }
       catch (e) { reject(e); }
@@ -259,6 +259,23 @@ function openaiImageEdit(prompt, refAbs, size, model, opts) {
       (r)=>{ let d=''; r.on('data',c=>d+=c); r.on('end',()=>{ try{ const j=JSON.parse(d); if(r.statusCode>=400) return reject(new Error((j.error&&j.error.message)||('HTTP '+r.statusCode))); resolve(j); }catch(e){ reject(new Error('bad img response')); } }); });
     req.on('error', reject); req.write(body); req.end();
   });
+}
+
+// POST /api/author/file-import { name, b64 } → worlds/pride-and-prejudice/_import/<sub>/<name>  (browser-side downloads, e.g. Miro signed URLs that expire within minutes)
+async function handleFileImport(req, res) {
+  const b = await readJsonBody(req); const name = String(b.name || '').replace(/[^A-Za-z0-9._-]/g, '_'); const sub = String(b.sub || '').replace(/[^A-Za-z0-9._-]/g, '_');
+  if (!b.b64) return sendJson(res, 400, { error: 'no b64' });
+  let abs;
+  if (b.path) {   // explicit worlds/… target (authoring tools: notes.json etc.)
+    const rel = String(b.path).trim(); if (!/^worlds\/pride-and-prejudice\/[a-z0-9_/.\-]+\.(json|png|jpe?g|webp|mp3|m4a|wav|webm|mp4|txt|abc)$/i.test(rel) || rel.includes('..')) return sendJson(res, 400, { error: 'bad path' });
+    abs = path.join(ROOT, rel); fs.mkdirSync(path.dirname(abs), { recursive: true });
+  } else {
+    if (!name || !/\.(png|jpe?g|webp|mp4|mp3|m4a|wav|webm)$/i.test(name)) return sendJson(res, 400, { error: 'bad name' });
+    const dir = path.join(ROOT, 'worlds', 'pride-and-prejudice', '_import', sub); fs.mkdirSync(dir, { recursive: true }); abs = path.join(dir, name);
+  }
+  if (!isInsideRoot(abs)) return sendJson(res, 400, { error: 'bad path' });
+  try { fs.writeFileSync(abs, Buffer.from(String(b.b64), 'base64')); return sendJson(res, 200, { ok: true, path: path.relative(ROOT, abs), bytes: fs.statSync(abs).size }); }
+  catch (e) { return sendJson(res, 500, { error: String(e.message || e) }); }
 }
 
 // POST /api/author/transcribe { audioPath }  → OpenAI Whisper word timestamps (lyric sync for the episode-end Air scene)
@@ -1515,6 +1532,7 @@ const server = http.createServer(async (req, res) => {
     if (req.method === 'POST' && parsed.pathname === '/api/author/script') return handleAuthorScript(req, res);
     if (req.method === 'POST' && parsed.pathname === '/api/author/gen-asset') return handleGenAsset(req, res);
     if (req.method === 'POST' && parsed.pathname === '/api/author/transcribe') return handleTranscribe(req, res);
+    if (req.method === 'POST' && parsed.pathname === '/api/author/file-import') return handleFileImport(req, res);
     if (req.method === 'POST' && parsed.pathname === '/api/author/gen-audio') return handleGenAudio(req, res);
     if (req.method === 'POST' && parsed.pathname === '/api/author/audio-manifest') return handleAudioManifestSave(req, res);
     if (req.method === 'POST' && parsed.pathname === '/api/author/audio-import') return handleAudioImport(req, res);

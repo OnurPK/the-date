@@ -2465,6 +2465,7 @@
   <details class="dock-group" data-g="pp" open>
     <summary>Pride &amp; Prejudice</summary>
     <button class="act-btn primary" id="btnAssemblyEnd" type="button">⏭ Assembly · last scene</button>
+    <button class="act-btn" id="btnAir" type="button" title="Episode-end song + pianoforte game (S D F G H J K)">♪ Play the air</button>
     <button class="act-btn primary" id="btnNetherfield" type="button">♛ Netherfield Ball</button>
     <button class="act-btn" id="btnCombat" type="button">⚔ Darcy Duel (combat)</button>
     <button class="act-btn" id="btnSuccess" type="button">✓ Success Screen</button>
@@ -2915,6 +2916,8 @@
   // episode's main.txt and renders straight into the ballroom.
   // ⏭ Assembly · last scene — load the Assembly episode and park the engine on
   // the coda (the last cutscene), so the episode-end → dashboard flow is 3 taps away.
+  const btnAir = document.getElementById('btnAir');
+  if (btnAir) btnAir.addEventListener('click', () => { try { const w = document.getElementById('gameFrame').contentWindow; if (w && typeof w.prideAirScene === 'function') w.prideAirScene(() => {}, { episode: 'episodes/authored/the-assembly' }); } catch (e) { console.warn(e); } });
   const btnAssemblyEnd = document.getElementById('btnAssemblyEnd');
   if (btnAssemblyEnd) {
     btnAssemblyEnd.addEventListener('click', async () => {

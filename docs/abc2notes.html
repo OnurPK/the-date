@@ -1,0 +1,95 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>ABC → notes.json (Play the air)</title>
+<script src="https://cdn.jsdelivr.net/npm/abcjs@6/dist/abcjs-basic-min.js"></script>
+<style>
+  body{ font:14px/1.5 Inter,system-ui,sans-serif; background:#120a14; color:#eee; margin:0; padding:22px; }
+  h1{ font:600 18px/1 "Playfair Display",Georgia,serif; color:#f0d47c; margin:0 0 14px; }
+  textarea{ width:100%; height:260px; background:#1a1220; color:#eee; border:1px solid #444; border-radius:8px; padding:10px; font:12px/1.4 ui-monospace,monospace; }
+  label{ display:inline-block; margin:8px 14px 8px 0; color:#ccc; } input,select{ background:#1a1220; color:#eee; border:1px solid #444; border-radius:6px; padding:5px 8px; }
+  button{ padding:9px 16px; border-radius:999px; border:1px solid #f0d47c; background:transparent; color:#f0d47c; font:700 11px/1 Inter; letter-spacing:.2em; text-transform:uppercase; cursor:pointer; margin-right:8px; }
+  pre{ background:#0d0810; border:1px solid #333; border-radius:8px; padding:10px; max-height:260px; overflow:auto; font-size:11px; }
+  .ok{ color:#9be39b } .err{ color:#e39b9b }
+</style>
+<h1>ABC → notes.json</h1>
+<p>Plan metnini (ABC) yapıştır. Nota haritası: 7 tuşlu pencere (F F# G G# A A# B), en çok notayı pencereye düşüren transpoze + oktav katlama, Kolay seyreltme.</p>
+<textarea id="abc" placeholder="X:1&#10;T:…&#10;V:Vocal&#10;…"></textarea>
+<div>
+  <label>Episode <input id="ep" value="authored/the-assembly" size="26"></label>
+  <label>Ses <select id="voice"><option value="auto">auto (ölçüde vokal varsa Vocal, yoksa Ins)</option><option value="Vocal">Vocal</option><option value="Ins">Ins</option><option value="all">hepsi</option></select></label>
+  <label>Offset (sn) <input id="off" value="0.10" size="6"></label>
+  <label>Min aralık (sn) <input id="gap" value="0.34" size="6"></label>
+  <label>Tutma eşiği (sn) <input id="hold" value="0.55" size="6"></label>
+  <label>Akor katmanı <select id="chords"><option value="1">kök, akor değişiminde</option><option value="0">yok</option></select></label>
+</div>
+<div style="margin:10px 0"><button id="run">Hesapla</button><button id="save">Kaydet → air/notes.json</button><button id="dl">İndir</button> <span id="msg"></span></div>
+<pre id="out"></pre>
+<script>
+const $=id=>document.getElementById(id); let RESULT=null;
+const WINDOW=[65,66,67,68,69,70,71];            // MIDI F4..B4
+function keyAccidentals(keyObj){ const m={}; (keyObj&&keyObj.accidentals||[]).forEach(a=>{ m[a.note.toUpperCase()] = a.acc==='sharp'?1:a.acc==='flat'?-1:0; }); return m; }
+// abcjs pitch: diatonic number, 0 = C4? abcjs uses pitch 0 = C (middle C octave 4 region: C=0 D=1 … B=6, c=7…). name gives e.g. "^F" or "_B," etc.
+function midiOf(el, keyAcc, barAcc){ const p=el.pitches[0]; const letters=['C','D','E','F','G','A','B']; const semis=[0,2,4,5,7,9,11];
+  const idx=((p.pitch%7)+7)%7, oct=Math.floor(p.pitch/7); const L=letters[idx]; let acc;
+  if(p.accidental){ acc = p.accidental==='sharp'?1:p.accidental==='flat'?-1:p.accidental==='natural'?0:p.accidental==='dblsharp'?2:p.accidental==='dblflat'?-2:0; barAcc[L+oct]=acc; }
+  else if(barAcc[L+oct]!=null) acc=barAcc[L+oct]; else acc=keyAcc[L]||0;
+  return 60 + oct*12 + semis[idx] + acc; }
+function build(){
+  const abc=$('abc').value; const tune=ABCJS.parseOnly(abc)[0]; if(!tune) throw new Error('ABC ayrıştırılamadı');
+  const voiceWant=$('voice').value, off=parseFloat($('off').value)||0, minGap=parseFloat($('gap').value)||0, holdMin=parseFloat($('hold').value)||0.5;
+  const Q = tune.getBpm ? tune.getBpm() : 120; const meter=tune.getMeterFraction?tune.getMeterFraction():{num:4,den:4};
+  // beat length from the tempo directive: abcjs getBpm gives bpm for the Q note value; whole-note seconds = (60/bpm) / (Q note fraction)
+  let qnote=0.25; try{ const t=tune.metaText&&tune.metaText.tempo; if(t&&t.duration&&t.duration.length) qnote=t.duration[0]; }catch(e){}
+  const wholeSec = (60/Q)/qnote;
+  const keyAcc = keyAccidentals(tune.getKeySignature ? tune.getKeySignature() : null);
+  // walk voices: tune.lines[].staff[].voices[] — each element has duration (fraction of a whole note)
+  const byVoice={}; const names={}; const vnames=[...abc.matchAll(/^V:\s*([^\s%]+)/gm)].map(m=>m[1]); const seen=[];
+  tune.lines.forEach(line=>{ (line.staff||[]).forEach((st,si)=>{ (st.voices||[]).forEach((v,vi)=>{ const id=si+':'+vi; if(seen.indexOf(id)<0) seen.push(id); const nm=(st.title&&st.title[vi])||vnames[seen.indexOf(id)]||''; names[id]=nm; byVoice[id]=byVoice[id]||{t:0,notes:[],bars:[],barAcc:{},tieFrom:null,chords:[]};
+    const V=byVoice[id];
+    v.forEach(el=>{ if(el.el_type==='bar'){ V.barAcc={}; V.bars.push(V.t); return; } if(el.el_type!=='note') return; const dur=(el.duration||0)*wholeSec;
+      if(el.rest){ if(el.chord&&el.chord.length) V.chords.push({ t:V.t, name:el.chord[0].name }); V.t+=dur; return; }
+      const m=midiOf(el,keyAcc,V.barAcc); if(el.chord&&el.chord.length) V.chords.push({ t:V.t, name:el.chord[0].name });
+      if(V.tieFrom && V.tieFrom.m===m){ V.tieFrom.d+=dur; if(!el.endTie && !(el.pitches[0]&&el.pitches[0].startTie)) V.tieFrom=null; if(!(el.pitches[0]&&el.pitches[0].startTie)) V.tieFrom=null; V.t+=dur; return; }
+      const n={t:V.t,d:dur,m,pitch:el.pitches[0].pitch}; V.notes.push(n); if(el.pitches[0]&&el.pitches[0].startTie) V.tieFrom=n; else V.tieFrom=null; V.t+=dur; }); }); }); });
+  const ids=Object.keys(byVoice); const pick=(id)=>{ const nm=(names[id]||'').toLowerCase(); return nm; };
+  let notes=[];
+  if(voiceWant==='all'){ ids.forEach(id=>notes.push(...byVoice[id].notes)); }
+  else if(voiceWant==='auto'){ const voc=ids.find(id=>/vocal/.test(pick(id))), ins=ids.find(id=>/ins/.test(pick(id)))||ids.find(id=>id!==voc);
+    if(!voc){ notes=byVoice[ins||ids[0]].notes.slice(); }
+    else { const bars=byVoice[voc].bars.concat([Infinity]); const vb=new Set(); byVoice[voc].notes.forEach(n=>{ let b=0; while(bars[b+1]<=n.t) b++; vb.add(b); });
+      const inBar=(t)=>{ let b=0; while(bars[b+1]<=t) b++; return b; };
+      notes = byVoice[voc].notes.slice(); if(ins) byVoice[ins].notes.forEach(n=>{ if(!vb.has(inBar(n.t))) notes.push(n); }); } }
+  else { const id=ids.find(i=>pick(i).includes(voiceWant.toLowerCase()))||ids[0]; notes=byVoice[id].notes.slice(); }
+  notes.sort((a,b)=>a.t-b.t);
+  const chordsOn = $('chords').value==='1'; let chords=[]; if(chordsOn){ ids.forEach(id=>chords.push(...byVoice[id].chords)); chords.sort((a,b)=>a.t-b.t); chords=chords.filter((c,i)=>i===0||c.name!==chords[i-1].name||c.t-chords[i-1].t>0.01); }
+  // ---- 7KEYS: scale-degree mapping. Lane = diatonic step inside a 7-step window chosen to hold the most notes; leftovers fold by ±7 steps. ----
+  const ks = tune.getKeySignature ? tune.getKeySignature() : {root:'C',acc:'',mode:''}; const letters=['C','D','E','F','G','A','B']; const semis=[0,2,4,5,7,9,11];
+  const tonicStep = letters.indexOf((ks.root||'C')[0].toUpperCase()); const tonicAcc = (ks.acc==='#'?1:ks.acc==='b'?-1:0);
+  const minor = /m(in)?$/i.test(ks.mode||'') && !/maj/i.test(ks.mode||'');
+  // diatonic step of each note relative to the tonic (abcjs pitch: 0 = C4 line, 7 = c5 …); real MIDI kept for the piano ping
+  notes.forEach(n=>{ n.step = n.pitch - tonicStep; });
+  let bestLo=0, bestC=-1; const steps=notes.map(n=>n.step); const lo0=Math.min(...steps), hi0=Math.max(...steps);
+  for(let lo=lo0-6; lo<=hi0; lo++){ const c=steps.filter(x=>x>=lo&&x<=lo+6).length; if(c>bestC){ bestC=c; bestLo=lo; } }
+  const fold=x=>{ while(x<bestLo) x+=7; while(x>bestLo+6) x-=7; return x; };
+  // chord layer (Easy: root at the chord change when the lane is free)
+  const chordRoot = name=>{ const m=String(name||'').match(/^([A-G])([#♯b♭]?)/); if(!m) return null; return { step: letters.indexOf(m[1]) - tonicStep, acc: m[2]==='#'||m[2]==='♯' ? 1 : (m[2]==='b'||m[2]==='♭') ? -1 : 0 }; };
+  const degMidi = (stepRel, octShift)=>{ // real pitch of a scale degree: tonic (near G4) + scale interval
+    const scale = minor ? [0,2,3,5,7,8,10] : [0,2,4,5,7,9,11]; const d=((stepRel%7)+7)%7, o=Math.floor(stepRel/7);
+    const tonicMidi = 60 + semis[tonicStep] + tonicAcc + (tonicStep>=4?0:12);  // keep the tonic between E4 and B4-ish
+    return tonicMidi + scale[d] + 12*o + (octShift||0); };
+  const out=[]; const lastOnLane=new Array(7).fill(-9);
+  const push=(t,d,lane,m)=>{ if(t-lastOnLane[lane]<minGap) return false; lastOnLane[lane]=t; out.push({ t:+t.toFixed(3), d: d>=holdMin ? +(d-0.08).toFixed(3) : 0, k:lane, p:m }); return true; };
+  notes.forEach(n=>{ const w=fold(n.step); push(n.t+off, n.d, w-bestLo, n.m); });
+  if(chords.length){ chords.forEach(c=>{ const r=chordRoot(c.name); if(!r) return; const w=fold(r.step); const lane=w-bestLo; const t=c.t+off;
+    const busy = out.some(o=>o.k===lane && Math.abs(o.t-t)<0.3); if(!busy) push(t, 0, lane, degMidi(w-7, 0)); }); }
+  out.sort((a,b)=>a.t-b.t);
+  const labels=[]; for(let i=0;i<7;i++){ const st=bestLo+i; const d=((st%7)+7)%7; const L=letters[(tonicStep+d)%7]; const a=keyAcc[L]||0; labels.push(L+(a===1?'#':a===-1?'b':'')); }
+  RESULT={ offset:0, bpm:Q, key:(ks.root||'C')+(ks.acc||'')+(ks.mode||''), windowStart:bestLo, labels, wholeSec:+wholeSec.toFixed(4), voices:names, notes:out };
+  $('out').textContent=JSON.stringify(RESULT,null,1).slice(0,6000); $('msg').innerHTML='<span class="ok">'+out.length+' nota ('+(out.length/(out[out.length-1]?out[out.length-1].t:1)).toFixed(2)+'/sn) · bpm '+Q+' · ton '+RESULT.key+' · tuşlar '+labels.join(' ')+' · süre '+(out.length?out[out.length-1].t.toFixed(1):0)+' sn</span>';
+}
+$('run').onclick=()=>{ try{ build(); }catch(e){ $('msg').innerHTML='<span class="err">'+e.message+'</span>'; } };
+$('save').onclick=async()=>{ try{ if(!RESULT) build(); const ep=$('ep').value.trim(); const b64=btoa(unescape(encodeURIComponent(JSON.stringify(RESULT,null,1))));
+  const r=await fetch('/api/author/file-import',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({path:'worlds/pride-and-prejudice/episodes/'+ep+'/air/notes.json', b64})}).then(r=>r.json());
+  $('msg').innerHTML=r.ok?'<span class="ok">kaydedildi: '+r.path+'</span>':'<span class="err">'+JSON.stringify(r)+'</span>'; }catch(e){ $('msg').innerHTML='<span class="err">'+e.message+'</span>'; } };
+$('dl').onclick=()=>{ if(!RESULT) build(); const a=document.createElement('a'); a.href='data:application/json,'+encodeURIComponent(JSON.stringify(RESULT,null,1)); a.download='notes.json'; a.click(); };
+</script>
