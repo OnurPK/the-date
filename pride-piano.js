@@ -93,15 +93,21 @@
         while(next<notes.length && notes[next].t < now-GOOD && notes[next].state!==1){ const n=notes[next]; if(n.state===0){ n.state=3; miss++; combo=0; duck(); } if(n.state!==1) next++; else break; }
         g.clearRect(0,0,W,H);
         // lanes (dark translucent strips over the video, from laneTop down to the keys)
-        for(let i=0;i<7;i++){ const a = LANES[i].b ? .28 : .13; const lg=g.createLinearGradient(0,laneTop,0,laneTop+120); lg.addColorStop(0,'rgba(0,0,0,0)'); lg.addColorStop(1,'rgba(0,0,0,'+a+')'); g.fillStyle=lg; g.fillRect(laneX[i], laneTop, laneW[i], 120); g.fillStyle='rgba(0,0,0,'+a+')'; g.fillRect(laneX[i], laneTop+120, laneW[i], keyTop-laneTop-120); }
-        // notes
-        const pxPerSec = (hitY-laneTop)/LEAD;
-        for(let i=Math.max(0,next-4);i<notes.length;i++){ const n=notes[i]; const dt=n.t-now; if(dt>LEAD+0.3) break; if(n.state===2 || (n.state===3 && dt<-0.3)) continue;
-          const yEnd = hitY - dt*pxPerSec; const len = Math.max(14, n.d*pxPerSec); const yTop = yEnd - len; const x = laneX[n.k]+ (LANES[n.k].b?3:6), w = laneW[n.k]-(LANES[n.k].b?6:12);
+        for(let i=0;i<7;i++){ const a = LANES[i].b ? .28 : .13; const lg=g.createLinearGradient(0,laneTop-70,0,laneTop+90); lg.addColorStop(0,'rgba(0,0,0,0)'); lg.addColorStop(1,'rgba(0,0,0,'+a+')'); g.fillStyle=lg; g.fillRect(laneX[i], laneTop-70, laneW[i], 160); g.fillStyle='rgba(0,0,0,'+a+')'; g.fillRect(laneX[i], laneTop+90, laneW[i], keyTop-laneTop-90); }
+        // notes — drawn unclamped inside a clip from the lane top to the keys, then the top 70 px is faded out
+        // (destination-out gradient) so bars glide into view instead of appearing clamped at the edge
+        const pxPerSec = (hitY-laneTop)/LEAD; const TAP = 34;
+        g.save(); g.beginPath(); g.rect(0, laneTop-70, W, keyTop-laneTop+70); g.clip();
+        for(let i=Math.max(0,next-4);i<notes.length;i++){ const n=notes[i]; const dt=n.t-now; if(dt>LEAD+1.2) break; if(n.state===2 || (n.state===3 && dt<-0.3)) continue;
+          const yEnd = hitY - dt*pxPerSec; const len = Math.max(TAP, n.d*pxPerSec); const yTop = yEnd - len; if(yTop > keyTop) continue;
+          const x = laneX[n.k]+ (LANES[n.k].b?3:5), w = laneW[n.k]-(LANES[n.k].b?6:10);
           const held = n.state===1; const col = n.state===3 ? 'rgba(120,100,80,.55)' : held ? '#fff1c2' : '#f2c75c';
-          g.fillStyle = col; const y0 = held ? Math.min(hitY-4, yTop) : yTop, y1 = held ? hitY : yEnd; rr(x, Math.max(laneTop-20,y0), w, Math.max(10, y1-Math.max(laneTop-20,y0)), Math.min(8,w/2)); g.fill();
-          if(n.state!==3){ g.fillStyle='rgba(255,255,255,.35)'; rr(x+2, Math.max(laneTop-20,y0)+2, w-4, 4, 2); g.fill(); }
+          const y0 = held ? Math.min(hitY-6, yTop) : yTop, y1 = held ? hitY : yEnd;
+          g.fillStyle = col; rr(x, y0, w, Math.max(TAP*0.6, y1-y0), Math.min(9,w/2)); g.fill();
+          if(n.state!==3){ g.fillStyle='rgba(255,255,255,.38)'; rr(x+3, y0+3, w-6, 5, 2.5); g.fill(); }
           if(held){ g.drawImage(glowW, x+w/2-70, hitY-70, 140, 140); } }
+        g.globalCompositeOperation='destination-out'; const fo=g.createLinearGradient(0,laneTop-70,0,laneTop+40); fo.addColorStop(0,'rgba(0,0,0,1)'); fo.addColorStop(1,'rgba(0,0,0,0)'); g.fillStyle=fo; g.fillRect(0,laneTop-70,W,110); g.globalCompositeOperation='source-over';
+        g.restore();
         // hit line
         const hl=g.createLinearGradient(0,hitY-2,0,hitY+2); g.fillStyle='rgba(240,212,124,.9)'; g.fillRect(0,hitY-1,W,2);
         g.fillStyle='rgba(240,212,124,.18)'; g.fillRect(0,hitY-10,W,20);
