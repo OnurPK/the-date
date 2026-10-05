@@ -51,8 +51,8 @@
       let W=0, H=0, dpr=1, keyTop=0, keyH=0, laneTop=0, hitY=0, whiteW=0, blackW=0, blackH=0;
       const laneX = new Array(7), laneW = new Array(7);
       function layout(){ dpr = Math.min(2, window.devicePixelRatio||1); W = ov.clientWidth; H = ov.clientHeight; cv.width = Math.round(W*dpr); cv.height = Math.round(H*dpr); cv.style.width = W+'px'; cv.style.height = H+'px'; g.setTransform(dpr,0,0,dpr,0,0);
-        keyH = Math.round(H*0.24); keyTop = H - keyH; hitY = keyTop - 6; laneTop = Math.round(H*0.36);
-        whiteW = W/NW; blackW = whiteW*0.64; blackH = keyH*0.62;
+        keyH = Math.round(H*0.30); keyTop = H - keyH; hitY = keyTop - 6; laneTop = Math.round(H*0.36);
+        whiteW = W/NW; blackW = whiteW*0.64; blackH = keyH*0.54;
         LANES.forEach((l,i)=>{ if(!l.b){ laneX[i] = l.w*whiteW; laneW[i] = whiteW; } else { laneX[i] = (l.w+1)*whiteW - blackW/2; laneW[i] = blackW; } }); }
       layout(); window.addEventListener('resize', layout);
 
@@ -85,6 +85,9 @@
       const pd = e => { const r=cv.getBoundingClientRect(); const lane=laneAt(e.clientX-r.left, e.clientY-r.top); if(lane<0) return; e.preventDefault(); try{ cv.setPointerCapture(e.pointerId); }catch(_){} pressedBy[e.pointerId]=lane; down(lane); };
       const pu = e => { const lane=pressedBy[e.pointerId]; if(lane==null) return; delete pressedBy[e.pointerId]; up(lane); };
       cv.addEventListener('pointerdown', pd); cv.addEventListener('pointerup', pu); cv.addEventListener('pointercancel', pu); cv.addEventListener('lostpointercapture', pu);
+      const swallow = e => { e.preventDefault(); };   // iOS long-press magnifier / callout / selection
+      cv.addEventListener('touchstart', swallow, { passive:false }); cv.addEventListener('touchmove', swallow, { passive:false }); cv.addEventListener('contextmenu', swallow); cv.addEventListener('selectstart', swallow);
+      cv.style.webkitUserSelect='none'; cv.style.userSelect='none'; cv.style.webkitTouchCallout='none'; ov.style.webkitUserSelect='none'; ov.style.webkitTouchCallout='none';
       const kd = e => { if(e.repeat) return; const l=KEY_MAP[e.key.toLowerCase()]; if(l==null) return; e.preventDefault(); down(l); };
       const ku = e => { const l=KEY_MAP[e.key.toLowerCase()]; if(l==null) return; up(l); };
       window.addEventListener('keydown', kd); window.addEventListener('keyup', ku);

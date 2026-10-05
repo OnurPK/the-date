@@ -37332,7 +37332,8 @@ body.pride-sketch .scene-bubble, body.pride-sketch #choicePanel, body.pride-sket
   body.dev-noveil #prideNightVeil{ display:none !important; }
   body.dev-noanim #mapScreen *, body.dev-noanim #prideMeters *, body.dev-noanim #pridePcHud *{ animation:none !important; transition:none !important; }
   body.dev-nowalk #mapScreen .pride-ep3-av{ display:none !important; }
-  #prideAir canvas.piano{ position:absolute; inset:0; z-index:6; touch-action:none; }
+  #prideAir canvas.piano{ position:absolute; inset:0; z-index:6; touch-action:none; -webkit-user-select:none; user-select:none; -webkit-touch-callout:none; }
+  #prideAir.game{ -webkit-user-select:none; user-select:none; -webkit-touch-callout:none; }
   #prideAir.game .kar{ bottom:auto; top:15%; height:110px; left:0; right:0; }
   #prideAir.game .kar .ln{ text-align:center; font-size:27px; }
   #prideAir.game .share{ display:none; }
