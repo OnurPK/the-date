@@ -30332,15 +30332,16 @@ console.log('%c[caller] Episode 1 ready — run startCaller()', 'color:#e7b24c')
     const src=url||(BASE+'characters/'+c.portrait+'/you/pride.png?v='+PC_RUN);   // PC_RUN: a fresh run never shows a cached (edited) sprite
     // default box until measured = the reveal idle geometry
     let box={ left:null, top:null, w:null, h:S*0.78/0.86 }; box.w=box.h*2/3; box.left=(SW-box.w)/2; box.top=S-(0.06*S-0.03*box.h)-box.h;
-    const place=()=>{ const op=img.style.opacity, tr=img.style.transition, cp=img.style.clipPath, fl=img.style.filter; img.style.cssText='position:absolute;left:'+box.left.toFixed(2)+'px;top:'+box.top.toFixed(2)+'px;width:'+box.w.toFixed(2)+'px;height:'+box.h.toFixed(2)+'px;background:url("'+src+'") 0 0/100% 100% no-repeat;pointer-events:none;'; if(op!==''){ img.style.opacity=op; } if(tr!==''){ img.style.transition=tr; } if(cp!==''){ img.style.clipPath=cp; } if(fl!==''){ img.style.filter=fl; } };
-    place(); fig.style.backgroundImage='none';
+    const place=()=>{ const op=img.style.opacity, tr=img.style.transition, cp=img.style.clipPath, fl=img.style.filter, vs=img.style.visibility; img.style.cssText='position:absolute;left:'+box.left.toFixed(2)+'px;top:'+box.top.toFixed(2)+'px;width:'+box.w.toFixed(2)+'px;height:'+box.h.toFixed(2)+'px;background:url("'+src+'") 0 0/100% 100% no-repeat;pointer-events:none;'; if(op!==''){ img.style.opacity=op; } if(tr!==''){ img.style.transition=tr; } if(cp!==''){ img.style.clipPath=cp; } if(fl!==''){ img.style.filter=fl; } if(vs!==''){ img.style.visibility=vs; } };
+    const ready=(_youCB[c.portrait]!==undefined) && !!_youBB[src];   // both measurements cached → fit synchronously, no intermediate frame
+    if(!ready){ img.style.visibility='hidden'; } place(); fig.style.backgroundImage='none';
     // Pixel fit: the entrance clip is mounted full-stage (height 100 %, centred) → the keyed clip's LAST-frame figure box
     // (you/entrance2.json, measured offline) maps to stage px with k=S/1920. The sprite's own alpha bbox is scaled (by height)
     // and shifted so that it lands exactly on that box, whatever padding the face-swap PNG has. Clip → sprite = no jump.
     youClipBox(c.portrait, cb=>{ youBBox(src, bb=>{ if(!bb||fig.querySelector('.hfig-you')!==img) return;
       let t0,t1,cx; if(cb){ const k=S/cb.h, ox=(SW-cb.w*k)/2; t0=cb.last.y0*k; t1=cb.last.y1*k; cx=ox+(cb.last.x0+cb.last.x1)/2*k; }
       else { t0=0.110*S; t1=0.810*S; cx=SW/2; }
-      const sc=(t1-t0)/(bb.y1-bb.y0); box.h=bb.h*sc; box.w=bb.w*sc; box.top=t0-bb.y0*sc; box.left=cx-(bb.x0+bb.x1)/2*sc; place(); }); }); }
+      const sc=(t1-t0)/(bb.y1-bb.y0); box.h=bb.h*sc; box.w=bb.w*sc; box.top=t0-bb.y0*sc; box.left=cx-(bb.x0+bb.x1)/2*sc; place(); img.style.visibility=''; }); }); }
   const _youCB={}; function youClipBox(pc, cb){ if(_youCB[pc]!==undefined){ cb(_youCB[pc]); return; } fetch(BASE+'characters/'+pc+'/you/entrance2.json',{cache:'no-store'}).then(r=>r.ok?r.json():null).then(j=>{ _youCB[pc]=(j&&j.last)?j:null; cb(_youCB[pc]); }).catch(()=>{ _youCB[pc]=null; cb(null); }); }
   const _youBB={}; function youBBox(src, cb){ if(_youBB[src]){ cb(_youBB[src]); return; } const im=new Image(); im.crossOrigin='anonymous'; im.onload=()=>{ try{ const w=im.naturalWidth,h=im.naturalHeight; const cv=document.createElement('canvas'); cv.width=w; cv.height=h; const cx=cv.getContext('2d',{willReadFrequently:true}); cx.drawImage(im,0,0); const d=cx.getImageData(0,0,w,h).data; let y0=-1,y1=-1,x0=w,x1=-1; for(let y=0;y<h;y++){ for(let x=0;x<w;x++){ if(d[(y*w+x)*4+3]>40){ if(y0<0) y0=y; y1=y+1; if(x<x0) x0=x; if(x+1>x1) x1=x+1; } } } if(y0<0) return cb(null); _youBB[src]={w,h,x0,y0,x1,y1}; cb(_youBB[src]); }catch(e){ cb(null); } }; im.onerror=()=>cb(null); im.src=src; }
   function revealDone(){ const root=$('pcsel'), rv=root.querySelector('.pcs-rv'), c=curChar; clearInterval(rvRot); root.classList.add('rv-text');
@@ -30443,7 +30444,7 @@ console.log('%c[caller] Episode 1 ready — run startCaller()', 'color:#e7b24c')
       // removable things she wears: only in the expanded list, at the very bottom, with an (x) icon
       if(box&&box.classList.contains('open')&&pcWearing.length) html+='<i class="rv-sep"></i>'+pcWearing.map(w=>'<button type="button" class="rv-chip rm" data-rm="'+esc(w.label||w.kind)+'">'+ICON_X+'<span>Remove '+esc(w.label||w.kind)+'</span></button>').join('');
       row.innerHTML=html; row.scrollTop=0;
-      row.querySelectorAll('.rv-chip').forEach(b=>b.addEventListener('click',()=>{ const inp=rv.querySelector('.rv-in'); const rm=b.dataset.rm; inp.value=rm?('Remove the '+rm):b.querySelector('span').textContent; box.classList.toggle('rm', !!rm); inp.focus(); })); };
+      row.querySelectorAll('.rv-chip').forEach(b=>b.addEventListener('click',()=>{ const inp=rv.querySelector('.rv-in'); const rm=b.dataset.rm; inp.value=rm?('Remove the '+rm):b.querySelector('span').textContent; box.classList.toggle('rm', !!rm); /* no focus: the keyboard stays closed */ })); };
     if(pcPool.length || !pcPoolReq){ if(!pcPoolReq) pcPrefetchSuggestions(c); paint(); }
     if(pcPoolReq) pcPoolReq.then(()=>{ if(rv.isConnected) paint(); }); }
   // ---- "Changing her" fx (replaces the curtain): the sprite stays, darkened, gold dust inside, two lights climb the rim;
@@ -30476,7 +30477,7 @@ console.log('%c[caller] Episode 1 ready — run startCaller()', 'color:#e7b24c')
       const req=fetch('/api/author/pc-wear',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({ pc:c.portrait, b64, name:file.name||'' })}).then(r=>r.json());
       pcRegenerate('wear', { req, label:'Trying it on' }); }; im.onerror=()=>{}; im.src=rd.result; }; rd.readAsDataURL(file); }
   function pcRegenerate(text, opts){ opts=opts||{}; if(pcEditBusy) return; const root=$('pcsel'), rv=root.querySelector('.pcs-rv'), c=curChar; if(!c) return; pcEditBusy=true;
-    const box=rv.querySelector('.rv-edit'); box.classList.add('busy'); const cont=root.querySelector('.rv-continue'); const st=box.querySelector('.rv-status');
+    const box=rv.querySelector('.rv-edit'); box.classList.add('busy'); if(box.classList.contains('open')){ box.classList.remove('open'); try{ pcChips(rv); }catch(e){} } const cont=root.querySelector('.rv-continue'); const st=box.querySelector('.rv-status');
     // status lives as small text in the control row — never over her. (the big title stays hidden; any marketing line is dropped)
     { const kr=root.querySelector('.rv-kar'); if(kr) kr.remove(); rvKarT.forEach(clearTimeout); rvKarT=[]; }
     clearTimeout(rvQuietT); if(!rv.classList.contains('rv-gone')){ rv.classList.add('rv-quiet','rv-gone'); } clearTimeout(rvStatusT); if(st){ st.textContent = opts.label || (text ? ('Changing her: '+text.charAt(0).toLowerCase()+text.slice(1)) : 'Undoing the last change'); st.classList.add('on','busy'); } if(cont) cont.classList.remove('on');
@@ -30491,7 +30492,7 @@ console.log('%c[caller] Episode 1 ready — run startCaller()', 'color:#e7b24c')
         }, 350); };
       if(result.refused){ done(false, result.line || 'I cannot wear that, forgive me.'); return; }   // Arabella declines (not clothing / not decent)
       if(result.error || (!result.url && text)){ done(false, result.error ? 'Could not change that ('+String(result.error).slice(0,60)+')' : null); return; }
-      if(!result.url){ done(true); return; }
+      if(!result.url){ try{ pcFx.stop(); }catch(e){} done(true); return; }   // nothing changed (e.g. nothing to undo): lights off, she brightens back
       // preload the new sprite, then swap behind the closed curtain: static sprite replaces whatever stands there (entrance clip or old sprite)
       const im=new Image(); const swap=()=>{ try{ const fig=$('pcsFig'); fig.querySelectorAll('video.hfig-entrance').forEach(v=>{ try{ v.pause(); v.remove(); }catch(e){} });
           // keep a static, dark copy of the old sprite underneath; the real .hfig-you takes the new image (hidden by a zero circle until the burst)
@@ -30521,7 +30522,7 @@ console.log('%c[caller] Episode 1 ready — run startCaller()', 'color:#e7b24c')
       setTimeout(()=>{ try{ v.remove(); }catch(e){} if(you){ you.style.transition=''; } }, 420); });
     v.addEventListener('error',()=>{ v.remove(); showYou(); if(onReady) onReady(null); });
     setTimeout(()=>{ if(!primed && v.isConnected && !v.error){ prime(); } }, 2500);   // safety: never stall behind the curtain
-    v.src=clipSrc('characters/'+c.portrait+'/you/entrance2'+CLIP_EXT); fig.appendChild(v); fig.style.backgroundImage='none'; try{ pcPrefetchSuggestions(c); }catch(e){}   // the suggestion pool is fetched while she walks
+    v.src=clipSrc('characters/'+c.portrait+'/you/entrance2'+CLIP_EXT); fig.appendChild(v); fig.style.backgroundImage='none'; try{ pcPrefetchSuggestions(c); youClipBox(c.portrait, ()=>{}); youBBox(BASE+'characters/'+c.portrait+'/you/pride.png?v='+PC_RUN, ()=>{}); }catch(e){}   // while she walks: the suggestion pool + the measurements the cut needs (so the sprite lands fitted on the first frame)
     return v; }   // entrance2 = green-keyed Kling clip: starts small/far in the sprite pose → walks toward camera, twirl + flourish → walks away and returns to the same mark: head 11 % / feet 81 % (showYou measures the sprite to the same box)
   window.pcRevealDone=revealDone; window.pcFxDev=pcFx; window.pcShowYouDev=showYou;   // (dev) jump to the post-curtain state: title + edit panel; fx handles for tests
   window.pcRevealSequence=function(done){
