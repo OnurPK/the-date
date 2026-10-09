@@ -30368,7 +30368,7 @@ console.log('%c[caller] Episode 1 ready — run startCaller()', 'color:#e7b24c')
   let pcEditBusy=false, pcEditRecent=[], PC_RUN=Date.now();
   // Suggestion pool: ONE AI call per run, fired while the entrance clip plays (no wait at the panel); the row shows 10 and
   // the refresh button pages through the pool locally. Used suggestions drop out of the pool.
-  let pcPool=[], pcPoolAt=0, pcPoolReq=null, pcPoolFor='';
+  let pcPool=[], pcPoolAt=0, pcPoolReq=null, pcPoolFor='', pcPoolErr='';
   const ICON_REFRESH='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 12a8 8 0 1 1-2.3-5.6"/><path d="M20 4v5h-5"/></svg>';
   const ICON_UP='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 15l6-6 6 6"/></svg>';
   const ICON_OK='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12l5 5L20 7"/></svg>';
@@ -30393,7 +30393,7 @@ console.log('%c[caller] Episode 1 ready — run startCaller()', 'color:#e7b24c')
   let pcColor='none';
   function pcPrefetchSuggestions(c){ if(!c) return; if(pcPoolReq && pcPoolFor===c.portrait) return; pcPoolFor=c.portrait; pcPool=[]; pcPoolAt=0;
     pcPoolReq=fetch('/api/author/pc-suggest',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({ pc:c.portrait, count:40 })})
-      .then(r=>r.json()).then(j=>{ const seen=new Set(); const list=((j&&j.suggestions)||[]).map(x=>(typeof x==='string')?{text:x.trim(),cat:catOf(x)}:{text:String(x.text||'').trim(),cat:CAT_ICON[x.cat]?x.cat:catOf(String(x.text||''))}).filter(x=>{ const k=x.text.toLowerCase(); if(!x.text||seen.has(k)) return false; seen.add(k); return true; }); pcPool=pcShuffle(list); pcPoolAt=0; return list; }).catch(()=>{ pcPool=[]; return []; }); }
+      .then(r=>r.json()).then(j=>{ pcPoolErr=(j&&j.error)?String(j.error):''; const seen=new Set(); const list=((j&&j.suggestions)||[]).map(x=>(typeof x==='string')?{text:x.trim(),cat:catOf(x)}:{text:String(x.text||'').trim(),cat:CAT_ICON[x.cat]?x.cat:catOf(String(x.text||''))}).filter(x=>{ const k=x.text.toLowerCase(); if(!x.text||seen.has(k)) return false; seen.add(k); return true; }); pcPool=pcShuffle(list); pcPoolAt=0; if(!list.length&&!pcPoolErr) pcPoolErr='no suggestions returned'; return list; }).catch(e=>{ pcPoolErr=String(e&&e.message||e); pcPool=[]; return []; }); }
   function pcShuffle(a){ for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } return a; }
   const esc=t=>t.replace(/[&<>]/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[ch]));
   function pcInventoryRefresh(rv){ const c=curChar; if(!c) return; fetch('/api/author/pc-inventory',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({ pc:c.portrait })}).then(r=>r.json()).then(j=>{ pcWearing=(j&&j.wearing)||[]; if(rv&&rv.isConnected) pcChips(rv); }).catch(()=>{}); }
@@ -30410,9 +30410,12 @@ console.log('%c[caller] Episode 1 ready — run startCaller()', 'color:#e7b24c')
     // iOS keyboard: the webview shrinks → lock the stage to its pre-keyboard height so she stays put, and lift the row above the keyboard
     // The panel stays anchored to the stage bottom; the part hidden by the keyboard becomes bottom padding, so the gradient
     // simply continues under the keyboard (no hard edge) and only the padding number changes while the keyboard animates.
-    const root=$('pcsel'); let kbS=0, kbRaf=0; const kbPlace=()=>{ kbRaf=0; if(!root.classList.contains('kb')) return; const vv=window.visualViewport; const vis=vv?Math.round(vv.height+vv.offsetTop):window.innerHeight; const hidden=Math.max(0,kbS-vis); rv.style.paddingBottom=(hidden+12)+'px'; if(window.scrollY||window.pageYOffset) try{ window.scrollTo(0,0); }catch(e){} };
+    // iOS scrolls every overflow container (even overflow:hidden ones) to reveal the focused field → force all of them back to 0
+    const root=$('pcsel'); let kbS=0, kbRaf=0; const unscroll=()=>{ try{ let e=inp.parentElement; while(e){ if(e.scrollTop) e.scrollTop=0; if(e.scrollLeft) e.scrollLeft=0; e=e.parentElement; } if(document.scrollingElement&&document.scrollingElement.scrollTop) document.scrollingElement.scrollTop=0; if(window.scrollY) window.scrollTo(0,0); }catch(e){} };
+    const kbPlace=()=>{ kbRaf=0; if(!root.classList.contains('kb')) return; unscroll(); const vv=window.visualViewport; const vis=vv?Math.round(vv.height+vv.offsetTop):window.innerHeight; const hidden=Math.max(0,kbS-vis); rv.style.paddingBottom=(hidden+12)+'px'; };
     const kbQueue=()=>{ if(!kbRaf) kbRaf=requestAnimationFrame(kbPlace); };
-    inp.addEventListener('focus', ()=>{ kbS=root.clientHeight||window.innerHeight; root.style.height=kbS+'px'; root.classList.add('kb'); kbQueue(); });
+    inp.addEventListener('focus', ()=>{ kbS=root.clientHeight||window.innerHeight; root.style.height=kbS+'px'; root.classList.add('kb'); kbQueue(); [60,200,400,700].forEach(t=>setTimeout(()=>{ unscroll(); kbQueue(); },t)); });
+    ['scroll'].forEach(ev=>{ root.addEventListener(ev, ()=>{ if(root.classList.contains('kb')) unscroll(); }, {passive:true}); document.addEventListener(ev, ()=>{ if(root.classList.contains('kb')) unscroll(); }, {passive:true}); });
     inp.addEventListener('blur', ()=>{ setTimeout(()=>{ if(document.activeElement===inp) return; root.classList.remove('kb'); root.style.height=''; rv.style.paddingBottom=''; }, 260); });   // (delayed so a tap on ✓ lands before the row moves back)
     if(window.visualViewport) window.visualViewport.addEventListener('resize', kbQueue); window.addEventListener('resize', kbQueue);
     box.querySelector('.rv-go').addEventListener('click', go); inp.addEventListener('keydown', e=>{ if(e.key==='Enter'){ e.preventDefault(); go(); } });
@@ -30433,7 +30436,7 @@ console.log('%c[caller] Episode 1 ready — run startCaller()', 'color:#e7b24c')
     document.addEventListener('click', e=>{ if(!pal.contains(e.target) && e.target!==cbtn) pal.classList.remove('on'); });
     pcChips(rv); pcInventoryRefresh(rv); }
   function pcChips(rv){ const c=curChar, row=rv.querySelector('.rv-tags'), box=rv.querySelector('.rv-edit'); if(!c||!row) return;
-    const paint=()=>{ if(!pcPool.length){ row.innerHTML='<span class="rv-chip ghost">Tell her what to change</span>'; return; }
+    const paint=()=>{ if(!pcPool.length){ row.innerHTML='<span class="rv-chip ghost">'+(pcPoolReq?(pcPoolErr?('No ideas: '+esc(pcPoolErr.slice(0,70))):'Looking at her…'):'Tell her what to change')+'</span>'; return; }
       if(pcPoolAt>=pcPool.length){ pcPoolAt=0; pcShuffle(pcPool); }
       const n=box&&box.classList.contains('open')?12:8;   // open: ~5 rows of ideas + the remove row, no scrolling let list=pcPool.slice(pcPoolAt, pcPoolAt+n); if(list.length<n) list=list.concat(pcPool.slice(0, n-list.length));
       let html=list.map(x=>'<button type="button" class="rv-chip" data-cat="'+x.cat+'">'+(CAT_ICON[x.cat]||CAT_ICON.accessory)+'<span>'+esc(x.text)+'</span></button>').join('');
