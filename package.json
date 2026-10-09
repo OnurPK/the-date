@@ -7,7 +7,7 @@
     "node": ">=18"
   },
   "scripts": {
-    "start": "serve -l tcp://0.0.0.0:${PORT:-3000}",
+    "start": "node dev-server.js",
     "ios:add": "npx cap add ios",
     "ios:open": "npx cap open ios",
     "ios:sync": "npx cap sync ios"

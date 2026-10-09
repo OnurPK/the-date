@@ -197,6 +197,10 @@ function handleListAppearances(req, res, parsed) {
 // Episode Author tool — OpenAI proxy (key from OPENAI_API_KEY env)
 // ───────────────────────────────────────────────────────────────
 const OPENAI_KEY   = process.env.OPENAI_API_KEY || '';
+const AUTHOR_TOKEN = process.env.AUTHOR_TOKEN || '';   // set on Railway: locks every /api/* POST except the player-facing pc-* endpoints
+// per-IP sliding window for the open pc-* endpoints (image edits cost money): RATE_PER_10MIN requests / 10 min
+const RATE_PER_10MIN = parseInt(process.env.RATE_PER_10MIN || '40', 10); const _rate = new Map();
+function rateOk(req) { const ip = String(req.headers['x-forwarded-for'] || req.socket.remoteAddress || '').split(',')[0].trim(); const now = Date.now(); const arr = (_rate.get(ip) || []).filter(t => now - t < 600e3); if (arr.length >= RATE_PER_10MIN) { _rate.set(ip, arr); return false; } arr.push(now); _rate.set(ip, arr); if (_rate.size > 5000) { for (const [k, v] of _rate) { if (!v.length || now - v[v.length - 1] > 600e3) _rate.delete(k); } } return true; }
 const CHAT_MODEL   = process.env.OPENAI_CHAT_MODEL || 'gpt-4o';
 const IMAGE_MODEL  = process.env.OPENAI_IMAGE_MODEL || 'gpt-image-2';
 
@@ -1652,6 +1656,15 @@ const server = http.createServer(async (req, res) => {
     return res.end();
   }
 
+  // ---- production guard (Railway: AUTHOR_TOKEN set) ----
+  // Player-facing AI endpoints (/api/author/pc-*) stay open but rate-limited per IP; every other /api/* POST (writes:
+  // scripts, assets, voices, imports…) needs the token (header x-author-token or ?token=). GETs stay open (the game reads them).
+  // Without AUTHOR_TOKEN (local dev) nothing changes.
+  if (AUTHOR_TOKEN && req.method === 'POST' && parsed.pathname.startsWith('/api/')) {
+    const open = /^\/api\/author\/pc-(suggest|edit|undo|reset|wear|inventory)$/.test(parsed.pathname);
+    if (open) { if (!rateOk(req)) return sendJson(res, 429, { error: 'Too many requests. Please wait a moment.' }); }
+    else { const tok = req.headers['x-author-token'] || (parsed.query && parsed.query.token) || ''; if (tok !== AUTHOR_TOKEN) return sendJson(res, 403, { error: 'author token required' }); }
+  }
   try {
     if (req.method === 'POST' && parsed.pathname === '/api/review/save') return handleReviewSave(req, res);
     if (req.method === 'POST' && parsed.pathname === '/api/save-venue') return handleSaveVenue(req, res);
