@@ -278,6 +278,135 @@ async function handleFileImport(req, res) {
   catch (e) { return sendJson(res, 500, { error: String(e.message || e) }); }
 }
 
+// ---- "Make her you" edit loop: characters/<pc>/you/pride.png is the current look; every edit is kept in you/edits/<stamp>.png ----
+// POST /api/author/pc-edit { pc, prompt }  → gpt-image edit (ref = current pride.png, transparent) → you/edits/<stamp>.png + copied over you/pride.png → { url, history }
+// POST /api/author/pc-undo { pc }           → previous edit (or the base) becomes pride.png again
+// POST /api/author/pc-suggest { pc }        → 6 short, period-appropriate change suggestions from the current image (vision JSON)
+const PC_SIZE = '1024x1536';
+function pcYouDir(pc) { pc = String(pc || '').replace(/[^a-z0-9_-]/gi, ''); if (!pc) return null; const d = path.join(ROOT, 'worlds', 'pride-and-prejudice', 'characters', pc, 'you'); return fs.existsSync(path.join(d, 'pride.png')) ? d : null; }
+function pcHistory(dir) { const h = path.join(dir, 'edits', 'history.json'); try { return JSON.parse(fs.readFileSync(h, 'utf8')); } catch (e) { return { items: [], cursor: -1 }; } }
+function pcSaveHistory(dir, H) { fs.mkdirSync(path.join(dir, 'edits'), { recursive: true }); fs.writeFileSync(path.join(dir, 'edits', 'history.json'), JSON.stringify(H, null, 1)); }
+function pcEnsureBase(dir) { const b = path.join(dir, 'edits', 'base.png'); if (!fs.existsSync(b)) { fs.mkdirSync(path.join(dir, 'edits'), { recursive: true }); fs.copyFileSync(path.join(dir, 'pride.png'), b); } return b; }
+async function handlePcEdit(req, res) {
+  if (!OPENAI_KEY) return sendJson(res, 400, { error: 'Set OPENAI_API_KEY in the dev-server environment' });
+  const b = await readJsonBody(req); const dir = pcYouDir(b.pc); const change = String(b.prompt || '').trim().slice(0, 300);
+  if (!dir) return sendJson(res, 404, { error: 'no you/pride.png for ' + b.pc }); if (!change) return sendJson(res, 400, { error: 'prompt required' });
+  pcEnsureBase(dir);
+  // "remove X": guarded (she keeps her gown, bodice, skirt and shoes) and uses a dedicated removal prompt
+  const rm = /^\s*(?:remove|take\s+off|lose|drop|without|no)\s+(?:her\s+|the\s+|my\s+)?(.+?)\s*\.?\s*$/i.exec(change);
+  if (rm) {
+    const what = rm[1].toLowerCase();
+    if (/\b(gown|dress|frock|bodice|skirt|shirt|blouse|chemise|top|sleeves?|shoes?|slippers?|boots?|stockings?)\b/.test(what))
+      return sendJson(res, 200, { ok: false, refused: 'keep', line: pick(['I shall keep my gown on, thank you.', 'A lady does not go barefoot to a ball.', 'That stays. I insist.']) });
+  }
+  const prompt = rm
+    ? 'Edit this full-body character sprite. Keep the SAME woman (identical face, hair colour, body, pose, proportions and camera), the same painted, matte illustration style and visible brush texture (not photographic, no glossy render), same lighting, and keep the background fully transparent with clean edges. Apply ONLY this change: REMOVE her ' + rm[1] + ' completely. Where it was, show what is naturally underneath (bare skin, her hair, the gown) painted in the same style. Nothing else changes. Do not add text or a background.'
+    : 'Edit this full-body character sprite. Keep the SAME woman (identical face, hair colour, body, pose, proportions and camera), the same painted, matte illustration style and visible brush texture (not photographic, no glossy render), same lighting, and keep the background fully transparent with clean edges — nothing else in the frame. Apply ONLY this change, Regency-era (1811) appropriate: ' + change + '. Do not add text or a background.';
+  try {
+    const j = await openaiImageEdit(prompt, [path.join(dir, 'pride.png')], PC_SIZE, pickImageModel(b.model), { transparent: true });
+    const b64 = j.data && j.data[0] && j.data[0].b64_json; if (!b64) return sendJson(res, 502, { error: 'no image returned' });
+    const stamp = new Date().toISOString().slice(0, 19).replace(/[T:]/g, '-'); const file = path.join(dir, 'edits', stamp + '.png');
+    fs.writeFileSync(file, Buffer.from(b64, 'base64')); fs.copyFileSync(file, path.join(dir, 'pride.png'));
+    const H = pcHistory(dir); H.items = H.items.slice(0, H.cursor + 1).concat([{ file: 'edits/' + stamp + '.png', prompt: change, at: new Date().toISOString() }]); H.cursor = H.items.length - 1; pcSaveHistory(dir, H);
+    return sendJson(res, 200, { ok: true, url: 'worlds/pride-and-prejudice/characters/' + b.pc + '/you/pride.png?v=' + Date.now(), history: H });
+  } catch (e) { return sendJson(res, 502, { error: String(e.message || e) }); }
+}
+// New run of the character select → the sprite goes back to the face-swap base and the edit history is cleared
+async function handlePcReset(req, res) {
+  const b = await readJsonBody(req); const dir = pcYouDir(b.pc); if (!dir) return sendJson(res, 404, { error: 'no you/pride.png' });
+  const base = pcEnsureBase(dir); fs.copyFileSync(base, path.join(dir, 'pride.png')); pcSaveHistory(dir, { items: [], cursor: -1 });
+  return sendJson(res, 200, { ok: true, url: 'worlds/pride-and-prejudice/characters/' + b.pc + '/you/pride.png?v=' + Date.now() });
+}
+// POST /api/author/pc-wear { pc, b64, name } — the player uploads a photo of a garment / accessory; a vision pass decides whether it is
+// wearable (and decent) and what it is; the edit prompt is built per kind; refusals come back as a line in Arabella's voice.
+const WEAR_KINDS = ['full outfit', 'gown', 'jacket', 'shawl', 'hat', 'gloves', 'shoes', 'earrings', 'necklace', 'bracelet', 'ring', 'bag', 'fan', 'hair accessory', 'belt', 'other'];
+async function handlePcWear(req, res) {
+  if (!OPENAI_KEY) return sendJson(res, 400, { error: 'Set OPENAI_API_KEY in the dev-server environment' });
+  const b = await readJsonBody(req); const dir = pcYouDir(b.pc); if (!dir) return sendJson(res, 404, { error: 'no you/pride.png for ' + b.pc });
+  const m = /^data:(image\/(png|jpeg|jpg|webp));base64,(.+)$/.exec(String(b.b64 || '')); if (!m) return sendJson(res, 400, { error: 'image b64 required' });
+  const stamp = new Date().toISOString().slice(0, 19).replace(/[T:]/g, '-'); const wdir = path.join(dir, 'edits', 'wear'); fs.mkdirSync(wdir, { recursive: true });
+  const refFile = path.join(wdir, stamp + '.' + (m[2] === 'jpeg' ? 'jpg' : m[2])); fs.writeFileSync(refFile, Buffer.from(m[3], 'base64'));
+  // 1) vision: what is it, is it wearable, is it decent
+  const sys = 'You check a photo a player uploaded for a Regency-era (1811) visual novel heroine to wear. Answer JSON only: {"wearable":bool,"decent":bool,"kind":one of [' + WEAR_KINDS.map(k => '"' + k + '"').join(',') + '],"item":"short visual description: colours, fabric, cut, notable details (max 40 words)","adapt":"one sentence on how to adapt it to a Regency silhouette while keeping its colour and character","has_gloves":bool (the photo clearly shows gloves as part of the look),"has_footwear":bool (the photo clearly shows shoes/boots),"extras":[list of other items clearly visible as part of the look, each a short phrase with colour, e.g. "small black leather bag","wide-brim straw hat","pearl necklace","gold belt","cream shawl"; empty if none]}. wearable=false for anything that is not clothing, footwear, jewellery or a wearable accessory (cars, furniture, food, scenery, people without a clear garment, screenshots of text). decent=false for revealing or overtly sexual items (bikinis, lingerie, sheer/transparent garments, extreme cleavage or very short hems), costumes meant to shock, or anything with offensive symbols. "full outfit" = a complete dress/suit/look; "gown" = a dress; use the most specific kind.';
+  let v = {};
+  try {
+    const j = await openaiJson('/v1/chat/completions', { model: CHAT_MODEL, response_format: { type: 'json_object' }, max_tokens: 300,
+      messages: [{ role: 'system', content: sys }, { role: 'user', content: [{ type: 'text', text: 'What is this, and may she wear it?' }, { type: 'image_url', image_url: { url: m[1] ? ('data:' + m[1] + ';base64,' + m[3]) : b.b64, detail: 'low' } }] }] });
+    try { v = JSON.parse(j.choices[0].message.content); } catch (e) { v = {}; }
+  } catch (e) { return sendJson(res, 502, { error: 'vision: ' + String(e.message || e) }); }
+  const kind = WEAR_KINDS.includes(String(v.kind || '').toLowerCase()) ? String(v.kind).toLowerCase() : 'other';
+  if (v.wearable === false || kind === 'other' && !v.item) return sendJson(res, 200, { ok: false, refused: 'not_clothing', kind, line: pick(['That is hardly a garment at all.', 'I cannot wear that. It is not clothing, is it?', 'Forgive me, but that is not something one puts on.']) });
+  if (v.decent === false) return sendJson(res, 200, { ok: false, refused: 'indecent', kind, line: pick(['I cannot wear that, forgive me.', 'Not in this county, and not in this century.', 'My mother would faint. No.']) });
+  // 2) build the edit prompt per kind
+  const item = String(v.item || kind).slice(0, 300); const adapt = String(v.adapt || '').slice(0, 200);
+  const KEEP = 'Keep the SAME woman (identical face, hair, body, pose, proportions and camera), the same painted, matte illustration style with visible brush texture (not photographic), same lighting, and keep the background fully transparent with clean edges — nothing else in the frame, no text.';
+  let change;
+  switch (kind) {
+    case 'full outfit': case 'gown': {
+      const gl = v.has_gloves ? 'Her gloves are replaced by the gloves in image 2.' : 'REMOVE her current white gloves completely: her arms and hands are bare (natural skin), no gloves of any kind, unless image 2 shows gloves.';
+      const sh = v.has_footwear ? 'Her shoes are replaced by the footwear in image 2.' : 'Her shoes may stay as they are.';
+      const extras = (Array.isArray(v.extras) ? v.extras : []).map(x => String(x || '').trim()).filter(Boolean).slice(0, 6);
+      const ex = extras.length ? ' She also gets every accessory visible in image 2, exactly as shown: ' + extras.join('; ') + ' (a bag or fan goes in her hand, a hat on her head, jewellery where it belongs).' : '';
+      change = 'Dress her in the ' + (kind === 'gown' ? 'gown' : 'outfit') + ' shown in image 2: ' + item + '. ' + adapt + ' Replace her current gown entirely with it (same colours, fabric and character), fitted to her figure and pose. Nothing of the old outfit remains. ' + gl + ' ' + sh + ex; break; }
+    case 'jacket': case 'shawl': change = 'Put the ' + kind + ' from image 2 over her current gown: ' + item + '. ' + adapt + ' Everything else stays.'; break;
+    case 'hat': case 'hair accessory': change = 'Add the ' + kind + ' from image 2 to her head/hair: ' + item + '. ' + adapt + ' Everything else stays.'; break;
+    case 'gloves': change = 'Replace her gloves with the gloves in image 2: ' + item + '. Everything else stays.'; break;
+    case 'shoes': change = 'Replace her shoes with the footwear in image 2: ' + item + '. ' + adapt + ' Everything else stays.'; break;
+    case 'earrings': case 'necklace': case 'bracelet': case 'ring': change = 'Give her the ' + kind + ' from image 2: ' + item + ' (replace the current ' + kind + ' if she has one). Everything else stays.'; break;
+    case 'bag': case 'fan': change = 'Put the ' + kind + ' from image 2 in her hand: ' + item + '. ' + adapt + ' Everything else stays.'; break;
+    case 'belt': change = 'Add the belt/sash from image 2 at her waist: ' + item + '. Everything else stays.'; break;
+    default: change = 'Have her wear the item from image 2: ' + item + '. ' + adapt + ' Everything else stays.';
+  }
+  const prompt = 'Image 1 is a full-body character sprite. Image 2 is a reference photo of something for her to wear. ' + KEEP + ' Apply ONLY this change, Regency-era (1811) appropriate: ' + change;
+  pcEnsureBase(dir);
+  try {
+    const j = await openaiImageEdit(prompt, [path.join(dir, 'pride.png'), refFile], PC_SIZE, pickImageModel(b.model), { transparent: true });
+    const b64 = j.data && j.data[0] && j.data[0].b64_json; if (!b64) return sendJson(res, 502, { error: 'no image returned' });
+    const file = path.join(dir, 'edits', stamp + '.png'); fs.writeFileSync(file, Buffer.from(b64, 'base64')); fs.copyFileSync(file, path.join(dir, 'pride.png'));
+    const label = 'Wear: ' + (kind === 'other' ? item.slice(0, 60) : kind);
+    const H = pcHistory(dir); H.items = H.items.slice(0, H.cursor + 1).concat([{ file: 'edits/' + stamp + '.png', prompt: label, ref: 'edits/wear/' + path.basename(refFile), kind, at: new Date().toISOString() }]); H.cursor = H.items.length - 1; pcSaveHistory(dir, H);
+    return sendJson(res, 200, { ok: true, url: 'worlds/pride-and-prejudice/characters/' + b.pc + '/you/pride.png?v=' + Date.now(), history: H, kind, item, line: pick(['There. How do I look?', 'Very well. I shall wear it.', 'It suits me, I think.']) });
+  } catch (e) { return sendJson(res, 502, { error: String(e.message || e) }); }
+}
+function pick(a) { return a[Math.floor(Math.random() * a.length)]; }
+const REMOVABLE = ['bag', 'earrings', 'necklace', 'hat', 'shawl', 'gloves', 'fan', 'bracelet', 'belt', 'hair accessory'];
+async function pcInventory(dir) {
+  const img = 'data:image/png;base64,' + fs.readFileSync(path.join(dir, 'pride.png')).toString('base64');
+  const sys = 'Look at this full-body character sprite and list which of these she is clearly wearing or holding: ' + REMOVABLE.join(', ') + '. Return JSON {"wearing":[{"kind":"<one of the list>","label":"<2-4 words, e.g. white gloves, gold necklace>"}]}. Only items that are plainly visible; never list the gown, shoes or hair itself.';
+  const j = await openaiJson('/v1/chat/completions', { model: CHAT_MODEL, response_format: { type: 'json_object' }, max_tokens: 200,
+    messages: [{ role: 'system', content: sys }, { role: 'user', content: [{ type: 'text', text: 'What is she wearing from the list?' }, { type: 'image_url', image_url: { url: img, detail: 'low' } }] }] });
+  let out = {}; try { out = JSON.parse(j.choices[0].message.content); } catch (e) {}
+  const seen = new Set();
+  return (Array.isArray(out.wearing) ? out.wearing : []).map(x => ({ kind: String((x && x.kind) || '').toLowerCase(), label: String((x && x.label) || '').trim() })).filter(x => REMOVABLE.includes(x.kind) && !seen.has(x.kind) && seen.add(x.kind));
+}
+async function handlePcInventory(req, res) {
+  if (!OPENAI_KEY) return sendJson(res, 400, { error: 'Set OPENAI_API_KEY in the dev-server environment' });
+  const b = await readJsonBody(req); const dir = pcYouDir(b.pc); if (!dir) return sendJson(res, 404, { error: 'no you/pride.png' });
+  try { return sendJson(res, 200, { ok: true, wearing: await pcInventory(dir) }); } catch (e) { return sendJson(res, 502, { error: String(e.message || e) }); }
+}
+async function handlePcUndo(req, res) {
+  const b = await readJsonBody(req); const dir = pcYouDir(b.pc); if (!dir) return sendJson(res, 404, { error: 'no you/pride.png' });
+  const H = pcHistory(dir); if (H.cursor < 0) return sendJson(res, 200, { ok: true, url: null, history: H, note: 'nothing to undo' });
+  H.cursor -= 1; const src = H.cursor >= 0 ? path.join(dir, H.items[H.cursor].file) : pcEnsureBase(dir);
+  fs.copyFileSync(src, path.join(dir, 'pride.png')); pcSaveHistory(dir, H);
+  return sendJson(res, 200, { ok: true, url: 'worlds/pride-and-prejudice/characters/' + b.pc + '/you/pride.png?v=' + Date.now(), history: H });
+}
+async function handlePcSuggest(req, res) {
+  if (!OPENAI_KEY) return sendJson(res, 400, { error: 'Set OPENAI_API_KEY in the dev-server environment' });
+  const b = await readJsonBody(req); const dir = pcYouDir(b.pc); if (!dir) return sendJson(res, 404, { error: 'no you/pride.png' });
+  const img = 'data:image/png;base64,' + fs.readFileSync(path.join(dir, 'pride.png')).toString('base64');
+  const n = Math.max(6, Math.min(48, parseInt(b.count, 10) || 40));   // one call → a pool; the client shows 2 rows (or 8 when expanded) and pages locally
+  const CATS = ['hair', 'hat', 'dress', 'jacket', 'gloves', 'shoes', 'jewellery', 'accessory'];
+  const sys = 'You suggest small wardrobe and styling edits for a Regency (1811) heroine sprite in a visual novel. Look at the image and return ' + n + ' short imperative suggestions the player might like, each 2–5 words, concrete and visible in a full-body view. Each has a category from exactly this list: ' + CATS.join(', ') + ' (hair = style or ornament; hat = bonnet/turban/cap; dress = gown, fabric, neckline, sleeves, sash, hem; jacket = spencer, pelisse, shawl, cloak; gloves; shoes = slippers, boots; jewellery = necklace, earrings, brooch, bracelet; accessory = fan, reticule, parasol, flower, book, ribbon). Spread the suggestions over all categories (at least 4 each); do NOT put a colour in the text (the player picks colours separately), e.g. "Add a bonnet", "Change to puffed sleeves", "Pin up her hair". Nothing anachronistic; no text, no faces. Return JSON {"suggestions":[{"text":"...","cat":"..."}]}.';
+  try {
+    const j = await openaiJson('/v1/chat/completions', { model: CHAT_MODEL, response_format: { type: 'json_object' }, max_tokens: 1600,
+      messages: [{ role: 'system', content: sys }, { role: 'user', content: [{ type: 'text', text: 'Current look:' + (b.recent ? ' (recent edits: ' + String(b.recent).slice(0, 200) + ')' : '') }, { type: 'image_url', image_url: { url: img, detail: 'low' } }] }] });
+    let out = {}; try { out = JSON.parse(j.choices[0].message.content); } catch (e) {}
+    const list = (Array.isArray(out.suggestions) ? out.suggestions : []).map(x => (typeof x === 'string') ? { text: x.trim(), cat: 'accessory' } : { text: String(x.text || '').trim(), cat: CATS.includes(String(x.cat || '').toLowerCase()) ? String(x.cat).toLowerCase() : 'accessory' }).filter(x => x.text).slice(0, n);
+    return sendJson(res, 200, { ok: true, suggestions: list });
+  } catch (e) { return sendJson(res, 502, { error: String(e.message || e) }); }
+}
+
 // POST /api/author/transcribe { audioPath }  → OpenAI Whisper word timestamps (lyric sync for the episode-end Air scene)
 function openaiTranscribe(absPath) {
   return new Promise((resolve, reject) => {
@@ -1532,6 +1661,12 @@ const server = http.createServer(async (req, res) => {
     if (req.method === 'POST' && parsed.pathname === '/api/author/script') return handleAuthorScript(req, res);
     if (req.method === 'POST' && parsed.pathname === '/api/author/gen-asset') return handleGenAsset(req, res);
     if (req.method === 'POST' && parsed.pathname === '/api/author/transcribe') return handleTranscribe(req, res);
+    if (req.method === 'POST' && parsed.pathname === '/api/author/pc-edit') return handlePcEdit(req, res);
+    if (req.method === 'POST' && parsed.pathname === '/api/author/pc-undo') return handlePcUndo(req, res);
+    if (req.method === 'POST' && parsed.pathname === '/api/author/pc-reset') return handlePcReset(req, res);
+    if (req.method === 'POST' && parsed.pathname === '/api/author/pc-wear') return handlePcWear(req, res);
+    if (req.method === 'POST' && parsed.pathname === '/api/author/pc-inventory') return handlePcInventory(req, res);
+    if (req.method === 'POST' && parsed.pathname === '/api/author/pc-suggest') return handlePcSuggest(req, res);
     if (req.method === 'POST' && parsed.pathname === '/api/author/file-import') return handleFileImport(req, res);
     if (req.method === 'POST' && parsed.pathname === '/api/author/gen-audio') return handleGenAudio(req, res);
     if (req.method === 'POST' && parsed.pathname === '/api/author/audio-manifest') return handleAudioManifestSave(req, res);

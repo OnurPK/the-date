@@ -16348,7 +16348,8 @@ function showEndContinue(){
 // WIDE mode keyboard: Space/Enter advance (whisper, dialogue, narrative), 1-9 pick a choice, Esc closes the rail / settings.
 (function(){ if (!window.__RAI_WIDE) return;
   document.addEventListener('keydown', (e) => { try {
-    if (e.target && /INPUT|TEXTAREA|SELECT/.test(e.target.tagName)) return;
+    if (e.target && (/INPUT|TEXTAREA|SELECT/.test(e.target.tagName) || e.target.isContentEditable)) return;
+    { const ps = document.getElementById('pcsel'); if (ps && ps.classList.contains('on')) return; }
     const vis = (el) => el && el.offsetParent !== null && getComputedStyle(el).visibility !== 'hidden' && getComputedStyle(el).opacity !== '0';
     if (/^[1-9]$/.test(e.key)) { const opts = [...document.querySelectorAll('#choicePanel .choice-opt, #pcWhisper.on .ps-opt')].filter(vis); const o = opts[+e.key - 1]; if (o) { e.preventDefault(); o.click(); } return; }
     if (e.key === ' ' || e.key === 'Enter') { const t = [ document.querySelector('#pcWhisper.on.show-say .ps-dlg'), document.querySelector('#pcWhisper.on.show-narr .ps-narr'), document.getElementById('objectDialog'), document.getElementById('dialogBox') ].find(vis); if (t && !document.querySelector('#choicePanel.open')) { e.preventDefault(); t.click(); } return; }
@@ -19477,6 +19478,9 @@ function loadScript(text) {
 
 // Keyboard
 document.addEventListener('keydown', (e) => {
+  // typing in any field (e.g. the reveal's "tell her what to change" box) must never advance the story; nor should keys while the character select is up
+  if (e.target && (/INPUT|TEXTAREA|SELECT/.test(e.target.tagName) || e.target.isContentEditable)) return;
+  { const ps = document.getElementById('pcsel'); if (ps && ps.classList.contains('on')) return; }
   if (el.body.classList.contains('choosing'))  return;
   if (inObject()) {
     if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'Enter') { e.preventDefault(); advanceObjectLine(); }
@@ -29637,6 +29641,63 @@ console.log('%c[caller] Episode 1 ready — run startCaller()', 'color:#e7b24c')
 #pcsel .pcs-rv .rv-title{font-family:"Playfair Display",Georgia,serif; font-style:italic; font-weight:600; font-size:clamp(24px,7vw,32px); line-height:1.1; color:#f4eee1; text-shadow:0 3px 18px rgba(0,0,0,.7)}
 #pcsel .pcs-rv .rv-sub{margin-top:8px; font:italic 500 14px/1.4 "Playfair Display",Georgia,serif; color:#d9cfb8; min-height:20px; transition:opacity .35s ease; text-shadow:0 2px 12px rgba(0,0,0,.7)}
 #pcsel .pcs-rv .rv-dots{display:flex; justify-content:center; gap:12px; margin-top:16px}
+#pcsel .pcs-rv .rv-edit{margin:14px -10px 0; text-align:left; pointer-events:auto}
+/* row 1: [expand] [refresh]. rows 2–3: wrapped tags (icon = category + text); expanded → up to 8 rows (scroll inside). */
+#pcsel .pcs-rv .rv-ctl{display:flex; align-items:center; gap:8px; margin-bottom:8px}
+#pcsel .pcs-rv .rv-status{flex:1; min-width:0; margin-left:4px; font:italic 500 13px/1.3 "Playfair Display",Georgia,serif; color:#e8d6a8; text-shadow:0 1px 6px rgba(0,0,0,.7); opacity:0; transition:opacity .35s ease; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+#pcsel .pcs-rv .rv-status.on{opacity:1}
+#pcsel .pcs-rv .rv-status.busy::after{content:"…"; display:inline-block; width:1.2em; text-align:left; animation:rvEll 1.2s steps(4,end) infinite}
+@keyframes rvEll{0%{clip-path:inset(0 100% 0 0)}25%{clip-path:inset(0 66% 0 0)}50%{clip-path:inset(0 33% 0 0)}75%,100%{clip-path:inset(0 0 0 0)}}
+#pcsel .pcs-rv .rv-ctl button{flex:none; width:36px; height:36px; border-radius:50%; border:1px solid rgba(240,212,124,.55); background:rgba(20,10,20,.6); color:#f0d47c; display:flex; align-items:center; justify-content:center; cursor:pointer; padding:0}
+#pcsel .pcs-rv .rv-ctl svg{width:16px; height:16px; stroke:currentColor; fill:none; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; transition:transform .3s ease}
+#pcsel .pcs-rv .rv-edit.open .rv-expand svg{transform:rotate(180deg)}
+#pcsel .pcs-rv .rv-refresh.spin svg{animation:rvSpin .5s ease}
+@keyframes rvSpin{to{transform:rotate(360deg)}}
+#pcsel .pcs-rv .rv-tags{display:flex; flex-wrap:wrap; gap:8px; align-content:flex-start; max-height:88px; overflow:hidden; transition:max-height .35s ease; scrollbar-width:none}
+#pcsel .pcs-rv .rv-tags::-webkit-scrollbar{display:none}
+#pcsel .pcs-rv .rv-edit.open .rv-tags{max-height:376px; overflow-y:auto; -webkit-overflow-scrolling:touch}
+#pcsel .pcs-rv .rv-chip{display:inline-flex; align-items:center; gap:6px; height:40px; max-width:100%; padding:0 12px 0 10px; border-radius:999px; border:1px solid rgba(240,212,124,.55); background:rgba(14,8,16,.72); color:#f7e8bf; font:500 13.5px/1 "Playfair Display",Georgia,serif; font-style:italic; white-space:nowrap; cursor:pointer; text-shadow:0 1px 6px rgba(0,0,0,.6); box-sizing:border-box}
+#pcsel .pcs-rv .rv-chip span{overflow:hidden; text-overflow:ellipsis}
+#pcsel .pcs-rv .rv-chip svg{flex:none; width:14px; height:14px; stroke:#f0d47c; fill:none; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round; opacity:.9}
+#pcsel .pcs-rv .rv-chip.ghost{border-color:rgba(255,255,255,.15); color:rgba(255,255,255,.5); cursor:default}
+#pcsel .pcs-rv .rv-chip.rm{border-color:rgba(255,255,255,.28); color:#e6ddcf; background:rgba(20,12,18,.6)}
+#pcsel .pcs-rv .rv-chip.rm svg{stroke:#e6ddcf; opacity:.8}
+#pcsel .pcs-rv .rv-sep{flex-basis:100%; height:0}
+#pcsel .pcs-rv .rv-edit.rm .rv-color{display:none}
+#pcsel .pcs-rv .rv-edit.rm .rv-in{padding-left:14px}
+/* button row: [wardrobe] [colour ● | text field | undo] [ok] */
+#pcsel .pcs-rv .rv-row{display:flex; gap:8px; margin-top:10px; align-items:center}
+#pcsel .pcs-rv .rv-ward{flex:none; width:46px; height:46px; border-radius:50%; border:1px solid rgba(240,212,124,.55); background:rgba(20,10,20,.6); color:#f0d47c; display:flex; align-items:center; justify-content:center; cursor:pointer; padding:0}
+#pcsel .pcs-rv .rv-ward svg{width:20px; height:20px; stroke:currentColor; fill:none; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round}
+#pcsel .pcs-rv .rv-field{position:relative; flex:1; min-width:0}
+#pcsel .pcs-rv .rv-in{width:100%; height:46px; padding:0 44px 0 44px; border-radius:14px; border:1px solid rgba(255,255,255,.22); background:rgba(10,6,12,.62); color:#f4eee1; font:500 14px/1 Inter,system-ui,sans-serif; outline:none; box-sizing:border-box}
+#pcsel .pcs-rv .rv-in::placeholder{color:rgba(244,238,225,.45)}
+#pcsel .pcs-rv .rv-color{position:absolute; left:9px; top:50%; transform:translateY(-50%); width:28px; height:28px; border-radius:50%; border:2px solid rgba(255,255,255,.35); background:transparent; cursor:pointer; padding:0; box-shadow:0 0 0 1px rgba(0,0,0,.4) inset}
+#pcsel .pcs-rv .rv-color.none{background:linear-gradient(135deg, transparent 46%, rgba(255,255,255,.55) 47%, rgba(255,255,255,.55) 53%, transparent 54%)}
+#pcsel .pcs-rv .rv-pal{position:absolute; left:0; bottom:calc(100% + 8px); z-index:5; display:none; grid-template-columns:repeat(7, 32px); gap:8px; padding:10px; border-radius:16px; border:1px solid rgba(240,212,124,.35); background:rgba(12,7,14,.92); -webkit-backdrop-filter:blur(10px); backdrop-filter:blur(10px)}
+#pcsel .pcs-rv .rv-pal.on{display:grid}
+#pcsel .pcs-rv .rv-pal button{width:32px; height:32px; border-radius:50%; border:2px solid rgba(255,255,255,.25); cursor:pointer; padding:0}
+#pcsel .pcs-rv .rv-pal button.sel{border-color:#f0d47c; box-shadow:0 0 0 2px rgba(240,212,124,.35)}
+#pcsel .pcs-rv .rv-pal button.none{background:linear-gradient(135deg, transparent 46%, rgba(255,255,255,.6) 47%, rgba(255,255,255,.6) 53%, transparent 54%)}
+#pcsel .pcs-rv .rv-undo{position:absolute; right:6px; top:50%; transform:translateY(-50%); width:34px; height:34px; border-radius:50%; border:none; background:transparent; color:rgba(244,238,225,.7); display:none; align-items:center; justify-content:center; cursor:pointer; padding:0}
+#pcsel .pcs-rv .rv-undo.on{display:flex}
+#pcsel .pcs-rv .rv-undo svg{width:18px; height:18px; stroke:currentColor; fill:none; stroke-width:2; stroke-linecap:round; stroke-linejoin:round}
+#pcsel .pcs-rv .rv-go{flex:none; width:46px; height:46px; border-radius:50%; border:1px solid rgba(240,212,124,.75); background:rgba(240,212,124,.14); color:#f0d47c; display:flex; align-items:center; justify-content:center; cursor:pointer; padding:0}
+#pcsel .pcs-rv .rv-go svg{width:20px; height:20px; stroke:currentColor; fill:none; stroke-width:2.4; stroke-linecap:round; stroke-linejoin:round}
+#pcsel .pcs-rv .rv-edit.busy{opacity:.45; pointer-events:none}
+/* the title + subtitle leave after a moment; the panel compacts to the two rows */
+#pcsel .pcs-rv .rv-spark, #pcsel .pcs-rv .rv-title, #pcsel .pcs-rv .rv-sub{transition:opacity .6s ease}
+#pcsel .pcs-rv.rv-quiet .rv-spark, #pcsel .pcs-rv.rv-quiet .rv-title, #pcsel .pcs-rv.rv-quiet .rv-sub{opacity:0}
+#pcsel .pcs-rv.rv-gone .rv-spark, #pcsel .pcs-rv.rv-gone .rv-title, #pcsel .pcs-rv.rv-gone .rv-sub{display:none}
+/* reveal marketing line at her knees: words arrive one by one (blur-in), hold, then scatter (blur-out) — same look as the Air karaoke */
+#pcsel .rv-kar{position:absolute; left:0; right:0; top:56%; z-index:11; text-align:center; padding:0 22px; pointer-events:none}
+#pcsel .rv-kar .ln{position:absolute; left:22px; right:22px; top:0; transform:translateY(-50%); font:italic 500 26px/1.15 "Playfair Display",Georgia,serif; color:#fff; text-shadow:0 2px 16px rgba(0,0,0,.95),0 0 36px rgba(0,0,0,.7)}
+#pcsel .rv-kar .ln .w{display:inline-block; margin-right:.26em; opacity:0; filter:blur(8px); transform:translateY(6px); transition:opacity .7s ease-out, filter .7s ease-out, transform .7s ease-out; transition-delay:var(--d,0s)}
+#pcsel .rv-kar .ln .w.on{opacity:1; filter:blur(0); transform:none}
+#pcsel .rv-kar .ln.out .w{opacity:0; filter:blur(10px); transform:none; transition:opacity .9s ease-in, filter .9s ease-in; transition-delay:var(--o,0s)}
+/* Continue: top-right pill */
+#pcsel .rv-continue{position:absolute; top:calc(max(env(safe-area-inset-top,0px), 44px) + 14px); right:14px; z-index:12; height:38px; padding:0 16px; border-radius:999px; border:1px solid rgba(240,212,124,.7); background:rgba(14,8,16,.62); color:#f0d47c; font:700 11px/38px Inter,system-ui,sans-serif; letter-spacing:.18em; text-transform:uppercase; cursor:pointer; opacity:0; pointer-events:none; transition:opacity .5s ease; -webkit-backdrop-filter:blur(8px); backdrop-filter:blur(8px)}
+#pcsel .rv-continue.on{opacity:1; pointer-events:auto}
 #pcsel .pcs-rv .rv-dots i{width:9px; height:9px; border-radius:50%; background:#c8a86a; opacity:.32; animation:pcsDot 1.4s ease-in-out infinite}
 #pcsel .pcs-rv .rv-dots i:nth-child(2){animation-delay:.22s} #pcsel .pcs-rv .rv-dots i:nth-child(3){animation-delay:.44s}
 @keyframes pcsDot{0%,100%{opacity:.3; transform:translateY(0)} 50%{opacity:1; transform:translateY(-3px)}}
@@ -30223,7 +30284,7 @@ console.log('%c[caller] Episode 1 ready — run startCaller()', 'color:#e7b24c')
     let rv=root.querySelector('.pcs-rv'); if(!rv){ rv=document.createElement('div'); rv.className='pcs-rv';
       rv.innerHTML='<svg class="rv-spark" width="34" height="34" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 0 C12.6 6.4 17.6 11.4 24 12 C17.6 12.6 12.6 17.6 12 24 C11.4 17.6 6.4 12.6 0 12 C6.4 11.4 11.4 6.4 12 0 Z" fill="#c8a86a"/></svg>'
         +'<div class="rv-title">Becoming someone…</div><div class="rv-sub"></div><div class="rv-dots"><i></i><i></i><i></i></div>'; root.appendChild(rv); }
-    clearInterval(rvRot);
+    clearInterval(rvRot); rv.classList.remove('rv-quiet','rv-gone');
     // reset the floor text + transformed sprite from a previous run
     rv.querySelector('.rv-title').textContent='Becoming someone…'; rv.querySelector('.rv-dots').style.display=''; rv.querySelector('.rv-spark').style.animation=''; rv.style.pointerEvents='none';
     const ob=rv.querySelector('.rv-btn'); if(ob) ob.remove(); const oy=hero.querySelector('.hfig-you'); if(oy) oy.remove();
@@ -30240,7 +30301,7 @@ console.log('%c[caller] Episode 1 ready — run startCaller()', 'color:#e7b24c')
         rvLayout={ top:top0, h:h0, cx:cx0 }; } }catch(e){}
       root.classList.add('revealing');
       rvRot=setInterval(()=>{ li=(li+1)%RV_LINES.length; sub.style.opacity='0'; setTimeout(()=>{ sub.textContent=RV_LINES[li]; sub.style.opacity='1'; },330); }, 2400); }
-    else { root.classList.remove('revealing','rv-text'); } }
+    else { root.classList.remove('revealing','rv-text'); const ct=root.querySelector('.rv-continue'); if(ct) ct.classList.remove('on'); } }
   // curtain opens (reversed clip) → then removed
   function curtainOpen(onEnd){ const root=$('pcsel'); if(!root) return null;
     // fresh element on top of the closed curtain (swapping src on the same element blanks it until the new clip decodes)
@@ -30259,19 +30320,169 @@ console.log('%c[caller] Episode 1 ready — run startCaller()', 'color:#e7b24c')
     v.addEventListener('ended',lift,{once:true});
     v.src=clipSrc('pc-select/fx/curtain_open'+CLIP_EXT); playRetry(v, 4, finish); return v; }
   // the transformed sprite (characters/<portrait>/you/pride.png) placed exactly where the walk clip left her
-  function showYou(){ const fig=$('pcsFig'), c=curChar; if(!fig||!c) return;
-    fig.querySelectorAll('video.hfig-idle').forEach(v=>{ try{ v.pause(); v.remove(); }catch(e){} });
-    const S=$('pcsel').clientHeight||844; const vh=S*0.70/0.86; const bottom=(0.17*S-0.03*vh);   // a step back on the boards, clear of the floor text
+  function showYou(url){ const fig=$('pcsFig'), c=curChar; if(!fig||!c) return;
+    fig.querySelectorAll('video.hfig-idle:not(.hfig-entrance)').forEach(v=>{ try{ v.pause(); v.remove(); }catch(e){} });   // (the entrance clip stays underneath for the crossfade; its own 'ended' handler removes it)
+    const S=$('pcsel').clientHeight||844, SW=fig.clientWidth||$('pcsel').clientWidth||390;
     let img=fig.querySelector('.hfig-you'); if(!img){ img=document.createElement('div'); img.className='hfig-you'; fig.appendChild(img); }
-    img.style.cssText='position:absolute;left:50%;bottom:'+bottom.toFixed(1)+'px;height:'+vh.toFixed(1)+'px;aspect-ratio:2/3;transform:translateX(-50%);background:url("'+BASE+'characters/'+c.portrait+'/you/pride.png") center bottom/contain no-repeat;pointer-events:none;';
-    fig.style.backgroundImage='none'; }
+    const src=url||(BASE+'characters/'+c.portrait+'/you/pride.png?v='+PC_RUN);   // PC_RUN: a fresh run never shows a cached (edited) sprite
+    // default box until measured = the reveal idle geometry
+    let box={ left:null, top:null, w:null, h:S*0.78/0.86 }; box.w=box.h*2/3; box.left=(SW-box.w)/2; box.top=S-(0.06*S-0.03*box.h)-box.h;
+    const place=()=>{ const op=img.style.opacity, tr=img.style.transition, cp=img.style.clipPath, fl=img.style.filter; img.style.cssText='position:absolute;left:'+box.left.toFixed(2)+'px;top:'+box.top.toFixed(2)+'px;width:'+box.w.toFixed(2)+'px;height:'+box.h.toFixed(2)+'px;background:url("'+src+'") 0 0/100% 100% no-repeat;pointer-events:none;'; if(op!==''){ img.style.opacity=op; } if(tr!==''){ img.style.transition=tr; } if(cp!==''){ img.style.clipPath=cp; } if(fl!==''){ img.style.filter=fl; } };
+    place(); fig.style.backgroundImage='none';
+    // Pixel fit: the entrance clip is mounted full-stage (height 100 %, centred) → the keyed clip's LAST-frame figure box
+    // (you/entrance2.json, measured offline) maps to stage px with k=S/1920. The sprite's own alpha bbox is scaled (by height)
+    // and shifted so that it lands exactly on that box, whatever padding the face-swap PNG has. Clip → sprite = no jump.
+    youClipBox(c.portrait, cb=>{ youBBox(src, bb=>{ if(!bb||fig.querySelector('.hfig-you')!==img) return;
+      let t0,t1,cx; if(cb){ const k=S/cb.h, ox=(SW-cb.w*k)/2; t0=cb.last.y0*k; t1=cb.last.y1*k; cx=ox+(cb.last.x0+cb.last.x1)/2*k; }
+      else { t0=0.110*S; t1=0.810*S; cx=SW/2; }
+      const sc=(t1-t0)/(bb.y1-bb.y0); box.h=bb.h*sc; box.w=bb.w*sc; box.top=t0-bb.y0*sc; box.left=cx-(bb.x0+bb.x1)/2*sc; place(); }); }); }
+  const _youCB={}; function youClipBox(pc, cb){ if(_youCB[pc]!==undefined){ cb(_youCB[pc]); return; } fetch(BASE+'characters/'+pc+'/you/entrance2.json',{cache:'no-store'}).then(r=>r.ok?r.json():null).then(j=>{ _youCB[pc]=(j&&j.last)?j:null; cb(_youCB[pc]); }).catch(()=>{ _youCB[pc]=null; cb(null); }); }
+  const _youBB={}; function youBBox(src, cb){ if(_youBB[src]){ cb(_youBB[src]); return; } const im=new Image(); im.crossOrigin='anonymous'; im.onload=()=>{ try{ const w=im.naturalWidth,h=im.naturalHeight; const cv=document.createElement('canvas'); cv.width=w; cv.height=h; const cx=cv.getContext('2d',{willReadFrequently:true}); cx.drawImage(im,0,0); const d=cx.getImageData(0,0,w,h).data; let y0=-1,y1=-1,x0=w,x1=-1; for(let y=0;y<h;y++){ for(let x=0;x<w;x++){ if(d[(y*w+x)*4+3]>40){ if(y0<0) y0=y; y1=y+1; if(x<x0) x0=x; if(x+1>x1) x1=x+1; } } } if(y0<0) return cb(null); _youBB[src]={w,h,x0,y0,x1,y1}; cb(_youBB[src]); }catch(e){ cb(null); } }; im.onerror=()=>cb(null); im.src=src; }
   function revealDone(){ const root=$('pcsel'), rv=root.querySelector('.pcs-rv'), c=curChar; clearInterval(rvRot); root.classList.add('rv-text');
-    const SUB='The county will not know what hit it.'; rv.querySelector('.rv-title').textContent=(c&&c.name?c.name:'She')+' — as you.'; const sb=rv.querySelector('.rv-sub'); sb.textContent=SUB; sb.style.opacity='1'; setTimeout(()=>{ sb.textContent=SUB; sb.style.opacity='1'; }, 450);
+    // no title / subtitle on the reveal: the only words are the two karaoke lines at her knees (pcKaraoke below)
+    rv.classList.add('rv-quiet','rv-gone'); rv.querySelector('.rv-title').textContent=''; const sb=rv.querySelector('.rv-sub'); sb.textContent='';
     rv.querySelector('.rv-dots').style.display='none'; rv.querySelector('.rv-spark').style.animation='none';
-    let btn=rv.querySelector('.rv-btn'); if(!btn){ btn=document.createElement('button'); btn.type='button'; btn.className='btn btn-primary rv-btn'; btn.style.cssText='margin-top:16px;width:100%;pointer-events:auto;'; btn.innerHTML='Play as this character &#8594;';
-      // (the in-game actor stays the original Arabella for now — the swapped actor folder characters/arabella_you exists for later)
-      btn.addEventListener('click',()=>{ try{ window.pcPlayCurrent&&window.pcPlayCurrent(); }catch(e){} }); rv.appendChild(btn); }
-    rv.style.pointerEvents='auto'; }
+    const ob=rv.querySelector('.rv-btn'); if(ob) ob.remove();
+    // Continue → top-right (the in-game actor stays the original Arabella for now — characters/arabella_you exists for later)
+    let cont=root.querySelector('.rv-continue'); if(!cont){ cont=document.createElement('button'); cont.type='button'; cont.className='rv-continue'; cont.innerHTML='Continue &#8594;'; cont.addEventListener('click',()=>{ try{ window.pcPlayCurrent&&window.pcPlayCurrent(); }catch(e){} }); root.appendChild(cont); }
+    setTimeout(()=>cont.classList.add('on'), 400);
+    rv.style.pointerEvents='auto'; try{ pcEditMount(rv); }catch(e){}
+    setTimeout(()=>{ try{ pcKaraoke(['Your words are her tailor.','Every ballroom is about to notice.']); }catch(e){} }, 300);   // marketing beat at her knees
+    clearTimeout(rvQuietT); }
+  let rvQuietT=0, rvStatusT=0, rvKarT=[];
+  // lines arrive one after another at her waist: each word blurs in on its own beat, the line holds, then scatters
+  function pcKaraoke(lines){ const root=$('pcsel'); if(!root) return; let kar=root.querySelector('.rv-kar'); if(kar) kar.remove(); kar=document.createElement('div'); kar.className='rv-kar'; root.appendChild(kar); rvKarT.forEach(clearTimeout); rvKarT=[];
+    const esc=t=>t.replace(/[&<>]/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[ch])); let at=0; const STEP=170, HOLD=1500, OUT=1000;
+    lines.forEach((text,li)=>{ const words=text.split(/\s+/); rvKarT.push(setTimeout(()=>{ const ln=document.createElement('div'); ln.className='ln'; ln.innerHTML=words.map(w=>'<span class="w">'+esc(w)+'</span>').join(''); kar.appendChild(ln); void ln.offsetWidth; [...ln.children].forEach((w,n)=>{ w.style.setProperty('--d',(n*STEP/1000)+'s'); w.classList.add('on'); }); }, at));
+      const inDur=words.length*STEP+700; rvKarT.push(setTimeout(()=>{ const ln=kar.lastElementChild; if(!ln) return; ln.classList.add('out'); [...ln.children].forEach((w,n)=>w.style.setProperty('--o',(n*0.05)+'s')); setTimeout(()=>ln.remove(), OUT+400); }, at+inDur+HOLD)); at+=inDur+HOLD+OUT*0.6; });
+    rvKarT.push(setTimeout(()=>{ if(kar.isConnected && !kar.children.length) kar.remove(); }, at+1600)); }
+
+  // ================= "Make her you" · edit loop (after the curtain opens) =================
+  // Recommended changes (AI, from the current image) as a swipeable chip row + a free text field. Regenerate: curtain closes,
+  // gpt-image edits you/pride.png behind it, the new sprite is preloaded and swapped in while nothing is visible, curtain opens.
+  let pcEditBusy=false, pcEditRecent=[], PC_RUN=Date.now();
+  // Suggestion pool: ONE AI call per run, fired while the entrance clip plays (no wait at the panel); the row shows 10 and
+  // the refresh button pages through the pool locally. Used suggestions drop out of the pool.
+  let pcPool=[], pcPoolAt=0, pcPoolReq=null, pcPoolFor='';
+  const ICON_REFRESH='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 12a8 8 0 1 1-2.3-5.6"/><path d="M20 4v5h-5"/></svg>';
+  const ICON_UP='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 15l6-6 6 6"/></svg>';
+  const ICON_OK='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12l5 5L20 7"/></svg>';
+  const ICON_UNDO='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 14 4 9l5-5"/><path d="M4 9h10a6 6 0 0 1 0 12h-3"/></svg>';
+  const ICON_X='<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M9 9l6 6M15 9l-6 6"/></svg>';
+  let pcWearing=[];
+  const ICON_WARD='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 21V8a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v13"/><path d="M4 21h16"/><path d="M12 6v15"/><path d="M9 12h.01M15 12h.01"/><path d="M12 6V4a2 2 0 1 1 2-2"/></svg>';
+  // category icons (the tag's "type"): hair, hat, dress, jacket, gloves, shoes, jewellery, accessory
+  const CAT_ICON={
+    hair:'<svg viewBox="0 0 24 24"><path d="M5 20c0-6 1-11 7-14 6 3 7 8 7 14"/><path d="M8 20c0-3 .5-6 4-8 3.5 2 4 5 4 8"/><path d="M12 6c-2 2-3 4-3 7"/></svg>',
+    hat:'<svg viewBox="0 0 24 24"><path d="M3 14c3-2 4-8 9-8s6 6 9 8"/><path d="M3 14c2 3 16 3 18 0"/><path d="M12 6V4"/><path d="M8 17l-1 3M16 17l1 3"/></svg>',
+    dress:'<svg viewBox="0 0 24 24"><path d="M9 3l3 3 3-3"/><path d="M9 3v4l-1 3h8l-1-3V3"/><path d="M8 10 4 21h16L16 10"/></svg>',
+    jacket:'<svg viewBox="0 0 24 24"><path d="M8 4 4 7v7l3-1v8h10v-8l3 1V7l-4-3"/><path d="M8 4c1 3 7 3 8 0"/><path d="M12 7v14"/></svg>',
+    gloves:'<svg viewBox="0 0 24 24"><path d="M7 21v-7L4 9l2-1 2 3V4h2v7h1V3h2v8h1V4h2v9"/><path d="M7 21h9v-4"/><path d="M16 13l2-3 2 1-4 6"/></svg>',
+    shoes:'<svg viewBox="0 0 24 24"><path d="M3 17c4 0 6-1 8-4l2-5 3 2-1 3c2 1 5 2 6 4H3z"/><path d="M3 17v2h18v-2"/></svg>',
+    jewellery:'<svg viewBox="0 0 24 24"><path d="M4 6c0 6 4 10 8 10s8-4 8-10"/><circle cx="12" cy="17" r="2.5"/><path d="M12 19.5V21"/></svg>',
+    accessory:'<svg viewBox="0 0 24 24"><path d="M12 3l1.8 4.6L18 9l-3.6 3.2L15.5 17 12 14.6 8.5 17l1.1-4.8L6 9l4.2-1.4z"/></svg>' };
+  const CAT_KEYS=[['hair',/\bhair|curl|braid|chignon|ringlet|updo|fringe|comb\b/i],['hat',/\bbonnet|hat|turban|cap|veil|tiara\b/i],['jacket',/\bspencer|pelisse|shawl|cloak|cape|jacket|wrap|stole\b/i],['gloves',/\bglove|mitt\b/i],['shoes',/\bslipper|shoe|boot|heel|sandal\b/i],['jewellery',/\bnecklace|earring|brooch|bracelet|pearl|locket|pendant|ring\b/i],['accessory',/\bfan|reticule|parasol|flower|book|ribbon|handkerchief|muff|purse\b/i],['dress',/\bgown|dress|sleeve|neckline|sash|hem|bodice|skirt|fabric|silk|muslin|velvet|lace|train|waist\b/i]];
+  const catOf=t=>{ for(const [c,re] of CAT_KEYS){ if(re.test(t)) return c; } return 'accessory'; };
+  // Regency palette: the colour sits in the text field (left) and is appended to the request on OK
+  const PAL=[['none','No colour',''],['ivory','Ivory','#f3ead6'],['blush','Blush pink','#e9b7b3'],['rose','Rose','#c9607a'],['claret','Claret red','#7a1f2e'],['gold','Old gold','#c9a24a'],['sage','Sage green','#9aa98b'],['emerald','Emerald green','#1f6b4a'],['sky','Sky blue','#9fc1d9'],['navy','Navy blue','#1f2b55'],['lavender','Lavender','#b7a6cf'],['plum','Plum','#5a2a4e'],['black','Black','#141214'],['white','White','#ffffff']];
+  let pcColor='none';
+  function pcPrefetchSuggestions(c){ if(!c) return; if(pcPoolReq && pcPoolFor===c.portrait) return; pcPoolFor=c.portrait; pcPool=[]; pcPoolAt=0;
+    pcPoolReq=fetch('/api/author/pc-suggest',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({ pc:c.portrait, count:40 })})
+      .then(r=>r.json()).then(j=>{ const seen=new Set(); const list=((j&&j.suggestions)||[]).map(x=>(typeof x==='string')?{text:x.trim(),cat:catOf(x)}:{text:String(x.text||'').trim(),cat:CAT_ICON[x.cat]?x.cat:catOf(String(x.text||''))}).filter(x=>{ const k=x.text.toLowerCase(); if(!x.text||seen.has(k)) return false; seen.add(k); return true; }); pcPool=pcShuffle(list); pcPoolAt=0; return list; }).catch(()=>{ pcPool=[]; return []; }); }
+  function pcShuffle(a){ for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } return a; }
+  const esc=t=>t.replace(/[&<>]/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[ch]));
+  function pcInventoryRefresh(rv){ const c=curChar; if(!c) return; fetch('/api/author/pc-inventory',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({ pc:c.portrait })}).then(r=>r.json()).then(j=>{ pcWearing=(j&&j.wearing)||[]; if(rv&&rv.isConnected) pcChips(rv); }).catch(()=>{}); }
+  function pcEditMount(rv){ if(rv.querySelector('.rv-edit')) { pcChips(rv); return; }
+    const box=document.createElement('div'); box.className='rv-edit';
+    box.innerHTML='<div class="rv-ctl"><button type="button" class="rv-expand" aria-label="More ideas">'+ICON_UP+'</button><button type="button" class="rv-refresh" aria-label="New ideas">'+ICON_REFRESH+'</button><span class="rv-status" aria-live="polite"></span></div>'
+      +'<div class="rv-tags" aria-label="Ideas"><span class="rv-chip ghost">Looking at her…</span></div>'
+      +'<div class="rv-row"><button type="button" class="rv-ward" aria-label="Wardrobe">'+ICON_WARD+'</button>'
+      +'<div class="rv-field"><button type="button" class="rv-color none" aria-label="Colour"></button><div class="rv-pal"></div><input class="rv-in" type="text" maxlength="140" placeholder="Tell her what to change…" autocomplete="off" autocorrect="off" spellcheck="false"><button type="button" class="rv-undo" aria-label="Undo last change">'+ICON_UNDO+'</button></div>'
+      +'<button type="button" class="rv-go" aria-label="Apply">'+ICON_OK+'</button></div>';
+    rv.appendChild(box);
+    const inp=box.querySelector('.rv-in'); const go=()=>{ let t=inp.value.trim(); if(!t) return; const col=PAL.find(p=>p[0]===pcColor); if(!box.classList.contains('rm')&&col&&col[0]!=='none'&&!new RegExp(col[1].split(' ')[0],'i').test(t)) t+=', in '+col[1].toLowerCase(); pcRegenerate(t); };
+    inp.addEventListener('input', ()=>{ if(!/^\s*(remove|take off|no|without)\b/i.test(inp.value)) box.classList.remove('rm'); });
+    box.querySelector('.rv-go').addEventListener('click', go); inp.addEventListener('keydown', e=>{ if(e.key==='Enter'){ e.preventDefault(); go(); } });
+    box.querySelector('.rv-undo').addEventListener('click', ()=>pcRegenerate(null));
+    box.querySelector('.rv-refresh').addEventListener('click', e=>{ const b=e.currentTarget; b.classList.remove('spin'); void b.offsetWidth; b.classList.add('spin'); pcPoolAt+=(box.classList.contains('open')?24:8); pcChips(rv); });
+    box.querySelector('.rv-expand').addEventListener('click', ()=>{ box.classList.toggle('open'); pcChips(rv); });
+    // wardrobe: upload a photo of something to wear → vision decides what it is (or declines, in her voice) → edit with the photo as reference
+    const file=document.createElement('input'); file.type='file'; file.accept='image/*'; file.style.display='none'; box.appendChild(file);
+    box.querySelector('.rv-ward').addEventListener('click', ()=>{ if(pcEditBusy) return; file.value=''; file.click(); });
+    file.addEventListener('change', ()=>{ const f=file.files&&file.files[0]; if(!f) return; pcWear(f); });
+    // colour swatch + palette
+    const cbtn=box.querySelector('.rv-color'), pal=box.querySelector('.rv-pal');
+    pal.innerHTML=PAL.map(p=>'<button type="button" data-c="'+p[0]+'" title="'+p[1]+'" class="'+(p[0]==='none'?'none':'')+(p[0]===pcColor?' sel':'')+'" style="'+(p[2]?'background:'+p[2]:'')+'"></button>').join('');
+    const setColor=(k)=>{ pcColor=k; const p=PAL.find(x=>x[0]===k)||PAL[0]; cbtn.classList.toggle('none', k==='none'); cbtn.style.background=p[2]||''; cbtn.title=p[1]; pal.querySelectorAll('button').forEach(b=>b.classList.toggle('sel', b.dataset.c===k)); };
+    setColor(pcColor);
+    cbtn.addEventListener('click', e=>{ e.stopPropagation(); pal.classList.toggle('on'); });
+    pal.addEventListener('click', e=>{ const b=e.target.closest('button'); if(!b) return; setColor(b.dataset.c); pal.classList.remove('on'); inp.focus(); });
+    document.addEventListener('click', e=>{ if(!pal.contains(e.target) && e.target!==cbtn) pal.classList.remove('on'); });
+    pcChips(rv); pcInventoryRefresh(rv); }
+  function pcChips(rv){ const c=curChar, row=rv.querySelector('.rv-tags'), box=rv.querySelector('.rv-edit'); if(!c||!row) return;
+    const paint=()=>{ if(!pcPool.length){ row.innerHTML='<span class="rv-chip ghost">Tell her what to change</span>'; return; }
+      if(pcPoolAt>=pcPool.length){ pcPoolAt=0; pcShuffle(pcPool); }
+      const n=box&&box.classList.contains('open')?24:8; let list=pcPool.slice(pcPoolAt, pcPoolAt+n); if(list.length<n) list=list.concat(pcPool.slice(0, n-list.length));
+      let html=list.map(x=>'<button type="button" class="rv-chip" data-cat="'+x.cat+'">'+(CAT_ICON[x.cat]||CAT_ICON.accessory)+'<span>'+esc(x.text)+'</span></button>').join('');
+      // removable things she wears: only in the expanded list, at the very bottom, with an (x) icon
+      if(box&&box.classList.contains('open')&&pcWearing.length) html+='<i class="rv-sep"></i>'+pcWearing.map(w=>'<button type="button" class="rv-chip rm" data-rm="'+esc(w.label||w.kind)+'">'+ICON_X+'<span>Remove '+esc(w.label||w.kind)+'</span></button>').join('');
+      row.innerHTML=html; row.scrollTop=0;
+      row.querySelectorAll('.rv-chip').forEach(b=>b.addEventListener('click',()=>{ const inp=rv.querySelector('.rv-in'); const rm=b.dataset.rm; inp.value=rm?('Remove the '+rm):b.querySelector('span').textContent; box.classList.toggle('rm', !!rm); inp.focus(); })); };
+    if(pcPool.length || !pcPoolReq){ if(!pcPoolReq) pcPrefetchSuggestions(c); paint(); }
+    if(pcPoolReq) pcPoolReq.then(()=>{ if(rv.isConnected) paint(); }); }
+  // ---- "Changing her" fx (replaces the curtain): the sprite stays, darkened, gold dust inside, two lights climb the rim;
+  // on resolve a gold burst grows from the chest — the new sprite inside the circle, the old (dark) outside. (prototype: _mockups/fx/changing-her-2.html · 1f)
+  const pcFx={ raf:0, cv:null, P:null, box:null, old:null, t0:0,
+    _off(w,h){ const c=document.createElement('canvas'); c.width=w; c.height=h; return c; },
+    _spr(img,box,tint){ const c=this._off(Math.max(2,Math.ceil(box.w*2)),Math.max(2,Math.ceil(box.h*2))); const x=c.getContext('2d'); x.drawImage(img,0,0,c.width,c.height); if(tint){ x.globalCompositeOperation='source-in'; x.fillStyle=tint; x.fillRect(0,0,c.width,c.height); } return c; },
+    _parts(img,box){ const sil=this._spr(img,box,'#0f1631'), gold=this._spr(img,box,'#ffd98a'); const rim=this._off(sil.width,sil.height); const r=rim.getContext('2d'); for(let a=0;a<8;a++){ r.drawImage(gold, Math.cos(a*Math.PI/4)*3, Math.sin(a*Math.PI/4)*3); } r.globalCompositeOperation='destination-out'; r.drawImage(sil,0,0); r.globalCompositeOperation='source-over'; return {sil,gold,rim}; },
+    _canvas(){ const fig=$('pcsFig'); let cv=fig.querySelector('canvas.hfig-fx'); if(!cv){ cv=document.createElement('canvas'); cv.className='hfig-fx'; cv.style.cssText='position:absolute;left:0;top:0;width:100%;height:100%;pointer-events:none;z-index:3;'; fig.appendChild(cv); } const W=fig.clientWidth||390, H=fig.clientHeight||844; const dpr=Math.min(2,window.devicePixelRatio||1); if(cv.width!==Math.round(W*dpr)){ cv.width=Math.round(W*dpr); cv.height=Math.round(H*dpr); } const ctx=cv.getContext('2d'); ctx.setTransform(dpr,0,0,dpr,0,0); this.cv=cv; this.ctx=ctx; this.W=W; this.H=H; return cv; },
+    _boxOf(el){ const fig=$('pcsFig'); const fr=fig.getBoundingClientRect(), b=el.getBoundingClientRect(); return { left:b.left-fr.left, top:b.top-fr.top, w:b.width, h:b.height }; },
+    start(){ const fig=$('pcsFig'); const el=fig&&fig.querySelector('.hfig-you'); if(!el) return; this.stop(true); this.old=el; const box=this._boxOf(el); this.box=box; this._canvas(); const url=(el.style.backgroundImage.match(/url\(["']?([^"')]+)["']?\)/)||[])[1]; if(!url) return;
+      el.style.transition='filter .5s ease'; el.style.filter='brightness(.3) saturate(.5)';
+      const im=new Image(); im.crossOrigin='anonymous'; im.onload=()=>{ if(this.old!==el) return; this.P=this._parts(im,box); this._loop(); }; im.src=url; },
+    _loop(){ const {ctx,P,box:bx,W,H}=this; const dust=[]; for(let i=0;i<60;i++) dust.push({x:Math.random(),y:Math.random(),s:.6+Math.random()*1.5,v:.02+Math.random()*.05,ph:Math.random()*6.3}); this.t0=performance.now();
+      const lights=(y,cx)=>{ [[bx.left-10,cx],[cx,bx.left+bx.w+10]].forEach(([x0,x1])=>{ ctx.save(); ctx.beginPath(); ctx.rect(x0,y-80,x1-x0,160); ctx.clip(); ctx.drawImage(P.rim,bx.left,bx.top,bx.w,bx.h); ctx.restore(); }); };
+      const tick=()=>{ const t=(performance.now()-this.t0)/1000; ctx.clearRect(0,0,W,H); const p=1-((t/1.5)%1); const y=bx.top+p*bx.h; const cx=bx.left+bx.w/2;
+        ctx.save(); for(const d of dust){ const yy=bx.top+bx.h*((((d.y-t*d.v)%1)+1)%1); const xx=bx.left+bx.w*(d.x+Math.sin(t+d.ph)*.02); ctx.fillStyle='rgba(255,224,160,'+(.2+.5*(.5+.5*Math.sin(t*3+d.ph)))+')'; ctx.beginPath(); ctx.arc(xx,yy,d.s,0,6.3); ctx.fill(); } ctx.globalCompositeOperation='destination-in'; ctx.drawImage(P.gold,bx.left-4,bx.top-4,bx.w+8,bx.h+8); ctx.restore();
+        ctx.save(); ctx.globalCompositeOperation='lighter'; [bx.left+bx.w*.25,bx.left+bx.w*.75].forEach(gx=>{ const g=ctx.createRadialGradient(gx,y,0,gx,y,60); g.addColorStop(0,'rgba(255,220,150,.22)'); g.addColorStop(1,'rgba(255,220,150,0)'); ctx.fillStyle=g; ctx.fillRect(gx-60,y-60,120,120); }); ctx.restore();
+        ctx.globalAlpha=.18; ctx.drawImage(P.rim,bx.left,bx.top,bx.w,bx.h); ctx.globalAlpha=1; lights(y,cx);
+        this.raf=requestAnimationFrame(tick); }; tick(); },
+    // newEl = the freshly placed .hfig-you (new image); oldClone = static copy of the dark old sprite underneath
+    resolve(newEl, oldClone, done){ cancelAnimationFrame(this.raf); this.raf=0; const P=this.P, bx=this.box, ctx=this.ctx, W=this.W, H=this.H; if(!P||!ctx){ this.stop(); if(oldClone) oldClone.remove(); if(newEl){ newEl.style.clipPath=''; newEl.style.filter=''; } done&&done(); return; }
+      const cx=bx.left+bx.w/2, cy=bx.top+bx.h*.33, R=Math.hypot(bx.w,bx.h)*.75; const t0=performance.now(); const nb=this._boxOf(newEl);
+      const tick=()=>{ const p=Math.min(1,(performance.now()-t0)/600), r=R*p; ctx.clearRect(0,0,W,H); newEl.style.clipPath='circle('+r.toFixed(1)+'px at '+(cx-nb.left).toFixed(1)+'px '+(cy-nb.top).toFixed(1)+'px)';
+        ctx.save(); ctx.globalCompositeOperation='lighter'; const g=ctx.createRadialGradient(cx,cy,Math.max(0,r-40),cx,cy,r+10); g.addColorStop(0,'rgba(255,220,150,0)'); g.addColorStop(.7,'rgba(255,230,170,'+(.85*(1-p)).toFixed(3)+')'); g.addColorStop(1,'rgba(255,230,170,0)'); ctx.fillStyle=g; ctx.beginPath(); ctx.arc(cx,cy,r+10,0,6.3); ctx.fill(); ctx.globalCompositeOperation='destination-in'; ctx.drawImage(P.gold,bx.left-6,bx.top-6,bx.w+12,bx.h+12); ctx.restore();
+        ctx.save(); ctx.beginPath(); ctx.rect(0,0,W,H); ctx.arc(cx,cy,r,0,6.3,true); ctx.clip(); ctx.globalAlpha=.25*(1-p); ctx.drawImage(P.rim,bx.left,bx.top,bx.w,bx.h); ctx.restore();
+        if(p<1) this.raf=requestAnimationFrame(tick); else { ctx.clearRect(0,0,W,H); if(oldClone) oldClone.remove(); newEl.style.clipPath=''; newEl.style.filter=''; this.stop(); done&&done(); } }; tick(); },
+    stop(keepCanvas){ cancelAnimationFrame(this.raf); this.raf=0; if(this.ctx){ try{ this.ctx.clearRect(0,0,this.W,this.H); }catch(e){} } if(this.old){ this.old.style.filter=''; this.old.style.transition=''; } this.old=null; this.P=null; if(!keepCanvas&&this.cv){ this.cv.remove(); this.cv=null; this.ctx=null; } } };
+  function pcWear(file){ const c=curChar; if(!c||pcEditBusy) return; const rd=new FileReader(); rd.onload=()=>{ const im=new Image(); im.onload=()=>{ const M=1280; const k=Math.min(1, M/Math.max(im.width,im.height)); const cv=document.createElement('canvas'); cv.width=Math.round(im.width*k); cv.height=Math.round(im.height*k); cv.getContext('2d').drawImage(im,0,0,cv.width,cv.height); const b64=cv.toDataURL('image/jpeg',.9);
+      const req=fetch('/api/author/pc-wear',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({ pc:c.portrait, b64, name:file.name||'' })}).then(r=>r.json());
+      pcRegenerate('wear', { req, label:'Trying it on' }); }; im.onerror=()=>{}; im.src=rd.result; }; rd.readAsDataURL(file); }
+  function pcRegenerate(text, opts){ opts=opts||{}; if(pcEditBusy) return; const root=$('pcsel'), rv=root.querySelector('.pcs-rv'), c=curChar; if(!c) return; pcEditBusy=true;
+    const box=rv.querySelector('.rv-edit'); box.classList.add('busy'); const cont=root.querySelector('.rv-continue'); const st=box.querySelector('.rv-status');
+    // status lives as small text in the control row — never over her. (the big title stays hidden; any marketing line is dropped)
+    { const kr=root.querySelector('.rv-kar'); if(kr) kr.remove(); rvKarT.forEach(clearTimeout); rvKarT=[]; }
+    clearTimeout(rvQuietT); if(!rv.classList.contains('rv-gone')){ rv.classList.add('rv-quiet','rv-gone'); } clearTimeout(rvStatusT); if(st){ st.textContent = opts.label || (text ? ('Changing her: '+text.charAt(0).toLowerCase()+text.slice(1)) : 'Undoing the last change'); st.classList.add('on','busy'); } if(cont) cont.classList.remove('on');
+    // start the generation at once; the fx starts now (no curtain)
+    try{ pcFx.start(); }catch(e){}
+    const req=(opts.req || fetch(text?'/api/author/pc-edit':'/api/author/pc-undo',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(text?{ pc:c.portrait, prompt:text }:{ pc:c.portrait })}).then(r=>r.json())).catch(e=>({ error:String(e&&e.message||e) }));
+    let closed=false, result=null; const tryFinish=()=>{ if(!closed||!result) return;
+      const done=(ok,msg)=>{ if(!ok){ try{ pcFx.stop(); }catch(e){} } setTimeout(()=>{ if(st){ st.classList.remove('busy'); st.textContent=ok?((result&&result.line)||(text?'Done.':'Back to how she was.')):(msg||'The change did not take. Try again.'); st.classList.add('on'); clearTimeout(rvStatusT); rvStatusT=setTimeout(()=>st.classList.remove('on'), ok?2200:4000); } if(cont) cont.classList.add('on'); box.classList.remove('busy'); pcEditBusy=false;
+        const undo=box.querySelector('.rv-undo'); if(undo) undo.classList.toggle('on', !!(result.history&&result.history.cursor>=0));
+        if(ok){ box.classList.remove('rm'); const inp0=box.querySelector('.rv-in'); if(inp0&&opts.req) inp0.value=''; pcInventoryRefresh(rv); }
+        if(ok&&text&&!opts.req){ pcEditRecent.push(text); const k=text.toLowerCase(); pcPool=pcPool.filter(x=>!k.startsWith(x.text.toLowerCase())); const inp=box.querySelector('.rv-in'); if(inp) inp.value=''; pcChips(rv); }
+        }, 350); };
+      if(result.refused){ done(false, result.line || 'I cannot wear that, forgive me.'); return; }   // Arabella declines (not clothing / not decent)
+      if(result.error || (!result.url && text)){ done(false, result.error ? 'Could not change that ('+String(result.error).slice(0,60)+')' : null); return; }
+      if(!result.url){ done(true); return; }
+      // preload the new sprite, then swap behind the closed curtain: static sprite replaces whatever stands there (entrance clip or old sprite)
+      const im=new Image(); const swap=()=>{ try{ const fig=$('pcsFig'); fig.querySelectorAll('video.hfig-entrance').forEach(v=>{ try{ v.pause(); v.remove(); }catch(e){} });
+          // keep a static, dark copy of the old sprite underneath; the real .hfig-you takes the new image (hidden by a zero circle until the burst)
+          const cur=fig.querySelector('.hfig-you'); let oldClone=null; if(cur){ oldClone=cur.cloneNode(false); oldClone.className='hfig-you-old'; oldClone.style.filter='brightness(.3) saturate(.5)'; oldClone.style.transition='none'; fig.insertBefore(oldClone, cur); cur.style.filter=''; cur.style.transition='none'; cur.style.clipPath='circle(0px at 50% 33%)'; }
+          showYou(result.url); const nel=fig.querySelector('.hfig-you'); setTimeout(()=>{ try{ pcFx.resolve(nel, oldClone, ()=>done(true)); }catch(e){ if(oldClone) oldClone.remove(); if(nel){ nel.style.clipPath=''; } done(true); } }, 180); }catch(e){ done(true); } };
+      im.onload=swap; im.onerror=()=>done(false,'Image failed to load'); im.src=result.url; };
+    closed=true; req.then(j=>{ result=j||{error:'no response'}; tryFinish(); }); }
   // the transformed character's ENTRANCE clip (you/entrance.webm: far shot → walks up → fan → the look), full hero
   // height, mounted paused on its first frame behind the closed curtain; plays as the curtain opens.
   function entranceClip(onReady){ const fig=$('pcsFig'), c=curChar; if(!fig||!c) return null;
@@ -30279,8 +30490,8 @@ console.log('%c[caller] Episode 1 ready — run startCaller()', 'color:#e7b24c')
     // clips → seamless); mount the entrance on the SAME layout the walk used (rvLayout) so sizes match 1:1
     const olds=[...fig.querySelectorAll('video.hfig-idle, .hfig-you')]; olds.forEach(o=>{ try{ o.pause&&o.pause(); }catch(e){} });
     const v=document.createElement('video'); v.className='hfig-idle hfig-entrance'; v.muted=true; v.playsInline=true; v.preload='auto';
-    if(rvLayout) v.style.cssText='position:absolute;left:'+rvLayout.cx.toFixed(1)+'px;top:'+rvLayout.top.toFixed(1)+'px;height:'+rvLayout.h.toFixed(1)+'px;width:auto;transform:translateX(-50%);pointer-events:none;opacity:0;';
-    else v.style.cssText='position:absolute;left:50%;bottom:0;height:100%;width:auto;transform:translateX(-50%);pointer-events:none;opacity:0;';
+    // full-stage 9:16 frame, scaled by height and centred like the stage background → vertical fractions of the clip = fractions of the stage on any phone
+    v.style.cssText='position:absolute;left:50%;top:0;height:100%;width:auto;transform:translateX(-50%);pointer-events:none;opacity:0;';
     // Behind the CLOSED curtain: play just long enough to present two frames (the first frame of an alpha clip can
     // paint opaque for a tick), then PAUSE on that frame, show it and drop the old clips — the switch to the new
     // Arabella happens while nothing is visible. The caller resumes play() when the curtain is nearly open.
@@ -30289,10 +30500,14 @@ console.log('%c[caller] Episode 1 ready — run startCaller()', 'color:#e7b24c')
       requestAnimationFrame(()=>requestAnimationFrame(()=>{ olds.forEach(o=>{ try{ o.remove(); }catch(e){} }); if(onReady) onReady(v); })); };
     v.addEventListener('playing',()=>{ if(v.requestVideoFrameCallback) v.requestVideoFrameCallback(()=>v.requestVideoFrameCallback(prime)); else setTimeout(prime, 120); },{once:true});
     v.addEventListener('loadeddata',()=>{ playRetry(v, 4, ()=>{ v.style.opacity='1'; olds.forEach(o=>{ try{ o.remove(); }catch(e){} }); if(onReady) onReady(v); }); },{once:true});
-    v.addEventListener('ended',()=>{ try{ v.pause(); }catch(e){} });
+    v.addEventListener('ended',()=>{ try{ v.pause(); }catch(e){} showYou();   // last frame == sprite box; the sprite fades in over the paused last frame (same place, same size) so texture differences don't pop
+      const you=fig.querySelector('.hfig-you'); if(you){ you.style.opacity='0'; you.style.transition='none'; void you.offsetWidth; you.style.transition='opacity .32s ease'; you.style.opacity='1'; }
+      setTimeout(()=>{ try{ v.remove(); }catch(e){} if(you){ you.style.transition=''; } }, 420); });
     v.addEventListener('error',()=>{ v.remove(); showYou(); if(onReady) onReady(null); });
     setTimeout(()=>{ if(!primed && v.isConnected && !v.error){ prime(); } }, 2500);   // safety: never stall behind the curtain
-    v.src=clipSrc('characters/'+c.portrait+'/you/entrance'+CLIP_EXT); fig.appendChild(v); fig.style.backgroundImage='none'; return v; }
+    v.src=clipSrc('characters/'+c.portrait+'/you/entrance2'+CLIP_EXT); fig.appendChild(v); fig.style.backgroundImage='none'; try{ pcPrefetchSuggestions(c); }catch(e){}   // the suggestion pool is fetched while she walks
+    return v; }   // entrance2 = green-keyed Kling clip: starts small/far in the sprite pose → walks toward camera, twirl + flourish → walks away and returns to the same mark: head 11 % / feet 81 % (showYou measures the sprite to the same box)
+  window.pcRevealDone=revealDone; window.pcFxDev=pcFx; window.pcShowYouDev=showYou;   // (dev) jump to the post-curtain state: title + edit panel; fx handles for tests
   window.pcRevealSequence=function(done){
     preloadRevealClips(curChar);
     revealUi(true);
@@ -30375,6 +30590,13 @@ console.log('%c[caller] Episode 1 ready — run startCaller()', 'color:#e7b24c')
       if(pmMode==='create'){ window.pcCreateOpen(); setTimeout(()=>window.pcMirrorClose(), 380); return; }   // create flow: the story-begins page slides up over the mirror
       window.pcMirrorClose(); if(typeof window.pcRevealSequence==='function') setTimeout(()=>window.pcRevealSequence(), 350); }); }
   window.pcRevealReset=function(){ $('pcsel').classList.remove('no-idle','idle-fade'); curtainRemove(); revealUi(false); if(typeof window.pcMirrorClose==='function') window.pcMirrorClose(); if(typeof window.pcCreateClose==='function') window.pcCreateClose(); const c=curChar; if(c) fill(c); };   // back to the card
+  // A fresh run of the select screen: drop everything the previous reveal left behind (floor text, edit panel, Play button,
+  // transformed sprite, entrance/curtain clips) and put the sprite back to the face-swap base on the server (edit history cleared).
+  function pcFreshStart(){ const root=$('pcsel'); if(!root) return; try{ clearInterval(rvRot); }catch(e){} PC_RUN=Date.now();
+    root.classList.remove('revealing','rv-text','no-idle','idle-fade'); curtainRemove();
+    const rv=root.querySelector('.pcs-rv'); if(rv) rv.remove(); const ct=root.querySelector('.rv-continue'); if(ct) ct.remove(); const kr=root.querySelector('.rv-kar'); if(kr) kr.remove(); rvKarT.forEach(clearTimeout); rvKarT=[]; clearTimeout(rvQuietT); pcEditBusy=false; pcEditRecent=[]; pcPool=[]; pcPoolAt=0; pcPoolReq=null; pcPoolFor=''; pcColor='none'; pcWearing=[];
+    const fig=$('pcsFig'); try{ pcFx.stop(); }catch(e){} if(fig){ fig.querySelectorAll('.hfig-you, .hfig-you-old, canvas.hfig-fx, video.hfig-entrance').forEach(e=>{ try{ e.pause&&e.pause(); }catch(x){} e.remove(); }); }
+    try{ fetch('/api/author/pc-reset',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({ pc:(curChar&&curChar.portrait)||'arabella_frost' })}).catch(()=>{}); }catch(e){} }
   window.pcCurtainRemove=curtainRemove;
   function figIntro(){ const fig=$('pcsFig'); if(!fig) return; fig.style.transition='none'; fig.style.transformOrigin='50% 14%'; fig.style.transform='scale(1.18)'; void fig.offsetWidth; fig.style.transition='transform .62s cubic-bezier(.5,0,.15,1)'; fig.style.transform='scale(1)'; }
   // cycle the avatar face (edit-mode side arrows) with a move-out / move-in slide
@@ -30441,7 +30663,7 @@ console.log('%c[caller] Episode 1 ready — run startCaller()', 'color:#e7b24c')
   function cancelSwitch(){ hide(); $('pcsel').classList.remove('switch'); switchMode=false; showHud(window.__pridePC); const cb=resumeCb; if(typeof cb==='function') cb(); }
 
   async function ensureData(){ if(D) return D; const r=await fetch(BASE+'characters/pcs.json',{cache:'no-store'}); D=await r.json(); return D; }
-  window.pcSelectStart=function(cb){ onPlayCb=cb||null; switchMode=false; ensureData().then(()=>{ genderTab='woman'; deckIdx=0;
+  window.pcSelectStart=function(cb){ onPlayCb=cb||null; switchMode=false; pcFreshStart(); ensureData().then(()=>{ genderTab='woman'; deckIdx=0;
       $('pcsel').classList.remove('switch'); $('pcsKick').textContent='Pride & Prejudice'; $('pcsH1').textContent='Choose your heroine';
       $('pcsWorldBg').style.backgroundImage=AURL('bg_ballroom.webp');
       view('pcs-roster'); renderDeck(); $('pcsel').classList.add('on'); }).catch(e=>{ console.warn('[pcsel] data load failed',e); const cb2=onPlayCb; onPlayCb=null; if(cb2)cb2(); }); };
@@ -30459,7 +30681,7 @@ console.log('%c[caller] Episode 1 ready — run startCaller()', 'color:#e7b24c')
   // Map's FIRST state: character selection. Opens the roster titled
   // "Create Your Character" (non-switch). Picking a premade card, or creating
   // a new character, sets __pridePC and drops the player onto the full map.
-  window.pcSelectFirst=function(){ onPlayCb=null; switchMode=false; ensureData().then(()=>{ genderTab='woman'; deckIdx=0;
+  window.pcSelectFirst=function(){ onPlayCb=null; switchMode=false; pcFreshStart(); ensureData().then(()=>{ genderTab='woman'; deckIdx=0;
       $('pcsel').classList.remove('switch'); $('pcsel').classList.add('overmap'); document.body.classList.add('pc-firststate');
       $('pcsKick').textContent='Pride & Prejudice'; $('pcsH1').textContent='Choose your heroine';
       view('pcs-roster'); renderDeck(); $('pcsel').classList.add('on'); }).catch(e=>{ console.warn('[pcsel] first-state',e); }); };

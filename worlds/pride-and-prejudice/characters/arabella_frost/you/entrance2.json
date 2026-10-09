@@ -1,0 +1,11 @@
+{
+ "w": 1080,
+ "h": 1920,
+ "last": {
+  "x0": 371.34,
+  "y0": 157.14,
+  "x1": 710.33,
+  "y1": 1342.36
+ },
+ "note": "where the sprite's alpha bbox (threshold 40) lands on the keyed clip's last frame, found by mask matching (scale+offset); showYou fits the sprite's bbox to this box"
+}
