@@ -287,6 +287,7 @@ async function handleFileImport(req, res) {
 // POST /api/author/pc-undo { pc }           → previous edit (or the base) becomes pride.png again
 // POST /api/author/pc-suggest { pc }        → 6 short, period-appropriate change suggestions from the current image (vision JSON)
 const PC_SIZE = '1024x1536';
+const PC_IMAGE_MODEL = process.env.PC_IMAGE_MODEL || 'gpt-image-2.5-sunburst';   // the player-facing edits need a model that supports background:transparent (on Railway there is no image-model.local.json)
 function pcYouDir(pc) { pc = String(pc || '').replace(/[^a-z0-9_-]/gi, ''); if (!pc) return null; const d = path.join(ROOT, 'worlds', 'pride-and-prejudice', 'characters', pc, 'you'); return fs.existsSync(path.join(d, 'pride.png')) ? d : null; }
 function pcHistory(dir) { const h = path.join(dir, 'edits', 'history.json'); try { return JSON.parse(fs.readFileSync(h, 'utf8')); } catch (e) { return { items: [], cursor: -1 }; } }
 function pcSaveHistory(dir, H) { fs.mkdirSync(path.join(dir, 'edits'), { recursive: true }); fs.writeFileSync(path.join(dir, 'edits', 'history.json'), JSON.stringify(H, null, 1)); }
@@ -308,7 +309,7 @@ async function handlePcEdit(req, res) {
     ? 'Edit this full-body character sprite. Keep the SAME woman (identical face, hair colour, body, pose, proportions and camera), the same painted, matte illustration style and visible brush texture (not photographic, no glossy render), same lighting, and keep the background fully transparent with clean edges. Apply ONLY this change: REMOVE her ' + rm[1] + ' completely. Where it was, show what is naturally underneath (bare skin, her hair, the gown) painted in the same style. Nothing else changes. Do not add text or a background.'
     : 'Edit this full-body character sprite. Keep the SAME woman (identical face, hair colour, body, pose, proportions and camera), the same painted, matte illustration style and visible brush texture (not photographic, no glossy render), same lighting, and keep the background fully transparent with clean edges — nothing else in the frame. Apply ONLY this change, Regency-era (1811) appropriate: ' + change + '. Do not add text or a background.';
   try {
-    const j = await openaiImageEdit(prompt, [path.join(dir, 'pride.png')], PC_SIZE, pickImageModel(b.model), { transparent: true });
+    const j = await openaiImageEdit(prompt, [path.join(dir, 'pride.png')], PC_SIZE, pickImageModel(b.model || PC_IMAGE_MODEL), { transparent: true });
     const b64 = j.data && j.data[0] && j.data[0].b64_json; if (!b64) return sendJson(res, 502, { error: 'no image returned' });
     const stamp = new Date().toISOString().slice(0, 19).replace(/[T:]/g, '-'); const file = path.join(dir, 'edits', stamp + '.png');
     fs.writeFileSync(file, Buffer.from(b64, 'base64')); fs.copyFileSync(file, path.join(dir, 'pride.png'));
@@ -365,7 +366,7 @@ async function handlePcWear(req, res) {
   const prompt = 'Image 1 is a full-body character sprite. Image 2 is a reference photo of something for her to wear. ' + KEEP + ' Apply ONLY this change, Regency-era (1811) appropriate: ' + change;
   pcEnsureBase(dir);
   try {
-    const j = await openaiImageEdit(prompt, [path.join(dir, 'pride.png'), refFile], PC_SIZE, pickImageModel(b.model), { transparent: true });
+    const j = await openaiImageEdit(prompt, [path.join(dir, 'pride.png'), refFile], PC_SIZE, pickImageModel(b.model || PC_IMAGE_MODEL), { transparent: true });
     const b64 = j.data && j.data[0] && j.data[0].b64_json; if (!b64) return sendJson(res, 502, { error: 'no image returned' });
     const file = path.join(dir, 'edits', stamp + '.png'); fs.writeFileSync(file, Buffer.from(b64, 'base64')); fs.copyFileSync(file, path.join(dir, 'pride.png'));
     const label = 'Wear: ' + (kind === 'other' ? item.slice(0, 60) : kind);
