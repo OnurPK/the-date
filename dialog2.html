@@ -30438,7 +30438,7 @@ console.log('%c[caller] Episode 1 ready — run startCaller()', 'color:#e7b24c')
   function pcChips(rv){ const c=curChar, row=rv.querySelector('.rv-tags'), box=rv.querySelector('.rv-edit'); if(!c||!row) return;
     const paint=()=>{ if(!pcPool.length){ row.innerHTML='<span class="rv-chip ghost">'+(pcPoolReq?(pcPoolErr?('No ideas: '+esc(pcPoolErr.slice(0,70))):'Looking at her…'):'Tell her what to change')+'</span>'; return; }
       if(pcPoolAt>=pcPool.length){ pcPoolAt=0; pcShuffle(pcPool); }
-      const n=box&&box.classList.contains('open')?12:8;   // open: ~5 rows of ideas + the remove row, no scrolling let list=pcPool.slice(pcPoolAt, pcPoolAt+n); if(list.length<n) list=list.concat(pcPool.slice(0, n-list.length));
+      const n=box&&box.classList.contains('open')?12:8; /* open: ~5 rows of ideas + the remove row, no scrolling */ let list=pcPool.slice(pcPoolAt, pcPoolAt+n); if(list.length<n) list=list.concat(pcPool.slice(0, n-list.length));
       let html=list.map(x=>'<button type="button" class="rv-chip" data-cat="'+x.cat+'">'+(CAT_ICON[x.cat]||CAT_ICON.accessory)+'<span>'+esc(x.text)+'</span></button>').join('');
       // removable things she wears: only in the expanded list, at the very bottom, with an (x) icon
       if(box&&box.classList.contains('open')&&pcWearing.length) html+='<i class="rv-sep"></i>'+pcWearing.map(w=>'<button type="button" class="rv-chip rm" data-rm="'+esc(w.label||w.kind)+'">'+ICON_X+'<span>Remove '+esc(w.label||w.kind)+'</span></button>').join('');
