@@ -29664,6 +29664,10 @@ console.log('%c[caller] Episode 1 ready — run startCaller()', 'color:#e7b24c')
 #pcsel .pcs-rv .rv-chip.rm svg{stroke:#e6ddcf; opacity:.8}
 #pcsel .pcs-rv .rv-sep{flex-basis:100%; height:0}
 #pcsel .pcs-rv .rv-edit.rm .rv-color{display:none}
+/* keyboard up: the stage keeps its height (she does not move), only the text row stays, lifted above the keyboard */
+#pcsel.kb .pcs-rv .rv-ctl, #pcsel.kb .pcs-rv .rv-tags, #pcsel.kb .rv-continue, #pcsel.kb .rv-kar{display:none !important}
+#pcsel.kb .pcs-rv{padding-top:24px; padding-bottom:12px; transition:none}
+#pcsel.kb .pcs-rv .rv-row{margin-top:0}
 #pcsel .pcs-rv .rv-edit.rm .rv-in{padding-left:14px}
 /* button row: [wardrobe] [colour ● | text field | undo] [ok] */
 #pcsel .pcs-rv .rv-row{display:flex; gap:8px; margin-top:10px; align-items:center}
@@ -30402,6 +30406,11 @@ console.log('%c[caller] Episode 1 ready — run startCaller()', 'color:#e7b24c')
     rv.appendChild(box);
     const inp=box.querySelector('.rv-in'); const go=()=>{ let t=inp.value.trim(); if(!t) return; const col=PAL.find(p=>p[0]===pcColor); if(!box.classList.contains('rm')&&col&&col[0]!=='none'&&!new RegExp(col[1].split(' ')[0],'i').test(t)) t+=', in '+col[1].toLowerCase(); pcRegenerate(t); };
     inp.addEventListener('input', ()=>{ if(!/^\s*(remove|take off|no|without)\b/i.test(inp.value)) box.classList.remove('rm'); });
+    // iOS keyboard: the webview shrinks → lock the stage to its pre-keyboard height so she stays put, and lift the row above the keyboard
+    const root=$('pcsel'); let kbS=0; const kbPlace=()=>{ if(!root.classList.contains('kb')) return; const vv=window.visualViewport; const vis=vv?Math.round(vv.height+vv.offsetTop):window.innerHeight; rv.style.bottom=Math.max(0,kbS-vis)+'px'; try{ window.scrollTo(0,0); }catch(e){} };
+    inp.addEventListener('focus', ()=>{ kbS=root.clientHeight||window.innerHeight; root.style.height=kbS+'px'; root.classList.add('kb'); setTimeout(kbPlace,50); setTimeout(kbPlace,350); setTimeout(kbPlace,700); });
+    inp.addEventListener('blur', ()=>{ setTimeout(()=>{ if(document.activeElement===inp) return; root.classList.remove('kb'); root.style.height=''; rv.style.bottom=''; }, 260); });   // (delayed so a tap on ✓ lands before the row moves back)
+    if(window.visualViewport) window.visualViewport.addEventListener('resize', kbPlace); window.addEventListener('resize', kbPlace);
     box.querySelector('.rv-go').addEventListener('click', go); inp.addEventListener('keydown', e=>{ if(e.key==='Enter'){ e.preventDefault(); go(); } });
     box.querySelector('.rv-undo').addEventListener('click', ()=>pcRegenerate(null));
     box.querySelector('.rv-refresh').addEventListener('click', e=>{ const b=e.currentTarget; b.classList.remove('spin'); void b.offsetWidth; b.classList.add('spin'); pcPoolAt+=(box.classList.contains('open')?24:8); pcChips(rv); });
