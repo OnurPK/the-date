@@ -290,7 +290,8 @@ const PC_SIZE = '1024x1536';
 function pcYouDir(pc) { pc = String(pc || '').replace(/[^a-z0-9_-]/gi, ''); if (!pc) return null; const d = path.join(ROOT, 'worlds', 'pride-and-prejudice', 'characters', pc, 'you'); return fs.existsSync(path.join(d, 'pride.png')) ? d : null; }
 function pcHistory(dir) { const h = path.join(dir, 'edits', 'history.json'); try { return JSON.parse(fs.readFileSync(h, 'utf8')); } catch (e) { return { items: [], cursor: -1 }; } }
 function pcSaveHistory(dir, H) { fs.mkdirSync(path.join(dir, 'edits'), { recursive: true }); fs.writeFileSync(path.join(dir, 'edits', 'history.json'), JSON.stringify(H, null, 1)); }
-function pcEnsureBase(dir) { const b = path.join(dir, 'edits', 'base.png'); if (!fs.existsSync(b)) { fs.mkdirSync(path.join(dir, 'edits'), { recursive: true }); fs.copyFileSync(path.join(dir, 'pride.png'), b); } return b; }
+// The face-swap result is you/base.png (tracked in git); pride.png is the working copy the edits write over. Legacy: edits/base.png.
+function pcEnsureBase(dir) { const b0 = path.join(dir, 'base.png'); if (fs.existsSync(b0)) return b0; const b = path.join(dir, 'edits', 'base.png'); if (!fs.existsSync(b)) { fs.mkdirSync(path.join(dir, 'edits'), { recursive: true }); fs.copyFileSync(path.join(dir, 'pride.png'), b); } return b; }
 async function handlePcEdit(req, res) {
   if (!OPENAI_KEY) return sendJson(res, 400, { error: 'Set OPENAI_API_KEY in the dev-server environment' });
   const b = await readJsonBody(req); const dir = pcYouDir(b.pc); const change = String(b.prompt || '').trim().slice(0, 300);

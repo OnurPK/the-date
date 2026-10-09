@@ -29655,18 +29655,19 @@ console.log('%c[caller] Episode 1 ready — run startCaller()', 'color:#e7b24c')
 @keyframes rvSpin{to{transform:rotate(360deg)}}
 #pcsel .pcs-rv .rv-tags{display:flex; flex-wrap:wrap; gap:8px; align-content:flex-start; max-height:88px; overflow:hidden; transition:max-height .35s ease; scrollbar-width:none}
 #pcsel .pcs-rv .rv-tags::-webkit-scrollbar{display:none}
-#pcsel .pcs-rv .rv-edit.open .rv-tags{max-height:376px; overflow-y:auto; -webkit-overflow-scrolling:touch}
+#pcsel .pcs-rv .rv-edit.open .rv-tags{max-height:420px; overflow:visible}   /* no scrolling: fewer tags instead */
 #pcsel .pcs-rv .rv-chip{display:inline-flex; align-items:center; gap:6px; height:40px; max-width:100%; padding:0 12px 0 10px; border-radius:999px; border:1px solid rgba(240,212,124,.55); background:rgba(14,8,16,.72); color:#f7e8bf; font:500 13.5px/1 "Playfair Display",Georgia,serif; font-style:italic; white-space:nowrap; cursor:pointer; text-shadow:0 1px 6px rgba(0,0,0,.6); box-sizing:border-box}
 #pcsel .pcs-rv .rv-chip span{overflow:hidden; text-overflow:ellipsis}
 #pcsel .pcs-rv .rv-chip svg{flex:none; width:14px; height:14px; stroke:#f0d47c; fill:none; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round; opacity:.9}
 #pcsel .pcs-rv .rv-chip.ghost{border-color:rgba(255,255,255,.15); color:rgba(255,255,255,.5); cursor:default}
-#pcsel .pcs-rv .rv-chip.rm{border-color:rgba(255,255,255,.28); color:#e6ddcf; background:rgba(20,12,18,.6)}
-#pcsel .pcs-rv .rv-chip.rm svg{stroke:#e6ddcf; opacity:.8}
+#pcsel .pcs-rv .rv-chip.rm{border-color:rgba(226,96,96,.65); color:#f3b9b4; background:rgba(40,12,16,.68)}
+#pcsel .pcs-rv .rv-chip.rm svg{stroke:#ef8a84; opacity:.95}
 #pcsel .pcs-rv .rv-sep{flex-basis:100%; height:0}
 #pcsel .pcs-rv .rv-edit.rm .rv-color{display:none}
 /* keyboard up: the stage keeps its height (she does not move), only the text row stays, lifted above the keyboard */
 #pcsel.kb .pcs-rv .rv-ctl, #pcsel.kb .pcs-rv .rv-tags, #pcsel.kb .rv-continue, #pcsel.kb .rv-kar{display:none !important}
-#pcsel.kb .pcs-rv{padding-top:24px; padding-bottom:12px; transition:none}
+#pcsel.kb .pcs-rv{padding-top:40px; transition:none; will-change:padding}
+#pcsel.kb .hero, #pcsel.kb .pcs-rv{transition:none !important}
 #pcsel.kb .pcs-rv .rv-row{margin-top:0}
 #pcsel .pcs-rv .rv-edit.rm .rv-in{padding-left:14px}
 /* button row: [wardrobe] [colour ● | text field | undo] [ok] */
@@ -30407,13 +30408,16 @@ console.log('%c[caller] Episode 1 ready — run startCaller()', 'color:#e7b24c')
     const inp=box.querySelector('.rv-in'); const go=()=>{ let t=inp.value.trim(); if(!t) return; const col=PAL.find(p=>p[0]===pcColor); if(!box.classList.contains('rm')&&col&&col[0]!=='none'&&!new RegExp(col[1].split(' ')[0],'i').test(t)) t+=', in '+col[1].toLowerCase(); pcRegenerate(t); };
     inp.addEventListener('input', ()=>{ if(!/^\s*(remove|take off|no|without)\b/i.test(inp.value)) box.classList.remove('rm'); });
     // iOS keyboard: the webview shrinks → lock the stage to its pre-keyboard height so she stays put, and lift the row above the keyboard
-    const root=$('pcsel'); let kbS=0; const kbPlace=()=>{ if(!root.classList.contains('kb')) return; const vv=window.visualViewport; const vis=vv?Math.round(vv.height+vv.offsetTop):window.innerHeight; rv.style.bottom=Math.max(0,kbS-vis)+'px'; try{ window.scrollTo(0,0); }catch(e){} };
-    inp.addEventListener('focus', ()=>{ kbS=root.clientHeight||window.innerHeight; root.style.height=kbS+'px'; root.classList.add('kb'); setTimeout(kbPlace,50); setTimeout(kbPlace,350); setTimeout(kbPlace,700); });
-    inp.addEventListener('blur', ()=>{ setTimeout(()=>{ if(document.activeElement===inp) return; root.classList.remove('kb'); root.style.height=''; rv.style.bottom=''; }, 260); });   // (delayed so a tap on ✓ lands before the row moves back)
-    if(window.visualViewport) window.visualViewport.addEventListener('resize', kbPlace); window.addEventListener('resize', kbPlace);
+    // The panel stays anchored to the stage bottom; the part hidden by the keyboard becomes bottom padding, so the gradient
+    // simply continues under the keyboard (no hard edge) and only the padding number changes while the keyboard animates.
+    const root=$('pcsel'); let kbS=0, kbRaf=0; const kbPlace=()=>{ kbRaf=0; if(!root.classList.contains('kb')) return; const vv=window.visualViewport; const vis=vv?Math.round(vv.height+vv.offsetTop):window.innerHeight; const hidden=Math.max(0,kbS-vis); rv.style.paddingBottom=(hidden+12)+'px'; if(window.scrollY||window.pageYOffset) try{ window.scrollTo(0,0); }catch(e){} };
+    const kbQueue=()=>{ if(!kbRaf) kbRaf=requestAnimationFrame(kbPlace); };
+    inp.addEventListener('focus', ()=>{ kbS=root.clientHeight||window.innerHeight; root.style.height=kbS+'px'; root.classList.add('kb'); kbQueue(); });
+    inp.addEventListener('blur', ()=>{ setTimeout(()=>{ if(document.activeElement===inp) return; root.classList.remove('kb'); root.style.height=''; rv.style.paddingBottom=''; }, 260); });   // (delayed so a tap on ✓ lands before the row moves back)
+    if(window.visualViewport) window.visualViewport.addEventListener('resize', kbQueue); window.addEventListener('resize', kbQueue);
     box.querySelector('.rv-go').addEventListener('click', go); inp.addEventListener('keydown', e=>{ if(e.key==='Enter'){ e.preventDefault(); go(); } });
     box.querySelector('.rv-undo').addEventListener('click', ()=>pcRegenerate(null));
-    box.querySelector('.rv-refresh').addEventListener('click', e=>{ const b=e.currentTarget; b.classList.remove('spin'); void b.offsetWidth; b.classList.add('spin'); pcPoolAt+=(box.classList.contains('open')?24:8); pcChips(rv); });
+    box.querySelector('.rv-refresh').addEventListener('click', e=>{ const b=e.currentTarget; b.classList.remove('spin'); void b.offsetWidth; b.classList.add('spin'); pcPoolAt+=(box.classList.contains('open')?12:8); pcChips(rv); });
     box.querySelector('.rv-expand').addEventListener('click', ()=>{ box.classList.toggle('open'); pcChips(rv); });
     // wardrobe: upload a photo of something to wear → vision decides what it is (or declines, in her voice) → edit with the photo as reference
     const file=document.createElement('input'); file.type='file'; file.accept='image/*'; file.style.display='none'; box.appendChild(file);
@@ -30431,7 +30435,7 @@ console.log('%c[caller] Episode 1 ready — run startCaller()', 'color:#e7b24c')
   function pcChips(rv){ const c=curChar, row=rv.querySelector('.rv-tags'), box=rv.querySelector('.rv-edit'); if(!c||!row) return;
     const paint=()=>{ if(!pcPool.length){ row.innerHTML='<span class="rv-chip ghost">Tell her what to change</span>'; return; }
       if(pcPoolAt>=pcPool.length){ pcPoolAt=0; pcShuffle(pcPool); }
-      const n=box&&box.classList.contains('open')?24:8; let list=pcPool.slice(pcPoolAt, pcPoolAt+n); if(list.length<n) list=list.concat(pcPool.slice(0, n-list.length));
+      const n=box&&box.classList.contains('open')?12:8;   // open: ~5 rows of ideas + the remove row, no scrolling let list=pcPool.slice(pcPoolAt, pcPoolAt+n); if(list.length<n) list=list.concat(pcPool.slice(0, n-list.length));
       let html=list.map(x=>'<button type="button" class="rv-chip" data-cat="'+x.cat+'">'+(CAT_ICON[x.cat]||CAT_ICON.accessory)+'<span>'+esc(x.text)+'</span></button>').join('');
       // removable things she wears: only in the expanded list, at the very bottom, with an (x) icon
       if(box&&box.classList.contains('open')&&pcWearing.length) html+='<i class="rv-sep"></i>'+pcWearing.map(w=>'<button type="button" class="rv-chip rm" data-rm="'+esc(w.label||w.kind)+'">'+ICON_X+'<span>Remove '+esc(w.label||w.kind)+'</span></button>').join('');

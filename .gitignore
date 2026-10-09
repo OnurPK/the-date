@@ -63,6 +63,7 @@ worlds/pride-and-prejudice/characters/*/you/*
 !worlds/pride-and-prejudice/characters/arabella_frost/you/entrance2.mov
 !worlds/pride-and-prejudice/characters/arabella_frost/you/entrance2.json
 !worlds/pride-and-prejudice/characters/arabella_frost/you/pride.png
+!worlds/pride-and-prejudice/characters/arabella_frost/you/base.png
 # green-screen sources of the alpha clips (webm/mov are the shipped versions)
 **/*_green.mp4
 worlds/pride-and-prejudice/characters/arabella_you/
